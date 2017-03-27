@@ -9,8 +9,14 @@ OTHER_FILES += \
 CONFIG(release,release|debug):BUILD_TYPE="Release"
 else:BUILD_TYPE="Debug"
 
-win32:!no-bootstrap:system(cmd /c "$${PWD}/Bootstrap.cmd \"$${OUT_PWD}\"" $${BUILD_TYPE} $${OPENSSL_PREFIX} $${QT_ARCH})
-unix:!no-bootstrap:system($${PWD}/Bootstrap.sh $${OUT_PWD} $${BUILD_TYPE} $${OPENSSL_PREFIX} $${QT_ARCH})
+win32:CONFIG+=bootstrap
+macx:!CONFIG(no-bootstrap):CONFIG+=bootstrap
 
-INCLUDEPATH += $${OUT_PWD}/Bootstrap/include
-LIBS += -L$${OUT_PWD}/Bootstrap/lib
+win32:system(cmd /c "$${PWD}/Bootstrap.cmd \"$${OUT_PWD}\"" $${BUILD_TYPE} $${OPENSSL_PREFIX} $${QT_ARCH})
+unix:CONFIG(bootstrap):system($${PWD}/Bootstrap.sh $${OUT_PWD} $${BUILD_TYPE} $${OPENSSL_PREFIX} $${QT_ARCH})
+
+CONFIG(bootstrap) {
+    Message(*** Bootstrap included ***)
+    INCLUDEPATH += $${OUT_PWD}/Bootstrap/include
+    LIBS += -L$${OUT_PWD}/Bootstrap/lib
+}
