@@ -1,0 +1,27 @@
+*.pro.user.*
+*.pro.user
+
+*.tar.gz
+*.zip
+
+testdata/*.log
+testdata/*.pid
+testdata/*.db
+testdata/*.cnf
+testdata/*.realm
+testdata/misc
+userdata/
+*.gch/
+
+# for in-tree unix builds
+
+CMakeFiles/
+CMakeCache.txt
+Makefile
+Makefile.*
+cmake_install.cmake
+moc_*.cpp
+*.o
+*.a
+sipwitches
+sipwitches.spec
