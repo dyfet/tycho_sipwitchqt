@@ -30,7 +30,8 @@
 
 enum {
     // database events...
-    QUERY_EXTENSIONS = QEvent::User + 1,
+    COUNT_EXTENSIONS = QEvent::User + 1,
+    QUERY_EXTENSIONS,
 };
 
 class DatabaseEvent final : public QEvent
@@ -236,6 +237,8 @@ bool Database::create()
     if(!runQuery("UPDATE Tycho_Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
         runQuery("INSERT INTO Tycho_Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
           
+    emit countResults("ext", getCount("Extensions"));
+
     DbResults results;
     results["ext"] = snapshotExtensions();
     results["alias"] = indexResults(results["ext"], "alias");
@@ -267,6 +270,23 @@ DbRecords Database::indexResults(const DbRecords& index, const QString& key)
             out[id] = rec;
     }
     return out;
+}
+
+int Database::getCount(const QString& id)
+{
+    qDebug() << "Count extensions...";
+
+    int count = 0;
+    QSqlQuery query(db);
+    query.prepare(QString("SELECT COUNT (*) FROM Tycho_") + id + ";");
+    if(!query.exec()) {
+        Logging::err() << "Extensions; error=" << query.lastError().text();
+        failed = true;
+    }
+    else if(query.next()) {
+        count = query.value(0).toInt();
+    }
+    return count;
 }
 
 DbRecords Database::snapshotExtensions()
@@ -302,8 +322,15 @@ bool Database::event(QEvent *evt)
 
     DbResults results;
     DbRecords records;
+    int count = 0;
 
     switch(id) {
+    case COUNT_EXTENSIONS:
+        if(opened)
+            count = getCount("Extensions");
+        if(!failed)
+            emit countResults("ext", count);
+        return true;
     case QUERY_EXTENSIONS:
         if(opened) {
             results["ext"] = snapshotExtensions();
@@ -361,3 +388,9 @@ void Database::queryExtensions()
         new DatabaseEvent(QUERY_EXTENSIONS));
 }
 
+void Database::countExtensions()
+{
+    Q_ASSERT(Instance != nullptr);
+    QCoreApplication::postEvent(Instance,
+        new DatabaseEvent(COUNT_EXTENSIONS));
+}

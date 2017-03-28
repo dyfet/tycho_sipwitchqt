@@ -42,6 +42,8 @@ public:
 
     static void queryExtensions();
 
+    static void countExtensions();
+
     static DbRecords indexResults(const DbRecords& index, const QString& key);
     
     static DbRecords indexResults(const QList<QSqlRecord>& list, const QString& key);
@@ -64,6 +66,7 @@ private:
 
     bool event(QEvent *evt) final;
 
+    int getCount(const QString& id);
     DbRecords snapshotExtensions();    
 
     bool runQuery(const QString& string, QVariantList parms = QVariantList());
@@ -77,6 +80,7 @@ private:
 
 signals:
     void snapshotResults(const DbResults& results);
+    void countResults(const QString& id, int count);
 
 private slots:
     void applyConfig(const QVariantHash& config);
