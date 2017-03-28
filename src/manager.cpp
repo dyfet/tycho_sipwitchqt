@@ -37,7 +37,10 @@ Stack(order)
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
 	connect(control, &Control::changeValue, this, &Manager::applyValue);
 	connect(server, &Server::changeConfig, this, &Manager::applyConfig);
-    connect(db, &Database::snapshotResults, this, &Manager::applyExtensions);
+
+#ifndef QT_NO_DEBUG
+    connect(db, &Database::countResults, this, &Manager::reportCounts);
+#endif
 }
 
 Manager::~Manager()
@@ -50,11 +53,12 @@ void Manager::init(unsigned order)
     new Manager(order);
 }
 
-void Manager::applyExtensions(const DbResults& results)
+#ifndef QT_NO_DEBUG
+void Manager::reportCounts(const QString& id, int count)
 {
-	Q_UNUSED(results);
-	qDebug() << "*** DB Confirm" << results.count();
+    qDebug() << "*** DB Count" << id << count;
 }
+#endif
 
 void Manager::applyNames()
 {

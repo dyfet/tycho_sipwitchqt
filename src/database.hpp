@@ -23,9 +23,6 @@
 #include <QDebug>
 #include <QSqlDatabase>
 
-typedef QHash<QString,QSqlRecord> DbRecords;
-typedef QHash<QString,DbRecords> DbResults;
-
 class Database final : public QObject
 {
     Q_OBJECT
@@ -40,11 +37,7 @@ public:
 
     static void init(unsigned order);
 
-    static void queryExtensions();
-
-    static DbRecords indexResults(const DbRecords& index, const QString& key);
-    
-    static DbRecords indexResults(const QList<QSqlRecord>& list, const QString& key);
+    static void countExtensions();
 
 private:
     static const int interval = 10000;
@@ -64,7 +57,7 @@ private:
 
     bool event(QEvent *evt) final;
 
-    DbRecords snapshotExtensions();    
+    int getCount(const QString& id);
 
     bool runQuery(const QString& string, QVariantList parms = QVariantList());
     int runQuery(const QStringList& list);
@@ -76,12 +69,10 @@ private:
     static Database *Instance;
 
 signals:
-    void snapshotResults(const DbResults& results);
+    void countResults(const QString& id, int count);
 
 private slots:
     void applyConfig(const QVariantHash& config);
     void onTimeout();
 };
 
-Q_DECLARE_METATYPE(DbRecords);
-Q_DECLARE_METATYPE(DbResults);

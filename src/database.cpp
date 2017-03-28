@@ -30,7 +30,7 @@
 
 enum {
     // database events...
-    QUERY_EXTENSIONS = QEvent::User + 1,
+    COUNT_EXTENSIONS = QEvent::User + 1,
 };
 
 class DatabaseEvent final : public QEvent
@@ -54,28 +54,12 @@ DatabaseEvent::~DatabaseEvent() {}
 
 static bool failed = false;
 
-static DbRecords indexQuery(QSqlQuery& query, const QString& key)
-{
-    DbRecords out;
-
-    while(query.next()) {
-        QSqlRecord rec = query.record();
-        QString id = rec.value(key).toString();
-        if(!id.isEmpty() && !rec.isEmpty())
-            out[id] = rec;
-    }
-    return out;
-}
-
 Database *Database::Instance = nullptr;
 
 Database::Database(unsigned order)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
-
-    qRegisterMetaType<DbRecords>();
-    qRegisterMetaType<DbResults>();
 
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
@@ -235,52 +219,29 @@ bool Database::create()
 
     if(!runQuery("UPDATE Tycho_Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
         runQuery("INSERT INTO Tycho_Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
-          
-    DbResults results;
-    results["ext"] = snapshotExtensions();
-    results["alias"] = indexResults(results["ext"], "alias");
+
+    int count = getCount("Extensions");
     if(!failed)
-        emit snapshotResults(results);
+        emit countResults("ext", count);
+
     return true;
 }
 
-DbRecords Database::indexResults(const QList<QSqlRecord>& recs, const QString& key)
+int Database::getCount(const QString& id)
 {
-    QHash<QString,QSqlRecord> out;
+    qDebug() << "Count extensions...";
 
-    foreach(auto rec, recs) {
-        QString id = rec.value(key).toString();
-        if(!id.isEmpty() && !rec.isEmpty())
-            out[id] = rec;
-    }
-    return out;
-}
-
-DbRecords Database::indexResults(const DbRecords& index, const QString& key)
-{
-    QHash<QString,QSqlRecord> out;
-
-    QList<QSqlRecord> recs = index.values();
-    foreach(auto rec, recs) {
-        QString id = rec.value(key).toString();
-        if(!id.isEmpty() && !rec.isEmpty())
-            out[id] = rec;
-    }
-    return out;
-}
-
-DbRecords Database::snapshotExtensions()
-{
-    qDebug() << "Snapshot extensions...";
-
+    int count = 0;
     QSqlQuery query(db);
-    query.prepare("SELECT * FROM Tycho_Extensions;");
+    query.prepare(QString("SELECT COUNT (*) FROM Tycho_") + id + ";");
     if(!query.exec()) {
         Logging::err() << "Extensions; error=" << query.lastError().text();
         failed = true;
-        return DbRecords();
     }
-    return indexQuery(query, "number");
+    else if(query.next()) {
+        count = query.value(0).toInt();
+    }
+    return count;
 }
 
 bool Database::event(QEvent *evt)
@@ -300,17 +261,14 @@ bool Database::event(QEvent *evt)
         return true;
     }
 
-    DbResults results;
-    DbRecords records;
+    int count = 0;
 
     switch(id) {
-    case QUERY_EXTENSIONS:
-        if(opened) {
-            results["ext"] = snapshotExtensions();
-            results["alias"] = indexResults(results["ext"], "alias");
-        }
+    case COUNT_EXTENSIONS:
+        if(opened)
+            count = getCount("Extensions");
         if(!failed)
-            emit snapshotResults(results);
+            emit countResults("ext", count);
         return true;
     }
     return true;
@@ -354,10 +312,9 @@ void Database::applyConfig(const QVariantHash& config)
     create();
 }
 
-void Database::queryExtensions()
+void Database::countExtensions()
 {
     Q_ASSERT(Instance != nullptr);
-    QCoreApplication::postEvent(Instance, 
-        new DatabaseEvent(QUERY_EXTENSIONS));
+    QCoreApplication::postEvent(Instance,
+        new DatabaseEvent(COUNT_EXTENSIONS));
 }
-
