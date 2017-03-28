@@ -45,6 +45,5 @@ private slots:
 
 #ifndef QT_NO_DEBUG
     void reportCounts(const QString& id, int count);
-    void applyExtensions(const DbResults& results);
 #endif
 };

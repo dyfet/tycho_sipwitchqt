@@ -39,7 +39,6 @@ Stack(order)
 	connect(server, &Server::changeConfig, this, &Manager::applyConfig);
 
 #ifndef QT_NO_DEBUG
-    connect(db, &Database::snapshotResults, this, &Manager::applyExtensions);
     connect(db, &Database::countResults, this, &Manager::reportCounts);
 #endif
 }
@@ -58,12 +57,6 @@ void Manager::init(unsigned order)
 void Manager::reportCounts(const QString& id, int count)
 {
     qDebug() << "*** DB Count" << id << count;
-}
-
-void Manager::applyExtensions(const DbResults& results)
-{
-    Q_UNUSED(results);
-    qDebug() << "*** DB Confirm" << results.count();
 }
 #endif
 
