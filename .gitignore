@@ -3,6 +3,11 @@
 
 *.tar.gz
 *.zip
+*.exe
+*.app
+
+.DS_Store
+.qmake.*
 
 testdata/*.log
 testdata/*.pid
@@ -16,6 +21,7 @@ userdata/
 # for in-tree unix builds
 
 CMakeFiles/
+Bootstrap/*/*
 CMakeCache.txt
 Makefile
 Makefile.*
@@ -23,5 +29,10 @@ cmake_install.cmake
 moc_*.cpp
 *.o
 *.a
+*.obj
+*.qm
+*.lib
+*.dll
+
 sipwitches
 sipwitches.spec
