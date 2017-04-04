@@ -137,6 +137,7 @@ OTHER_FILES += \
     README.md \
     CONTRIBUTING.md \
     LICENSE \
+    sipwitches.spec \
 
 QMAKE_TARGET_COMPANY = "Tycho Softworks"
 QMAKE_TARGET_COPYRIGHT = "$${COPYRIGHT} Tycho Softworks"
