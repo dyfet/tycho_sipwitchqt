@@ -1,3 +1,5 @@
+# VoIP stack components that interface directly with eXosip
+
 HEADERS += \
     $${PWD}/context.hpp \
     $${PWD}/stack.hpp \

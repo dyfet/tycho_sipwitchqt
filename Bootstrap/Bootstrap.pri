@@ -1,3 +1,5 @@
+# Bootstrap external dependencies
+
 OTHER_FILES += \
     Bootstrap/CMakeLists.txt \
     Bootstrap/Bootstrap.cmd \

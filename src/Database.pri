@@ -1,3 +1,5 @@
+# All components for database queued operations
+
 SOURCES +=\
     $${PWD}/database.cpp \
     $${PWD}/sqldriver.cpp \

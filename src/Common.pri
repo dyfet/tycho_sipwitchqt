@@ -1,3 +1,5 @@
+# Common service code, may become stand-alone ServiceQt library in the future
+
 HEADERS += \
     $${PWD}/compiler.hpp \
     $${PWD}/inline.hpp \

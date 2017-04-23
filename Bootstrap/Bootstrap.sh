@@ -14,7 +14,7 @@ mkdir -p Bootstrap
 cd Bootstrap
 case `uname` in
 Darwin)
-    PATH=$PATH:/opt/local/bin
+    PATH=$PATH:/usr/local/bin:/opt/local/bin
     CPPFLAGS="$CPPFLAGS -mmacosx-version-min=10.10"
     CC=clang
     CXX=clang++
