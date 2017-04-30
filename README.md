@@ -12,13 +12,13 @@ Bootstrap is used to configure dependencies and libraries that may normally not 
 
 I collect and use source tarballs found at http://pub.cherokeesofidaho.org/bootstrap.  This is done for several reasons.  I did not want to carry and manage large binary tarballs in the git repos.  I also don't want to use any other external locations such as git lfs does, or original archive sites, because often I have found myself, sometimes for months at a time, in places where I had no internet connectivity at all.  I could always do a 127.0.0.1 remap of my own pub site for such circumstances.
 
-On more sane Unix (BSD, Linux) systems you normally do not need bootstrap.  For RedHat/Fedora and maybe a few other Linux distros that happen to include only very old versions of exosip2 in their repos, or perhaps for opensolaris, you can still activate bootstrap, though it is recommended instead to package newer libraries for these.
+On more sane Unix (BSD, Linux) systems you normally do not need bootstrap.  For older Unix/Linux distros that may only very old versions of exosip2 in their repos, you can still activate bootstrap, though it is recommended instead to package newer libraries for these.  For Fedora (and later Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
 
-For macOS I do require bootstrap either when building for macports (or homebrew).  However, I recommend bootstrap when using QtCreator downloaded from the
-Qt Company.  This is because even though macports may provide dependencies I need, the pre-built Qt for macOS can often break badly if /opt/local/lib is in
-the link chain.  I also wanted to simplify setting up a build environment for macOS without requiring external porting kits such as macports or additional packages.
+``dnf copr enable dyfet/develop``.
 
-Bootstrap may also be useful when setting up single use / single execution ci container environments, such as travis, where dependent packages may not be installable or otherwise available.  For ci environments like Jenkins, you may be better off taking advantage of persistent slave build environments that are pre-configured with required dependencies pre-installed instead.
+For macOS I may not require bootstrap either when building for macports or homebrew.  However, I recommend bootstrap when using QtCreator downloaded from the Qt Company.  This is because even though macports (and brew) may provide dependencies I need, the pre-built Qt for macOS can break if /opt/local/lib (or /usr/local/lib) is in the link chain, particularly because both brew and macports use an incompatible version of libjpeg.  Also the version of eXosip2 brew provides is not built against c-ares, limiting performance and functionality.  I also wanted to simplify setting up a build environment for macOS without requiring external porting kits such as macports, brew, or additional packages.
+
+Bootstrap may also be useful when setting up single use / single execution ci container environments for repeatable builds, such as travis, where dependent packages may not be installable or otherwise available.  For ci environments like Jenkins (and some uses of gitlab-ci), you may be better off taking advantage of persistent slave build environments that are pre-configured with required dependencies pre-installed instead.
 
 Deploy
 ======
