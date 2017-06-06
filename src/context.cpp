@@ -77,6 +77,8 @@ static volatile unsigned instanceCount = 0;
 static QMutex nameLock, netLock;
 static bool active = true;
 
+bool Context::trusted = false;
+
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
     {"udp", "sip:",  Context::UDP},

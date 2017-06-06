@@ -62,6 +62,10 @@ public:
 
     const QList<Subnet> localnets();
 
+    inline static void enableTrusted() {
+        trusted = true;
+    }
+
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
     }
@@ -85,6 +89,7 @@ private:
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
+    static bool trusted;                // trust subnets auth flag
 
     ~Context();
 
