@@ -77,23 +77,6 @@ public:
         return Contexts;
     }
 
-    inline static const QString gateway() {
-        return Gateway;
-    }
-
-    inline static void setGateway(const QString& gateway) {
-        if(Gateway.isEmpty())
-            Gateway = gateway;
-    }
-
-    inline static bool isSeparated() {
-        return Separated;
-    }
-
-    inline static void setSeparated() {
-        Separated = true;
-    }    
-
     static void start(QThread::Priority priority = QThread::InheritPriority);
 
     static void shutdown();
@@ -107,10 +90,8 @@ private:
     QStringList localHosts, otherNames;
     QList<Subnet> localSubnets, otherNets;
 
-    static bool Separated;
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
-    static QString Gateway;
 
     ~Context();
 

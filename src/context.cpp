@@ -77,8 +77,6 @@ static volatile unsigned instanceCount = 0;
 static QMutex nameLock, netLock;
 static bool active = true;
 
-bool Context::Separated = false;
-QString Context::Gateway;
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
     {"udp", "sip:",  Context::UDP},
@@ -109,9 +107,6 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
 
     setObjectName(name + "/" + choice.name);
     Contexts << this;
-
-    if(Separated)
-        return;
 
     auto nets = QNetworkInterface::allInterfaces();
     foreach(auto net, nets) {
@@ -280,9 +275,6 @@ const QStringList Context::localnames()
 const QList<Subnet> Context::localnets()
 {
     QList<Subnet> nets;
-    if(Separated)
-        return nets;
-
     nets << localSubnets;
     QMutexLocker lock(&netLock);
     nets << otherNets;

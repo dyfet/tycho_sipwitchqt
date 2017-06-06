@@ -67,12 +67,10 @@ Q_UNUSED(xyz)
 #endif
 
 #define CURRENT_ADDRESS     "ADDRESS"
-#define CURRENT_GATEWAY     "GATEWAY"
 #define CURRENT_NETWORK     "NETWORK"
 #define CURRENT_PORT        "PORT"
 #define	CURRENT_UUID		"UUID"
 #define DEFAULT_ADDRESS     "address"
-#define DEFAULT_GATEWAY     "gateway"
 #define DEFAULT_NETWORK     "network"
 #define DEFAULT_PORT        "port"
 

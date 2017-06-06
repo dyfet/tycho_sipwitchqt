@@ -117,13 +117,11 @@ void Manager::applyConfig(const QVariantHash& config)
             subnets6 << sub;
     }
 
-    if(!Context::isSeparated()) {
-        foreach(auto context, Context::contexts()) {
-            if(context->protocol() == QAbstractSocket::IPv4Protocol) 
-                context->setOtherNets(subnets4);
-            else
-                context->setOtherNets(subnets6);
-        }
+    foreach(auto context, Context::contexts()) {
+        if(context->protocol() == QAbstractSocket::IPv4Protocol)
+            context->setOtherNets(subnets4);
+        else
+            context->setOtherNets(subnets6);
     }
 }
 
@@ -132,7 +130,6 @@ void Manager::createContext(const QString& name, const QHostAddress& addr, int p
     Q_UNUSED(name);
 
     qDebug().nospace() << "Creating " << name << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
-    Context::setGateway(name);
 
     foreach(auto schema, Context::schemas()) {
         if(schema.proto & mask) {
