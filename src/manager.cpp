@@ -127,7 +127,7 @@ void Manager::applyConfig(const QVariantHash& config)
     }
 }
 
-void Manager::localContext(const QString& name, const QHostAddress& addr, int port, unsigned mask)
+void Manager::createContext(const QString& name, const QHostAddress& addr, int port, unsigned mask)
 {
     Q_UNUSED(name);
 
@@ -141,24 +141,11 @@ void Manager::localContext(const QString& name, const QHostAddress& addr, int po
     }
 }
 
-void Manager::localContexts(const QList<QHostAddress>& list, int port, unsigned  mask)
+void Manager::createContexts(const QList<QHostAddress>& list, int port, unsigned  mask)
 {
     unsigned count = 0;
     foreach(auto host, list) {
-        localContext(QString("local") + QString::number(++count), host, port, mask);
-    }
-}
-
-void Manager::remoteContext(const QHostAddress& addr, int port, unsigned mask)
-{
-    qDebug().nospace() << "Creating remote " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
-    Context::setGateway("remote");
-	Context::setSeparated();
-
-    foreach(auto schema, Context::schemas()) {
-        if(schema.proto & mask) {
-            new Context(addr, port, "remote", schema);
-        }
+        createContext(QString("local") + QString::number(++count), host, port, mask);
     }
 }
 

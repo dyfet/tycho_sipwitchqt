@@ -24,9 +24,7 @@ class Manager : public Stack
 
 public:
     static void init(unsigned order);
-
-    static void remoteContext(const QHostAddress& addr, int port, unsigned mask);
-    static void localContexts(const QList<QHostAddress>& list, int port, unsigned mask);
+    static void createContexts(const QList<QHostAddress>& list, int port, unsigned mask);
 
 private:
     Manager(unsigned order);
@@ -37,7 +35,7 @@ private:
     static QString SystemPassword;
     static QString ServerMode;
 
-    static void localContext(const QString& name, const QHostAddress& addr, int port, unsigned mask);
+    static void createContext(const QString& name, const QHostAddress& addr, int port, unsigned mask);
 
 private slots:
     void applyValue(const QString& id, const QVariant& value);

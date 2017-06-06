@@ -49,10 +49,9 @@ private:
     const QString execute(const QStringList& args) final;
 };
 
-static int localPort, remotePort = 0;
-static QList<QHostAddress> localInterfaces, remoteInterfaces;
-static unsigned localProtocols = Context::UDP | Context::TCP;
-static unsigned remoteProtocols = Context::TCP;
+static int port;
+static QList<QHostAddress> interfaces;
+static unsigned protocols = Context::UDP | Context::TCP;
 
 using namespace std;
 
@@ -141,7 +140,6 @@ int main(int argc, char **argv)
     Args::add(args, {
         {{"A", "address"}, tr("Specify network interface to bind"), tr("address"), "any"},
         {{"C", "config"}, tr("Specify config file"), tr("file"), SERVICE_CONF},
-        {{"G", "gateway"}, tr("Specify gateway interface to bind"), tr("gateway"), "none"},
         {{"N", "network", "domain"}, tr("Specify network domain to serve"), tr("name"), "%%network"},
         {{"P", "port"}, tr("Specify network port to bind"), "100-65534", "%%port"},
         {Args::HelpArgument},
@@ -174,7 +172,6 @@ int main(int argc, char **argv)
         {CURRENT_NETWORK,   "--network"},
         {CURRENT_PORT,      "--port"},
         {CURRENT_ADDRESS,   "--address"},
-        {CURRENT_GATEWAY,   "--gateway"},
         {DEFAULT_PORT,      5060},
         {DEFAULT_ADDRESS,   QHostInfo::localHostName()},
         {DEFAULT_NETWORK,   Util::localDomain()},
@@ -187,7 +184,7 @@ int main(int argc, char **argv)
     }
 
     if(Args::includes(args, {"status", "shutdown", "show-values", "show-env", "show-config", "show-cache", "set-mode", "set-aliases", "reload", "control", "abort"})) {
-        if(Args::includes(args, {"address", "gateway", "network", "port"})) {
+        if(Args::includes(args, {"address", "network", "port"})) {
             cerr << "Invalid option(s) used in offline mode." << endl;
             exit(90);
         }
@@ -209,16 +206,13 @@ int main(int argc, char **argv)
 #endif
 
     // validate global parsing results...
-    localPort = atoi(Server::sym("PORT"));
-    if(localPort < 100 || localPort > 65534 || localPort % 2)
-        Logging::crit(95) << localPort << ": Invalid sip port value";
+    port = atoi(Server::sym("PORT"));
+    if(port < 100 || port > 65534 || port % 2)
+        Logging::crit(95) << port << ": Invalid sip port value";
 
-    localInterfaces = Util::bindAddress(Server::sym("ADDRESS"));
-    if(localInterfaces.count() < 1)
-        Logging::crit(95) << "No valid local interfaces specified";
-
-    remoteInterfaces = Util::hostAddress(Server::sym("GATEWAY"));
-    remotePort = Util::hostPort(Server::sym("GATEWAY"));
+    interfaces = Util::bindAddress(Server::sym("ADDRESS"));
+    if(interfaces.count() < 1)
+        Logging::crit(95) << "No valid interfaces specified";
 
     if(args.isSet("reset"))
         Main::reset(SETTING);
@@ -230,23 +224,9 @@ int main(int argc, char **argv)
 
     // setup our contexts...
 
-    unsigned remote_mask = \
-        Context::Allow::FEDERATED |\
-        Context::Allow::PROVIDER |\
-        remoteProtocols;
+    unsigned mask = protocols;
 
-    unsigned local_mask = \
-        Context::Allow::TRUSTED |\
-        Context::Allow::REGISTRY |\
-        localProtocols;
-
-    if(remoteInterfaces.count() < 1)
-        remoteInterfaces = localInterfaces;
-
-    if(remotePort)
-        Manager::remoteContext(remoteInterfaces[0], remotePort, remote_mask);
-
-    Manager::localContexts(localInterfaces, localPort, local_mask);
+    Manager::createContexts(interfaces, port, mask);
 
     // create managers and start server...
     Database::init(2);
