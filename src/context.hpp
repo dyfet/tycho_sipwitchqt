@@ -37,13 +37,6 @@ public:
         TLS = 1<<2,
         DTLS = 1<<3,
     };
-    
-    enum Allow : unsigned {
-        TRUSTED = 1 << 6,           // can accept local trusted
-        FEDERATED = 1 << 7,         // can accept remote federated
-        PROVIDER = 1 << 8,          // has/requires provider support
-        REGISTRY = 1 << 9,          // has/requires registry support
-    };
 
     typedef struct {
         const char *name;
