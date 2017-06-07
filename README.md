@@ -1,9 +1,9 @@
-What is SipWitchEs
+What is SipWitchQt
 ==================
 
 This is a newly written from scratch enterprise sip server which extends sipwitch branding and re-thinks my original sipwitch architecture.  This new server is written using [Qt](https://www.qt.io) and C++11.  This package also introduces a new general purpose daemon service architecture for Qt rather than using Qt Service, and this is embedded thru src/Common.pri.  Flattening the name to lower case reduces to the amusing plural, sipwitches, as if uno bruja de sip had not been trouble enough.
 
-One key difference between SipWitchEs and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchEs.
+One key difference between SipWitchQt and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchQt.
 
 Bootstrap
 =========
@@ -25,9 +25,9 @@ Deploy
 
 This project is not yet far enough along for deployment or use, but I do have some specific plans for this.  For GNU/Linux systems, I will support both init scripts and systemd units, which will be added to a new top level etc directory in the source tree, along with things like a logrotate.d file.  I guess on something like macos it could be built from homebrew or macports and added to launchd.  On Microsoft Windows it would have to have code to support registering itself as a system service.
 
-In addition to os distribution packages and port files, I am looking at providing docker instances.  The idea is to be able to deploy and use SipWitchEs anywhere; on premise or in the cloud.  To better support this, the SipWitchEs docker image should also be composable into a stack that includes a separated database server and web interface.  The web interface will be worked on as a separate project to be called switchroom.  The idea is a complete and easily managed deploy anywhere enterprise VoIP phone system.
+In addition to os distribution packages and port files, I am looking at providing docker instances.  The idea is to be able to deploy and use SipWitchQt anywhere; on premise or in the cloud.  To better support this, the SipWitchQt docker image should also be composable into a stack that includes a separated database server and web interface.  The web interface will be worked on as a separate project to be called switchroom.  The idea is a complete and easily managed deploy anywhere enterprise VoIP phone system.
 
-On Microsoft Windows, perhaps SipWitchEs could be bundled with a BayonneSip server and other things as part of a complete VoIP service stack that can be delivered in an inno setup installer that shares Qt runtime libraries.  On macos one option would be to build SipWitchEs using the Qt online installer, and then create a bundled executable including Qt runtime that could be installed as a macos .pkg.
+On Microsoft Windows, perhaps SipWitchQt could be bundled with a SipBayonneQt server and other things as part of a complete VoIP service stack that can be delivered in an inno setup installer that shares Qt runtime libraries.  On macos one option would be to build SipWitchQt using the Qt online installer, and then create a bundled executable including Qt runtime that could be installed as a macos .pkg.
 
 
 Support

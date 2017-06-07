@@ -1,8 +1,8 @@
 TEMPLATE = app
 VERSION = 0.1.0
 COPYRIGHT = 2017
-ARCHIVE = sipwitches
-PRODUCT = SipWitchEs
+ARCHIVE = sipwitchqt
+PRODUCT = SipWitchQt
 CONFIG += c++11 console
 QT -= gui
 QT += network sql
@@ -137,9 +137,9 @@ OTHER_FILES += \
     README.md \
     CONTRIBUTING.md \
     LICENSE \
-    sipwitches.spec \
+    sipwitchqt.spec \
 
 QMAKE_TARGET_COMPANY = "Tycho Softworks"
 QMAKE_TARGET_COPYRIGHT = "$${COPYRIGHT} Tycho Softworks"
 QMAKE_TARGET_PRODUCT = "$${PRODUCT}"
-QMAKE_TARGET_DESCRIPTION = "Tycho SIP Service"
+QMAKE_TARGET_DESCRIPTION = "Tycho SIP Witch Service"
