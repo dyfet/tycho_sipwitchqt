@@ -77,8 +77,6 @@ static volatile unsigned instanceCount = 0;
 static QMutex nameLock, netLock;
 static bool active = true;
 
-bool Context::trusted = false;
-
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
     {"udp", "sip:",  Context::UDP},
@@ -87,7 +85,7 @@ QList<Context::Schema> Context::Schemas = {
     {"dtls","sips:", Context::DTLS},
 };
 
-Context::Context(const QHostAddress& addr, int port, const QString& name, const Schema& choice) :
+Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
 {
     netPort &= 0xfffe;
@@ -107,7 +105,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
     if(!addr.isNull())
         netAddr = addr.toString().toUtf8();
 
-    setObjectName(name + "/" + choice.name);
+    setObjectName(QString("sip") + QString::number(index) + "/" + choice.name);
     Contexts << this;
 
     auto nets = QNetworkInterface::allInterfaces();

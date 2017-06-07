@@ -48,7 +48,7 @@ public:
 
     static const unsigned max = 1<<4;
 
-    Context(const QHostAddress& bind, int port, const QString& name, const Schema& choice);
+    Context(const QHostAddress& bind, int port, const Schema& choice, unsigned index = 1);
 
     inline const QString hostname() {
         return localHosts[0];
@@ -61,10 +61,6 @@ public:
     const QStringList localnames();
 
     const QList<Subnet> localnets();
-
-    inline static void enableTrusted() {
-        trusted = true;
-    }
 
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
@@ -89,7 +85,6 @@ private:
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
-    static bool trusted;                // trust subnets auth flag
 
     ~Context();
 

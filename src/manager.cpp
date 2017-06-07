@@ -125,24 +125,22 @@ void Manager::applyConfig(const QVariantHash& config)
     }
 }
 
-void Manager::createContext(const QString& name, const QHostAddress& addr, int port, unsigned mask)
+void Manager::create(unsigned index, const QHostAddress& addr, int port, unsigned mask)
 {
-    Q_UNUSED(name);
-
-    qDebug().nospace() << "Creating " << name << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
+    qDebug().nospace() << "Creating sip" << index << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
 
     foreach(auto schema, Context::schemas()) {
         if(schema.proto & mask) {
-            new Context(addr, port, name, schema);
+            new Context(addr, port, schema, index);
         }
     }
 }
 
-void Manager::createContexts(const QList<QHostAddress>& list, int port, unsigned  mask)
+void Manager::create(const QList<QHostAddress>& list, int port, unsigned  mask)
 {
     unsigned count = 0;
     foreach(auto host, list) {
-        createContext(QString("local") + QString::number(++count), host, port, mask);
+        create(++count, host, port, mask);
     }
 }
 

@@ -227,10 +227,7 @@ int main(int argc, char **argv)
 
     unsigned mask = protocols;
 
-    if(args.isSet("trusted"))
-        Context::enableTrusted();
-
-    Manager::createContexts(interfaces, port, mask);
+    Manager::create(interfaces, port, mask);
 
     // create managers and start server...
     Database::init(2);
