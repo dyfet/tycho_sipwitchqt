@@ -10,9 +10,9 @@ Bootstrap
 
 Bootstrap is used to configure dependencies and libraries that may normally not be present in your development system.  To do this, I take advantage of cmake external projects to build required libraries and invoke it directly from qmake to establish required dependencies.  In particular, for windows, bootstrap offers openssl support as well as libexosip2 for sipwitchqt and so is enabled by default.  This does mean cmake is required to build on windows and macOS.
 
-I collect and use source tarballs found at http://pub.cherokeesofidaho.org/bootstrap.  This is done for several reasons.  I did not want to carry and manage large binary tarballs in the git repos.  I also don't want to use any other external locations such as git lfs does, or original archive sites, because often I have found myself, sometimes for months at a time, in places where I had no internet connectivity at all.  I could always do a 127.0.0.1 remap of my own pub site for such circumstances.
+Bootstrap is implemented as a submodule project.  It only needs to be included when building for Microsoft Windows and macOs.  On most platforms bootstrap is never used and can be ignored.  By making bootstrap a submodule, and requiring git lfs in the submodule only, it is both easy to maintain library dependencies, and to avoid having to carry large 3rd-party library source tarballs inside any git repo.  This also isolates requirement for git-lfs to only those platforms (osx, msvc) where it is needed.
 
-On more sane Unix (BSD, Linux) systems you normally do not need bootstrap.  For older Unix/Linux distros that may only very old versions of exosip2 in their repos, you can still activate bootstrap, though it is recommended instead to package newer libraries for these.  For Fedora (and later Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
+For really old Unix/Linux distros that may only very old versions of exosip2 in their repos, you can still activate bootstrap, though it is recommended instead to package newer libraries for these.  For Fedora (and later Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
 
 ``dnf copr enable dyfet/develop``.
 
