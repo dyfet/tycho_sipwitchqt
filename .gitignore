@@ -20,13 +20,14 @@ userdata/
 
 # for in-tree unix builds
 
-CMakeFiles/
 Bootstrap/*/*
+CMakeFiles/
 CMakeCache.txt
 Makefile
 Makefile.*
 cmake_install.cmake
 moc_*.cpp
+moc_*.h
 *.o
 *.a
 *.obj
@@ -34,4 +35,4 @@ moc_*.cpp
 *.lib
 *.dll
 
-sipwitches
+sipwitchqt
