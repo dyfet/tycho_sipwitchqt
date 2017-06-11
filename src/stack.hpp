@@ -44,8 +44,9 @@ public:
     }
 
     static const QByteArray digestName();
-
     static const QByteArray computeDigest(const QString& id, const QString& secret);
+    static void create(const QList<QHostAddress>& list, int port, unsigned mask);
+    static void create(const QHostAddress& addr, int port, unsigned mask);
 
 protected:
     static QStringList ServerAliases, ServerNames;
@@ -53,6 +54,7 @@ protected:
     static QString UserAgent;
     static QCryptographicHash::Algorithm Digest;
     static Stack *Instance;
+    static unsigned Contexts;
     static QThread::Priority Priority;
 
     Stack(unsigned order = 0);

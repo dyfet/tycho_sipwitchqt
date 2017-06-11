@@ -26,6 +26,7 @@ QString Stack::ServerRealm;
 QStringList Stack::ServerAliases;
 QStringList Stack::ServerNames;
 QCryptographicHash::Algorithm Stack::Digest = QCryptographicHash::Md5;
+unsigned Stack::Contexts = 0;
 
 Stack::Stack(unsigned order)
 {
@@ -67,4 +68,25 @@ const QByteArray Stack::computeDigest(const QString& id, const QString& secret)
     hash.addData(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8());
     return hash.result();
 }
+
+void Stack::create(const QHostAddress& addr, int port, unsigned mask)
+{
+    unsigned index = ++Contexts;
+
+    qDebug().nospace() << "Creating sip" << index << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
+
+    foreach(auto schema, Context::schemas()) {
+        if(schema.proto & mask) {
+            new Context(addr, port, schema, index);
+        }
+    }
+}
+
+void Stack::create(const QList<QHostAddress>& list, int port, unsigned  mask)
+{
+    foreach(auto host, list) {
+        create(host, port, mask);
+    }
+}
+
 

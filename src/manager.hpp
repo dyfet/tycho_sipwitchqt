@@ -24,7 +24,6 @@ class Manager : public Stack
 
 public:
     static void init(unsigned order);
-    static void create(const QList<QHostAddress>& list, int port, unsigned mask);
 
 private:
     Manager(unsigned order);
@@ -34,8 +33,6 @@ private:
 
     static QString SystemPassword;
     static QString ServerMode;
-
-    static void create(unsigned index, const QHostAddress& addr, int port, unsigned mask);
 
 private slots:
     void applyValue(const QString& id, const QVariant& value);

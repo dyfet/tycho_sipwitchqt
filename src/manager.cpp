@@ -125,22 +125,4 @@ void Manager::applyConfig(const QVariantHash& config)
     }
 }
 
-void Manager::create(unsigned index, const QHostAddress& addr, int port, unsigned mask)
-{
-    qDebug().nospace() << "Creating sip" << index << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
-
-    foreach(auto schema, Context::schemas()) {
-        if(schema.proto & mask) {
-            new Context(addr, port, schema, index);
-        }
-    }
-}
-
-void Manager::create(const QList<QHostAddress>& list, int port, unsigned  mask)
-{
-    unsigned count = 0;
-    foreach(auto host, list) {
-        create(++count, host, port, mask);
-    }
-}
 
