@@ -223,10 +223,10 @@ int main(int argc, char **argv)
     Main controller(args);
     controller.options(args);
 
-    // setup our contexts...
+    // setup our contexts...allow registration
 
     unsigned mask = protocols;
-
+    mask |= Context::Allow::REGISTRY;
     Manager::create(interfaces, port, mask);
 
     // create managers and start server...

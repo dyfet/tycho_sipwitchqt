@@ -38,6 +38,11 @@ public:
         DTLS = 1<<3,
     };
 
+    // permissions to pre-filter sip messages
+    enum Allow : unsigned {
+        REGISTRY = 1 << 6
+    };
+
     typedef struct {
         const char *name;
         const char *schema;
