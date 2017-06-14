@@ -6,6 +6,7 @@ HEADERS += \
     $${PWD}/subnet.hpp \
     $${PWD}/address.hpp \
     $${PWD}/endpoint.hpp \
+    $${PWD}/registry.hpp \
 
 SOURCES += \
     $${PWD}/context.cpp \
@@ -13,6 +14,7 @@ SOURCES += \
     $${PWD}/subnet.cpp \
     $${PWD}/address.cpp \
     $${PWD}/endpoint.cpp \
+    $${PWD}/registry.cpp \
 
 LIBS += -leXosip2 -losip2 -losipparser2
 
