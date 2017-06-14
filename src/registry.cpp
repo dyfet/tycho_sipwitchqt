@@ -42,6 +42,11 @@ Registry::~Registry()
     }
 }
 
+QList<Registry *> Registry::list()
+{
+    return extensions.values();
+}
+
 // find at least one un-expired endpoint...
 bool Registry::hasExpired() const
 {

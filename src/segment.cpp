@@ -15,35 +15,27 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "compiler.hpp"
-#include "endpoint.hpp"
-#include <QSqlRecord>
+#include "segment.hpp"
 
-class Registry final
+static QHash<int,Segment*> calls;
+
+Segment::Segment(int cid, const Call *cp, const Context *ctx) :
+call(cp), context(ctx), id(cid)
 {
-    Q_DISABLE_COPY(Registry)
+    calls.insert(id, this);
+}
 
-public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+Segment::~Segment()
+{
+    calls.remove(id);
+}
 
-    inline const QSqlRecord data() const {
-        return extension;
-    }
+LocalSegment::LocalSegment(int cid, const Call *cp, const Endpoint *ep) :
+Segment(cid, cp, ep->sip()), endpoint(ep)
+{
+}
 
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
-
-    static QList<Registry *> list();
-
-private:
-    const QSqlRecord extension;
-    const QString id, alias;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
-};
-
-QDebug operator<<(QDebug dbg, const Registry& registry);
+RemoteSegment::RemoteSegment(int cid, const Call *cp, const Provider *pp) :
+Segment(cid, cp, pp->sip()), provider(pp)
+{
+}

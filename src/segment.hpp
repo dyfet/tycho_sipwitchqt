@@ -16,34 +16,45 @@
  **/
 
 #include "compiler.hpp"
-#include "endpoint.hpp"
-#include <QSqlRecord>
+#include "provider.hpp"
 
-class Registry final
+class Call;
+
+// basic call processing segment (call leg), can be for remote or local...
+class Segment
 {
-    Q_DISABLE_COPY(Registry)
+    Q_DISABLE_COPY(Segment)
 
-public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+protected:
+    const Call *call;
+    const Context *context;
+    int id;
 
-    inline const QSqlRecord data() const {
-        return extension;
-    }
-
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
-
-    static QList<Registry *> list();
-
-private:
-    const QSqlRecord extension;
-    const QString id, alias;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
+    Segment(int cid, const Call *cp, const Context *ctx);
+    virtual ~Segment();
 };
 
-QDebug operator<<(QDebug dbg, const Registry& registry);
+class LocalSegment final : public Segment 
+{
+    Q_DISABLE_COPY(LocalSegment)
+
+public:
+    LocalSegment(int cid, const Call *cp, const Endpoint *ep);
+
+private:
+    const Endpoint *endpoint;
+};
+
+class RemoteSegment final : public Segment 
+{
+    Q_DISABLE_COPY(RemoteSegment)
+
+public:
+    RemoteSegment(int cid, const Call *cp, const Provider *prov);
+
+private:
+    const Provider *provider;
+};
+
+
+QDebug operator<<(QDebug dbg, const Segment& seg);

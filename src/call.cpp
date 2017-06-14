@@ -15,35 +15,22 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "compiler.hpp"
-#include "endpoint.hpp"
-#include <QSqlRecord>
+#include "call.hpp"
 
-class Registry final
+static QHash<QString,Call*> calls;
+
+Call::Call(const QString id) :
+tag(id)
 {
-    Q_DISABLE_COPY(Registry)
+    calls.insert(tag, this);
+}
 
-public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+Call::~Call()
+{
+    calls.remove(tag);
+}
 
-    inline const QSqlRecord data() const {
-        return extension;
-    }
-
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
-
-    static QList<Registry *> list();
-
-private:
-    const QSqlRecord extension;
-    const QString id, alias;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
-};
-
-QDebug operator<<(QDebug dbg, const Registry& registry);
+QList<Call*> Call::list()
+{
+	return calls.values();
+}

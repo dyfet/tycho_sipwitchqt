@@ -15,9 +15,7 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "compiler.hpp"
-#include <QSqlRecord>
-#include <QList>
+#include "registry.hpp"
 
 class RemoteSegment;      // call segment
 
@@ -33,13 +31,18 @@ public:
         return provider;
     }
 
+    inline const Context *sip() const {
+        return context;
+    }
+
     static Provider *find(const QString& target);
 
 private:
     const QSqlRecord provider;
     const QString uri;
+    const Context *context;             // to be set based on uri...
 
-    QList<RemoteSegment*> calls;         // calls on this provider
+    QList<RemoteSegment*> calls;        // calls on this provider
 };
 
 QDebug operator<<(QDebug dbg, const Provider& prov);

@@ -16,34 +16,22 @@
  **/
 
 #include "compiler.hpp"
-#include "endpoint.hpp"
-#include <QSqlRecord>
+#include "segment.hpp"
 
-class Registry final
+class Call
 {
-    Q_DISABLE_COPY(Registry)
+    Q_DISABLE_COPY(Call)
 
 public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+    Call(const QString id);
+    ~Call();
 
-    inline const QSqlRecord data() const {
-        return extension;
-    }
-
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
-
-    static QList<Registry *> list();
+    static QList<Call*> list();
 
 private:
-    const QSqlRecord extension;
-    const QString id, alias;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
+    Segment *from;
+    QList<Segment*> to;
+    QString tag;
 };
 
-QDebug operator<<(QDebug dbg, const Registry& registry);
+QDebug operator<<(QDebug dbg, const Call& cr);

@@ -42,6 +42,10 @@ public:
     inline quint16 port() const {
         return address.port();
     }
+
+    inline const Context *sip() const {
+        return context;
+    }
     
     int expires(void) const;
     void refresh(int expires);
