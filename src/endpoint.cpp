@@ -18,14 +18,12 @@
 #include "endpoint.hpp"
 #include <QElapsedTimer>
 
-static QHash<Context *, QHash<Address, Endpoint *>> Endpoints;
+static QHash<const Context *, QHash<Address, Endpoint *>> Endpoints;
 
-Endpoint::Endpoint(Context *ctx, Address addr, int expires, Registry *reg)
+Endpoint::Endpoint(const Context *ctx, const Address& addr, int expires, const Registry *reg) :
+registry(reg), context(ctx), address(addr)
 {
     refresh(expires);
-    address = addr;
-    context = ctx;
-    registry = reg;
     Endpoints[ctx].insert(address, this);
 }
 
@@ -34,7 +32,7 @@ Endpoint::~Endpoint()
     Endpoints[context].remove(address);
 }
 
-Endpoint *Endpoint::find(Context *ctx, const Address& addr) {
+Endpoint *Endpoint::find(const Context *ctx, const Address& addr) {
     if(Endpoints.contains(ctx))
         return Endpoints[ctx].value(addr, nullptr);
     else
