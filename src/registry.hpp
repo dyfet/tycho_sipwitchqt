@@ -31,6 +31,8 @@ public:
         return extension;
     }
 
+    bool hasExpired() const;
+
     static Registry *find(const QString& target);
 
 private:

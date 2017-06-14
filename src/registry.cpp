@@ -42,6 +42,16 @@ Registry::~Registry()
     }
 }
 
+// find at least one un-expired endpoint...
+bool Registry::hasExpired() const
+{
+    foreach(auto endpoint, endpoints) {
+        if(!endpoint->hasExpired())
+            return false;
+    }
+    return true;
+}
+
 Registry *Registry::find(const QString& target)
 {
     Registry *registry = nullptr;
