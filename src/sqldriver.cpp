@@ -37,7 +37,10 @@ static QStringList sqliteTables = {
 
     "CREATE TABLE Tycho_Providers ("
         "contact VARCHAR(128) PRIMARY KEY,"     // provider host uri
-        "display VARCHAR(64));",                // privider short name
+        "realm VARCHAR(128) DEFAULT '',"        // domain filled on first contact
+        "userid VARCHAR(32) NOT NULL,"          // auth code
+        "secret VARCHAR(128) NOT NULL,"         // secret hashed if realm known
+        "display VARCHAR(64)) NOT NULL;",       // privider short name
 };
 
 static QStringList sqlitePragmas = {

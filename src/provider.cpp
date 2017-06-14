@@ -21,16 +21,28 @@
 #include <QDebug>
 
 static QHash<const QString, Provider *> providers;
+static QHash<int, Provider *> registrations;
 
-Provider::Provider(const QSqlRecord& db) :
-provider(db), uri(db.value("contact").toString()), text(db.value("display").toString())
+Provider::Provider(const QSqlRecord& db, int rid) :
+provider(db), uri(db.value("contact").toString()), text(db.value("display").toString()), id(rid)
 {    
     providers.insert(uri, this);
+
+    if(id > -1)
+        registrations.insert(id, this);
 }
 
 Provider::~Provider()
 {
     providers.remove(uri);
+
+    if(id > -1)
+        registrations.remove(id);
+}
+
+Provider *Provider::find(int rid)
+{
+    return registrations.value(rid);
 }
 
 Provider *Provider::find(const QString& target)

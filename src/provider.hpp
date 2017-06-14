@@ -24,7 +24,7 @@ class Provider final
     Q_DISABLE_COPY(Provider)
 
 public:
-    Provider(const QSqlRecord& db);
+    Provider(const QSqlRecord& db, int rid = -1);
     ~Provider();
 
     inline const QSqlRecord data() const {
@@ -41,12 +41,15 @@ public:
 
     static Provider *find(const QString& target);
 
+    static Provider *find(int rid);
+
     static QList<Provider *> list();
 
 private:
     QSqlRecord provider;
     QString uri, text;
     Context *context;                   // to be set based on uri...
+    int id;                             // exosip registration id
 
     QList<RemoteSegment*> calls;        // calls on this provider
 };
