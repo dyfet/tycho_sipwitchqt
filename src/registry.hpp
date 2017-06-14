@@ -31,7 +31,7 @@ public:
         return extension;
     }
 
-    static const Registry *find(const QString& target);
+    static Registry *find(const QString& target);
 
 private:
     const QSqlRecord extension;

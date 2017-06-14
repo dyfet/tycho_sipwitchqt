@@ -42,9 +42,9 @@ Registry::~Registry()
     }
 }
 
-const Registry *Registry::find(const QString& target)
+Registry *Registry::find(const QString& target)
 {
-    const Registry *registry = nullptr;
+    Registry *registry = nullptr;
 
     if(target.length() < 1)
         return nullptr;
