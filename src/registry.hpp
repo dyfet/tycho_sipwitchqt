@@ -36,7 +36,7 @@ public:
 private:
     const QSqlRecord extension;
     const QString id, alias;
-    QList<const Endpoint*> endpoints;
+    QList<Endpoint*> endpoints;
 };
 
 QDebug operator<<(QDebug dbg, const Registry& registry);
