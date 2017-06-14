@@ -16,7 +16,7 @@
  **/
 
 #include "compiler.hpp"
-#include "context.hpp"
+#include "endpoint.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 
