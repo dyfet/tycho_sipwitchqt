@@ -19,6 +19,8 @@
 #include "endpoint.hpp"
 #include <QSqlRecord>
 
+class Call;
+
 class Registry final
 {
     Q_DISABLE_COPY(Registry)
@@ -33,12 +35,16 @@ public:
 
     bool hasExpired() const;
 
+    int expires() const;
+
     static Registry *find(const QString& target);
 
 private:
     const QSqlRecord extension;
     const QString id, alias;
-    QList<Endpoint*> endpoints;
+
+    QList<Endpoint*> endpoints;         // endpoint nodes
+    QList<Call *>calls;                 // calls active on this registry
 };
 
 QDebug operator<<(QDebug dbg, const Registry& registry);

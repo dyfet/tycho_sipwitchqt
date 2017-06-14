@@ -52,6 +52,18 @@ bool Registry::hasExpired() const
     return true;
 }
 
+// find longest remaining time in endpoints...
+int Registry::expires() const
+{
+    int remaining = 0;
+    foreach(auto endpoint, endpoints) {
+        int expiration = endpoint->expires();
+        if(expiration > remaining)
+            remaining = expiration;
+    }
+    return remaining;
+}
+
 Registry *Registry::find(const QString& target)
 {
     Registry *registry = nullptr;
