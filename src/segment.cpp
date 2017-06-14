@@ -18,6 +18,7 @@
 #include "segment.hpp"
 
 static QHash<int,Segment*> calls;
+static QList<RemoteSegment*> peering;
 
 Segment::Segment(int cid, const Call *cp, const Context *ctx) :
 call(cp), context(ctx), id(cid)
@@ -30,6 +31,11 @@ Segment::~Segment()
     calls.remove(id);
 }
 
+QList <RemoteSegment *> Segment::peers()
+{
+    return peering;
+}        
+
 LocalSegment::LocalSegment(int cid, const Call *cp, const Endpoint *ep) :
 Segment(cid, cp, ep->sip()), endpoint(ep)
 {
@@ -38,4 +44,16 @@ Segment(cid, cp, ep->sip()), endpoint(ep)
 RemoteSegment::RemoteSegment(int cid, const Call *cp, const Provider *pp) :
 Segment(cid, cp, pp->sip()), provider(pp)
 {
+}
+
+RemoteSegment::RemoteSegment(int cid, const Call *cp, const Context *ctx) :
+Segment(cid, cp, ctx), provider(nullptr)
+{
+    peering.append(this);
+}
+
+RemoteSegment::~RemoteSegment()
+{
+    if(!provider)
+        peering.removeOne(this);
 }
