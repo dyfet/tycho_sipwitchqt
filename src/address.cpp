@@ -15,16 +15,33 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <QCoreApplication>
-#include <QString>
-#include <QDebug>
-#include <QHostAddress>
-#include <QCommandLineParser>
+#include "inline.hpp"
+#include "address.hpp"
 
-namespace Util {
-    const QString localDomain();
-    const QList<QHostAddress> bindAddress(const QString& hostId);
-    const QList<QHostAddress> hostAddress(const QString& hostId);
-    int hostPort(const QString& hostId);
-    const QStringList controlOptions(const char **argv);
-};
+Address::Address(QHostAddress host, quint16 port) noexcept :
+pair(QPair<QHostAddress,int>(host, port))
+{
+}
+
+Address::Address(const Address& from) noexcept :
+pair(from.pair)
+{
+}
+
+Address::Address(Address&& from) noexcept :
+pair(std::move(from.pair))
+{
+}
+
+Address::Address() noexcept :
+pair(QHostAddress::Any, 0)
+{
+}
+
+QDebug operator<<(QDebug dbg, const Address& addr)
+{
+    dbg.nospace() << "Address(" << addr.host() << ":" << addr.port() << ")";
+    return dbg.maybeSpace();
+}
+
+

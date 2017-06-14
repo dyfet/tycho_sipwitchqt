@@ -16,7 +16,6 @@
  **/
 
 #include "compiler.hpp"
-#include "util.hpp"
 #include "args.hpp"
 #include "server.hpp"
 #include "control.hpp"

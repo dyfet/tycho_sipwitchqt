@@ -4,11 +4,13 @@ HEADERS += \
     $${PWD}/context.hpp \
     $${PWD}/stack.hpp \
     $${PWD}/subnet.hpp \
+    $${PWD}/address.hpp \
 
 SOURCES += \
     $${PWD}/context.cpp \
     $${PWD}/stack.cpp \
     $${PWD}/subnet.cpp \
+    $${PWD}/address.cpp \
 
 LIBS += -leXosip2 -losip2 -losipparser2
 
