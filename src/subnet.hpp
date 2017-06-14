@@ -25,7 +25,7 @@
 class Subnet
 {
 public:
-	Subnet(QHostAddress addr, int mask) noexcept;
+    Subnet(QHostAddress addr, int mask) noexcept;
 
 	Subnet(const QString& addr) noexcept;
 
@@ -42,6 +42,8 @@ public:
 
     Subnet& operator=(Subnet&& from) {
         pair = std::move(from.pair);
+        from.pair.second = 0;
+        from.pair.first = QHostAddress::Any;
         return *this;
     }
 
@@ -69,8 +71,16 @@ public:
         return pair.first.protocol();
 	}
 
-    inline bool contains(const QHostAddress& host) {
+    inline bool contains(const QHostAddress& host) const {
         return host.isInSubnet(pair);
+    }
+
+    inline operator bool() const {
+        return pair.second > 0;
+    }
+
+    inline bool operator!() const {
+        return pair.second == 0;
     }
 
 private:

@@ -31,6 +31,8 @@ pair(from.pair)
 Address::Address(Address&& from) noexcept :
 pair(std::move(from.pair))
 {
+    from.pair.second = 0;
+    from.pair.first = QHostAddress::Any;
 }
 
 Address::Address() noexcept :

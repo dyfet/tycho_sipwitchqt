@@ -40,6 +40,8 @@ public:
 
     Address& operator=(Address&& from) {
         pair = std::move(from.pair);
+        from.pair.second = 0;
+        from.pair.first = QHostAddress::Any;
         return *this;
     }
 

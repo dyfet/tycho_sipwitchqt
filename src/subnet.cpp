@@ -36,6 +36,8 @@ pair(from.pair)
 Subnet::Subnet(Subnet&& from) noexcept :
 pair(std::move(from.pair))
 {
+    from.pair.second = 0;
+    from.pair.first = QHostAddress::Any;
 }
 
 Subnet::Subnet() noexcept :
@@ -45,7 +47,7 @@ pair(QHostAddress::Any, 0)
 
 QDebug operator<<(QDebug dbg, const Subnet& cidr)
 {
-    dbg.nospace() << "Subnet(" << cidr.address() << ")";
+    dbg.nospace() << "Subnet(" << cidr.address() << "/" << cidr.mask() << ")";
     return dbg.maybeSpace();
 }
 
