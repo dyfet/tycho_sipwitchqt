@@ -20,13 +20,18 @@
 static QHash <const QString, Registry *> extensions, aliases;
 
 Registry::Registry(const QSqlRecord& db) :
-extension(db), id(db.value("number").toString()), alias(db.value("alias").toString())
+extension(db), id(db.value("number").toString()), alias(db.value("alias").toString()), text(db.value("display").toString())
 {    
     if(id.toInt() > 0)
         extensions.insert(id, this);
 
     if(alias.length() > 0)
         aliases.insert(alias, this);
+
+    if(text.length() < 1)
+        text = alias;
+    if(text.length() < 1)
+        text = id;
 }
 
 Registry::~Registry()

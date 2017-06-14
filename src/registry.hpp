@@ -31,6 +31,10 @@ public:
         return extension;
     }
 
+    const QString display() const {
+        return text;
+    }
+
     bool hasExpired() const;
 
     int expires() const;
@@ -40,8 +44,8 @@ public:
     static QList<Registry *> list();
 
 private:
-    const QSqlRecord extension;
-    const QString id, alias;
+    QSqlRecord extension;
+    QString id, alias, text;
 
     QList<Endpoint*> endpoints;         // endpoint nodes
 };

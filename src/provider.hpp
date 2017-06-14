@@ -31,8 +31,12 @@ public:
         return provider;
     }
 
-    inline const Context *sip() const {
+    inline Context *sip() const {
         return context;
+    }
+
+    inline const QString display() const {
+        return text;
     }
 
     static Provider *find(const QString& target);
@@ -40,9 +44,9 @@ public:
     static QList<Provider *> list();
 
 private:
-    const QSqlRecord provider;
-    const QString uri;
-    const Context *context;             // to be set based on uri...
+    QSqlRecord provider;
+    QString uri, text;
+    Context *context;                   // to be set based on uri...
 
     QList<RemoteSegment*> calls;        // calls on this provider
 };

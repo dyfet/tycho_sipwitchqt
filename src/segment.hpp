@@ -30,11 +30,12 @@ public:
     static QList<RemoteSegment *>peers();
 
 protected:
-    const Call *call;
-    const Context *context;
+    Call *call;
+    Context *context;
+    QString display;
     int id;
 
-    Segment(int cid, const Call *cp, const Context *ctx);
+    Segment(int cid, Call *cp, Context *ctx);
     virtual ~Segment();
 };
 
@@ -43,10 +44,11 @@ class LocalSegment final : public Segment
     Q_DISABLE_COPY(LocalSegment)
 
 public:
-    LocalSegment(int cid, const Call *cp, const Endpoint *ep);
+    LocalSegment(int cid, Call *cp, Endpoint *ep);
 
 private:
     const Endpoint *endpoint;
+    const Registry *registry;
 };
 
 class RemoteSegment final : public Segment 
@@ -54,8 +56,8 @@ class RemoteSegment final : public Segment
     Q_DISABLE_COPY(RemoteSegment)
 
 public:
-    RemoteSegment(int cid, const Call *cp, const Provider *prov);   // standard provider
-    RemoteSegment(int cid, const Call *cp, const Context *ctx);     // p2p calls...
+    RemoteSegment(int cid, Call *cp, Provider *prov);   // standard provider
+    RemoteSegment(int cid, Call *cp, Context *ctx);     // p2p calls...
     ~RemoteSegment();
 
 private:

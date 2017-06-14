@@ -20,7 +20,7 @@
 
 static QHash<const Context *, QHash<Address, Endpoint *>> Endpoints;
 
-Endpoint::Endpoint(const Context *ctx, const Address& addr, int expires, const Registry *reg) :
+Endpoint::Endpoint(Context *ctx, const Address& addr, int expires, Registry *reg) :
 registry(reg), context(ctx), address(addr)
 {
     refresh(expires);

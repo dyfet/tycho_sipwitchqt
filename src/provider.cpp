@@ -23,7 +23,7 @@
 static QHash<const QString, Provider *> providers;
 
 Provider::Provider(const QSqlRecord& db) :
-provider(db), uri(db.value("contact").toString())
+provider(db), uri(db.value("contact").toString()), text(db.value("display").toString())
 {    
     providers.insert(uri, this);
 }

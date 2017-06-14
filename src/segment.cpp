@@ -20,9 +20,10 @@
 static QHash<int,Segment*> calls;
 static QList<RemoteSegment*> peering;
 
-Segment::Segment(int cid, const Call *cp, const Context *ctx) :
+Segment::Segment(int cid, Call *cp, Context *ctx) :
 call(cp), context(ctx), id(cid)
 {
+    display = "";
     calls.insert(id, this);
 }
 
@@ -36,19 +37,22 @@ QList <RemoteSegment *> Segment::peers()
     return peering;
 }        
 
-LocalSegment::LocalSegment(int cid, const Call *cp, const Endpoint *ep) :
-Segment(cid, cp, ep->sip()), endpoint(ep)
+LocalSegment::LocalSegment(int cid, Call *cp, Endpoint *ep) :
+Segment(cid, cp, ep->sip()), endpoint(ep), registry(ep->parent())
 {
+    display = registry->display();
 }
 
-RemoteSegment::RemoteSegment(int cid, const Call *cp, const Provider *pp) :
+RemoteSegment::RemoteSegment(int cid, Call *cp, Provider *pp) :
 Segment(cid, cp, pp->sip()), provider(pp)
 {
+    display = provider->display();
 }
 
-RemoteSegment::RemoteSegment(int cid, const Call *cp, const Context *ctx) :
+RemoteSegment::RemoteSegment(int cid, Call *cp, Context *ctx) :
 Segment(cid, cp, ctx), provider(nullptr)
 {
+    display = "peer";   //TODO: fill with "from" later...
     peering.append(this);
 }
 
