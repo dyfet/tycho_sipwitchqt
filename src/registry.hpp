@@ -31,6 +31,8 @@ public:
         return extension;
     }
 
+    static const Registry *find(const QString& target);
+
 private:
     const QSqlRecord extension;
     const QString id, alias;

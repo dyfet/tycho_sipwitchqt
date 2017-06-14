@@ -42,6 +42,22 @@ Registry::~Registry()
     }
 }
 
+const Registry *Registry::find(const QString& target)
+{
+    const Registry *registry = nullptr;
+
+    if(target.length() < 1)
+        return nullptr;
+
+    if(target.toInt() > 0)
+        registry = extensions.value(target, nullptr);
+
+    if(!registry)
+        registry = aliases.value(target, nullptr);
+
+    return registry;
+}
+
 QDebug operator<<(QDebug dbg, const Registry& registry)
 {
     
