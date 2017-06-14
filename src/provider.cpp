@@ -38,6 +38,11 @@ Provider *Provider::find(const QString& target)
     return providers.value(target);
 }
 
+QList<Provider *> Provider::list()
+{
+    return providers.values();
+}
+
 QDebug operator<<(QDebug dbg, const Provider& prov)
 {
     

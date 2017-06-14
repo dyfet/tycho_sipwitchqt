@@ -37,6 +37,8 @@ public:
 
     static Provider *find(const QString& target);
 
+    static QList<Provider *> list();
+
 private:
     const QSqlRecord provider;
     const QString uri;
