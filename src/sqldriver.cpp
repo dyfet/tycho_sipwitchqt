@@ -34,6 +34,10 @@ static QStringList sqliteTables = {
         "secret VARCHAR(128),"                  // auth secret
         "display VARCHAR(64));",                // display name
     "CREATE INDEX TychoAuthorizedAliases ON Tycho_Extensions(alias) WHERE secret IS NOT NULL;",
+
+    "CREATE TABLE Tycho_Providers ("
+        "contact VARCHAR(128) PRIMARY KEY,"     // provider host uri
+        "display VARCHAR(64));",                // privider short name
 };
 
 static QStringList sqlitePragmas = {

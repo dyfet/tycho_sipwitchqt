@@ -16,32 +16,30 @@
  **/
 
 #include "compiler.hpp"
-#include "endpoint.hpp"
 #include <QSqlRecord>
+#include <QList>
 
-class Registry final
+class RemoteSegment;      // call segment
+
+class Provider final
 {
-    Q_DISABLE_COPY(Registry)
+    Q_DISABLE_COPY(Provider)
 
 public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+    Provider(const QSqlRecord& db);
+    ~Provider();
 
     inline const QSqlRecord data() const {
-        return extension;
+        return provider;
     }
 
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
+    static Provider *find(const QString& target);
 
 private:
-    const QSqlRecord extension;
-    const QString id, alias;
+    const QSqlRecord provider;
+    const QString uri;
 
-    QList<Endpoint*> endpoints;         // endpoint nodes
+    QList<RemoteSegment*> calls;         // calls on this provider
 };
 
-QDebug operator<<(QDebug dbg, const Registry& registry);
+QDebug operator<<(QDebug dbg, const Provider& prov);

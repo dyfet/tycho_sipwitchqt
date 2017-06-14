@@ -15,33 +15,32 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "compiler.hpp"
-#include "endpoint.hpp"
-#include <QSqlRecord>
+#include "provider.hpp"
+#include <QHash>
+#include <QVariant>
+#include <QDebug>
 
-class Registry final
+static QHash<const QString, Provider *> providers;
+
+Provider::Provider(const QSqlRecord& db) :
+provider(db), uri(db.value("contact").toString())
+{    
+    providers.insert(uri, this);
+}
+
+Provider::~Provider()
 {
-    Q_DISABLE_COPY(Registry)
+    providers.remove(uri);
+}
 
-public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
+Provider *Provider::find(const QString& target)
+{
+    return providers.value(target);
+}
 
-    inline const QSqlRecord data() const {
-        return extension;
-    }
-
-    bool hasExpired() const;
-
-    int expires() const;
-
-    static Registry *find(const QString& target);
-
-private:
-    const QSqlRecord extension;
-    const QString id, alias;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
-};
-
-QDebug operator<<(QDebug dbg, const Registry& registry);
+QDebug operator<<(QDebug dbg, const Provider& prov)
+{
+    
+    dbg.nospace() << "Provider(" << prov.data() << ")";
+    return dbg.maybeSpace();
+}

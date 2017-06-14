@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include <QElapsedTimer>
 
+class LocalSegment;
 class Registry;
 
 class Endpoint final
@@ -48,11 +49,12 @@ public:
     static Endpoint *find(const Context *ctx, const Address& addr);
 
 private:
-    const Registry *registry;   // registry that holds our endpoint
-    const Context *context;     // context endpoint exists on
-    const Address address;      // network address of endpoint
-    QElapsedTimer updated;      // last refreshed registration
-    qint64 expiration;          // msecs to expiration
+    const Registry *registry;       // registry that holds our endpoint
+    const Context *context;         // context endpoint exists on
+    const Address address;          // network address of endpoint
+    QElapsedTimer updated;          // last refreshed registration
+    qint64 expiration;              // msecs to expiration
+    QList<LocalSegment *> calls;    // local calls on this endpoint...
 };
 
 QDebug operator<<(QDebug dbg, const Endpoint& endpoint);

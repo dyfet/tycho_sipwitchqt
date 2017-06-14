@@ -7,6 +7,7 @@ HEADERS += \
     $${PWD}/address.hpp \
     $${PWD}/endpoint.hpp \
     $${PWD}/registry.hpp \
+    $${PWD}/provider.hpp \
 
 SOURCES += \
     $${PWD}/context.cpp \
@@ -15,6 +16,7 @@ SOURCES += \
     $${PWD}/address.cpp \
     $${PWD}/endpoint.cpp \
     $${PWD}/registry.cpp \
+    $${PWD}/provider.cpp \
 
 LIBS += -leXosip2 -losip2 -losipparser2
 
