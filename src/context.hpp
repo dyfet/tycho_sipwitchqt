@@ -83,6 +83,8 @@ public:
 
     void setOtherNames(QStringList names);
 
+    void setPublicName(QString name);
+
     const QStringList localnames() const;
 
     const QList<Subnet> localnets() const;
@@ -107,9 +109,10 @@ private:
     QByteArray netAddress;
     QString uriAddress;
     Subnet localSubnet;
+    QString publicName;
     QStringList localHosts, otherNames;
     QList<Subnet> otherNets;
-    QHash<Subnet,QHostAddress> interfaces;
+    mutable QMutex nameLock, netLock;
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;

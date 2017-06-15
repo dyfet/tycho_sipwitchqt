@@ -72,7 +72,6 @@ private:
 };
 
 static volatile unsigned instanceCount = 0;
-static QMutex nameLock, netLock;
 static bool active = true;
 
 QList<Context *> Context::Contexts;
@@ -198,8 +197,12 @@ const QString Context::uriPeer(const QHostAddress& target) const
         }
     }
 
-    //TODO: Replace with "public" appearing host, is foreign address...
-    uriHost = QHostInfo::localHostName();
+    QMutexLocker lock(&nameLock);
+    if(publicName.length() > 0)
+        uriHost = publicName;
+    else
+        uriHost = QHostInfo::localHostName();
+
     if(netPort != schema.port)
         return uriHost + ":" + QString::number(netPort);
 
@@ -309,11 +312,20 @@ void Context::setOtherNames(QStringList names)
     otherNames = names;
 }
 
+void Context::setPublicName(QString name)
+{
+    QMutexLocker lock(&nameLock);
+    publicName = name;
+}
+
 const QStringList Context::localnames() const
 {
     QStringList names = localHosts;
     QMutexLocker lock(&nameLock);
     names << otherNames;
+    if(publicName.length() > 0)
+        names << publicName;
+    names << QHostInfo::localHostName();
     return names;
 }
 
