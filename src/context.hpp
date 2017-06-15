@@ -64,20 +64,28 @@ public:
     }
 
     inline const QString uri() const {
-        return schema.uri + uriAddress;
+        return schema.uri + localHosts[0];
     }
 
     inline const QString uri(const QString& id) const {
-        return schema.uri + id + "@" + uriAddress;
+        return schema.uri + id + "@" + localHosts[0];
+    }
+
+    inline const QString uriTo(const QHostAddress& target) const {
+        return schema.uri + uriPeer(target);
+    }
+
+    inline const QString uriTo(const QHostAddress& target, const QString& id) const {
+        return schema.uri + id + "@" + uriPeer(target);
     }
 
     void setOtherNets(QList<Subnet> subnets);
 
     void setOtherNames(QStringList names);
 
-    const QStringList localnames();
+    const QStringList localnames() const;
 
-    const QList<Subnet> localnets();
+    const QList<Subnet> localnets() const;
 
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
@@ -98,15 +106,17 @@ private:
     int netFamily, netPort, netTLS, netProto;
     QByteArray netAddress;
     QString uriAddress;
+    Subnet localSubnet;
     QStringList localHosts, otherNames;
-    QList<Subnet> localSubnets, otherNets;
+    QList<Subnet> otherNets;
+    QHash<Subnet,QHostAddress> interfaces;
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
 
     ~Context();
 
-    void init(void);
+    const QString uriPeer(const QHostAddress& target) const;
 
     bool process(const eXosip_event_t *ev);
 

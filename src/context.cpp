@@ -124,39 +124,86 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
     setObjectName(QString("sip") + QString::number(index) + "/" + choice.name);
     Contexts << this;
 
-    auto nets = QNetworkInterface::allInterfaces();
-    foreach(auto net, nets) {
-        foreach(auto entry, net.addressEntries()) {
-            auto proto = entry.ip().protocol();
-            if(addr.isNull() ||\
-              (addr == QHostAddress::Any && proto == QAbstractSocket::IPv4Protocol) ||\
-              (addr == QHostAddress::AnyIPv6 && proto == QAbstractSocket::IPv6Protocol) ||\
-              (entry.ip() == addr && proto == addr.protocol())) {
-                Subnet sub(entry.ip(), entry.prefixLength());
-                localSubnets <<  sub;
+    if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
+        auto nets = QNetworkInterface::allInterfaces();
+        foreach(auto net, nets) {
+            foreach(auto entry, net.addressEntries()) {
+                auto proto = entry.ip().protocol();
+                if(entry.ip() == addr && proto == addr.protocol()) {
+                    localSubnet = Subnet(entry.ip(), entry.prefixLength());
+                    break;
+                }
             }
         }
-    }
 
-    if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
         if(ipv6)
             uriAddress = "[" + netAddress + "]";
         else
             uriAddress = netAddress;
     }
-    else
+    else {
         uriAddress = QHostInfo::localHostName();
+    }
+
+    // reverse lookup so we can use interface name rather than addr...
+    if(!netAddress.isEmpty() && netAddress != "0.0.0.0") {
+        QHostInfo host = QHostInfo::fromName(netAddress);
+        if(host.error() == QHostInfo::NoError)
+            localHosts << host.hostName();
+        localHosts << netAddress;
+    }
+    localHosts << QHostInfo::localHostName() << Util::localDomain();
 
     if(netPort != schema.port)
         uriAddress += ":" + QString::number(netPort);
 
-    // qDebug() << "**** URI ADDR" << uri();
+    //qDebug() << "****** URI TO " << uriTo(QHostAddress("127.0.1.7"));
+    //qDebug() << "**** LOCAL URI" << uri();
 }
 
 Context::~Context()
 {
     if(context)
         eXosip_quit(context);
+}
+
+const QString Context::uriPeer(const QHostAddress& target) const
+{
+    QString uriHost;
+
+    // check our subnet lists
+    foreach(auto subnet, localnets()) {
+        if(subnet.contains(target)) {
+            return uriAddress;
+        }
+    }
+
+    // check local interfaces if multi-bound context
+    if(!localSubnet) {
+        auto nets = QNetworkInterface::allInterfaces();
+        foreach(auto net, nets) {
+            foreach(auto entry, net.addressEntries()) {
+                if(entry.ip().protocol() != target.protocol())
+                    continue;
+                Subnet sub(entry.ip(), entry.prefixLength());
+                if(sub.contains(target)) {
+                    uriHost = entry.ip().toString().toUtf8();
+                    if(target.protocol() == QAbstractSocket::IPv6Protocol)
+                        uriHost = "[" + uriHost + "]";
+                    if(netPort != schema.port)
+                        uriHost = uriHost + ":" + QString::number(netPort);
+                    return uriHost;
+                }
+            }
+        }
+    }
+
+    //TODO: Replace with "public" appearing host, is foreign address...
+    uriHost = QHostInfo::localHostName();
+    if(netPort != schema.port)
+        return uriHost + ":" + QString::number(netPort);
+
+    return uriHost;
 }
 
 QAbstractSocket::NetworkLayerProtocol Context::protocol()
@@ -167,22 +214,9 @@ QAbstractSocket::NetworkLayerProtocol Context::protocol()
         return QAbstractSocket::IPv6Protocol;
 }
 
-void Context::init()
-{
-    if(!netAddress.isEmpty() && netAddress != "0.0.0.0") {
-        QHostInfo host = QHostInfo::fromName(netAddress);
-        if(host.error() == QHostInfo::NoError)
-            localHosts << host.hostName();
-        localHosts << netAddress;
-    }
-    localHosts << QHostInfo::localHostName() << Util::localDomain();
-}
-
 void Context::run()
 {
     ++instanceCount;
-
-    init();
 
     Logging::debug() << "Running " << objectName();
 
@@ -275,7 +309,7 @@ void Context::setOtherNames(QStringList names)
     otherNames = names;
 }
 
-const QStringList Context::localnames()
+const QStringList Context::localnames() const
 {
     QStringList names = localHosts;
     QMutexLocker lock(&nameLock);
@@ -283,10 +317,11 @@ const QStringList Context::localnames()
     return names;
 }
 
-const QList<Subnet> Context::localnets()
+const QList<Subnet> Context::localnets() const
 {
     QList<Subnet> nets;
-    nets << localSubnets;
+    if(localSubnet)
+    nets << localSubnet;
     QMutexLocker lock(&netLock);
     nets << otherNets;
     return nets;
