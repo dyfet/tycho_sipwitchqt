@@ -33,7 +33,6 @@ public:
 protected:
     Call *call;
     Context *context;
-    QString display;
     int id;
 
     Segment(int cid, Call *cp, Context *ctx);

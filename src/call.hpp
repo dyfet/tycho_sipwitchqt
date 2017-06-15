@@ -31,7 +31,7 @@ public:
     }
 
     inline const QString display() const {
-        return from->display;
+        return text;
     }
 
     static QList<Call*> list();
@@ -40,6 +40,7 @@ private:
     Segment *from;
     QList<Segment*> to;
     QString tag;
+    QString text;
 };
 
 QDebug operator<<(QDebug dbg, const Call& cr);
