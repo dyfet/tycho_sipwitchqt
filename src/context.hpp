@@ -41,9 +41,8 @@ public:
 
     // permissions to pre-filter sip messages
     enum Allow : unsigned {
-        REGISTRY   = 1 << 8,
-
-        LOCAL_ONLY = 1 << 24, // restrict to local subnets...
+        REGISTRY =  1 << 8,
+        REMOTE =    1 << 9, // restrict to local subnets...
     };
 
     typedef struct {

@@ -225,7 +225,9 @@ int main(int argc, char **argv)
     // setup our contexts...allow registration
 
     unsigned mask = protocols;
-    mask |= Context::Allow::REGISTRY;
+    mask |= Context::Allow::REGISTRY |\
+            Context::Allow::REMOTE;
+
     Manager::create(interfaces, port, mask);
 
     // create managers and start server...
