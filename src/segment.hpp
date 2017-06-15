@@ -24,6 +24,7 @@ class RemoteSegment;
 // basic call processing segment (call leg), can be for remote or local...
 class Segment
 {
+    friend class Call;
     Q_DISABLE_COPY(Segment)
 
 public:

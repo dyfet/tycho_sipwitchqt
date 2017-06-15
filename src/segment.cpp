@@ -15,7 +15,7 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "segment.hpp"
+#include "call.hpp"
 
 static QHash<int,Segment*> calls;
 static QList<RemoteSegment*> peering;

@@ -26,6 +26,14 @@ public:
     Call(const QString id);
     ~Call();
 
+    inline Segment *origin() const {
+        return from;
+    }
+
+    inline const QString display() const {
+        return from->display;
+    }
+
     static QList<Call*> list();
 
 private:

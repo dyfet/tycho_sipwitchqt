@@ -37,16 +37,16 @@ static QStringList sqliteTables = {
 
     "CREATE TABLE Tycho_Providers ("
         "contact VARCHAR(128) PRIMARY KEY,"     // provider host uri
-        "realm VARCHAR(128) DEFAULT '',"        // domain filled on first contact
+        "protocol VARCHAR(3) DEFAULT 'UDP',"    // providers usually udp
         "userid VARCHAR(32) NOT NULL,"          // auth code
-        "secret VARCHAR(128) NOT NULL,"         // secret hashed if realm known
-        "display VARCHAR(64)) NOT NULL;",       // privider short name
+        "passwd VARCHAR(128) NOT NULL,"         // password to hash from
+        "display VARCHAR(64) NOT NULL);",       // provider short name
 };
 
 static QStringList sqlitePragmas = {
     "PRAGMA locking_mode = EXCLUSIVE;",
     "PRAGMA synchronous = OFF;",
-    "PRAGMA temp_store = MEMORY;"
+    "PRAGMA temp_store = MEMORY;",
 };
 
 namespace Util {
