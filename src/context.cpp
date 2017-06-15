@@ -20,9 +20,7 @@
 #include "control.hpp"
 #include "stack.hpp"
 
-#include <QHostAddress>
 #include <QNetworkInterface>
-#include <QHostInfo>
 
 #ifdef Q_OS_UNIX
 #include <netinet/in.h>
@@ -79,17 +77,35 @@ static bool active = true;
 
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
-    {"udp", "sip:",  Context::UDP},
-    {"tcp", "sip:",  Context::TCP},
-    {"tls", "sips:", Context::TLS},
-    {"dtls","sips:", Context::DTLS},
+    {"udp", "sip:",  Context::UDP, 5060},
+    {"tcp", "sip:",  Context::TCP, 5060},
+    {"tls", "sips:", Context::TLS, 5061},
+    {"dtls","sips:", Context::DTLS, 5061},
 };
 
 Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
 {
     netPort &= 0xfffe;
-    
+    netPort |= (schema.port & 0x01);
+    netProto = IPPROTO_UDP;
+
+    switch(schema.proto) {
+    case Context::DTLS:
+        netProto = IPPROTO_UDP;
+        netTLS = 1;
+        break;
+    case Context::TLS:
+        netProto = IPPROTO_TCP;
+        netTLS = 1;
+        break;
+    case Context::TCP:
+        netProto = IPPROTO_TCP;
+        break;
+    default:
+        break;
+    }
+
     context = eXosip_malloc();
     eXosip_init(context);
     eXosip_set_user_agent(context, Stack::agent());
@@ -103,7 +119,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
 
     if(!addr.isNull())
-        netAddr = addr.toString().toUtf8();
+        netAddress = addr.toString().toUtf8();
 
     setObjectName(QString("sip") + QString::number(index) + "/" + choice.name);
     Contexts << this;
@@ -121,6 +137,20 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
             }
         }
     }
+
+    if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
+        if(ipv6)
+            uriAddress = "[" + netAddress + "]";
+        else
+            uriAddress = netAddress;
+    }
+    else
+        uriAddress = QHostInfo::localHostName();
+
+    if(netPort != schema.port)
+        uriAddress += ":" + QString::number(netPort);
+
+    // qDebug() << "**** URI ADDR" << uri();
 }
 
 Context::~Context()
@@ -139,11 +169,11 @@ QAbstractSocket::NetworkLayerProtocol Context::protocol()
 
 void Context::init()
 {
-    if(!netAddr.isEmpty() && netAddr != "0.0.0.0") {
-        QHostInfo host = QHostInfo::fromName(netAddr);
+    if(!netAddress.isEmpty() && netAddress != "0.0.0.0") {
+        QHostInfo host = QHostInfo::fromName(netAddress);
         if(host.error() == QHostInfo::NoError)
             localHosts << host.hostName();
-        localHosts << netAddr;
+        localHosts << netAddress;
     }
     localHosts << QHostInfo::localHostName() << Util::localDomain();
 }
@@ -157,36 +187,17 @@ void Context::run()
     Logging::debug() << "Running " << objectName();
 
     const char *ap = nullptr;
-    int proto = IPPROTO_UDP;
 
-    if(!netAddr.isEmpty()) {
-        ap = netAddr.constData();
+    if(!netAddress.isEmpty()) {
+        ap = netAddress.constData();
     }
-    else if(netAddr == "0.0.0.0")
+    else if(netAddress == "0.0.0.0")
         ap = nullptr;
-
-    switch(schema.proto) {
-    case Context::DTLS:
-        proto = IPPROTO_UDP;
-        netTLS = 1;
-        ++netPort;
-        break;
-    case Context::TLS:
-        proto = IPPROTO_TCP;
-        netTLS = 1;
-        ++netPort;
-        break;
-    case Context::TCP:
-        proto = IPPROTO_TCP;
-        break;
-    default:
-        break;
-    }   
 
     priorEvent = 0;
     
     //qDebug() << "LISTEN " << proto << ap << port << family << NetTLS;
-    if(eXosip_listen_addr(context, proto, ap, netPort, netFamily, netTLS)) {
+    if(eXosip_listen_addr(context, netProto, ap, netPort, netFamily, netTLS)) {
         Logging::err() << objectName() << ": failed to bind and listen";
         context = nullptr;
     }

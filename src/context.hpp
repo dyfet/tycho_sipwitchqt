@@ -22,6 +22,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QHostAddress>
+#include <QHostInfo>
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
@@ -45,8 +46,9 @@ public:
 
     typedef struct {
         const char *name;
-        const char *schema;
+        const char *uri;
         Protocol proto;
+        quint16 port;
     } Schema;
 
     QAbstractSocket::NetworkLayerProtocol protocol();
@@ -56,7 +58,17 @@ public:
     Context(const QHostAddress& bind, int port, const Schema& choice, unsigned index = 1);
 
     inline const QString hostname() {
+        if(localHosts.count() < 1)
+            return QHostInfo::localHostName();
         return localHosts[0];
+    }
+
+    inline const QString uri() const {
+        return schema.uri + uriAddress;
+    }
+
+    inline const QString uri(const QString& id) const {
+        return schema.uri + id + "@" + uriAddress;
     }
 
     void setOtherNets(QList<Subnet> subnets);
@@ -83,8 +95,9 @@ private:
     const Schema schema;
     eXosip_t *context;
     time_t currentEvent, priorEvent;
-    int netFamily, netPort, netTLS;
-    QByteArray netAddr;
+    int netFamily, netPort, netTLS, netProto;
+    QByteArray netAddress;
+    QString uriAddress;
     QStringList localHosts, otherNames;
     QList<Subnet> localSubnets, otherNets;
 
