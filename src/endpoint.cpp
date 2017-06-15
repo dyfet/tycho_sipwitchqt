@@ -15,7 +15,7 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "endpoint.hpp"
+#include "registry.hpp"
 #include <QElapsedTimer>
 
 static QHash<const Context *, QHash<Address, Endpoint *>> Endpoints;

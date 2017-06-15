@@ -25,6 +25,7 @@ class Registry;
 
 class Endpoint final
 {
+    friend class Registry;
     Q_DISABLE_COPY(Endpoint)
 
 public:
