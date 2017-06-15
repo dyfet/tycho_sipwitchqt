@@ -41,7 +41,9 @@ public:
 
     // permissions to pre-filter sip messages
     enum Allow : unsigned {
-        REGISTRY = 1 << 6
+        REGISTRY   = 1 << 8,
+
+        LOCAL_ONLY = 1 << 24, // restrict to local subnets...
     };
 
     typedef struct {
@@ -55,34 +57,27 @@ public:
 
     static const unsigned max = 1<<4;
 
-    Context(const QHostAddress& bind, int port, const Schema& choice, unsigned index = 1);
+    Context(const QHostAddress& bind, int port, const Schema& choice, unsigned mask, unsigned index = 1);
 
-    inline const QString hostname() {
+    inline const QString hostname() const {
         if(localHosts.count() < 1)
             return QHostInfo::localHostName();
         return localHosts[0];
     }
 
-    inline const QString uri() const {
-        return schema.uri + localHosts[0];
+    const QString uri() const {
+        return schema.uri + uriAddress;
     }
 
     inline const QString uri(const QString& id) const {
-        return schema.uri + id + "@" + localHosts[0];
+        return schema.uri + id + "@" + uriAddress;
     }
 
-    inline const QString uriTo(const QHostAddress& target) const {
-        return schema.uri + uriPeer(target);
-    }
-
-    inline const QString uriTo(const QHostAddress& target, const QString& id) const {
-        return schema.uri + id + "@" + uriPeer(target);
-    }
+    const QString uriTo(const QHostAddress& target) const;
+    const QString uriTo(const QHostAddress& target, const QString& id) const;
 
     void setOtherNets(QList<Subnet> subnets);
-
     void setOtherNames(QStringList names);
-
     void setPublicName(QString name);
 
     const QStringList localnames() const;
@@ -103,6 +98,7 @@ public:
 
 private:
     const Schema schema;
+    unsigned allow;
     eXosip_t *context;
     time_t currentEvent, priorEvent;
     int netFamily, netPort, netTLS, netProto;

@@ -82,9 +82,11 @@ QList<Context::Schema> Context::Schemas = {
     {"dtls","sips:", Context::DTLS, 5061},
 };
 
-Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned index):
+Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned mask, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
 {
+    allow = mask & 0x00ffffff;
+
     netPort &= 0xfffe;
     netPort |= (schema.port & 0x01);
     netProto = IPPROTO_UDP;
@@ -156,7 +158,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
     if(netPort != schema.port)
         uriAddress += ":" + QString::number(netPort);
 
-    //qDebug() << "****** URI TO " << uriTo(QHostAddress("127.0.1.7"));
+    //qDebug() << "****** URI TO " << uriTo(QHostAddress("4.2.2.1"));
     //qDebug() << "**** LOCAL URI" << uri();
 }
 
@@ -164,6 +166,22 @@ Context::~Context()
 {
     if(context)
         eXosip_quit(context);
+}
+
+const QString Context::uriTo(const QHostAddress& target) const
+{
+    QString peer = uriPeer(target);
+    if(peer.isNull())
+        return QString();
+    return schema.uri + peer;
+}
+
+const QString Context::uriTo(const QHostAddress& target, const QString& id) const
+{
+    QString peer = uriPeer(target);
+    if(peer.isNull())
+        return QString();
+    return schema.uri + id + "@" + peer;
 }
 
 const QString Context::uriPeer(const QHostAddress& target) const
@@ -196,6 +214,9 @@ const QString Context::uriPeer(const QHostAddress& target) const
             }
         }
     }
+
+    if(allow & Allow::LOCAL_ONLY)
+        return QString();
 
     QMutexLocker lock(&nameLock);
     if(publicName.length() > 0)
@@ -314,6 +335,9 @@ void Context::setOtherNames(QStringList names)
 
 void Context::setPublicName(QString name)
 {
+    if(allow & Allow::LOCAL_ONLY)
+        return;
+
     QMutexLocker lock(&nameLock);
     publicName = name;
 }

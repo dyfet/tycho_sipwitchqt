@@ -77,7 +77,7 @@ void Stack::create(const QHostAddress& addr, int port, unsigned mask)
 
     foreach(auto schema, Context::schemas()) {
         if(schema.proto & mask) {
-            new Context(addr, port, schema, index);
+            new Context(addr, port, schema, mask, index);
         }
     }
 }
