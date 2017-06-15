@@ -117,6 +117,8 @@ private:
 
     const QString uriPeer(const QHostAddress& target) const;
 
+    bool isLocal(const QHostAddress &target) const;
+
     bool process(const eXosip_event_t *ev);
 
     const char *eid(eXosip_event_type ev);

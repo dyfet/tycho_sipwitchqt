@@ -184,6 +184,32 @@ const QString Context::uriTo(const QHostAddress& target, const QString& id) cons
     return schema.uri + id + "@" + peer;
 }
 
+bool Context::isLocal(const QHostAddress& target) const
+{
+    // check our subnet lists
+    foreach(auto subnet, localnets()) {
+        if(subnet.contains(target)) {
+            return true;
+        }
+    }
+
+    // check local interfaces if multi-bound context
+    if(!localSubnet) {
+        auto nets = QNetworkInterface::allInterfaces();
+        foreach(auto net, nets) {
+            foreach(auto entry, net.addressEntries()) {
+                if(entry.ip().protocol() != target.protocol())
+                    continue;
+                Subnet sub(entry.ip(), entry.prefixLength());
+                if(sub.contains(target)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 const QString Context::uriPeer(const QHostAddress& target) const
 {
     QString uriHost;
