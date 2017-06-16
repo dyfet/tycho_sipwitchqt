@@ -20,6 +20,12 @@
 #include "logging.hpp"
 #include "stack.hpp"
 
+static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
+    {QCryptographicHash::Md5,       "MD5"},
+    {QCryptographicHash::Sha256,    "SHA-256"},
+    {QCryptographicHash::Sha512,    "SHA-512"},
+};
+
 Stack *Stack::Instance = nullptr;
 QString Stack::UserAgent;
 QString Stack::ServerRealm;
@@ -47,16 +53,7 @@ Stack::~Stack()
 
 const QByteArray Stack::digestName()
 {
-    switch(Digest) {
-    case QCryptographicHash::Md5:
-	return "MD5";
-    case QCryptographicHash::Sha256:
-	return "SHA-256";
-    case QCryptographicHash::Sha512:
-	return "SHA-512";
-    default:
-	return "";
-    }
+    return digests.value(Digest, "");
 }
 
 const QByteArray Stack::computeDigest(const QString& id, const QString& secret)

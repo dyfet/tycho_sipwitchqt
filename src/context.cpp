@@ -76,35 +76,20 @@ static bool active = true;
 
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
-    {"udp", "sip:",  Context::UDP, 5060},
-    {"tcp", "sip:",  Context::TCP, 5060},
-    {"tls", "sips:", Context::TLS, 5061},
-    {"dtls","sips:", Context::DTLS, 5061},
+    {"udp", "sip:",  Context::UDP, 5060, IPPROTO_UDP},
+    {"tcp", "sip:",  Context::TCP, 5060, IPPROTO_TCP},
+    {"tls", "sips:", Context::TLS, 5061, IPPROTO_TCP},
+    {"dtls","sips:", Context::DTLS, 5061, IPPROTO_UDP},
 };
 
 Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned mask, unsigned index):
-schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
+schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 {
     allow = mask & 0xffffff00;
     netPort &= 0xfffe;
-    netPort |= (schema.port & 0x01);
-    netProto = IPPROTO_UDP;
-
-    switch(schema.proto) {
-    case Context::DTLS:
-        netProto = IPPROTO_UDP;
-        netTLS = 1;
-        break;
-    case Context::TLS:
-        netProto = IPPROTO_TCP;
-        netTLS = 1;
-        break;
-    case Context::TCP:
-        netProto = IPPROTO_TCP;
-        break;
-    default:
-        break;
-    }
+    netPort |= (schema.inPort & 0x01);
+    netProto = schema.inProto;
+    netTLS = (schema.inPort & 0x01);
 
     context = eXosip_malloc();
     eXosip_init(context);
@@ -154,11 +139,11 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port), netTLS(0)
     }
     localHosts << QHostInfo::localHostName() << Util::localDomain();
 
-    if(netPort != schema.port)
+    if(netPort != schema.inPort)
         uriAddress += ":" + QString::number(netPort);
 
-    qDebug() << "****** URI TO " << uriTo(QHostAddress("4.2.2.1"));
-    qDebug() << "**** LOCAL URI" << uri();
+    //qDebug() << "****** URI TO " << uriTo(QHostAddress("4.2.2.1"));
+    //qDebug() << "**** LOCAL URI" << uri();
 }
 
 Context::~Context()
@@ -232,7 +217,7 @@ const QString Context::uriPeer(const QHostAddress& target) const
                     uriHost = entry.ip().toString().toUtf8();
                     if(target.protocol() == QAbstractSocket::IPv6Protocol)
                         uriHost = "[" + uriHost + "]";
-                    if(netPort != schema.port)
+                    if(netPort != schema.inPort)
                         uriHost = uriHost + ":" + QString::number(netPort);
                     return uriHost;
                 }
@@ -249,7 +234,7 @@ const QString Context::uriPeer(const QHostAddress& target) const
     else
         uriHost = QHostInfo::localHostName();
 
-    if(netPort != schema.port)
+    if(netPort != schema.inPort)
         return uriHost + ":" + QString::number(netPort);
 
     return uriHost;

@@ -49,7 +49,8 @@ public:
         const char *name;
         const char *uri;
         Protocol proto;
-        quint16 port;
+        quint16 inPort;
+        int inProto;
     } Schema;
 
     QAbstractSocket::NetworkLayerProtocol protocol();
