@@ -28,7 +28,7 @@
 #include <QAbstractSocket>
 
 /**
- * @brief An internet connection address
+ * @brief An internet connection address.
  * This provides a convenient means to represent an internet connection
  * as a host address and port number.
  * @author David Sugar <tychosoft@gmail.com>

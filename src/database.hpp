@@ -30,7 +30,7 @@
 #include <QSqlDatabase>
 
 /**
- * @brief SipWitch database engine class
+ * @brief SipWitch database engine class.
  * The database engine operates in it's own thread context and uses a custom
  * event system.  By using a single and separate thread for all db operations
  * we avoid conflicts and problems with db drivers that are not thread-safe

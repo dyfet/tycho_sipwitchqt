@@ -15,12 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Some generic utility functions.
+ * @file util.hpp
+ */
+
 #include <QCoreApplication>
 #include <QString>
 #include <QDebug>
 #include <QHostAddress>
 #include <QCommandLineParser>
 
+/**
+ * @brief Utility functions.
+ * This namespace is typically used to create generic utility functions not necessarily
+ * tied exclusively to our application.
+ */
 namespace Util {
     const QString localDomain();
     const QList<QHostAddress> bindAddress(const QString& hostId);

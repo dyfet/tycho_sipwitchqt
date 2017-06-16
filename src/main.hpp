@@ -15,6 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Main include file for running the server.  This includes server default path
+ * and config macros.
+ * @file main.hpp
+ */
+
+/**
+ * @short A portable enterprise class sip server based on GNU SIP Witch.
+ * SipWitchQt takes advantage of the Qt library to produce a database connected cross-
+ * platform sip server.  The SipWitchQt architecture uses threads and signal slots to
+ * isolate components and to serialize events so that shared locking can be avoided.
+ * Blocking resources, such as database access, have their own thread and event loop.
+ * Intercommunication between threaded components uses async Qt signal-slot over threads.
+ * \n\n
+ * This page will go further into overall architecture in the future.
+ * @mainpage SipWitchQt
+ */
+
 #include <QtDebug>
 #include <QString>
 #include <QChar>

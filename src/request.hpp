@@ -28,7 +28,7 @@
 #include <QTimer>
 
 /**
- * @brief The query request class
+ * @brief The query request class.
  * This class is meant to queue a request to the database engine.  Results
  * are processed in a private event loop.  This is done because the request
  * will be created in the thread context of the originating object, not the
