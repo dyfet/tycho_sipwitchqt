@@ -20,15 +20,10 @@ exists(../Doxyfile) {
     QMAKE_EXTRA_TARGETS += docs
 
     unix:publish.depends += docs
-    unix:publish.commands += && cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
-
-    DOXYPATH = $${PWD}/..
-    doxyfile.input = $${PWD}/../Doxyfile
-    doxyfile.output = $${OUT_PWD}/Doxyfile.out
-    QMAKE_SUBSTITUTES += doxyfile
+    unix:publish.commands += && cp $${PWD}/../doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
 
     macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PATH && export PATH &&
-    docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
+    docs.commands += cd $${PWD}/.. && doxygen Doxyfile
     macx:docs.commands += && cd doc/html && make docset
     unix:docs.commands += && cd ../latex && make
 }
