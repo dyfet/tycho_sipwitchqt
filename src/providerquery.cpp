@@ -18,14 +18,16 @@
 #include "manager.hpp"
 #include "logging.hpp"
 
+#define TIMEOUT 10000       // 10 seconds because we can be lazy on these...
+
 ProviderQuery::ProviderQuery() :
-Request(Manager::instance(), QVariantHash(), 10)
+Request(Manager::instance(), QVariantHash(), TIMEOUT)
 {
     connect(this, &Request::results, this, &ProviderQuery::reload);
 }
 
 ProviderQuery::ProviderQuery(const QString &contact) :
-Request(Manager::instance(), {{"contact", contact}}, 5)
+Request(Manager::instance(), {{"contact", contact}}, TIMEOUT)
 {
     connect(this, &Request::results, this, &ProviderQuery::update);
 }
