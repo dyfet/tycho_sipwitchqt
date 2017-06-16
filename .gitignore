@@ -16,6 +16,7 @@ testdata/*.cnf
 testdata/*.realm
 testdata/misc
 userdata/
+doc/
 *.gch/
 
 # for in-tree unix builds

@@ -14,6 +14,15 @@ unix {
     publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz
 }
 
+# documentation processing
+
+exists(../Doxyfile) {
+    QMAKE_EXTRA_TARGETS += docs
+    docs.commands += cd $${PWD}/.. && doxygen Doxyfile
+    macx:docs.commands += && cd doc/html && make docset
+    unix:docs.commands += && cd ../latex && make
+}
+
 # binary packages, for release builds only...
 
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
