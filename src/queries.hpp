@@ -15,30 +15,28 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "stack.hpp"
-#include "queries.hpp"
+#include "compiler.hpp"
+#include "database.hpp"
 
-class Manager : public Stack
+class ProviderQuery final : public Request
 {
-    Q_DISABLE_COPY(Manager)
-
+    Q_DISABLE_COPY(ProviderQuery)
 public:
-    static void init(unsigned order);
+/*	static inline void reload() {
+		Database::providerList(new ProviderQuery());
+	}
+
+	static inline void update(const QString& contact) {
+		Database::providerGet(new ProviderQuery(contact));
+	}
+*/
 
 private:
-    Manager(unsigned order);
-    ~Manager();
-
-    void applyNames();
-
-    static QString SystemPassword;
-    static QString ServerMode;
-
+    ProviderQuery();
+    ProviderQuery(const QString& contact);
+	
 private slots:
-    void applyValue(const QString& id, const QVariant& value);
-    void applyConfig(const QVariantHash& config);
-
-#ifndef QT_NO_DEBUG
-    void reportCounts(const QString& id, int count);
-#endif
+    void reload(ErrorResult err, const QVariantHash& keys, const QList<QSqlRecord>& records);
+    void update(ErrorResult err, const QVariantHash& keys, const QList<QSqlRecord>& records);
 };
+

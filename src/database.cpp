@@ -318,3 +318,4 @@ void Database::countExtensions()
     QCoreApplication::postEvent(Instance,
         new DatabaseEvent(COUNT_EXTENSIONS));
 }
+

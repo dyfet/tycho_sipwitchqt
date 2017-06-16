@@ -40,6 +40,7 @@ public:
     }
 
     static void reload(const QList<QSqlRecord>& records);
+    static void update(const QSqlRecord& record);
 
     static Provider *find(const QString& target);
 

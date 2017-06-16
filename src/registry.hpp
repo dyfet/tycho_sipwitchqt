@@ -16,8 +16,57 @@
  **/
 
 #include "compiler.hpp"
-#include "endpoint.hpp"
+#include "address.hpp"
+#include "context.hpp"
+
 #include <QSqlRecord>
+#include <QElapsedTimer>
+
+class LocalSegment;
+class Registry;
+
+class Endpoint final
+{
+    friend class Registry;
+    Q_DISABLE_COPY(Endpoint)
+
+public:
+    Endpoint(Context *ctx, const Address& addr, int expires, Registry *reg = nullptr);
+    ~Endpoint();
+
+    inline bool hasExpired() const {
+        return updated.hasExpired(expiration);
+    }
+
+    inline const QHostAddress host() const {
+        return address.host();
+    }
+
+    inline quint16 port() const {
+        return address.port();
+    }
+
+    inline Context *sip() const {
+        return context;
+    }
+
+    inline Registry *parent() const {
+        return registry;
+    }
+    
+    int expires(void) const;
+    void refresh(int expires);
+    
+    static Endpoint *find(const Context *ctx, const Address& addr);
+
+private:
+    Registry *registry;             // registry that holds our endpoint
+    Context *context;               // context endpoint exists on
+    Address address;                // network address of endpoint
+    QElapsedTimer updated;          // last refreshed registration
+    qint64 expiration;              // msecs to expiration
+    QList<LocalSegment *> calls;    // local calls on this endpoint...
+};
 
 class Registry final
 {
@@ -50,4 +99,5 @@ private:
     QList<Endpoint*> endpoints;         // endpoint nodes
 };
 
+QDebug operator<<(QDebug dbg, const Endpoint& endpoint);
 QDebug operator<<(QDebug dbg, const Registry& registry);

@@ -61,8 +61,13 @@ void Provider::reload(const QList<QSqlRecord>& records)
         delete provider;
     }
     foreach(auto record, records) {
-
+        update(record);
     }
+}
+
+void Provider::update(const QSqlRecord &record)
+{
+    // if doesn't exist, do new...else change fields...
 }
 
 QDebug operator<<(QDebug dbg, const Provider& prov)

@@ -37,7 +37,6 @@ Stack(order)
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
 	connect(control, &Control::changeValue, this, &Manager::applyValue);
 	connect(server, &Server::changeConfig, this, &Manager::applyConfig);
-    connect(db, &Database::providerResults, this, &Provider::reload);
 
 #ifndef QT_NO_DEBUG
     connect(db, &Database::countResults, this, &Manager::reportCounts);

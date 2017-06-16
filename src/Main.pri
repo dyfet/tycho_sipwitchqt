@@ -3,7 +3,9 @@
 SOURCES +=\
     $${PWD}/main.cpp \
     $${PWD}/manager.cpp \
+    $${PWD}/providerquery.cpp \
 
 HEADERS +=\
     $${PWD}/main.hpp \
-    $${PWD}/manager.cpp \
+    $${PWD}/manager.hpp \
+    $${PWD}/queries.hpp \

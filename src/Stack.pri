@@ -5,10 +5,8 @@ HEADERS += \
     $${PWD}/stack.hpp \
     $${PWD}/subnet.hpp \
     $${PWD}/address.hpp \
-    $${PWD}/endpoint.hpp \
     $${PWD}/registry.hpp \
     $${PWD}/provider.hpp \
-    $${PWD}/segment.hpp \
     $${PWD}/call.hpp \
 
 SOURCES += \

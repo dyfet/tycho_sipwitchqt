@@ -36,13 +36,11 @@ public:
         Invalid,
     }   ErrorResult;
 
-	Request(QObject *parent, const QVariantHash& args, int timeout);	
+    Request(QObject *parent, const QVariantHash& args, int timeout);
 
 	inline const QVariant operator[](const QString& id) const {
 		return parms[id];
 	}
-
-	bool event(QEvent *evt) final;
 
 	inline const QVariant value(const QString& id) const {
 		return parms[id];
@@ -60,6 +58,7 @@ private:
     ErrorResult status;
     QVariantHash parms;
 
+    bool event(QEvent *evt) final;
 
 signals:
     void results(ErrorResult, const QVariantHash&, const QList<QSqlRecord>&);

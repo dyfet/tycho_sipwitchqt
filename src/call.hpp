@@ -16,7 +16,53 @@
  **/
 
 #include "compiler.hpp"
-#include "segment.hpp"
+#include "provider.hpp"
+
+class Call;
+class RemoteSegment;
+
+// basic call processing segment (call leg), can be for remote or local...
+class Segment
+{
+    friend class Call;
+    Q_DISABLE_COPY(Segment)
+
+public:
+    static QList<RemoteSegment *>peers();
+
+protected:
+    Call *call;
+    Context *context;
+    int id;
+
+    Segment(int cid, Call *cp, Context *ctx);
+    virtual ~Segment();
+};
+
+class LocalSegment final : public Segment 
+{
+    Q_DISABLE_COPY(LocalSegment)
+
+public:
+    LocalSegment(int cid, Call *cp, Endpoint *ep);
+
+private:
+    const Endpoint *endpoint;
+    const Registry *registry;
+};
+
+class RemoteSegment final : public Segment 
+{
+    Q_DISABLE_COPY(RemoteSegment)
+
+public:
+    RemoteSegment(int cid, Call *cp, Provider *prov);   // standard provider
+    RemoteSegment(int cid, Call *cp, Context *ctx);     // p2p calls...
+    ~RemoteSegment();
+
+private:
+    const Provider *provider;
+};
 
 class Call
 {
@@ -43,4 +89,5 @@ private:
     QString text;
 };
 
+QDebug operator<<(QDebug dbg, const Segment& seg);
 QDebug operator<<(QDebug dbg, const Call& cr);
