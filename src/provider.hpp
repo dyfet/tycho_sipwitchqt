@@ -24,7 +24,7 @@ class Provider final
     Q_DISABLE_COPY(Provider)
 
 public:
-    Provider(const QSqlRecord& db, int rid = -1);
+    Provider(const QSqlRecord& db, Context *ctx, int rid = -1);
     ~Provider();
 
     inline const QSqlRecord data() const {
@@ -38,6 +38,8 @@ public:
     inline const QString display() const {
         return text;
     }
+
+    static void reload(const QList<QSqlRecord>& records);
 
     static Provider *find(const QString& target);
 

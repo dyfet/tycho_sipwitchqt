@@ -70,6 +70,7 @@ private:
 
 signals:
     void countResults(const QString& id, int count);
+    void providerResults(const QList<QSqlRecord>& records);
 
 private slots:
     void applyConfig(const QVariantHash& config);

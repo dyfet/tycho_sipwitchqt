@@ -23,8 +23,8 @@
 static QHash<const QString, Provider *> providers;
 static QHash<int, Provider *> registrations;
 
-Provider::Provider(const QSqlRecord& db, int rid) :
-provider(db), uri(db.value("contact").toString()), text(db.value("display").toString()), id(rid)
+Provider::Provider(const QSqlRecord& db, Context *ctx, int rid) :
+provider(db), uri(db.value("contact").toString()), text(db.value("display").toString()), context(ctx), id(rid)
 {    
     providers.insert(uri, this);
 
@@ -53,6 +53,16 @@ Provider *Provider::find(const QString& target)
 QList<Provider *> Provider::list()
 {
     return providers.values();
+}
+
+void Provider::reload(const QList<QSqlRecord>& records)
+{
+    foreach(auto provider, providers.values()) {
+        delete provider;
+    }
+    foreach(auto record, records) {
+
+    }
 }
 
 QDebug operator<<(QDebug dbg, const Provider& prov)
