@@ -29,6 +29,23 @@ In addition to os distribution packages and port files, I am looking at providin
 
 On Microsoft Windows, perhaps SipWitchQt could be bundled with a SipBayonneQt server and other things as part of a complete VoIP service stack that can be delivered in an inno setup installer that shares Qt runtime libraries.  On macos one option would be to build SipWitchQt using the Qt online installer, and then create a bundled executable including Qt runtime that could be installed as a macos .pkg.
 
+Documentation
+=============
+
+Generation of source documentation can be done using doxygen with the provided Doxyfile.  This
+is setup to generate pdf and latex documentation as well.  From qtcreator you can add a "docs"
+make target to your project (debug) build steps, and enable it to create or update 
+documentation.  
+
+When enabling the docs make target from QtCreator itself you will be given warnings for 
+undocumented classes as issues.  This makes it easy to find and complete documentation for 
+the header files.  You  can also use "make docs" from command line builds.  Generated
+header documentation is always written back to doc/ in the source directory.
+
+Source documentation is meant only to document the class and design architecture of the
+sipwitchqt code base.  User and administration documentation will be written separately as 
+something like "CONFIG.md" and/or "SETUP.md" once development is further along.  Design notes 
+may be added as "DESIGN.md" or in CONTRIBUTING.md in the future.
 
 Support
 =======

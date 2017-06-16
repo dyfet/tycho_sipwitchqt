@@ -18,6 +18,7 @@ unix {
 
 exists(../Doxyfile) {
     QMAKE_EXTRA_TARGETS += docs
+    macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PATH && export PATH &&
     docs.commands += cd $${PWD}/.. && doxygen Doxyfile
     macx:docs.commands += && cd doc/html && make docset
     unix:docs.commands += && cd ../latex && make
