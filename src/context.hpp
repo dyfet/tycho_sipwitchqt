@@ -15,6 +15,13 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/**
+  * Manage exosip context threads.  These threads can emit signals back
+  * to the stack, but cannot receive signals as they run inside an exosip
+  * event loop.
+  * @file context.hpp
+  */
+
 #include "compiler.hpp"
 #include "util.hpp"
 #include "subnet.hpp"
@@ -26,6 +33,19 @@
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
+/**
+ * @brief An exosip2 event context.
+ * Each context represents a seperately bound context instance of the
+ * exosip2 stack.  These instances are grouped under indexes, and by
+ * default the first index is often presumed to be the gateway contexts for
+ * connecting with external sip providers and p2p calls.
+ *
+ * Each context runs it's own exosip2 event thread.  These threads then
+ * will signal events back to the stack, thereby serializing requests under
+ * the stack's own thread context.  This also may provide methods for low
+ * level access to exosip2 functions.
+ * @author David Sugar <tychosoft@gmail.com>
+ */
 class Context final : public QObject
 {
     Q_DISABLE_COPY(Context)

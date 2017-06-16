@@ -15,11 +15,27 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/**
+  * The stack is used to manage all sip activities.
+  * @file stack.hpp
+  */
+
 #include "compiler.hpp"
 #include "call.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 
+/**
+ * @brief Master sip stack management class.
+ * This is used to cooredinate all sip activity and runs in it's own thread.
+ * This class is meant to be derived into an application specific manager
+ * class to introduce product specific behaviors.  This class directly manages
+ * the call, registry, and provider objects.  All context events get signaled
+ * to here as well.  By having a seperate thread and event loop, and signaling
+ * all actions thru here (or the derived class), correct order and
+ * sychronization of object and state changes is gaurenteed without locking.
+ * @author David Sugar <tychosoft@gmail.com>
+ */
 class Stack : public QObject
 {
     Q_OBJECT
