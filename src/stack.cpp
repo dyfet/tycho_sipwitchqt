@@ -59,11 +59,9 @@ const QByteArray Stack::digestName()
 const QByteArray Stack::computeDigest(const QString& id, const QString& secret)
 {
     if(secret.isEmpty() || id.isEmpty())
-	return QByteArray();
+        return QByteArray();
 
-    QCryptographicHash hash(digestAlgorithm());
-    hash.addData(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8());
-    return hash.result();
+    return QCryptographicHash::hash(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8(), Digest);
 }
 
 void Stack::create(const QHostAddress& addr, int port, unsigned mask)
