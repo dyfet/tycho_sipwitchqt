@@ -5,6 +5,7 @@
 *.zip
 *.exe
 *.app
+*.out
 
 .DS_Store
 .qmake.*

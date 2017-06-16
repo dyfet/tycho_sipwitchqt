@@ -39,8 +39,7 @@ documentation.
 
 When enabling the docs make target from QtCreator itself you will be given warnings for 
 undocumented classes as issues.  This makes it easy to find and complete documentation for 
-the header files.  You  can also use "make docs" from command line builds.  Generated
-header documentation is always written back to doc/ in the source directory.
+the header files.  You can also use "make docs" from command line builds.
 
 Source documentation is meant only to document the class and design architecture of the
 sipwitchqt code base.  User and administration documentation will be written separately as 
