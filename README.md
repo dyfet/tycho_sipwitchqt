@@ -35,7 +35,7 @@ Documentation
 Generation of source documentation can be done using doxygen with the provided Doxyfile.  This
 is setup to generate pdf and latex documentation as well.  From qtcreator you can add a "docs"
 make target to your project (debug) build steps, and enable it to create or update 
-documentation.  Documentation is always re-generated in the source tree doc/ directory.
+documentation.
 
 When enabling the docs make target from QtCreator itself you will be given warnings for 
 undocumented classes as issues.  This makes it easy to find and complete documentation for 
