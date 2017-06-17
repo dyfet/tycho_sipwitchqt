@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
+/*!
  * Command line parsing support.
- * @file args.hpp
+ * \file args.hpp
  */
 
 #include <QCommandLineParser>
@@ -27,12 +27,12 @@
 
 #include "compiler.hpp"
 
-/**
- * @brief provides a simple means to initialize command line argument lists.  
+/*!
+ * \brief provides a simple means to initialize command line argument lists.  
  * This was originally created simply because the Qt version on Debian 8 (5.3) did not 
  * correctly support c++11 initializer lists.  Since then it has been expanded to be more
  * generally useful and offer other features needed in argument parsing.
- * @author David Sugar <tychosoft@gmail.com>
+ * \author David Sugar <tychosoft@gmail.com>
  */
 class Args
 {

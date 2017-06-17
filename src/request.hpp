@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
-  * Query request objects.
-  * @file request.hpp
-  */
+/*!
+ * Query request objects.
+ * \file request.hpp
+ */
 
 #include <QVariant>
 #include <QCoreApplication>
@@ -27,8 +27,8 @@
 #include <QSqlQuery>
 #include <QTimer>
 
-/**
- * @brief The query request class.
+/*!
+ * \brief The query request class.
  * This class is meant to queue a request to the database engine.  Results
  * are processed in a private event loop.  This is done because the request
  * will be created in the thread context of the originating object, not the
@@ -44,7 +44,7 @@
  * database engine.  It is also possible to create derived request objects,
  * and I do this in sipwitch to modularize & isolate the queries and db
  * handling code for simpler maintainability.
- * @author David Sugar <tychosoft@gmail.com>
+ * \author David Sugar <tychosoft@gmail.com>
  */
 class Request : public QObject
 {

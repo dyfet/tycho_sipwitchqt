@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
+/*!
  * Generic inline template functions and classes.
- * @file inline.hpp
+ * \file inline.hpp
  */
 
 #include "compiler.hpp"

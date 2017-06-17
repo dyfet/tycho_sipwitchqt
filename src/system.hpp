@@ -15,6 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+ * Support for platform specific system operations.
+ * \file system.hpp
+ */
+
 #include <QtGlobal>
 
 #ifdef Q_OS_UNIX
@@ -31,6 +36,9 @@ typedef DWORD SERVICE_STATE;
 extern SERVICE_TABLE_ENTRY DetachedServices[];
 #endif
 
+/*!
+ * \brief a namespace for cross-platform system functions.
+ */
 namespace System {
 #ifdef Q_OS_UNIX
     bool detachService();

@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
-  * Some database support utility classes and functions.
-  * @file sqldriver.hpp
-  */
-
 #include "sqldriver.hpp"
 
 #include <QStringList>

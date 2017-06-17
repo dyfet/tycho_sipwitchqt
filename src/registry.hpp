@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
-  * These classes are used to manage registration of sip device endpoints.
-  * This includes a master registration object, and a separate endpoint
-  * object associated with each physical sip user agent.  Multiple devices can
-  * register under the same id.
-  * @file registry.hpp
-  */
+/*!
+ * These classes are used to manage registration of sip device endpoints.
+ * This includes a master registration object, and a separate endpoint
+ * object associated with each physical sip user agent.  Multiple devices can
+ * register under the same id.
+ * \file registry.hpp
+ */
 
 #include "compiler.hpp"
 #include "address.hpp"

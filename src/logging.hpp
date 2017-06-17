@@ -15,11 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*! Support for service logging.
+ * \file logging.hpp
+ */
 #include <QObject>
 #include <QString>
 #include <QEvent>
 #include <QDebug>
 
+/*!
+ * \brief A generic server logging class.
+ * This delegates the qDebug handler, and serializes log messages thru a private
+ * thread event queue so that event logs can be issued from multiple threads
+ * without overlapping i/o.  Standard logging methods are also offered.  On
+ * Posix systems the syslog facility will also be used.  When logging to a log
+ * file, the log is closed while inactive.  This allows for clean log rotation.
+ * A signal is emitted so that other components can listen to log events.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
 class Logging final : public QObject
 {
     Q_OBJECT

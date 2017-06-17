@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
-  * The stack is used to manage all sip activities.
-  * @file stack.hpp
-  */
+/*!
+ * The stack is used to manage all sip activities.
+ * \file stack.hpp
+ */
 
 #include "compiler.hpp"
 #include "call.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 
-/**
- * @brief Master sip stack management class.
+/*!
+ * \brief Master sip stack management class.
  * This is used to coordinate all sip activity and runs in it's own thread.
  * This class is meant to be derived into an application specific manager
  * class to introduce product specific behaviors.  This class directly manages
@@ -34,7 +34,7 @@
  * to here as well.  By having a separate thread and event loop, and signaling
  * all actions through here (or the derived class), correct order and
  * synchronization of object and state changes is guaranteed without locking.
- * @author David Sugar <tychosoft@gmail.com>
+ * \author David Sugar <tychosoft@gmail.com>
  */
 class Stack : public QObject
 {

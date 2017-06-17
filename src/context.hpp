@@ -1,26 +1,26 @@
-/**
- ** Copyright 2017 Tycho Softworks.
- **
- ** This program is free software: you can redistribute it and/or modify
- ** it under the terms of the GNU General Public License as published by
- ** the Free Software Foundation, either version 3 of the License, or
- ** (at your option) any later version.
- **
- ** This program is distributed in the hope that it will be useful,
- ** but WITHOUT ANY WARRANTY; without even the implied warranty of
- ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ** GNU General Public License for more details.
- **
- ** You should have received a copy of the GNU General Public License
- ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+/*
+ * Copyright 2017 Tycho Softworks.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-/**
-  * Manage exosip context threads.  These threads can emit signals back
-  * to the stack, but cannot receive signals as they run inside an exosip
-  * event loop.
-  * @file context.hpp
-  */
+/*!
+ * Manage exosip context threads.  These threads can emit signals back
+ * to the stack, but cannot receive signals as they run inside an exosip
+ * event loop.
+ * \file context.hpp
+ */
 
 #include "compiler.hpp"
 #include "util.hpp"
@@ -33,8 +33,8 @@
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
-/**
- * @brief An exosip2 event context.
+/*!
+ * \brief An exosip2 event context.
  * Each context represents a seperately bound context instance of the
  * exosip2 stack.  These instances are grouped under indexes, and by
  * default the first index is often presumed to be the gateway contexts for
@@ -44,7 +44,7 @@
  * will signal events back to the stack, thereby serializing requests under
  * the stack's own thread context.  This also may provide methods for low
  * level access to exosip2 functions.
- * @author David Sugar <tychosoft@gmail.com>
+ * \author David Sugar <tychosoft@gmail.com>
  */
 class Context final : public QObject
 {

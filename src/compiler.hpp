@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
+/*!
  * Provides pragmas and macros for use in every compilation unit.
- * @file compiler.hpp
+ * \file compiler.hpp
  */
 
 #ifdef __clang__

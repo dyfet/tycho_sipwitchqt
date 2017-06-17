@@ -15,12 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+ * Crash handler support for service daemons.
+ * \file crashhandler.hpp
+ */
+
 #include <QtGlobal>
 
 class CrashHandler
 {
-    Q_DISABLE_COPY(CrashHandler);
-
+    Q_DISABLE_COPY(CrashHandler)
 public:
     CrashHandler();
 

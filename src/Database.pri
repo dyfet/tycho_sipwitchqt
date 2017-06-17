@@ -7,5 +7,5 @@ SOURCES +=\
 
 HEADERS +=\
     $${PWD}/database.hpp \
-    $${PWD}/sqldriver.cpp \
+    $${PWD}/sqldriver.hpp \
     $${PWD}/request.hpp \

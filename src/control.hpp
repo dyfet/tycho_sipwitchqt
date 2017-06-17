@@ -15,6 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+ * Local IPC control support of a service daemon.
+ * \file control.hpp
+ */
+
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -24,6 +29,15 @@
 #include <QHash>
 #include <QCommandLineParser>
 
+/*!
+ * \brief Server IPC control class.
+ * This offers the skeletal management of the fifo and is meant to be
+ * derived into an application specific control class, in particular to
+ * execute command operations.  A few specific commands, like reload, are
+ * built-in to the base class execute handler.  The fifo input is converted
+ * to a QStringList for execute, and is managed thru QLocalSocket.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
 class Control : public QObject
 {
     Q_OBJECT

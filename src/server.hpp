@@ -15,6 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*!
+ * Daemon service management core.
+ * \file server.hpp
+ */
 #include <QHash>
 #include <QString>
 #include <QProcess>
@@ -40,6 +44,22 @@
 #define VAR_PREFIX      "SERVICE_PREFIX"
 #define VAR_LIBEXEC     "SERVICE_LIBEXEC"
 
+/*!
+ * \brief The core daemon service class.
+ * This is used to create and manage a service daemon under Qt.  On Posix
+ * systems, the deamon is supported thru a double fork().  Support is also
+ * included to operate as a service under Linux SystemD.  On Windows
+ * support is provided for operating as a NT service.
+ *
+ * The service daemon also manages ordered startup and shutdown of long term
+ * service persistent threads, loading of a config file, and service
+ * restart processing.  For Posix systems sighup can be used as a service
+ * reload request.  Suspend-resume support is also integrated.
+ *
+ * A number of signals are emitted so that other components can be made
+ * aware of the running state of the service and to update configurations.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
 class Server final : public QObject
 {
     Q_OBJECT
