@@ -50,6 +50,10 @@ While an active milestone sprint is underway any high priority fixes will be mer
 
 In addition to merge requests, a few things are done directly on master.  Tagging will typically happen from master, unless it is done for a hotfix patch release.  The changelog and version updates in the sources will happen as a direct commit to master.  Sometimes other packaging/release process issues will happen as direct commits on master as well.
 
+As this project is still in rather early development, I am still be doing a lot of things
+directly on master.  I am going to try avoiding this soon to better stabilize the development
+process flow.
+
 Changelogs
 ==========
 
