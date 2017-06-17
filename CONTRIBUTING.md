@@ -37,7 +37,7 @@ On MacOS one should also be able to directly use macports or homebrew, and the v
 Project Planning
 ================
 
-Official project planning is performed on the gitlab [sipwitches](https://gitlab.com/tychosoft/sipwitches) project.  I will be using the issue tracking system and kanban style issue boards offered there.  All issues will be added to the backlog there, with what they call milestones and sprints being interchangeable. 
+Official project planning is performed on the gitlab [sipwitchqt](https://gitlab.com/tychosoft/sipwitchqt) project.  I will be using the issue tracking system and kanban style issue boards offered there.  All issues will be added to the backlog there, with what they call milestones and sprints being interchangeable. 
 
 I have standardized use of tags for issues in gitlab for project planning. This includes "RC" for "release critical" issues, "hotfix" for bugs that may require an immediate release, "bugs" to distinguish bug issues from feature branches, and "blocked" to indicate some issue is currently blocked from further work. Standard tags can be found at gitlab [Tychosoft Tags](https://gitlab.com/groups/tychosoft/labels).
 
