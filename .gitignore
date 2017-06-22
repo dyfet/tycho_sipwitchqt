@@ -6,6 +6,7 @@
 *.exe
 *.app
 *.out
+*.pdf
 
 .DS_Store
 .qmake.*
