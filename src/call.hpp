@@ -15,15 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * These classes are used by the stack to keep track of active call sessions.
- * Call sessions are handled by a master object which has a call segment for
- * each b2bua endpoint.  Because call segments are handled differently for
- * locally managed devices and remote (provider or p2p) connections, the
- * segment is split into a base and derived local and remote classes.
- * \file call.hpp
- */
-
 #include "compiler.hpp"
 #include "provider.hpp"
 
@@ -100,3 +91,13 @@ private:
 
 QDebug operator<<(QDebug dbg, const Segment& seg);
 QDebug operator<<(QDebug dbg, const Call& cr);
+
+/*!
+ * These classes are used by the stack to keep track of active call sessions.
+ * Call sessions are handled by a master object which has a call segment for
+ * each b2bua endpoint.  Because call segments are handled differently for
+ * locally managed devices and remote (provider or p2p) connections, the
+ * segment is split into a base and derived local and remote classes.
+ * \file call.hpp
+ * \ingroup Stack
+ */

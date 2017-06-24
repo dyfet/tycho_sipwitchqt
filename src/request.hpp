@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Query request objects.
- * \file request.hpp
- */
-
 #include <QVariant>
 #include <QCoreApplication>
 #include <QList>
@@ -27,25 +22,6 @@
 #include <QSqlQuery>
 #include <QTimer>
 
-/*!
- * \brief The query request class.
- * This class is meant to queue a request to the database engine.  Results
- * are processed in a private event loop.  This is done because the request
- * will be created in the thread context of the originating object, not the
- * database thread.  Hence, results have to be transposed from the database
- * engine thread to the requestors thread (parent qobject), and may even be
- * signalled to a different final object.  This also gaurentees that timeouts
- * are signalled on the correct thread and in a constitent manner, rather
- * than racing.
- *
- * As each request can be unique, a single result signal is emitted.  This
- * is based on the idea that a request can be created with new and connected
- * to it's result handler on demand as needed before being sent to the
- * database engine.  It is also possible to create derived request objects,
- * and I do this in sipwitch to modularize & isolate the queries and db
- * handling code for simpler maintainability.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Request : public QObject
 {
 	Q_OBJECT
@@ -90,4 +66,32 @@ signals:
 private slots:
 	void timeout();
 };
+
+/*!
+ * Query request objects.
+ * \file request.hpp
+ * \ingroup Database
+ */
+
+/*!
+ * \class Request
+ * \brief The query request class.
+ * This class is meant to queue a request to the database engine.  Results
+ * are processed in a private event loop.  This is done because the request
+ * will be created in the thread context of the originating object, not the
+ * database thread.  Hence, results have to be transposed from the database
+ * engine thread to the requestors thread (parent qobject), and may even be
+ * signalled to a different final object.  This also gaurentees that timeouts
+ * are signalled on the correct thread and in a constitent manner, rather
+ * than racing.
+ *
+ * As each request can be unique, a single result signal is emitted.  This
+ * is based on the idea that a request can be created with new and connected
+ * to it's result handler on demand as needed before being sent to the
+ * database engine.  It is also possible to create derived request objects,
+ * and I do this in sipwitch to modularize & isolate the queries and db
+ * handling code for simpler maintainability.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Database
+ */
 	

@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Command line parsing support.
- * \file args.hpp
- */
-
 #include <QCommandLineParser>
 #include <QStringList>
 #include <QPair>
@@ -27,8 +22,47 @@
 
 #include "compiler.hpp"
 
+class Args final
+{
+public:
+    typedef enum {
+        VersionArgument,
+        HelpArgument,
+        PositionalArgument,
+        GenericArgument
+    } builtin_t;
+
+    inline Args(const QStringList& flags, const QString& help, const QString& range, const QString& value) : opt(flags, help, range, value), mode(GenericArgument) {}
+    
+    inline Args(const QStringList& flags, const QString& help) : opt(flags, help), mode(GenericArgument) {}
+
+    inline Args(const QPair<QString,QString>& pos) : opt(pos.first, pos.second), mode(PositionalArgument) {}
+
+    inline Args(builtin_t builtin) : opt("tmp", ""), mode(builtin) {}
+
+    inline static void add(QCommandLineParser& args, const Args& opt) {
+        args.addOption(opt.opt);
+    }
+
+    static void add(QCommandLineParser& args, builtin_t use, const Args& opt = Args(GenericArgument));
+    static void add(QCommandLineParser& args, const QList<Args>& list);
+    static bool conflicting(const QCommandLineParser& args, const QStringList& options);
+    static bool includes(const QCommandLineParser& args, const QStringList& options);
+    static const QString exePath(const QString& path);
+
+private:
+    QCommandLineOption opt;
+    builtin_t mode;
+};
+
 /*!
- * \class Args \ingroup Common
+ * Command line parsing support.
+ * \file args.hpp
+ * \ingroup Common
+ */
+
+/*!
+ * \class Args
  * \brief Provides a simple means to initialize command line argument lists.
  * This was originally created simply because the Qt version on Debian 8 (5.3)
  * did not correctly support c++11 initializer lists for QCommandLineOption.
@@ -43,6 +77,7 @@
  * Args constructors).  Afterward the QCommandLineParser.process(parser) method
  * can be used to process the argument list that was constructed.
  * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Common
  *
  * \enum Args::builtin_t
  * Used to distinguise the type of argument entry in an arguments list.
@@ -91,35 +126,3 @@
     args.process(myapp);
   \endcode
  */
-class Args final
-{
-public:
-    typedef enum {
-        VersionArgument,
-        HelpArgument,
-        PositionalArgument,
-        GenericArgument
-    } builtin_t;
-
-    inline Args(const QStringList& flags, const QString& help, const QString& range, const QString& value) : opt(flags, help, range, value), mode(GenericArgument) {}
-    
-    inline Args(const QStringList& flags, const QString& help) : opt(flags, help), mode(GenericArgument) {}
-
-    inline Args(const QPair<QString,QString>& pos) : opt(pos.first, pos.second), mode(PositionalArgument) {}
-
-    inline Args(builtin_t builtin) : opt("tmp", ""), mode(builtin) {}
-
-    inline static void add(QCommandLineParser& args, const Args& opt) {
-        args.addOption(opt.opt);
-    }
-
-    static void add(QCommandLineParser& args, builtin_t use, const Args& opt = Args(GenericArgument));
-    static void add(QCommandLineParser& args, const QList<Args>& list);
-    static bool conflicting(const QCommandLineParser& args, const QStringList& options);
-    static bool includes(const QCommandLineParser& args, const QStringList& options);
-    static const QString exePath(const QString& path);
-
-private:
-    QCommandLineOption opt;
-    builtin_t mode;
-};

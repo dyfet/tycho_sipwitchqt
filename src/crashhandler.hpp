@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Crash handler support for service daemons.
- * \file crashhandler.hpp
- */
-
 #include <QtGlobal>
 
 class CrashHandler
@@ -40,3 +35,9 @@ private:
 
     static CrashHandler *HandlerList;
 };
+
+/*!
+ * Crash handler support for service daemons.
+ * \file crashhandler.hpp
+ * \ingroup Common
+ */

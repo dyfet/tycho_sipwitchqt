@@ -15,24 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * This is used to manage instances of external sip providers.  This will
- * later include routing objects and rules which may be associated with a
- * provider.
- * \file provider.hpp
- */
-
 #include "registry.hpp"
 
 class RemoteSegment;
 
-/*!
- * \brief A remote provider instance.
- * A provider may be a sip trunking provider.  This should not be confused
- * with locally managed gateways, which will be handled thru the registry.
- * This provides contact information and external registration management.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Provider final
 {
     Q_DISABLE_COPY(Provider)
@@ -72,3 +58,21 @@ private:
 };
 
 QDebug operator<<(QDebug dbg, const Provider& prov);
+
+/*!
+ * This is used to manage instances of external sip providers.  This will
+ * later include routing objects and rules which may be associated with a
+ * provider.
+ * \file provider.hpp
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Provider
+ * \brief A remote provider instance.
+ * A provider may be a sip trunking provider.  This should not be confused
+ * with locally managed gateways, which will be handled thru the registry.
+ * This provides contact information and external registration management.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */

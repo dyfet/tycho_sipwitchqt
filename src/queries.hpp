@@ -15,14 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Isolation of all timed db queries.  This is where we will bridge database
- * operations with sipwitch state changes for the Manager.  Each database
- * query set will be isolated into a separate class for easy componentization
- * and management of the code.
- * \file queries.hpp
- */
-
 #include "compiler.hpp"
 #include "database.hpp"
 
@@ -48,3 +40,11 @@ private slots:
     void update(ErrorResult err, const QVariantHash& keys, const QList<QSqlRecord>& records);
 };
 
+/*!
+ * Isolation of all timed db queries.  This is where we will bridge database
+ * operations with sipwitch state changes for the Manager.  Each database
+ * query set will be isolated into a separate class for easy componentization
+ * and management of the code.
+ * \file queries.hpp
+ * \ingroup Main
+ */

@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Manage information on internet subnets.
- * \file subnet.hpp
- */
-
 #include "compiler.hpp"
 #include <QString>
 #include <QByteArray>
@@ -27,13 +22,6 @@
 #include <QPair>
 #include <QAbstractSocket>
 
-/*!
- * \brief Internet subnet/cidr class.
- * This holds the base address and network mask for a subnet.  This allows
- * us to maintain list of valid subnets, and to determine if a given host
- * name happens to fall inside a subnet.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Subnet
 {
 public:
@@ -105,3 +93,19 @@ private:
 };
 
 QDebug operator<<(QDebug dbg, const Subnet& cidr);
+
+/*!
+ * Manage information on internet subnets.
+ * \file subnet.hpp
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Subnet
+ * \brief Internet subnet/cidr class.
+ * This holds the base address and network mask for a subnet.  This allows
+ * us to maintain list of valid subnets, and to determine if a given host
+ * name happens to fall inside a subnet.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */

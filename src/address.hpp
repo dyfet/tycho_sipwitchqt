@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Manage information on internet connections.
- * \file address.hpp
- */
-
 #include "compiler.hpp"
 #include <QString>
 #include <QByteArray>
@@ -27,12 +22,6 @@
 #include <QPair>
 #include <QAbstractSocket>
 
-/*!
- * \brief An internet connection address.
- * This provides a convenient means to represent an internet connection
- * as a host address and port number.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Address
 {
 public:
@@ -98,3 +87,18 @@ private:
 };
 
 QDebug operator<<(QDebug dbg, const Address& addr);
+
+/*!
+ * Manage information on internet connections.
+ * \file address.hpp
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Address
+ * \brief An internet connection address.
+ * This provides a convenient means to represent an internet connection
+ * as a host address and port number.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
