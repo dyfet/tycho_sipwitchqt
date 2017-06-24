@@ -220,16 +220,16 @@ bool Database::create()
     if(!runQuery("UPDATE Tycho_Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
         runQuery("INSERT INTO Tycho_Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
 
-    int count = getCount("Extensions");
+    int count = getCount("Switches");
     if(!failed)
-        emit countResults("ext", count);
+        emit countResults("swq", count);
 
     return true;
 }
 
 int Database::getCount(const QString& id)
 {
-    qDebug() << "Count extensions...";
+    qDebug() << "Count records...";
 
     int count = 0;
     QSqlQuery query(db);
@@ -297,17 +297,19 @@ void Database::applyConfig(const QVariantHash& config)
             realm = Server::sym(CURRENT_UUID);
     }
 
+    qDebug() << "DRIVER NAME " << driver;
+
     if(driver.isEmpty() && host.isEmpty())
         driver = "QSQLITE";
     else if(driver.isEmpty())
         driver = "QMYSQL";
 
+    driver = driver.toUpper();
     if(Util::dbIsFile(driver))
         name = "local.db";
     else if(name.isEmpty())
         name = "REALM_" + realm;
         
-    driver = driver.toUpper();
     qDebug() << "*** Database realm" << realm;
     create();
 }
