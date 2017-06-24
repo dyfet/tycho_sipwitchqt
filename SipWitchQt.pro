@@ -124,15 +124,21 @@ make-install {
         UNISTD_VARPATH=$${VARPATH} \
         UNISTD_LOGPATH=$${LOGPATH} \
 
-    INSTALLS += target
+    INSTALLS += target config
 
-    target.path = $$PREFIX/sbin
+    config.path = $${ETCPATH}
+    config.files = etc/sipwitchqt.conf
+    config.depends = target
+
+    target.path = $${PREFIX}/sbin
     target.depends = all
 }
 
 # other files...
 
 OTHER_FILES += \
+    etc/sipwitchqt.conf \
+    etc/README.md \
     testdata/service.conf \
     README.md \
     CONTRIBUTING.md \
