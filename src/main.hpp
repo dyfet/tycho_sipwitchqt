@@ -47,6 +47,7 @@
  * thread manager, and support for orderly startup, shutdown, suspend, and
  * resume operations are included.  A config system and support for config
  * reload is also provided.
+ * \annotatedlist Common
  * \section Database
  * This is the SipWitchQt database engine.  It provides an isolated database
  * service thread, and a query request system that can be used to issue timed
@@ -62,6 +63,10 @@
  * the call stack are found.  This support is rather generic, and derived
  * thru a Manager class in main for SipWitchQt specific behaviors.
  * \mainpage SipWitchQt
+ * \defgroup Common Common server classes.
+ * \defgroup Database Database engine classes.
+ * \defgroup Main Main application classes.
+ * \defgroup Stack Voip Stack classes.
  */
 
 #include <QtDebug>
@@ -123,3 +128,57 @@ Q_UNUSED(xyz)
 #define DEFAULT_NETWORK     "network"
 #define DEFAULT_PORT        "port"
 
+/*!
+ * \mainpage SipWitchQt
+ * A portable enterprise class sip server based on GNU SIP Witch.
+ * SipWitchQt takes advantage of the Qt library to produce a database connected cross-
+ * platform sip server.  The SipWitchQt architecture uses threads and signal slots to
+ * isolate components and to serialize events so that shared locking can be avoided.
+ * Blocking resources, such as database access, have their own thread and event loop.
+ * Intercommunication between threaded components uses async Qt signal-slot over threads.
+ * \n\n
+ * The source tree is built for use with Qt Creator, and seperated into a number of
+ * high level components thru .pri files.  These components include:
+ * \section Archive
+ * This is packaging support that mostly would be used by a project maintainer.
+ * This functionality will also evently migrate to a git submodule.  This
+ * includes things like the "publish", "archive", and "publish_and_archive"
+ * make targets to package sources, documentation, and binaries.
+ * \section Bootstrap
+ * This is used principally to vendor libraries not found on MacOS or Microsoft
+ * windows so that the project can be directly built on these platforms.   This
+ * is provided thru a git submodule.
+ * \section Common
+ * This is a locally copied version of what will become LibServiceQt.  It
+ * provides classes and compoments to write service deamons.  This includes
+ * support for SystemD and NT services.  A control fifo, a logging system, a
+ * thread manager, and support for orderly startup, shutdown, suspend, and
+ * resume operations are included.  A config system and support for config
+ * reload is also provided.
+ * \annotatedlist Common
+ * \section Database
+ * This is the SipWitchQt database engine.  It provides an isolated database
+ * service thread, and a query request system that can be used to issue timed
+ * requests to the engine and receive callbacks on query completion.  This
+ * includes low level query operations that are tied directly to SipWitchQt.
+ * I may look at making this generic and using a derived class in the future.
+ * \section Main
+ * This is where most code specific to SipWitchQt will be found.  This may
+ * derive classes from other generic top level components to create application
+ * specific behaviors.
+ * \section Stack
+ * This is where all code and classes that touch eXosip2 and directly manage
+ * the call stack are found.  This support is rather generic, and derived
+ * thru a Manager class in main for SipWitchQt specific behaviors.
+ * \defgroup Common Common server classes.
+ * \defgroup Database Database engine classes.
+ * \defgroup Main Main application classes.
+ * \defgroup Stack Voip Stack classes.
+ */
+
+/*!
+ * Main include file for running the server.  This includes server default path
+ * and config macros.
+ * \file main.hpp
+ * \ingroup Main
+ */

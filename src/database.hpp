@@ -15,12 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * A database system for sipwitch.  This can support direct database
- * access and queued requests.
- * \file database.hpp
- */
-
 #include "request.hpp"
 #include "sqldriver.hpp"
 
@@ -29,19 +23,6 @@
 #include <QDebug>
 #include <QSqlDatabase>
 
-/*!
- * \brief SipWitchQt database engine class.
- * The database engine operates in it's own thread context and uses a custom
- * event system.  By using a single and separate thread for all db operations
- * we avoid conflicts and problems with db drivers that are not thread-safe
- * or require complex thread locking schemes.
- *
- * This engine offers both direct query operations that are signaled, and can
- * process special requests objects.  Query/response thru a separate thread
- * allows fully asychronous operations with other services that may have their
- * own thread contexts and event loops, such as the stack manager.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Database final : public QObject
 {
     Q_OBJECT
@@ -95,3 +76,25 @@ private slots:
     void onTimeout();
 };
 
+/*!
+ * A database system for sipwitch.  This can support direct database
+ * access and queued requests.
+ * \file database.hpp
+ * \ingroup Database
+ */
+
+/*!
+ * \class Database
+ * \brief SipWitchQt database engine class.
+ * The database engine operates in it's own thread context and uses a custom
+ * event system.  By using a single and separate thread for all db operations
+ * we avoid conflicts and problems with db drivers that are not thread-safe
+ * or require complex thread locking schemes.
+ *
+ * This engine offers both direct query operations that are signaled, and can
+ * process special requests objects.  Query/response thru a separate thread
+ * allows fully asychronous operations with other services that may have their
+ * own thread contexts and event loops, such as the stack manager.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Database
+ */

@@ -15,21 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Derived sip stack management support.
- * \file manager.hpp
- */
-
 #include "stack.hpp"
 #include "queries.hpp"
 
-/*!
- * \brief SIP Stack management.
- * This derives from Stack and is (will be) used to impliment SipWitchQt specific
- * behaviors, typically by overriding Stack virtuals.  It also provides
- * voip specific configuration support in conjunction with the Server.
- * \author David Sugar <tychosoft@gmail.com>
- */
 class Manager : public Stack
 {
     Q_DISABLE_COPY(Manager)
@@ -54,3 +42,19 @@ private slots:
     void reportCounts(const QString& id, int count);
 #endif
 };
+
+/*!
+ * Derived sip stack management support.
+ * \file manager.hpp
+ * \ingroup Main
+ */
+
+/*!
+ * \class Manager
+ * \brief SIP Stack management.
+ * This derives from Stack and is (will be) used to impliment SipWitchQt specific
+ * behaviors, typically by overriding Stack virtuals.  It also provides
+ * voip specific configuration support in conjunction with the Server.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Main
+ */

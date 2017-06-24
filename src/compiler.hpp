@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Provides pragmas and macros for use in every compilation unit.
- * \file compiler.hpp
- */
-
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -52,3 +47,8 @@
 #define FOR_RELEASE(x)
 #endif
 
+/*!
+ * Provides pragmas and macros for use in every compilation unit.
+ * \file compiler.hpp
+ * \ingroup Common
+ */

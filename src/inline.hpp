@@ -15,29 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "compiler.hpp"
+
+namespace Util {
+    template<typename T>
+    T clampRange(const T& value, const T& min, const T& max)
+    {
+        if(value < min)
+            return min;
+
+        if(value > max)
+            return max;
+
+        return value;
+    }
+
+    template<typename T>
+    bool inRange(const T& value, const T& min, const T& max)
+    {
+        if(value < min || value > max)
+            return false;
+        return true;
+    }
+}
+
 /*!
  * Generic inline template functions and classes.
  * \file inline.hpp
+ * \ingroup Common
  */
 
-#include "compiler.hpp"
-
-template<typename T>
-T clampRange(const T& value, const T& min, const T& max)
-{
-	if(value < min)
-		return min;
-
-	if(value > max)
-		return max;
-
-	return value;
-}
-
-template<typename T>
-bool inRange(const T& value, const T& min, const T& max)
-{
-	if(value < min || value > max)
-		return false;
-	return true;
-}	
+/*!
+ * \namespace Util
+ * \ingroup Common
+ */

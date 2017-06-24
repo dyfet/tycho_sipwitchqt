@@ -15,14 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * These classes are used to manage registration of sip device endpoints.
- * This includes a master registration object, and a separate endpoint
- * object associated with each physical sip user agent.  Multiple devices can
- * register under the same id.
- * \file registry.hpp
- */
-
 #include "compiler.hpp"
 #include "address.hpp"
 #include "context.hpp"
@@ -33,12 +25,6 @@
 class LocalSegment;
 class Registry;
 
-/**
- * @brief A registration endpoint.
- * This represents a single SIP device that is registered thru the stack under
- * a registry object.
- * @author David Sugar <tychosoft@gmail.com>
- */
 class Endpoint final
 {
     friend class Registry;
@@ -82,12 +68,6 @@ private:
     QList<LocalSegment *> calls;    // local calls on this endpoint...
 };
 
-/**
- * @brief An active registration.
- * A registration consists of a user, and all the endpoints that are
- * registered thru the stack which are associated with that user.
- * @author David Sugar <tychosoft@gmail.com>
- */
 class Registry final
 {
     Q_DISABLE_COPY(Registry)
@@ -121,3 +101,30 @@ private:
 
 QDebug operator<<(QDebug dbg, const Endpoint& endpoint);
 QDebug operator<<(QDebug dbg, const Registry& registry);
+
+/*!
+ * These classes are used to manage registration of sip device endpoints.
+ * This includes a master registration object, and a separate endpoint
+ * object associated with each physical sip user agent.  Multiple devices can
+ * register under the same id.
+ * \file registry.hpp
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Endpoint
+ * \brief A registration endpoint.
+ * This represents a single SIP device that is registered thru the stack under
+ * a registry object.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Registry
+ * \brief An active registration.
+ * A registration consists of a user, and all the endpoints that are
+ * registered thru the stack which are associated with that user.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */

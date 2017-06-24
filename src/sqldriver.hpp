@@ -15,11 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*!
- * Some database support utility classes and functions.
- * \file sqldriver.hpp
- */
-
 #include <QString>
 
 namespace Util {
@@ -27,3 +22,9 @@ namespace Util {
     const QStringList pragmaQuery(const QString& name);
     bool dbIsFile(const QString& name);
 }
+
+/*!
+ * Some database support utility classes and functions.
+ * \file sqldriver.hpp
+ * \ingroup Database
+ */
