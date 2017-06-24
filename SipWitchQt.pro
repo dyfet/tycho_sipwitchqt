@@ -139,6 +139,7 @@ OTHER_FILES += \
     LICENSE \
     Doxyfile \
     sipwitchqt.spec \
+    qrc/README.md \
 
 QMAKE_TARGET_COMPANY = "Tycho Softworks"
 QMAKE_TARGET_COPYRIGHT = "$${COPYRIGHT} Tycho Softworks"

@@ -5,6 +5,11 @@ This is a newly written from scratch enterprise sip server which extends sipwitc
 
 One key difference between SipWitchQt and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchQt.
 
+Archive
+=======
+
+Archive is used by someone acting as a project maintainer to do a number of maintainer functions by extra make targets that most people using this project may not need to use.  This includes generating source, binary, and documentation packages for official distribution.  For this reason, and because it is boiler plate qmake support that can be re-used in multiple projects, it is provided through a git submodule.  Perhaps the one valuable feature for more general use is support for doxygen generation with the ``docs`` target.
+
 Bootstrap
 =========
 
@@ -32,10 +37,7 @@ On Microsoft Windows, perhaps SipWitchQt could be bundled with a SipBayonneQt se
 Documentation
 =============
 
-Generation of source documentation can be done using doxygen with the provided Doxyfile.  This
-is setup to generate pdf and latex documentation as well.  From qtcreator you can add a "docs"
-make target to your project (debug) build steps, and enable it to create or update 
-documentation.
+Generation of source documentation can be done using doxygen with the provided Doxyfile using the Archive git submodule.  This is setup to generate pdf and latex documentation as well as html pages, an xcode docset, a qt assistent stream, and a windows help file.  From qtcreator you can add a "docs" make target to your project (debug) build steps, and enable it to create or update documentation.
 
 When enabling the docs make target from QtCreator itself you will be given warnings for 
 undocumented classes as issues.  This makes it easy to find and complete documentation for 
@@ -45,6 +47,13 @@ Source documentation is meant only to document the class and design architecture
 sipwitchqt code base.  User and administration documentation will be written separately as 
 something like "CONFIG.md" and/or "SETUP.md" once development is further along.  Design notes 
 may be added as "DESIGN.md" or in CONTRIBUTING.md in the future.
+
+If you do not have the Archive git submodule, or you simply wish to generate the documentation in the local source subdirectory, you can use something like:
+
+```
+sed -e "s/[$][$]DOXYPATH/./g" <Doxyfile >Doxyfile.out
+doxygen Doxyfile.out
+```
 
 Support
 =======
