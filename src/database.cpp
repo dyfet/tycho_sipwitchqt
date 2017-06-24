@@ -303,7 +303,7 @@ void Database::applyConfig(const QVariantHash& config)
         driver = "QMYSQL";
 
     if(Util::dbIsFile(driver))
-        name = realm.toLower() + ".realm";
+        name = "local.db";
     else if(name.isEmpty())
         name = "REALM_" + realm;
         

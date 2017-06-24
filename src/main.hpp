@@ -112,7 +112,8 @@ Q_UNUSED(xyz)
 #endif
 
 #define TRACEIT "trace.log"
-#define SETTING "settings.db"
+#define SETTING "config.db"
+#define DATABASE "local.db"
 
 #if defined(Q_OS_LINUX)
 #define MIN_USER_UID    1000
