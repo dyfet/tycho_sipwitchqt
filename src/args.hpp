@@ -28,13 +28,70 @@
 #include "compiler.hpp"
 
 /*!
- * \brief provides a simple means to initialize command line argument lists.  
- * This was originally created simply because the Qt version on Debian 8 (5.3) did not 
- * correctly support c++11 initializer lists.  Since then it has been expanded to be more
- * generally useful and offer other features needed in argument parsing.
+ * \class Args \ingroup Common
+ * \brief Provides a simple means to initialize command line argument lists.
+ * This was originally created simply because the Qt version on Debian 8 (5.3)
+ * did not correctly support c++11 initializer lists for QCommandLineOption.
+ * Since then it has been expanded to be more generally useful and offer other
+ * features needed in argument parsing.
+ *
+ * The main function to drive this is really
+ * Args::add(QCommandLineParser&,const QList<Args>&) to construct a list of
+ * arguments that represents the full command line interface all at once.  The
+ * various Args constructor classes are meant to be used as list initializers
+ * for Args::add(parser, list) with QCommandLineOption objects (as derived thru
+ * Args constructors).  Afterward the QCommandLineParser.process(parser) method
+ * can be used to process the argument list that was constructed.
  * \author David Sugar <tychosoft@gmail.com>
+ *
+ * \enum Args::builtin_t
+ * Used to distinguise the type of argument entry in an arguments list.
+ * Normally only the Args::VersionArgument and Args::HelpArgument are used
+ * with the Args(builtin_t) constructor as part of an initialization list.
+ *
+ * \fn Args::add(QCommandLineParser &args, const QList<Args> &list)
+ * Used to add a (c++11 style) initializer list of command line options to
+ * the current parser. This is often the only member function directly used.
+ * The individual constructors provide the means to add entries by type.
+ * \param args A command line parser instance.
+ * \param list A list of arguments, typically a c++11 style initializer list.
+ *
+ * \fn Args::exePath(const QString& path)
+ * Compute a path relative to the executable programs path.  This can be used
+ * to find things like ../share from /usr/bin/exec-name.
+ * \param path Relative path to search from.
+ * \return full Path of target directory or file releative to exe file.
+ *
+ * \fn Args::conflicting(const QCommandLineParser& args, const QStringList& options)
+ * Used to find if conflicting command line options that cannot be used
+ * together are present.  This is typically for parsers that use --subcommand
+ * style parsing.
+ * \param args Parser instance to examine.
+ * \param options List of options by name that cannot co-exist.
+ * \return true if conflicting options are present.
+ *
+ * \fn Args::includes(const QCommandLineParser& args, const QString& options)
+ * Find if at least one of the required options is included.
+ * \param args Parser instance to examine.
+ * \param options List of options by name to search for.
+ * \return true if any of the list members is found.
+ *
+ * \section Example
+ * A typical use case.
+ * \code
+    #include "args.hpp"
+    ...
+    QApplication myapp(argc, argv);
+    QCommandLineParser args;
+    Args::add(args, {
+        {Args::HelpArgument},
+        {Args::VersionArgument},
+        {{"reset"}, tr("Reset Config")},
+    });
+    args.process(myapp);
+  \endcode
  */
-class Args
+class Args final
 {
 public:
     typedef enum {
