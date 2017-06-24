@@ -69,13 +69,6 @@ void Control::init()
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
-    QSettings bootstrap(":/etc/bootstrap.conf");
-    auto keys = bootstrap.allKeys();
-    foreach(auto key, keys) {
-        if(settings.value(key).isNull())
-            settings.setValue(key, bootstrap.value(key));
-    }
-
     Server *server = Server::instance();
     connect(server, &Server::started, this, &Control::onStartup);
     connect(server, &Server::finished, this, &Control::onShutdown);
