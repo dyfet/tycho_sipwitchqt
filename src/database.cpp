@@ -304,7 +304,14 @@ void Database::applyConfig(const QVariantHash& config)
     else if(driver.isEmpty())
         driver = "QMYSQL";
 
+    // normalize names for Qt database driver plugins
     driver = driver.toUpper();
+    if(driver[0] != QChar('Q'))
+        driver = "Q" + driver;
+
+    if(driver == "QSQLITE3")
+        driver = "QSQLITE";
+
     if(Util::dbIsFile(driver))
         name = "local.db";
     else if(name.isEmpty())
