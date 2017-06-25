@@ -67,7 +67,10 @@ CONFIG(release,release|debug) {
     unix:!macx:LIBS += -ltcmalloc_minimal
 }
 else {
+    # in debug the build exe must be in etc for most python utils to work fully
     DEFINES += DEBUG_LOGGING
+    unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
+    win32:QMAKE_POST_LINK += del $${PWD}/etc/$${TARGET}.exe 2>&1 >nul & mklink /H $${OUT_PWD}/$${TARGET}.exe $${PWD}/etc/$${TARGET}.exe)
     !CONFIG(no-testdata) {
         CONFIG(userdata):PROJECT_PREFIX=\"$${PWD}/userdata\"
         else:PROJECT_PREFIX=\"$${PWD}/testdata\"
@@ -133,6 +136,13 @@ make-install {
     target.path = $${PREFIX}/sbin
     target.depends = all
 }
+
+# may as well clean up test data on dist clean...
+
+QMAKE_EXTRA_TARGETS += distclean testclean
+distclean.depends += testclean
+unix:testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/testdata/*.cnf $${PWD}/etc/$${ARCHIVE}
+win32:testclean.commands = echo "a file" >$${PWD}/testdata/test.db && del $${PWD}/testdata/*.db >nul
 
 # other files...
 
