@@ -46,7 +46,7 @@ void Args::add(QCommandLineParser& args, const QList<Args>& list)
     }
 }
 
-void Args::add(QCommandLineParser& args, builtin_t use, const Args& opt) {
+void Args::add(QCommandLineParser& args, ArgType use, const Args& opt) {
     switch(use) {
     case VersionArgument:
         args.addVersionOption();

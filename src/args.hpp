@@ -25,12 +25,12 @@
 class Args final
 {
 public:
-    typedef enum {
+    enum ArgType {
         VersionArgument,
         HelpArgument,
         PositionalArgument,
         GenericArgument
-    } builtin_t;
+    };
 
     inline Args(const QStringList& flags, const QString& help, const QString& range, const QString& value) : opt(flags, help, range, value), mode(GenericArgument) {}
     
@@ -38,13 +38,13 @@ public:
 
     inline Args(const QPair<QString,QString>& pos) : opt(pos.first, pos.second), mode(PositionalArgument) {}
 
-    inline Args(builtin_t builtin) : opt("tmp", ""), mode(builtin) {}
+    inline Args(ArgType builtin) : opt("tmp", ""), mode(builtin) {}
 
     inline static void add(QCommandLineParser& args, const Args& opt) {
         args.addOption(opt.opt);
     }
 
-    static void add(QCommandLineParser& args, builtin_t use, const Args& opt = Args(GenericArgument));
+    static void add(QCommandLineParser& args, ArgType use, const Args& opt = Args(GenericArgument));
     static void add(QCommandLineParser& args, const QList<Args>& list);
     static bool conflicting(const QCommandLineParser& args, const QStringList& options);
     static bool includes(const QCommandLineParser& args, const QStringList& options);
@@ -52,7 +52,7 @@ public:
 
 private:
     QCommandLineOption opt;
-    builtin_t mode;
+    ArgType mode;
 };
 
 /*!
@@ -79,10 +79,15 @@ private:
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Common
  *
- * \enum Args::builtin_t
+ * \enum Args::ArgType
  * Used to distinguise the type of argument entry in an arguments list.
  * Normally only the Args::VersionArgument and Args::HelpArgument are used
- * with the Args(builtin_t) constructor as part of an initialization list.
+ * with the Args(ArgType) constructor as part of an initialization list.
+ *
+ * \var Args::VersionArgument
+ * \brief Adds --version flag to command parser.
+ * \var Args::HelpArgument
+ * \brief Adds --help flag to command parser.
  *
  * \fn Args::add(QCommandLineParser &args, const QList<Args> &list)
  * Used to add a (c++11 style) initializer list of command line options to

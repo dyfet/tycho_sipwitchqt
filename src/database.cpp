@@ -308,7 +308,7 @@ void Database::applyConfig(const QVariantHash& config)
     if(Util::dbIsFile(driver))
         name = "local.db";
     else if(name.isEmpty())
-        name = "REALM_" + realm;
+        name = "REALM_" + realm.toUpper();
         
     qDebug() << "*** Database realm" << realm;
     create();
