@@ -22,5 +22,10 @@ SOURCES += \
 
 LIBS += -leXosip2 -losip2 -losipparser2
 
-macx: LIBS += -lcares -framework Security -framework CoreServices -framework CoreFoundation
-unix: LIBS += -lresolv -lssl -lcrypto
+# required osx homebrew dependencies
+macx {
+    !exists(/usr/local/opt/libexosip):error(*** brew install libexosip)
+
+    INCLUDEPATH += /usr/local/opt/libosip/include /usr/local/opt/libexosip/include
+    LIBS += -L/usr/local/opt/libosip/lib -L/usr/local/opt/libexosip/lib
+}

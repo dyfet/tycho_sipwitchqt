@@ -39,20 +39,21 @@ linux {
 }
 
 macx {  
-    # check for homebrew or macports...
-    equals(PREFIX, "/usr/local")|equals(PREFIX, "/opt/local") {
+    # check for building under homebrew directly...
+    equals(PREFIX, "/usr/local") {
         CONFIG -= app_bundle
         CONFIG += make-install make-defines
+        INCLUDEPATH += $${PREFIX}/include
+        LIBS += -L$${PREFIX}/lib
     }
     else {
-        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.10
+        system(rm -rf $${OUT_PWD}/$${TARGET}.app)
         TARGET = $${PRODUCT}
-        CONFIG += make-defines
+        CONFIG += make-defines app_bundle
         PREFIX = /usr
         VARPATH=/var/lib
         LOGPATH=/var/log
         ETCPATH=/etc
-        system(rm -rf $${OUT_PWD}/$${TARGET}.app)
     }
 }
 
@@ -99,14 +100,13 @@ else {
     OPENSSL_PREFIX = $$shell_path($${PROJECT_PREFIX})
 }
 
-message(OpenSSL Certificates $${OPENSSL_PREFIX})
+# primary app maintainer and win32 build support
 
-# primary app support
-
-exists(Bootstrap/Bootstrap.pri):\
-    include(Bootstrap/Bootstrap.pri)
 exists(Archive/Archive.pri):\
     include(Archive/Archive.pri)
+win32:!exists(Bootstrap/Bootstrap.pri):\
+    error(*** win32 requires Bootstrap git submodule)
+win32:include(Bootstrap/Bootstrap.pri)
 
 include(src/Common.pri)
 include(src/Database.pri)

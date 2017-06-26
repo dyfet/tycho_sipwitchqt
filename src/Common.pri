@@ -19,3 +19,5 @@ SOURCES += \
     $${PWD}/system.cpp \
     $${PWD}/args.cpp \
     $${PWD}/crashhandler.cpp \
+
+macx: LIBS += -framework CoreFoundation
