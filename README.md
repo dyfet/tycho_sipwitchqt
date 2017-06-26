@@ -13,40 +13,32 @@ Archive is used by someone acting as a project maintainer to do a number of main
 Bootstrap
 =========
 
-Bootstrap is used to configure dependencies and libraries that may normally not be present in your development system.  To do this, I take advantage of cmake external projects to build required libraries and invoke it directly from qmake to establish required dependencies.  In particular, for windows, bootstrap offers openssl support as well as libexosip2 for sipwitchqt and so is enabled by default.  This does mean cmake is required to build on windows and macOS.
+Bootstrap is only required to build sipwitch on Microsoft Windows, by providing runtime libraries and headers that are not included with Microsoft Windows or Visual Studio development environments.  To do this, I use cmake and take advantage of cmake external projects support.  Cmake is then invoked directly from qmake as part of the project configuration.  Bootstrap offers openssl libraries as well as libexosip2 for sipwitchqt.  The libeXosip2 stack will not currently build on any version of MSVC later than 2013, and is recommended for building SipWitchQt with Qt on Microsoft Windows.
 
-Bootstrap is implemented as a submodule project.  It only needs to be included when building for Microsoft Windows and macOs.  On most platforms bootstrap is never used and can be ignored.  By making bootstrap a submodule, and requiring git lfs in the submodule only, it is both easy to maintain library dependencies, and to avoid having to carry large 3rd-party library source tarballs inside any git repo.  This also isolates requirement for git-lfs to only those platforms (osx, msvc) where it is needed.
+Bootstrap is implemented as a submodule project.  It only must be included when building for Microsoft Windows.  There is bootstrap support for macOS, and other unix platforms, but it is currently disabled in the project file.  By making bootstrap a submodule, and requiring git lfs in the submodule only, it is both easy to maintain library dependencies, and to avoid having to carry large 3rd-party library source tarballs inside our git repos.  This also isolates the requirement for git-lfs to Microsoft Windows development environments only.
 
-For really old Unix/Linux distros that may only very old versions of exosip2 in their repos, you can still activate bootstrap, though it is recommended instead to package newer libraries for these.  For Fedora (and later Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
+For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, you can still enable bootstrap by modifying the project file, though it is recommended instead to package newer libraries for these.  For Fedora (and eventually Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
 
 ``dnf copr enable dyfet/develop``.
-
-For macOS I may not require bootstrap either when building for macports or homebrew.  However, I recommend bootstrap when using QtCreator downloaded from the Qt Company.  This is because even though macports (and brew) may provide dependencies I need, the pre-built Qt for macOS can break if /opt/local/lib (or /usr/local/lib) is in the link chain, particularly because both brew and macports use an incompatible version of libjpeg.  Also the version of eXosip2 brew provides is not built against c-ares, limiting performance and functionality.  I also wanted to simplify setting up a build environment for macOS without requiring external porting kits such as macports, brew, or additional packages.
-
-Bootstrap may also be useful when setting up single use / single execution ci container environments for repeatable builds, such as travis, where dependent packages may not be installable or otherwise available.  For ci environments like Jenkins (and some uses of gitlab-ci), you may be better off taking advantage of persistent slave build environments that are pre-configured with required dependencies pre-installed instead.
 
 Deploy
 ======
 
-This project is not yet far enough along for deployment or use, but I do have some specific plans for this.  For GNU/Linux systems, I will support both init scripts and systemd units, which will be added to a new top level etc directory in the source tree, along with things like a logrotate.d file.  I guess on something like macos it could be built from homebrew or macports and added to launchd.  On Microsoft Windows it would have to have code to support registering itself as a system service.
+This project is not yet far enough along for deployment or use, but I do have some specific plans for this.  For GNU/Linux systems, I will support both init scripts and systemd units, which will be added to a new top level etc directory in the source tree, along with things like a logrotate.d file.  I guess on something like macOS it could be built from homebrew directly and added to launchd.  On Microsoft Windows it will eventually have code to support registering itself as a system service.
 
 In addition to os distribution packages and port files, I am looking at providing docker instances.  The idea is to be able to deploy and use SipWitchQt anywhere; on premise or in the cloud.  To better support this, the SipWitchQt docker image should also be composable into a stack that includes a separated database server and web interface.  The web interface will be worked on as a separate project to be called switchroom.  The idea is a complete and easily managed deploy anywhere enterprise VoIP phone system.
 
-On Microsoft Windows, perhaps SipWitchQt could be bundled with a SipBayonneQt server and other things as part of a complete VoIP service stack that can be delivered in an inno setup installer that shares Qt runtime libraries.  On macos one option would be to build SipWitchQt using the Qt online installer, and then create a bundled executable including Qt runtime that could be installed as a macos .pkg.
+On Microsoft Windows, perhaps SipWitchQt could be bundled with a SipBayonneQt server and other things as part of a complete VoIP service stack that can be delivered in an inno setup installer that shares Qt runtime libraries.  On macOS one option would be to build SipWitchQt using the Qt online installer, and then create a bundled executable including Qt runtime that could be installed as a macos .pkg.
 
 Documentation
 =============
 
-Generation of source documentation can be done using doxygen with the provided Doxyfile using the Archive git submodule.  This is setup to generate pdf and latex documentation as well as html pages, an xcode docset, a qt assistent stream, and a windows help file.  From qtcreator you can add a "docs" make target to your project (debug) build steps, and enable it to create or update documentation.
+Generation of source documentation can be done using doxygen with the provided Doxyfile using the Archive git submodule.  This is setup to generate pdf and latex documentation as well as html pages, an xcode docset, a qt assistant stream, and a windows help file.  From qtcreator you can add a "docs" make target to your project (debug) build steps, and enable it to create or update documentation.
 
-When enabling the docs make target from QtCreator itself you will be given warnings for 
-undocumented classes as issues.  This makes it easy to find and complete documentation for 
-the header files.  You can also use "make docs" from command line builds.
+When enabling the docs make target from QtCreator itself you will be given warnings for undocumented classes as issues.  This makes it easy to find and complete documentation for the header files.  You can also use "make docs" from command line builds.
 
 Source documentation is meant only to document the class and design architecture of the
-sipwitchqt code base.  User and administration documentation will be written separately as 
-something like "CONFIG.md" and/or "SETUP.md" once development is further along.  Design notes 
-may be added as "DESIGN.md" or in CONTRIBUTING.md in the future.
+sipwitchqt code base.  User and administration documentation will be written separately as something like "CONFIG.md" and/or "SETUP.md" once development is further along.  Design notes may be added as "DESIGN.md" or in CONTRIBUTING.md in the future.
 
 If you do not have the Archive git submodule, or you simply wish to generate the documentation in the local source subdirectory, you can use something like:
 
@@ -54,6 +46,16 @@ If you do not have the Archive git submodule, or you simply wish to generate the
 sed -e "s/[$][$]DOXYPATH/./g" <Doxyfile >Doxyfile.out
 doxygen Doxyfile.out
 ```
+
+Homebrew
+========
+
+For macOS support I new use homebrew.  The libraries
+are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To use homebrew, simply do:
+
+``brew install libexosip``
+
+This should pull in all other required dependencies (openssl, libosip, etc).
 
 Support
 =======
