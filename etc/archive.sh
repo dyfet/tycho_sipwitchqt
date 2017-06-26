@@ -2,7 +2,7 @@
 ORIGIN=`dirname $0`
 TARGET="$1"
 APPTRANSLATE="${ORIGIN}/../translate"
-ARCHIVE="../Archive"
+ARCHIVE="Archive"
 set -e
 mkdir -p ${ARCHIVE}
 rm -rf ${ARCHIVE}/${TARGET}.app ${ARCHIVE}/${TARGET}.dSYM
