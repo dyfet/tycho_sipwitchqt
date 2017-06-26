@@ -145,6 +145,7 @@ docs.commands += && cd ../latex && make
 
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
+    CONFIG += separate_debug_info force_debug_info
     QMAKE_EXTRA_TARGETS += archive publish_and_archive
     archive.depends = all
     archive.commands += $${PWD}/etc/archive.sh $${TARGET}
@@ -157,7 +158,6 @@ distclean.depends += testclean
 testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${OUT_PWD}/doc $${PWD}/*.tar.gz $${OUT_PWD}/*.pdf $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log
 
 # other files...
-
 OTHER_FILES += \
     etc/sipwitchqt.conf \
     etc/README.md \
