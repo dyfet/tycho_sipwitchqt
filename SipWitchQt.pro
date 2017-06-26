@@ -154,7 +154,7 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
 # clean additional testing files on distclean...
 QMAKE_EXTRA_TARGETS += distclean testclean
 distclean.depends += testclean
-testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE}
+testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${OUT_PWD}/doc $${PWD}/*.tar.gz $${OUT_PWD}/*.pdf $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log
 
 # other files...
 
