@@ -143,7 +143,7 @@ docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
 macx:docs.commands += && cd doc/html && make docset
 docs.commands += && cd ../latex && make
 clean.depends += extra_clean
-extra_clean.commands = rm -rf $${OUT_PWD}/Archive $${OUT_PWD}/doc $${OUT_PWD}/*.tar.gz $${OUT_PWD}/*.pdf 
+extra_clean.commands = rm -rf $${OUT_PWD}/Archive $${OUT_PWD}/doc $${OUT_PWD}/*.tar.gz $${OUT_PWD}/*.pdf $${OUT_PWD}/$${TARGET}
 
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
@@ -158,7 +158,7 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
 macx {
     QMAKE_EXTRA_TARGETS += app_clean exe_clean
     clean.depends += app_clean
-    app_clean.commands = rm -rf $${OUT_PWD}/$${TARGET}.app $${OUT_PWD}/$${TARGET}.app.dSYM $${OUT_PWD}/$${ARCHIVE}
+    app_clean.commands = rm -rf $${OUT_PWD}/$${TARGET}.app $${OUT_PWD}/$${TARGET}.app.dSYM
 }
 
 # clean additional testing files on distclean...
