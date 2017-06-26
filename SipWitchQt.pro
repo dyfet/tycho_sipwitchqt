@@ -155,7 +155,7 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
 # common extra cleanup for generic unix
 QMAKE_EXTRA_TARGETS += clean extra_clean
 clean.depends += extra_clean
-extra_clean.commands = rm -f $${ARCHIVE} Doxyfile.out
+extra_clean.commands = rm -f $${ARCHIVE}
 
 # extra clean up for mac app and debug symbols
 macx {
@@ -168,7 +168,7 @@ macx {
 QMAKE_EXTRA_TARGETS += distclean testclean publish_clean
 distclean.depends += testclean publish_clean
 testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log 
-publish_clean.commands = rm -rf Archive doc $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $${ARCHIVE}
+publish_clean.commands = rm -rf Archive $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $${ARCHIVE} doc Doxyfile.out
 
 # other files...
 OTHER_FILES += \
