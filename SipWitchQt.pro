@@ -150,12 +150,6 @@ exists(../Doxyfile) {
     docs.commands += && cd ../latex && make
 }
 
-QMAKE_CXXFLAGS += -Wno-padded
-QMAKE_EXTRA_TARGETS += distclean testclean
-distclean.depends += testclean
-testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE}
-
-
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
     QMAKE_EXTRA_TARGETS += archive publish_and_archive
