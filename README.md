@@ -5,21 +5,18 @@ This is a newly written from scratch enterprise sip server which extends sipwitc
 
 One key difference between SipWitchQt and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchQt.
 
-Archive
-=======
+Dependencies
+============
 
-Archive is used by someone acting as a project maintainer to do a number of maintainer functions by extra make targets that most people using this project may not need to use.  This includes generating source, binary, and documentation packages for official distribution.  For this reason, and because it is boiler plate qmake support that can be re-used in multiple projects, it is provided through a git submodule.  Perhaps the one valuable feature for more general use is support for doxygen generation with the ``docs`` target.
+SipWitchQt requires libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, you can still enable bootstrap by modifying the project file, though it is recommended instead to package newer libraries for these.  For Fedora (and eventually Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
 
-Bootstrap
-=========
+``dnf copr enable dyfet/develop``
 
-Bootstrap is only required to build sipwitch on Microsoft Windows, by providing runtime libraries and headers that are not included with Microsoft Windows or Visual Studio development environments.  To do this, I use cmake and take advantage of cmake external projects support.  Cmake is then invoked directly from qmake as part of the project configuration.  Bootstrap offers openssl libraries as well as libexosip2 for sipwitchqt.  The libeXosip2 stack will not currently build on any version of MSVC later than 2013, and is recommended for building SipWitchQt with Qt on Microsoft Windows.
+For macOS support I new use homebrew.  The libraries are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To install libeXosip2 with homebrew, simply do:
 
-Bootstrap is implemented as a submodule project.  It only must be included when building for Microsoft Windows.  There is bootstrap support for macOS, and other unix platforms, but it is currently disabled in the project file.  By making bootstrap a submodule, and requiring git lfs in the submodule only, it is both easy to maintain library dependencies, and to avoid having to carry large 3rd-party library source tarballs inside our git repos.  This also isolates the requirement for git-lfs to Microsoft Windows development environments only.
+``brew install libexosip``
 
-For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, you can still enable bootstrap by modifying the project file, though it is recommended instead to package newer libraries for these.  For Fedora (and eventually Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
-
-``dnf copr enable dyfet/develop``.
+This should pull in all other required dependencies (openssl, libosip, etc) on macOS.
 
 Deploy
 ======
@@ -46,16 +43,6 @@ If you do not have the Archive git submodule, or you simply wish to generate the
 sed -e "s/[$][$]DOXYPATH/./g" <Doxyfile >Doxyfile.out
 doxygen Doxyfile.out
 ```
-
-Homebrew
-========
-
-For macOS support I new use homebrew.  The libraries
-are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To use homebrew, simply do:
-
-``brew install libexosip``
-
-This should pull in all other required dependencies (openssl, libosip, etc).
 
 Support
 =======

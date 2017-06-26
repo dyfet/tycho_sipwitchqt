@@ -3,31 +3,29 @@ VERSION = 0.1.0
 COPYRIGHT = 2017
 ARCHIVE = sipwitchqt
 PRODUCT = SipWitchQt
+TARGET = $${ARCHIVE}
+
+# basic compile and link config
 CONFIG += c++11 console
 QT -= gui
 QT += network sql
+QMAKE_CXXFLAGS += -Wno-padded
 
-unix {
-    isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
-    !macx:CONFIG += make-install make-defines
+# prefix and build env
+win32-msvc*:error(*** windows no longer supported...)
+isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
+!macx:CONFIG += make-install make-defines
 
-    TARGET = $${ARCHIVE}
-    QMAKE_CXXFLAGS += -Wno-padded
-
-    QMAKE_EXTRA_TARGETS += distclean testclean
-    distclean.depends += testclean
-    testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/testdata/*.cnf $${PWD}/etc/$${ARCHIVE}
-
-    equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
-        VARPATH=/var/lib
-        LOGPATH=/var/log
-        ETCPATH=/etc
-    }
-    else {
-        VARPATH=$${PREFIX}/var
-        ETCPATH=$${PREFIX}/etc
-        LOGPATH=$${PREFIX}/var/log
-    }
+# check if normal prefix...
+equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
+    VARPATH=/var/lib
+    LOGPATH=/var/log
+    ETCPATH=/etc
+}
+else {
+    VARPATH=$${PREFIX}/var
+    ETCPATH=$${PREFIX}/etc
+    LOGPATH=$${PREFIX}/var/log
 }
 
 linux {
@@ -46,6 +44,7 @@ macx {
         INCLUDEPATH += $${PREFIX}/include
         LIBS += -L$${PREFIX}/lib
     }
+    # else a bundled app with Qt runtime will be built
     else {
         system(rm -rf $${OUT_PWD}/$${TARGET}.app)
         TARGET = $${PRODUCT}
@@ -55,16 +54,6 @@ macx {
         LOGPATH=/var/log
         ETCPATH=/etc
     }
-}
-
-win32-msvc* {
-    TARGET = $${PRODUCT}
-    QMAKE_CXXFLAGS_RELEASE += /Zi
-    QMAKE_LFLAGS_RELEASE += /debug
-    CONFIG -= debug_and_release debug_and_release_target
-    CONFIG += skip_target_version_ext
-    DEFINES += WIN32_LEAN_AND_MEAN
-    PROJECT_PREFIX = C:/ProgramData/TychoSoftworks/$${PRODUCT}
 }
 
 CONFIG(release,release|debug) {
@@ -100,14 +89,6 @@ else {
     OPENSSL_PREFIX = $$shell_path($${PROJECT_PREFIX})
 }
 
-# primary app maintainer and win32 build support
-
-exists(Archive/Archive.pri):\
-    include(Archive/Archive.pri)
-win32:!exists(Bootstrap/Bootstrap.pri):\
-    error(*** win32 requires Bootstrap git submodule)
-win32:include(Bootstrap/Bootstrap.pri)
-
 include(src/Common.pri)
 include(src/Database.pri)
 include(src/Main.pri)
@@ -142,11 +123,58 @@ make-install {
     target.depends = all
 }
 
+# archive support
+
+QMAKE_EXTRA_TARGETS += publish
+publish.commands += cd $${PWD} &&
+publish.commands += rm -f $${OUT_PWD}/$${ARCHIVE}-${VERSION}.tar.gz &&
+publish.commands += git archive --format tar --prefix=$${ARCHIVE}-$${VERSION}/ HEAD |
+publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz
+
+# documentation processing
+
+exists(../Doxyfile) {
+    QMAKE_EXTRA_TARGETS += docs
+
+    publish.depends += docs
+    publish.commands += && cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
+
+    QMAKE_SUBSTITUTES += doxyfile
+    DOXYPATH = $${PWD}
+    doxyfile.input = $${PWD}/Doxyfile
+    doxyfile.output = $${OUT_PWD}/Doxyfile.out
+
+    macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PATH && export PATH &&
+    docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
+    macx:docs.commands += && cd doc/html && make docset
+    docs.commands += && cd ../latex && make
+}
+
+QMAKE_CXXFLAGS += -Wno-padded
+QMAKE_EXTRA_TARGETS += distclean testclean
+distclean.depends += testclean
+testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE}
+
+
+# binary packages, for macosx release builds with Qt bundled
+macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
+    QMAKE_EXTRA_TARGETS += archive publish_and_archive
+    archive.depends = all
+    archive.commands += $${PWD}/etc/archive.sh $${TARGET}
+    publish_and_archive.depends = publish archive
+}
+
+# clean additional testing files on distclean...
+QMAKE_EXTRA_TARGETS += distclean testclean
+distclean.depends += testclean
+testclean.commands = rm -f $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE}
+
 # other files...
 
 OTHER_FILES += \
     etc/sipwitchqt.conf \
     etc/README.md \
+    etc/archive.sh \
     testdata/service.conf \
     README.md \
     CONTRIBUTING.md \
