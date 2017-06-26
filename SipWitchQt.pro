@@ -133,7 +133,7 @@ publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz &&
 publish.commands += cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
 
 # documentation processing
-QMAKE_EXTRA_TARGETS += docs
+QMAKE_EXTRA_TARGETS += docs clean extra_clean
 QMAKE_SUBSTITUTES += doxyfile
 DOXYPATH = $${PWD}
 doxyfile.input = $${PWD}/Doxyfile
@@ -142,6 +142,8 @@ macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PAT
 docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
 macx:docs.commands += && cd doc/html && make docset
 docs.commands += && cd ../latex && make
+clean.depends += extra_clean
+extra_clean.commands = rm -rf $${OUT_PWD}/Archive $${OUT_PWD}/doc $${OUT_PWD}/*.tar.gz $${OUT_PWD}/*.pdf 
 
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
@@ -152,10 +154,17 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
     publish_and_archive.depends = publish archive
 }
 
+# clean up mac app and debug symbols
+macx {
+    QMAKE_EXTRA_TARGETS += app_clean exe_clean
+    clean.depends += app_clean
+    app_clean.commands = rm -rf $${OUT_PWD}/$${TARGET}.app $${OUT_PWD}/$${TARGET}.app.dSYM $${OUT_PWD}/$${ARCHIVE}
+}
+
 # clean additional testing files on distclean...
 QMAKE_EXTRA_TARGETS += distclean testclean
 distclean.depends += testclean
-testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${OUT_PWD}/doc $${PWD}/*.tar.gz $${OUT_PWD}/*.pdf $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log
+testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log
 
 # other files...
 OTHER_FILES += \
