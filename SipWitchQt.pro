@@ -133,7 +133,7 @@ publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz &&
 publish.commands += cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
 
 # documentation processing
-QMAKE_EXTRA_TARGETS += docs clean extra_clean
+QMAKE_EXTRA_TARGETS += docs
 QMAKE_SUBSTITUTES += doxyfile
 DOXYPATH = $${PWD}
 doxyfile.input = $${PWD}/Doxyfile
@@ -142,8 +142,6 @@ macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PAT
 docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
 macx:docs.commands += && cd doc/html && make docset
 docs.commands += && cd ../latex && make
-clean.depends += extra_clean
-extra_clean.commands = rm -rf Archive doc $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $${ARCHIVE} Doxyfile.out
 
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
@@ -154,7 +152,12 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
     publish_and_archive.depends = publish archive
 }
 
-# clean up mac app and debug symbols
+# common extra cleanup for generic unix
+QMAKE_EXTRA_TARGETS += clean extra_clean
+clean.depends += extra_clean
+extra_clean.commands = rm -f $${ARCHIVE} Doxyfile.out
+
+# extra clean up for mac app and debug symbols
 macx {
     QMAKE_EXTRA_TARGETS += app_clean exe_clean
     clean.depends += app_clean
@@ -162,9 +165,10 @@ macx {
 }
 
 # clean additional testing files on distclean...
-QMAKE_EXTRA_TARGETS += distclean testclean
-distclean.depends += testclean
-testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log
+QMAKE_EXTRA_TARGETS += distclean testclean publish_clean
+distclean.depends += testclean publish_clean
+testclean.commands = rm -rf $${PWD}/testdata/*.db $${PWD}/etc/$${ARCHIVE} $${PWD}/testdata/certs $${PWD}/testdata/private $${PWD}/testdata/*.log 
+publish_clean.commands = rm -rf Archive doc $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $${ARCHIVE}
 
 # other files...
 OTHER_FILES += \
