@@ -24,14 +24,19 @@ Much of the functionality of SipServerQt is divided into individual QOBject comp
 
 I make use of Qt pri's to better segment the codebase when used from QtCreator.  This makes it easier to gather common functionality together and provide structure to the overall project without having to segment the package into static libraries or lots of subdirectories.  It also makes for easy isolation and re-use of source components directly in other projects.
 
-Platform Specific Issues
-========================
+All headers should be documented to at least the header and class level.  I use doxygen to produce header documentation, and keep the docs at the bottom of the header file, so that the header code is pristine.  More about the code architecture and class layouts can be found using the ``make docs`` target.
 
-For both Windows and MacOS platforms I presume the Digia online installer will be used to install Qt itself, rather than working with ports (such as macports) or self-built configurations.  I will then bundle the Digia Qt runtimes for application deployment (using windeplyqt & macdeplyqt).  If I need to create additional frameworks, plugins, and other dependencies for those platforms, they will be initially installed in the Digia Qt installation directories first.  This seemed simpler for managing Qt development on those platforms.  
+MacOS Specific Issues
+=====================
 
-On MacOS I will produce services as application bundles, and any additional libraries I may provide for use with Qt will be distributed as frameworks as well.  On GNU/Linux I use the distro version (for BSD, the ports collection version) of Qt, with both applications and any additional libraries installed in standard /usr paths by default.  On GNU/Linux I will use standard distro packaging (debian, rpm, etc) to make installable applications, and on both GNU/Linux and BSD the original source tarballs may also be directly used to produce and install my applications.  In the case of Windows, I will typically provide applications with an INNO Setup generated installer.
+For MacOS I presume the Digia online installer will be used to install Qt itself, rather than working with homebrew Qt or self-built configurations.  I do however presume that libeXosip2 will be installed with homebrew.  I will then bundle the Digia Qt runtimes for application deployment using macdeplyqt. 
 
-On MacOS one should also be able to directly use macports or homebrew, and the versions of Qt included with those.  I auto-detect such uses based on the Qt prefix directory.  When using macports or homebrew or similar, I do not create application bundles and instead the build follows normal unix conventions.
+On MacOS I will produce services as application bundles, and any additional libraries I may provide for use with Qt will be distributed as frameworks as well.  On GNU/Linux I use the distro version (for BSD, the ports collection version) of Qt, with both applications and any additional libraries installed in standard /usr paths by default.  On GNU/Linux I will use standard distro packaging (debian, rpm, etc) to make installable applications, and on both GNU/Linux and BSD the original source tarballs may also be directly used to produce and install my applications.
+
+Microsoft Windows
+=================
+
+While the code base technically may still build and run on Microsoft Windows, and libeXosip2 can be built with MSVC 2013, there are features and functions going forward that I have neither time nor resources to test or develop for Windows.  Hence, it is depreciated and likely already broken as of this time.
 
 
 Project Planning
@@ -39,7 +44,7 @@ Project Planning
 
 Official project planning is performed on the gitlab [sipwitchqt](https://gitlab.com/tychosoft/sipwitchqt) project.  I will be using the issue tracking system and kanban style issue boards offered there.  All issues will be added to the backlog there, with what they call milestones and sprints being interchangeable. 
 
-I have standardized use of tags for issues in gitlab for project planning. This includes "RC" for "release critical" issues, "hotfix" for bugs that may require an immediate release, "bugs" to distinguish bug issues from feature branches, and "blocked" to indicate some issue is currently blocked from further work. Standard tags can be found at gitlab [Tychosoft Tags](https://gitlab.com/groups/tychosoft/labels).
+I have standardized use of tags for issues in gitlab for project planning.  This includes "RC" for "release critical" issues, "hotfix" for bugs that may require an immediate release, "bugs" to distinguish bug issues from feature branches, and "blocked" to indicate some issue is currently blocked from further work. Standard tags can be found at gitlab [Tychosoft Tags](https://gitlab.com/groups/tychosoft/labels).
 
 Merges and Versioning
 =====================

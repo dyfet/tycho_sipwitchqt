@@ -1,6 +1,0 @@
-[submodule "Bootstrap"]
-	path = Bootstrap
-	url = https://gitlab.com/tychosoft/vendor-sipserver.git
-[submodule "Archive"]
-	path = Archive
-	url = https://gitlab.com/tychosoft/archive-server.git
