@@ -152,17 +152,11 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
     publish_and_archive.depends = publish archive
 }
 
-# common extra cleanup for generic unix
+# common extra cleanup
 QMAKE_EXTRA_TARGETS += clean extra_clean
 clean.depends += extra_clean
-extra_clean.commands = rm -f $${ARCHIVE}
-
-# extra clean up for mac app and debug symbols
-macx {
-    QMAKE_EXTRA_TARGETS += app_clean exe_clean
-    clean.depends += app_clean
-    app_clean.commands = rm -rf $${PRODUCT}.app $${PRODUCT}.app.dSYM
-}
+extra_clean.commands += rm -f $${ARCHIVE}
+macx:extra_clean.commands += && rm -rf $${PRODUCT}.app $${PRODUCT}.app.dSYM 
 
 # clean additional testing files on distclean...
 QMAKE_EXTRA_TARGETS += distclean testclean publish_clean
