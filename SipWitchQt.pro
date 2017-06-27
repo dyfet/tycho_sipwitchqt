@@ -161,7 +161,7 @@ extra_clean.commands = rm -f $${ARCHIVE}
 macx {
     QMAKE_EXTRA_TARGETS += app_clean exe_clean
     clean.depends += app_clean
-    app_clean.commands = rm -rf $${TARGET}.app $${TARGET}.app.dSYM
+    app_clean.commands = rm -rf $${PRODUCT}.app $${PRODUCT}.app.dSYM
 }
 
 # clean additional testing files on distclean...
