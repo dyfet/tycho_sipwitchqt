@@ -1,43 +1,35 @@
 *.pro.user.*
 *.pro.user
+*.xcodeproj
+*.autosave
+*.qm
+*.o
+*.rpm
 
 *.tar.gz
 *.zip
-*.exe
 *.app
 *.out
 *.pdf
 *.dSYM
-
-.DS_Store
-.qmake.*
 
 testdata/*.log
 testdata/*.pid
 testdata/*.db
 testdata/*.db-journal
 testdata/*.cnf
-testdata/*.realm
-testdata/misc
 userdata/
 doc/
 *.gch/
 
 # for in-tree unix builds
 
-Archive/
-CMakeFiles/
-CMakeCache.txt
+.qmake.*
+.DS_Store
 Makefile
-Makefile.*
-cmake_install.cmake
-moc_*.cpp
-moc_*.h
-*.o
-*.a
-*.obj
-*.qm
-*.lib
-*.dll
-
 sipwitchqt
+
+moc_*
+qrc_*
+ui_*
+
