@@ -14,7 +14,7 @@ QMAKE_CXXFLAGS += -Wno-padded
 # prefix and build env
 win32-msvc*:error(*** windows no longer supported...)
 isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
-!macx:CONFIG += make-install make-defines
+!macx:CONFIG += app_install app_config
 
 # check if normal prefix...
 equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
@@ -40,7 +40,7 @@ macx {
     # check for building under homebrew directly...
     equals(PREFIX, "/usr/local") {
         CONFIG -= app_bundle
-        CONFIG += make-install make-defines
+        CONFIG += app_install app_config
         INCLUDEPATH += $${PREFIX}/include
         LIBS += -L$${PREFIX}/lib
     }
@@ -48,7 +48,7 @@ macx {
     else {
         system(rm -rf $${OUT_PWD}/$${TARGET}.app)
         TARGET = $${PRODUCT}
-        CONFIG += make-defines app_bundle
+        CONFIG += app_config app_bundle
         PREFIX = /usr
         VARPATH=/var/lib
         LOGPATH=/var/log
@@ -72,7 +72,7 @@ else {
         macx:TARGET = $${ARCHIVE}
         unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
 
-        CONFIG -= make-install make-defines
+        CONFIG -= app_install app_config
         DEFINES += DEBUG_TESTDATA
     }
 }
@@ -84,7 +84,7 @@ DEFINES += \
 
 isEmpty(PROJECT_PREFIX):OPENSSL_PREFIX=$${VARPATH}/$${ARCHIVE}
 else {
-    CONFIG -= make-defines
+    CONFIG -= app_config
     DEFINES += PROJECT_PREFIX=$${PROJECT_PREFIX}
     OPENSSL_PREFIX = $$shell_path($${PROJECT_PREFIX})
 }
@@ -96,7 +96,7 @@ include(src/Stack.pri)
 
 # unix filesystem hierarchy defines
 
-make-defines {
+app_config {
     DEFINES += \
         UNISTD_PREFIX=$${PREFIX} \
         UNISTD_ETCPATH=$${ETCPATH} \
@@ -106,7 +106,7 @@ make-defines {
 
 # generic install, windows and mac may use archive instead...
 
-make-install {
+app_install {
     DEFINES += \
         UNISTD_PREFIX=$${PREFIX} \
         UNISTD_ETCPATH=$${ETCPATH} \
