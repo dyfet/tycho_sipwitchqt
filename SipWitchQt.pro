@@ -125,12 +125,10 @@ make-install {
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
-publish.depends += docs
 publish.commands += cd $${PWD} &&
 publish.commands += rm -f $${OUT_PWD}/$${ARCHIVE}-${VERSION}.tar.gz &&
 publish.commands += git archive --format tar --prefix=$${ARCHIVE}-$${VERSION}/ HEAD |
-publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz &&
-publish.commands += cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
+publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz
 
 # documentation processing
 QMAKE_EXTRA_TARGETS += docs
@@ -141,7 +139,9 @@ doxyfile.output = $${OUT_PWD}/Doxyfile.out
 macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PATH && export PATH &&
 docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
 macx:docs.commands += && cd doc/html && make docset
-docs.commands += && cd ../latex && make
+unix:docs.commands += && cd ../latex && make
+unix:publish.depends += docs
+unix:publish.commands += && cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
 
 # binary packages, for macosx release builds with Qt bundled
 macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
