@@ -14,7 +14,7 @@ QMAKE_CXXFLAGS += -Wno-padded
 # prefix and build env
 win32-msvc*:error(*** windows no longer supported...)
 isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
-!macx:CONFIG += app_install app_config
+!macx:CONFIG += install_service define_paths
 
 # check if normal prefix...
 equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
@@ -40,7 +40,7 @@ macx {
     # check for building under homebrew directly...
     equals(PREFIX, "/usr/local") {
         CONFIG -= app_bundle
-        CONFIG += app_install app_config
+        CONFIG += install_service define_paths
         INCLUDEPATH += $${PREFIX}/include
         LIBS += -L$${PREFIX}/lib
     }
@@ -48,7 +48,7 @@ macx {
     else {
         system(rm -rf $${OUT_PWD}/$${TARGET}.app)
         TARGET = $${PRODUCT}
-        CONFIG += app_config app_bundle
+        CONFIG += define_paths app_bundle
         PREFIX = /usr
         VARPATH=/var/lib
         LOGPATH=/var/log
@@ -72,7 +72,7 @@ else {
         macx:TARGET = $${ARCHIVE}
         unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
 
-        CONFIG -= app_install app_config
+        CONFIG -= install_service define_paths
         DEFINES += DEBUG_TESTDATA
     }
 }
@@ -84,7 +84,7 @@ DEFINES += \
 
 isEmpty(PROJECT_PREFIX):OPENSSL_PREFIX=$${VARPATH}/$${ARCHIVE}
 else {
-    CONFIG -= app_config
+    CONFIG -= define_paths
     DEFINES += PROJECT_PREFIX=$${PROJECT_PREFIX}
     OPENSSL_PREFIX = $$shell_path($${PROJECT_PREFIX})
 }
@@ -96,7 +96,7 @@ include(src/Stack.pri)
 
 # unix filesystem hierarchy defines
 
-app_config {
+define_paths {
     DEFINES += \
         UNISTD_PREFIX=$${PREFIX} \
         UNISTD_ETCPATH=$${ETCPATH} \
@@ -106,7 +106,7 @@ app_config {
 
 # generic install, windows and mac may use archive instead...
 
-app_install {
+install_service {
     DEFINES += \
         UNISTD_PREFIX=$${PREFIX} \
         UNISTD_ETCPATH=$${ETCPATH} \
@@ -116,7 +116,7 @@ app_install {
     INSTALLS += target config
 
     config.path = $${ETCPATH}
-    config.files = etc/sipwitchqt.conf
+    config.files = $${PWD}/etc/sipwitchqt.conf
     config.depends = target
 
     target.path = $${PREFIX}/sbin
