@@ -28,8 +28,10 @@ public:
     enum ArgType {
         VersionArgument,
         HelpArgument,
+/*! \cond PRIVATE */
         PositionalArgument,
         GenericArgument
+/*! \endcond */
     };
 
     inline Args(const QStringList& flags, const QString& help, const QString& range, const QString& value) : opt(flags, help, range, value), mode(GenericArgument) {}
@@ -40,11 +42,6 @@ public:
 
     inline Args(ArgType builtin) : opt("tmp", ""), mode(builtin) {}
 
-    inline static void add(QCommandLineParser& args, const Args& opt) {
-        args.addOption(opt.opt);
-    }
-
-    static void add(QCommandLineParser& args, ArgType use, const Args& opt = Args(GenericArgument));
     static void add(QCommandLineParser& args, const QList<Args>& list);
     static bool conflicting(const QCommandLineParser& args, const QStringList& options);
     static bool includes(const QCommandLineParser& args, const QStringList& options);
@@ -53,6 +50,12 @@ public:
 private:
     QCommandLineOption opt;
     ArgType mode;
+
+    inline static void add(QCommandLineParser& args, const Args& opt) {
+        args.addOption(opt.opt);
+    }
+
+    static void add(QCommandLineParser& args, ArgType use, const Args& opt = Args(GenericArgument));
 };
 
 /*!
@@ -72,8 +75,8 @@ private:
  * The main function to drive this is really
  * Args::add(QCommandLineParser&,const QList<Args>&) to construct a list of
  * arguments that represents the full command line interface all at once.  The
- * various Args constructor classes are meant to be used as list initializers
- * for Args::add(parser, list) with QCommandLineOption objects (as derived thru
+ * various Args class constructors are meant to be used as list initializers
+ * for this to create a list of QCommandLineOption objects (as derived thru
  * Args constructors).  Afterward the QCommandLineParser.process(parser) method
  * can be used to process the argument list that was constructed.
  * \author David Sugar <tychosoft@gmail.com>
@@ -88,6 +91,28 @@ private:
  * \brief Adds --version flag to command parser.
  * \var Args::HelpArgument
  * \brief Adds --help flag to command parser.
+ *
+ * \fn Args::Args(const QStringList& flags, const QString& help, const QString& range, const QString& value)
+ * Used to add a --flag=value option to the args initializer list.
+ * \param flags List of flag strings (synonyms).
+ * \param help Message text to use for --help to describe this flag.
+ * \param range Message text to describe valid range of values.
+ * \param value Default value to use for this flag option.
+ *
+ * \fn Args::Args(const QStringList& flags, const QString& help)
+ * Used to add a --flag or -f flag boolean option in an Args initializer list.
+ * \param flags List of flag strings.
+ * \param help Message text to use for --help to describe this flag.
+ *
+ * \fn Args::Args(const QPair<QString,QString>& pos)
+ * Used to add a positional option in an Args initializer list.
+ * \param pos A string pair to hold both the positional argument id for the
+ * "usage" message, and the message text for a --help command description.
+ *
+ * \fn Args::Args(ArgType mode)
+ * Used in Args::add() to add a Args::VersionArgument or Args::HelpArgument
+ * option in an Args initializer list.
+ * \param mode Either Args::Version or Args::HelpArgument
  *
  * \fn Args::add(QCommandLineParser &args, const QList<Args> &list)
  * Used to add a (c++11 style) initializer list of command line options to
