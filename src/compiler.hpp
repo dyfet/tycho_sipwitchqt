@@ -52,3 +52,13 @@
  * \file compiler.hpp
  * \ingroup Common
  */
+
+/*!
+ * \def FOR_DEBUG(block)
+ * Defines a block of code only built for debug builds.
+ */
+
+/*!
+ * \def FOR_RELEASE(block)
+ * Defines a block of code only built in release builds.
+ */
