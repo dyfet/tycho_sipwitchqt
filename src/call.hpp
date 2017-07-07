@@ -101,3 +101,43 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * \file call.hpp
  * \ingroup Stack
  */
+
+/*!
+ * \class RemoteSegment
+ * \brief A call connection to a remote endpoint.
+ * This represents a call connection tied to an endpoint not associated with our server.
+ * Typically this is for endpoints being reached thru a provider, or thru p2p calling.
+ * It could also happen if a dialed destination represents a uri of an actual endpoint
+ * that is not registered thru us.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+/*!
+ * \class LocalSegment
+ * \brief A call connection to a local endpoint.
+ * This represents an active call connection tied to an endpoint registered with SipWitchQt.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Segment
+ * \brief A call connection to a destination.
+ * A base class to represent a call connection, whether local or remote.  A few segment
+ * related utility functions may also be exposed thru here.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Call
+ * \brief A call connecting a source and destinations.
+ * If there is no call source, then this is a conference call.  Otherwise it represents
+ * a call that originated from a local or remote endpoint, and has a list of one or more
+ * active destinations.  A separate Call and Conf class may be later derived.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+
