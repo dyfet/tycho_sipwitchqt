@@ -15,16 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "compiler.hpp"
-#include "util.hpp"
-#include "subnet.hpp"
-
-#include <QThread>
-#include <QMutex>
-#include <QHostAddress>
-#include <QHostInfo>
-#include <QAbstractSocket>
-#include <eXosip2/eXosip.h>
+#include "event.hpp"
 
 class Context final : public QObject
 {
@@ -73,6 +64,10 @@ public:
         return schema.uri + id + "@" + uriAddress;
     }
 
+    inline const QString type() const {
+        return schema.name;
+    }
+
     const QString uriTo(const QHostAddress& target) const;
     const QString uriTo(const QHostAddress& target, const QString& id) const;
 
@@ -119,9 +114,7 @@ private:
 
     bool isLocal(const QHostAddress &target) const;
 
-    bool process(const eXosip_event_t *ev);
-
-    const char *eid(eXosip_event_type ev);
+    bool process(const Event& ev);
 
 signals:
     void finished();

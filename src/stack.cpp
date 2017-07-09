@@ -39,6 +39,8 @@ Stack::Stack(unsigned order)
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
+    qRegisterMetaType<Event>("Event");
+
     moveToThread(Server::createThread("stack", order));
     UserAgent = qApp->applicationName() + "/" + qApp->applicationVersion();
 #ifndef Q_OS_WIN

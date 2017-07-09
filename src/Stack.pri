@@ -8,6 +8,7 @@ HEADERS += \
     $${PWD}/registry.hpp \
     $${PWD}/provider.hpp \
     $${PWD}/call.hpp \
+    $${PWD}/event.hpp \
 
 SOURCES += \
     $${PWD}/context.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
     $${PWD}/provider.cpp \
     $${PWD}/segment.cpp \
     $${PWD}/call.cpp \
+    $${PWD}/event.cpp \
 
 LIBS += -leXosip2 -losip2 -losipparser2
 
