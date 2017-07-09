@@ -86,10 +86,10 @@ public:
 private:
     class Data final : public QSharedData
 	{
+        Q_DISABLE_COPY(Data)        // can never deep copy...
 	public:
         Data();
         Data(eXosip_event_t *evt, Context *ctx);
-        Data(const Data& copy);
         ~Data();
 
         Context *context;

@@ -27,11 +27,6 @@ context(ctx), event(evt), association(NONE)
 {
 }
 
-Event::Data::Data(const Data &copy) :
-QSharedData(copy)
-{
-}
-
 Event::Data::~Data()
 {
     if(event) {
