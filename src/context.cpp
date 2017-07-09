@@ -38,39 +38,6 @@
 
 #define EVENT_TIMER 500l    // 500ms...
 
-// allows task() to cleanly auto-delete eXosip events on premature returns
-class auto_event
-{
-    Q_DISABLE_COPY(auto_event)
-
-public:
-    auto_event(eXosip_event_t *sevent) {
-        event = sevent;
-    }
-
-    ~auto_event() {
-        if(event) {
-            eXosip_event_free(event);
-            event = nullptr;
-        }
-    }
-
-    operator bool() const {
-        return event != nullptr;
-    }
-
-    const eXosip_event_t *operator->() const {
-        return event;
-    }
-
-    const eXosip_event_t *operator*() const {
-        return event;
-    }
-
-private:
-    eXosip_event_t *event;
-};
-
 static volatile unsigned instanceCount = 0;
 static bool active = true;
 
@@ -273,7 +240,7 @@ void Context::run()
     while(active && context) {
         int s = EVENT_TIMER / 1000l;
         int ms = EVENT_TIMER % 1000l;
-        auto_event event(eXosip_event_wait(context, s, ms));
+        Event event(eXosip_event_wait(context, s, ms), this);
         time(&currentEvent);
         if(currentEvent != priorEvent) {
             priorEvent = currentEvent;
@@ -286,9 +253,9 @@ void Context::run()
 
         // skip extra code in event loop if we don't need it...
         if(Server::verbose())
-            Logging::debug() << "Sip Event " << event->type << "/" << eid(event->type) << ": cid=" << event->cid << ", did=" << event->did << ", proto=" << schema.name;
+            Logging::debug() << event;
 
-        if(Server::state() == Server::UP && process(*event))
+        if(Server::state() == Server::UP && process(event))
             continue;
     }
     Logging::debug() << "Exiting " << objectName();
@@ -296,7 +263,7 @@ void Context::run()
     --instanceCount;
 }
 
-bool Context::process(const eXosip_event_t *ev) {
+bool Context::process(const Event& ev) {
     Q_UNUSED(ev);
     return true;
 }
@@ -371,78 +338,6 @@ const QList<Subnet> Context::localnets() const
     QMutexLocker lock(&netLock);
     nets << otherNets;
     return nets;
-}
-
-const char *Context::eid(eXosip_event_type ev)
-{
-    switch(ev) {
-    case EXOSIP_REGISTRATION_SUCCESS:
-        return "register";
-    case EXOSIP_CALL_INVITE:
-        return "invite";
-    case EXOSIP_CALL_REINVITE:
-        return "reinvite";
-    case EXOSIP_CALL_NOANSWER:
-    case EXOSIP_SUBSCRIPTION_NOANSWER:
-    case EXOSIP_NOTIFICATION_NOANSWER:
-        return "noanswer";
-    case EXOSIP_MESSAGE_PROCEEDING:
-    case EXOSIP_NOTIFICATION_PROCEEDING:
-    case EXOSIP_CALL_MESSAGE_PROCEEDING:
-    case EXOSIP_SUBSCRIPTION_PROCEEDING:
-    case EXOSIP_CALL_PROCEEDING:
-        return "proceed";
-    case EXOSIP_CALL_RINGING:
-        return "ring";
-    case EXOSIP_MESSAGE_ANSWERED:
-    case EXOSIP_CALL_ANSWERED:
-    case EXOSIP_CALL_MESSAGE_ANSWERED:
-    case EXOSIP_SUBSCRIPTION_ANSWERED:
-    case EXOSIP_NOTIFICATION_ANSWERED:
-        return "answer";
-    case EXOSIP_SUBSCRIPTION_REDIRECTED:
-    case EXOSIP_NOTIFICATION_REDIRECTED:
-    case EXOSIP_CALL_MESSAGE_REDIRECTED:
-    case EXOSIP_CALL_REDIRECTED:
-    case EXOSIP_MESSAGE_REDIRECTED:
-        return "redirect";
-    case EXOSIP_REGISTRATION_FAILURE:
-        return "noreg";
-    case EXOSIP_SUBSCRIPTION_REQUESTFAILURE:
-    case EXOSIP_NOTIFICATION_REQUESTFAILURE:
-    case EXOSIP_CALL_REQUESTFAILURE:
-    case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
-    case EXOSIP_MESSAGE_REQUESTFAILURE:
-        return "failed";
-    case EXOSIP_SUBSCRIPTION_SERVERFAILURE:
-    case EXOSIP_NOTIFICATION_SERVERFAILURE:
-    case EXOSIP_CALL_SERVERFAILURE:
-    case EXOSIP_CALL_MESSAGE_SERVERFAILURE:
-    case EXOSIP_MESSAGE_SERVERFAILURE:
-        return "server";
-    case EXOSIP_SUBSCRIPTION_GLOBALFAILURE:
-    case EXOSIP_NOTIFICATION_GLOBALFAILURE:
-    case EXOSIP_CALL_GLOBALFAILURE:
-    case EXOSIP_CALL_MESSAGE_GLOBALFAILURE:
-    case EXOSIP_MESSAGE_GLOBALFAILURE:
-        return "global";
-    case EXOSIP_CALL_ACK:
-        return "ack";
-    case EXOSIP_CALL_CLOSED:
-    case EXOSIP_CALL_RELEASED:
-        return "bye";
-    case EXOSIP_CALL_CANCELLED:
-        return "cancel";
-    case EXOSIP_MESSAGE_NEW:
-    case EXOSIP_CALL_MESSAGE_NEW:
-    case EXOSIP_IN_SUBSCRIPTION_NEW:
-        return "new";
-    case EXOSIP_SUBSCRIPTION_NOTIFY:
-        return "notify";
-    default:
-        break;
-    }
-    return "unknown";
 }
 
 
