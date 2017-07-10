@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "registry.hpp"
+#include "stack.hpp"
 
 static QHash <const QString, Registry *> extensions, aliases;
 
@@ -88,6 +88,11 @@ Registry *Registry::find(const QString& target)
         registry = aliases.value(target, nullptr);
 
     return registry;
+}
+
+// event handling for registration system as a whole...
+void Registry::events(const Event& ev)
+{
 }
 
 QDebug operator<<(QDebug dbg, const Registry& registry)

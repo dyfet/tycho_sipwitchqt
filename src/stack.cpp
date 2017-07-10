@@ -86,4 +86,9 @@ void Stack::create(const QList<QHostAddress>& list, int port, unsigned  mask)
     }
 }
 
+void Stack::registry(const Event &ev)
+{
+    Registry::events(ev);
+}
+
 
