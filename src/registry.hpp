@@ -24,6 +24,7 @@
 
 class LocalSegment;
 class Registry;
+class Event;
 
 class Endpoint final
 {
@@ -91,6 +92,8 @@ public:
     static Registry *find(const QString& target);
 
     static QList<Registry *> list();
+
+    static void events(const Event& event);
 
 private:
     QSqlRecord extension;

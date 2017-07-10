@@ -66,6 +66,16 @@ public:
         return d->context;
     }
 
+    inline const osip_message_t* request() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->request;
+    }
+
+    inline const osip_message_t* response() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->response;
+    }
+
     inline int cid() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->cid;

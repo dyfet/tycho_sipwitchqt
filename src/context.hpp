@@ -117,6 +117,7 @@ private:
     bool process(const Event& ev);
 
 signals:
+    void registry(const Event& ev);
     void finished();
 
 private slots:

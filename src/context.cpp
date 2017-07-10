@@ -219,6 +219,11 @@ void Context::run()
 {
     ++instanceCount;
 
+    // connect events to state handlers when we run...
+    auto stack = Stack::instance();
+    if(allow & Allow::REGISTRY)
+        connect(this, &Context::registry, stack, &Stack::registry);
+
     Logging::debug() << "Running " << objectName();
 
     const char *ap = nullptr;
@@ -264,7 +269,26 @@ void Context::run()
 }
 
 bool Context::process(const Event& ev) {
-    Q_UNUSED(ev);
+    switch(ev.type()) {
+    case EXOSIP_MESSAGE_NEW:
+        if(MSG_IS_REGISTER(ev.request())) {
+            if(!allow & Allow::REGISTRY)
+                return false;
+            emit registry(ev);
+        }
+        else
+            return false;
+        break;
+    case EXOSIP_REGISTRATION_FAILURE:
+    case EXOSIP_REGISTRATION_SUCCESS:
+        if(!allow & Allow::REGISTRY)
+            return false;
+        emit registry(ev);
+        break;
+    default:
+        return false;
+    }
+
     return true;
 }
 

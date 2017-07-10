@@ -62,6 +62,9 @@ protected:
 
 signals:
     void changeRealm(const QString& realm, const QString& digest);
+
+public slots:
+    virtual void registry(const Event& ev);
 };
 
 /*!
