@@ -279,12 +279,6 @@ bool Context::process(const Event& ev) {
         else
             return false;
         break;
-    case EXOSIP_REGISTRATION_FAILURE:
-    case EXOSIP_REGISTRATION_SUCCESS:
-        if(!allow & Allow::REGISTRY)
-            return false;
-        emit registry(ev);
-        break;
     default:
         return false;
     }
