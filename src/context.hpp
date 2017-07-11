@@ -21,7 +21,7 @@ class Context final : public QObject
 {
     Q_DISABLE_COPY(Context)
     Q_OBJECT
-
+    friend class ContextLocker;
 public:
     enum Protocol : unsigned {
         UDP = 1<<0,
@@ -122,6 +122,28 @@ signals:
 
 private slots:
     void run();
+};
+
+class ContextLocker final
+{
+    inline ContextLocker(Context *ctx) :
+    context(ctx) {
+        Q_ASSERT(context != nullptr);
+        eXosip_lock(context->context);
+    }
+
+    inline ContextLocker(const Event &evt) :
+    context(evt.context()) {
+        Q_ASSERT(context != nullptr);
+        eXosip_lock(context->context);
+    }
+
+    inline ~ContextLocker() {
+        eXosip_unlock(context->context);
+    }
+
+private:
+    Context *context;
 };
 
 /*!

@@ -66,7 +66,7 @@ public:
         return d->event->type;
     }
 
-    inline const Context *context() const {
+    inline Context *context() const {
         Q_ASSERT(d->event != nullptr);
         return d->context;
     }
