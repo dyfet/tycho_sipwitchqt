@@ -66,6 +66,14 @@ public:
         return d->context;
     }
 
+    inline const QList<osip_contact_t*>& contacts() const {
+        return d->contacts;
+    }
+
+    inline int expires() const {
+        return d->expires;
+    }
+
     inline const osip_message_t* request() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->request;
@@ -90,8 +98,9 @@ public:
         return d->association;
     }
 
-    inline const QString protocol() const;
+    const QString protocol() const;
     const QString toString() const;
+    const osip_contact_t *contact() const;
 
 private:
     class Data final : public QSharedData
@@ -102,9 +111,13 @@ private:
         Data(eXosip_event_t *evt, Context *ctx);
         ~Data();
 
+        int expires;                // longest expiration
         Context *context;
         eXosip_event_t *event;
         Event::Association association;
+        QList<osip_contact_t *>contacts;
+
+        void parseContacts(const osip_list_t &list);
     };
 
     QSharedDataPointer<Event::Data> d;
@@ -133,4 +146,12 @@ Q_DECLARE_METATYPE(Event)
  * be buried inside here.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
+ *
+ * \fn Event::contacts()
+ * Returns list of parsed contacts.  Register and 3xx responses can have
+ * multipe contacts.
+ *
+ * \fn Event::contact()
+ * Returns a single valid contact from the event.  If either no contacts,
+ * or multiple contacts are present, then returns null.
  */

@@ -18,13 +18,26 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-context(nullptr), event(nullptr), association(NONE)
+expires(-1), context(nullptr), event(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-context(ctx), event(evt), association(NONE)
+expires(-1), context(ctx), event(evt), association(NONE)
 {
+    // ignore constructor parser if empty event;
+    if(!evt) {
+        context = nullptr;
+        return;
+    }
+
+    // parse contact records and longest expiration from exosip2 event
+    if(evt->response) {
+        parseContacts(evt->response->contacts);
+    }
+    else if(evt->request) {
+        parseContacts(evt->request->contacts);
+    }
 }
 
 Event::Data::~Data()
@@ -32,6 +45,23 @@ Event::Data::~Data()
     if(event) {
         eXosip_event_free(event);
         event = nullptr;
+    }
+}
+
+void Event::Data::parseContacts(const osip_list_t& list)
+{
+    int pos = 0;
+    while(osip_list_eol(&list, pos) == 0) {
+        auto contact = (osip_contact_t *)osip_list_get(&list, pos++);
+        if(contact && contact->url)
+            contacts << contact;
+            osip_uri_param_t *param = nullptr;
+            osip_contact_param_get_byname(contact, (char *)"expires", &param);
+            if(param && param->gvalue) {
+                auto interval = osip_atoi(param->gvalue);
+            if(interval > expires)
+                expires = interval;
+        }
     }
 }
 
@@ -54,6 +84,14 @@ Event::~Event()
 {
 }
 
+// used for events that support only one contact object...
+const osip_contact_t *Event::contact() const
+{
+    if(d->contacts.size() != 1)
+        return nullptr;
+    return d->contacts[0];
+}
+
 const QString Event::protocol() const
 {
     Q_ASSERT(d->context != nullptr);
@@ -65,7 +103,7 @@ QDebug operator<<(QDebug dbg, const Event& ev)
     if(ev)
         dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ")";
     else
-        dbg.nospace() << "Event()";
+        dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();
 }
 
