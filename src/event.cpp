@@ -41,6 +41,19 @@ expires(-1), status(0), context(ctx), event(evt), authorization(nullptr), associ
             authorization = nullptr;
         parseContacts(evt->request->contacts);
     }
+
+    // parse out authorization for later use
+    if(authorization && authorization->username)
+        userid = Util::removeQuotes(authorization->username);
+    if(authorization && authorization->response)
+        digest = Util::removeQuotes(authorization->response);
+    if(authorization && authorization->nonce)
+        nonce = Util::removeQuotes(authorization->nonce);
+    if(authorization && authorization->realm)
+        realm = Util::removeQuotes(authorization->realm);
+    if(authorization && authorization->algorithm)
+        algorithm = Util::removeQuotes(authorization->algorithm);
+
 }
 
 Event::Data::~Data()
@@ -100,31 +113,6 @@ const QString Event::protocol() const
     Q_ASSERT(d->context != nullptr);
     return d->context->type();
 }
-
-const QString Event::authorizingUser() const
-{
-    if(!d->authorization || !d->authorization->username)
-        return QString();
-
-    return Util::removeQuotes(d->authorization->username);
-}
-
-const QString Event::authorizingOnce() const
-{
-    if(!d->authorization || !d->authorization->nonce)
-        return QString();
-
-    return Util::removeQuotes(d->authorization->nonce);
-}
-
-const QString Event::authorizingCode() const
-{
-    if(!d->authorization || !d->authorization->response)
-        return QString();
-
-    return Util::removeQuotes(d->authorization->response);
-}
-
 
 QDebug operator<<(QDebug dbg, const Event& ev)
 {

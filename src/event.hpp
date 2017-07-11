@@ -78,6 +78,26 @@ public:
         return d->status;
     }
 
+    inline const QString authorizingId() const {
+        return d->userid;
+    }
+
+    inline const QString authorizingDigest() const {
+        return d->digest;
+    }
+
+    inline const QString authorizingOnce() const {
+        return d->nonce;
+    }
+
+    inline const QString authorizingRealm() const {
+        return d->realm;
+    }
+
+    inline const QString authorizingAlgorithm() const {
+        return d->algorithm;
+    }
+
     inline osip_authorization_t *authorization() const {
         return d->authorization;
     }
@@ -109,9 +129,6 @@ public:
     const QString protocol() const;
     const QString toString() const;
     const osip_contact_t *contact() const;
-    const QString authorizingUser() const;
-    const QString authorizingOnce() const;
-    const QString authorizingCode() const;
 
 private:
     class Data final : public QSharedData
@@ -129,6 +146,7 @@ private:
         osip_authorization_t *authorization;
         Event::Association association;
         QList<osip_contact_t *>contacts;
+        QString userid, nonce, digest, algorithm, realm;
 
         void parseContacts(const osip_list_t &list);
     };
