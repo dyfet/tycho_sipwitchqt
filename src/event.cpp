@@ -18,12 +18,12 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-expires(-1), context(nullptr), event(nullptr), association(NONE)
+expires(-1), status(0), context(nullptr), event(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), context(ctx), event(evt), association(NONE)
+expires(-1), status(0), context(ctx), event(evt), association(NONE)
 {
     // ignore constructor parser if empty event;
     if(!evt) {
@@ -33,6 +33,7 @@ expires(-1), context(ctx), event(evt), association(NONE)
 
     // parse contact records and longest expiration from exosip2 event
     if(evt->response) {
+        status = evt->response->status_code;
         parseContacts(evt->response->contacts);
     }
     else if(evt->request) {

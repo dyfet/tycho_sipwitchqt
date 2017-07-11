@@ -74,6 +74,10 @@ public:
         return d->expires;
     }
 
+    inline int status() const {
+        return d->status;
+    }
+
     inline const osip_message_t* request() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->request;
@@ -112,6 +116,7 @@ private:
         ~Data();
 
         int expires;                // longest expiration
+        int status;
         Context *context;
         eXosip_event_t *event;
         Event::Association association;
