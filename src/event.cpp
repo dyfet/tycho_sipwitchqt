@@ -18,12 +18,12 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-expires(-1), status(0), context(nullptr), event(nullptr), association(NONE)
+expires(-1), status(0), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), status(0), context(ctx), event(evt), association(NONE)
+expires(-1), status(0), context(ctx), event(evt), authorization(nullptr), association(NONE)
 {
     // ignore constructor parser if empty event;
     if(!evt) {
@@ -37,6 +37,8 @@ expires(-1), status(0), context(ctx), event(evt), association(NONE)
         parseContacts(evt->response->contacts);
     }
     else if(evt->request) {
+        if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
+            authorization = nullptr;
         parseContacts(evt->request->contacts);
     }
 }
@@ -98,6 +100,31 @@ const QString Event::protocol() const
     Q_ASSERT(d->context != nullptr);
     return d->context->type();
 }
+
+const QString Event::authorizingUser() const
+{
+    if(!d->authorization || !d->authorization->username)
+        return QString();
+
+    return Util::removeQuotes(d->authorization->username);
+}
+
+const QString Event::authorizingOnce() const
+{
+    if(!d->authorization || !d->authorization->nonce)
+        return QString();
+
+    return Util::removeQuotes(d->authorization->nonce);
+}
+
+const QString Event::authorizingCode() const
+{
+    if(!d->authorization || !d->authorization->response)
+        return QString();
+
+    return Util::removeQuotes(d->authorization->response);
+}
+
 
 QDebug operator<<(QDebug dbg, const Event& ev)
 {

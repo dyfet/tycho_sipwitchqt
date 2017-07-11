@@ -78,6 +78,10 @@ public:
         return d->status;
     }
 
+    inline osip_authorization_t *authorization() const {
+        return d->authorization;
+    }
+
     inline const osip_message_t* request() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->request;
@@ -105,6 +109,9 @@ public:
     const QString protocol() const;
     const QString toString() const;
     const osip_contact_t *contact() const;
+    const QString authorizingUser() const;
+    const QString authorizingOnce() const;
+    const QString authorizingCode() const;
 
 private:
     class Data final : public QSharedData
@@ -119,6 +126,7 @@ private:
         int status;
         Context *context;
         eXosip_event_t *event;
+        osip_authorization_t *authorization;
         Event::Association association;
         QList<osip_contact_t *>contacts;
 

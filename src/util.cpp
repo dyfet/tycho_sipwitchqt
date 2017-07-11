@@ -22,6 +22,15 @@
 #include "system.hpp"
 
 namespace Util {
+    QString removeQuotes(const QString& str)
+    {
+        if(str.startsWith("\"") && str.endsWith("\""))
+            return str.mid(1, str.length() - 2);
+        else if(str.startsWith("'") && str.endsWith("'"))
+            return str.mid(1, str.length() - 2);
+        return str;
+    }
+
     const QStringList controlOptions(const char **argv)
     {
         QStringList cmds;
