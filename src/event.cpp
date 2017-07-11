@@ -40,6 +40,7 @@ expires(-1), status(0), context(ctx), event(evt), authorization(nullptr), associ
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseContacts(evt->request->contacts);
+        parseSource(evt->request->vias);
     }
 
     // parse out authorization for later use
@@ -53,7 +54,6 @@ expires(-1), status(0), context(ctx), event(evt), authorization(nullptr), associ
         realm = Util::removeQuotes(authorization->realm);
     if(authorization && authorization->algorithm)
         algorithm = Util::removeQuotes(authorization->algorithm);
-
 }
 
 Event::Data::~Data()
@@ -62,6 +62,47 @@ Event::Data::~Data()
         eXosip_event_free(event);
         event = nullptr;
     }
+}
+
+// find effective source address of requesting endpoint, or address of nat
+void Event::Data::parseSource(const osip_list_t& list)
+{
+    int pos = 0;
+    osip_via_t *via;
+    Address nat;
+
+    while(osip_list_eol(&list, pos) == 0) {
+        via = (osip_via_t *)osip_list_get(&list, pos++);
+        ++hops;
+        if(via->host) {
+            const char *addr = via->host;
+            quint16 port = 5060, rport = 0;
+            if(via->port)
+                port = atoi(via->port);
+            osip_uri_param_t *param = nullptr;
+            osip_via_param_get_byname(via, (char *)"rport", &param);
+            if(param && param->gvalue)
+                rport = atoi(param->gvalue);
+            if(via->port)
+                port = atoi(via->port);
+            else if(rport)
+                port = rport;
+            source = Address(addr, port);
+
+            // top nat only
+            if(!nat && rport) {
+                param = nullptr;
+                osip_via_param_get_byname(via, (char *)"received", &param);
+                if(param && param->gvalue)
+                    nat = Address(param->gvalue, rport);
+            }
+        }
+    }
+
+    // nat overrides last via contact source address
+    if(nat)
+        source = nat;
+
 }
 
 void Event::Data::parseContacts(const osip_list_t& list)

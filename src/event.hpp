@@ -18,6 +18,7 @@
 #include "compiler.hpp"
 #include "util.hpp"
 #include "subnet.hpp"
+#include "address.hpp"
 
 #include <QThread>
 #include <QMutex>
@@ -83,6 +84,14 @@ public:
         return d->status;
     }
 
+    inline int hops() const {
+        return d->hops;
+    }
+
+    inline const Address source() const {
+        return d->source;
+    }
+
     inline const QString authorizingId() const {
         return d->userid;
     }
@@ -146,14 +155,17 @@ private:
 
         int expires;                // longest expiration
         int status;
+        int hops;                   // via hops
         Context *context;
         eXosip_event_t *event;
         osip_authorization_t *authorization;
         Event::Association association;
         QList<osip_contact_t *>contacts;
         QString userid, nonce, digest, algorithm, realm;
+        Address source;  // if nat, has first nat
 
         void parseContacts(const osip_list_t &list);
+        void parseSource(const osip_list_t &list);
     };
 
     QSharedDataPointer<Event::Data> d;

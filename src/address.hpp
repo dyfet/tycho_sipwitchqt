@@ -25,7 +25,7 @@
 class Address
 {
 public:
-    Address(QHostAddress addr, quint16 port) noexcept;
+    Address(const QString& address, quint16 port) noexcept;
 
     Address() noexcept;
 
@@ -41,7 +41,7 @@ public:
     Address& operator=(Address&& from) {
         pair = std::move(from.pair);
         from.pair.second = 0;
-        from.pair.first = QHostAddress::Any;
+        from.pair.first = "";
         return *this;
     }
 
@@ -53,20 +53,12 @@ public:
         return pair != other.pair;
     }
 
-    inline operator QPair<QHostAddress,quint16>() {
-        return pair;
-    }
-
-    inline const QHostAddress host() const {
+    inline const QString host() const {
         return pair.first;
 	}
 
     inline quint16 port() const {
         return pair.second;
-	}
-
-	inline QAbstractSocket::NetworkLayerProtocol protocol() const {
-        return pair.first.protocol();
 	}
 
     inline operator bool() const {
@@ -78,7 +70,7 @@ public:
     }
 
 private:
-    QPair<QHostAddress,quint16> pair;
+    QPair<QString,quint16> pair;
 
     friend uint qHash(const Address& key, uint seed) {
         return qHash(key.pair.first, seed) ^ key.port();
@@ -96,9 +88,11 @@ QDebug operator<<(QDebug dbg, const Address& addr);
 
 /*!
  * \class Address
- * \brief An internet connection address.
- * This provides a convenient means to represent an internet connection
- * as a host address and port number.
+ * \brief A SIP endpoint address.
+ * This provides a convenient means to represent a remote connection
+ * as a host address and port number.  This uses strings so that the
+ * actual host dns resolution happens in the eXosip2 library using c-ares
+ * resolver on demand, rather than when the object is created.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
  */

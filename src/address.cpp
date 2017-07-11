@@ -18,8 +18,8 @@
 #include "inline.hpp"
 #include "address.hpp"
 
-Address::Address(QHostAddress host, quint16 port) noexcept :
-pair(QPair<QHostAddress,int>(host, port))
+Address::Address(const QString& host, quint16 port) noexcept :
+pair(QPair<QString,quint16>(host, port))
 {
 }
 
@@ -32,11 +32,11 @@ Address::Address(Address&& from) noexcept :
 pair(std::move(from.pair))
 {
     from.pair.second = 0;
-    from.pair.first = QHostAddress::Any;
+    from.pair.first = "";
 }
 
 Address::Address() noexcept :
-pair(QHostAddress::Any, 0)
+pair("", 0)
 {
 }
 

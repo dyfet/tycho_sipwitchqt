@@ -16,7 +16,6 @@
  */
 
 #include "compiler.hpp"
-#include "address.hpp"
 #include "context.hpp"
 
 #include <QSqlRecord>
@@ -39,7 +38,7 @@ public:
         return updated.hasExpired(expiration);
     }
 
-    inline const QHostAddress host() const {
+    inline const QString host() const {
         return address.host();
     }
 
