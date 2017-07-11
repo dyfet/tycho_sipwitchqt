@@ -198,3 +198,15 @@ const QString Event::toString() const
     }
     return "unknown";
 }
+
+namespace Util {
+    QString removeQuotes(const QString& str)
+    {
+        if(str.startsWith("\"") && str.endsWith("\""))
+            return str.mid(1, str.length() - 2);
+        else if(str.startsWith("'") && str.endsWith("'"))
+            return str.mid(1, str.length() - 2);
+        return str;
+    }
+};
+

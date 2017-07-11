@@ -22,7 +22,6 @@
 #include <QCommandLineParser>
 
 namespace Util {
-    QString removeQuotes(const QString& str);
     const QString localDomain();
     const QList<QHostAddress> bindAddress(const QString& hostId);
     const QList<QHostAddress> hostAddress(const QString& hostId);

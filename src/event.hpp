@@ -29,6 +29,11 @@
 
 class Context;
 
+namespace Util
+{
+    QString removeQuotes(const QString& str);
+};
+
 class Event final
 {
 public:
