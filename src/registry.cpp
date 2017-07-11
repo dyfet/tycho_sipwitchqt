@@ -93,6 +93,7 @@ Registry *Registry::find(const QString& target)
 // event handling for registration system as a whole...
 void Registry::events(const Event& ev)
 {
+    Q_UNUSED(ev);
 }
 
 QDebug operator<<(QDebug dbg, const Registry& registry)

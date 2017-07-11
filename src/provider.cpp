@@ -68,6 +68,7 @@ void Provider::reload(const QList<QSqlRecord>& records)
 void Provider::update(const QSqlRecord &record)
 {
     // if doesn't exist, do new...else change fields...
+    Q_UNUSED(record);
 }
 
 QDebug operator<<(QDebug dbg, const Provider& prov)

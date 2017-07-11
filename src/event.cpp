@@ -69,14 +69,15 @@ void Event::Data::parseContacts(const osip_list_t& list)
     int pos = 0;
     while(osip_list_eol(&list, pos) == 0) {
         auto contact = (osip_contact_t *)osip_list_get(&list, pos++);
-        if(contact && contact->url)
+        if(contact && contact->url) {
             contacts << contact;
             osip_uri_param_t *param = nullptr;
             osip_contact_param_get_byname(contact, (char *)"expires", &param);
             if(param && param->gvalue) {
                 auto interval = osip_atoi(param->gvalue);
-            if(interval > expires)
-                expires = interval;
+                if(interval > expires)
+                    expires = interval;
+            }
         }
     }
 }

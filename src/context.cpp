@@ -272,7 +272,7 @@ bool Context::process(const Event& ev) {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_REGISTER(ev.request())) {
-            if(!allow & Allow::REGISTRY)
+            if(!(allow & Allow::REGISTRY))
                 return false;
             emit registry(ev);
         }
