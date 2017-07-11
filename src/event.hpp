@@ -192,6 +192,12 @@ Q_DECLARE_METATYPE(Event)
  * can then be passed to the main sip Stack class and handled in virtual
  * slots.  Exosip2 memory management for these data structures will also
  * be buried inside here.
+ *
+ * A lot of computation and parsing for lists, to determine nat and source
+ * address, contacts, etc, happens in the constructor automatically for 
+ * every event.  The event object is constructed in each Context thread 
+ * before handed off; this maximizes compute in parallel listeners rather
+ * than in bottlenecks like the stack manager thread.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
  *
