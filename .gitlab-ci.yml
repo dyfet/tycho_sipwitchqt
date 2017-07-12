@@ -1,0 +1,13 @@
+image: in1t3r/gitlabqt:latest
+
+stages:
+- build
+
+build:
+  stage: build
+  script:
+    - qmake
+    - make
+  tags:
+    - docker
+
