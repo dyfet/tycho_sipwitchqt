@@ -123,7 +123,7 @@ SERVICE_TABLE_ENTRY DetachedServices[] = {
 
 #define tr(x)   QCoreApplication::translate("Server", x)
 
-int main(int argc, char **argv)
+int xmain(int argc, char **argv)
 {
     static bool detached = System::detach(argc, SERVICE_VARPATH);
     int exitcode = 0;
