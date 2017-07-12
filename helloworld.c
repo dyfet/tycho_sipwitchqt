@@ -2,6 +2,6 @@
 
 int main(int argc, char const *argv[]) {
   printf("Hello World!\n");
-  puts("Hello World again\n");
+  printf("Lets see whether the CI will work with merge.\n");
   return 0;
 }
