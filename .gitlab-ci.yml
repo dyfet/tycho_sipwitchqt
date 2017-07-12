@@ -12,3 +12,4 @@ build:
     - docker
   only:
     - master
+  allow_failure: false
