@@ -10,4 +10,5 @@ build:
     - make
   tags:
     - docker
-
+  only:
+    - master
