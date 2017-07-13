@@ -18,12 +18,12 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-expires(-1), hops(0), status(0), natted(false), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), hops(0), status(0), natted(false), context(ctx), event(evt), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), authorization(nullptr), association(NONE)
 {
     // ignore constructor parser if empty event;
     if(!evt) {

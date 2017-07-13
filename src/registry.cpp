@@ -18,6 +18,7 @@
 #include "stack.hpp"
 
 static QHash <const QString, Registry *> extensions, aliases;
+static QHash<const Context *, QHash<Address, Endpoint *>> Endpoints;
 
 Registry::Registry(const QSqlRecord& db) :
 extension(db), id(db.value("number").toString()), alias(db.value("alias").toString()), text(db.value("display").toString())
@@ -95,6 +96,31 @@ void Registry::events(const Event& ev)
 {
     Q_UNUSED(ev);
 }
+
+Endpoint::Endpoint(Context *ctx, const Contact& addr, Registry *reg) :
+registry(reg), context(ctx), address(addr)
+{
+    Endpoints[ctx].insert(address, this);
+}
+
+Endpoint::~Endpoint()
+{
+    Endpoints[context].remove(address);
+}
+
+Endpoint *Endpoint::find(const Context *ctx, const Contact& addr) {
+    if(Endpoints.contains(ctx))
+        return Endpoints[ctx].value(addr, nullptr);
+    else
+        return nullptr;
+}
+
+QDebug operator<<(QDebug dbg, const Endpoint& endpoint)
+{
+    dbg.nospace() << "Endpoint(" << endpoint.host() << ":" << endpoint.port() << ")";
+    return dbg.maybeSpace();
+}
+
 
 QDebug operator<<(QDebug dbg, const Registry& registry)
 {

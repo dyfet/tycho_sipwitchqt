@@ -3,7 +3,6 @@
 HEADERS += \
     $${PWD}/context.hpp \
     $${PWD}/stack.hpp \
-    $${PWD}/subnet.hpp \
     $${PWD}/address.hpp \
     $${PWD}/registry.hpp \
     $${PWD}/provider.hpp \
@@ -13,12 +12,9 @@ HEADERS += \
 SOURCES += \
     $${PWD}/context.cpp \
     $${PWD}/stack.cpp \
-    $${PWD}/subnet.cpp \
     $${PWD}/address.cpp \
-    $${PWD}/endpoint.cpp \
     $${PWD}/registry.cpp \
     $${PWD}/provider.cpp \
-    $${PWD}/segment.cpp \
     $${PWD}/call.cpp \
     $${PWD}/event.cpp \
 
