@@ -116,6 +116,10 @@ public:
         return d->authorization;
     }
 
+    inline bool isNatted() const {
+        return d->natted;
+    }
+
     inline const osip_message_t* request() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->request;
@@ -156,6 +160,7 @@ private:
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops
+        bool natted;
         Context *context;
         eXosip_event_t *event;
         osip_authorization_t *authorization;

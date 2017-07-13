@@ -18,12 +18,12 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-expires(-1), status(0), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
+expires(-1), hops(0), status(0), natted(false), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), status(0), context(ctx), event(evt), authorization(nullptr), association(NONE)
+expires(-1), hops(0), status(0), natted(false), context(ctx), event(evt), authorization(nullptr), association(NONE)
 {
     // ignore constructor parser if empty event;
     if(!evt) {
@@ -85,8 +85,6 @@ void Event::Data::parseSource(const osip_list_t& list)
                 rport = atoi(param->gvalue);
             if(via->port)
                 port = atoi(via->port);
-            else if(rport)
-                port = rport;
             source = Address(addr, port);
 
             // top nat only
@@ -100,8 +98,10 @@ void Event::Data::parseSource(const osip_list_t& list)
     }
 
     // nat overrides last via contact source address
-    if(nat)
+    if(nat) {
+        natted = true;
         source = nat;
+    }
 
 }
 
