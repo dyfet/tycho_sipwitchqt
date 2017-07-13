@@ -73,6 +73,8 @@ public:
 
     const QStringList localnames() const;
 
+    const QString uriTo(const Contact& address) const;
+
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
     }

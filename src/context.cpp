@@ -129,6 +129,22 @@ Context::~Context()
         eXosip_quit(context);
 }
 
+const QString Context::uriTo(const Contact &address) const
+{
+    QString host = address.host();
+    QString port = "";
+
+    if(host[0] != QChar('[') && host.contains(":"))
+        host = "[" + host + "]";
+
+    if(address.port() != schema.inPort)
+        port = ":" + QString::number(address.port());
+
+    if(address.userId().length() > 0)
+        return schema.uri + address.userId() + "@" + host + port;
+    return schema.uri + host + port;
+}
+
 QAbstractSocket::NetworkLayerProtocol Context::protocol()
 {
     if(netFamily == AF_INET)
