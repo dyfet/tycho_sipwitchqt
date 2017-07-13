@@ -17,7 +17,6 @@
 
 #include "compiler.hpp"
 #include "util.hpp"
-#include "subnet.hpp"
 #include "address.hpp"
 
 #include <QThread>

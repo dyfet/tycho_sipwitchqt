@@ -31,8 +31,8 @@ public:
 
     // permissions to pre-filter sip messages
     enum Allow : unsigned {
-        REGISTRY =          1 << 8,
-        REMOTE =            1 << 9,     // restrict to local subnets...
+        REGISTRY =          1 << 8,     // permit registrations from context
+        REMOTE =            1 << 9,     // permit remote operations...
         UNAUTHENTICATED =   1 << 10,    // unathenticated requests allowed
     };
 
@@ -68,16 +68,10 @@ public:
         return schema.name;
     }
 
-    const QString uriTo(const QHostAddress& target) const;
-    const QString uriTo(const QHostAddress& target, const QString& id) const;
-
-    void setOtherNets(QList<Subnet> subnets);
     void setOtherNames(QStringList names);
     void setPublicName(QString name);
 
     const QStringList localnames() const;
-
-    const QList<Subnet> localnets() const;
 
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
@@ -99,20 +93,14 @@ private:
     int netFamily, netPort, netTLS, netProto;
     QByteArray netAddress;
     QString uriAddress;
-    Subnet localSubnet;
     QString publicName;
     QStringList localHosts, otherNames;
-    QList<Subnet> otherNets;
-    mutable QMutex nameLock, netLock;
+    mutable QMutex nameLock;
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
 
     ~Context();
-
-    const QString uriPeer(const QHostAddress& target) const;
-
-    bool isLocal(const QHostAddress &target) const;
 
     bool process(const Event& ev);
     bool authenticated(const Event& ev);

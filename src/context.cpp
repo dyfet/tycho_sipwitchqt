@@ -98,17 +98,6 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     Contexts << this;
 
     if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
-        auto nets = QNetworkInterface::allInterfaces();
-        foreach(auto net, nets) {
-            foreach(auto entry, net.addressEntries()) {
-                auto proto = entry.ip().protocol();
-                if(entry.ip() == addr && proto == addr.protocol()) {
-                    localSubnet = Subnet(entry.ip(), entry.prefixLength());
-                    break;
-                }
-            }
-        }
-
         if(ipv6)
             uriAddress = "[" + netAddress + "]";
         else
@@ -138,94 +127,6 @@ Context::~Context()
 {
     if(context)
         eXosip_quit(context);
-}
-
-const QString Context::uriTo(const QHostAddress& target) const
-{
-    QString peer = uriPeer(target);
-    if(peer.isNull())
-        return QString();
-    return schema.uri + peer;
-}
-
-const QString Context::uriTo(const QHostAddress& target, const QString& id) const
-{
-    QString peer = uriPeer(target);
-    if(peer.isNull())
-        return QString();
-    return schema.uri + id + "@" + peer;
-}
-
-bool Context::isLocal(const QHostAddress& target) const
-{
-    // check our subnet lists
-    foreach(auto subnet, localnets()) {
-        if(subnet.contains(target)) {
-            return true;
-        }
-    }
-
-    // check local interfaces if multi-bound context
-    if(!localSubnet) {
-        auto nets = QNetworkInterface::allInterfaces();
-        foreach(auto net, nets) {
-            foreach(auto entry, net.addressEntries()) {
-                if(entry.ip().protocol() != target.protocol())
-                    continue;
-                Subnet sub(entry.ip(), entry.prefixLength());
-                if(sub.contains(target)) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-const QString Context::uriPeer(const QHostAddress& target) const
-{
-    QString uriHost;
-
-    // check our subnet lists
-    foreach(auto subnet, localnets()) {
-        if(subnet.contains(target)) {
-            return uriAddress;
-        }
-    }
-
-    // check local interfaces if multi-bound context
-    if(!localSubnet) {
-        auto nets = QNetworkInterface::allInterfaces();
-        foreach(auto net, nets) {
-            foreach(auto entry, net.addressEntries()) {
-                if(entry.ip().protocol() != target.protocol())
-                    continue;
-                Subnet sub(entry.ip(), entry.prefixLength());
-                if(sub.contains(target)) {
-                    uriHost = entry.ip().toString().toUtf8();
-                    if(target.protocol() == QAbstractSocket::IPv6Protocol)
-                        uriHost = "[" + uriHost + "]";
-                    if(netPort != schema.inPort)
-                        uriHost = uriHost + ":" + QString::number(netPort);
-                    return uriHost;
-                }
-            }
-        }
-    }
-
-    if(!(allow & Allow::REMOTE))
-        return QString();
-
-    QMutexLocker lock(&nameLock);
-    if(publicName.length() > 0)
-        uriHost = publicName;
-    else
-        uriHost = QHostInfo::localHostName();
-
-    if(netPort != schema.inPort)
-        return uriHost + ":" + QString::number(netPort);
-
-    return uriHost;
 }
 
 QAbstractSocket::NetworkLayerProtocol Context::protocol()
@@ -357,12 +258,6 @@ void Context::shutdown()
     }
 }
 
-void Context::setOtherNets(QList<Subnet> subnets) 
-{
-    QMutexLocker lock(&netLock);
-    otherNets = subnets;
-}
-
 void Context::setOtherNames(QStringList names) 
 {
     QMutexLocker lock(&nameLock);
@@ -389,15 +284,6 @@ const QStringList Context::localnames() const
     return names;
 }
 
-const QList<Subnet> Context::localnets() const
-{
-    QList<Subnet> nets;
-    if(localSubnet)
-    nets << localSubnet;
-    QMutexLocker lock(&netLock);
-    nets << otherNets;
-    return nets;
-}
 
 
 

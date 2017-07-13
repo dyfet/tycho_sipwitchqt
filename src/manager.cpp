@@ -108,21 +108,6 @@ void Manager::applyConfig(const QVariantHash& config)
     }
  
     applyNames();
-    QList<Subnet> subnets4, subnets6;
-    foreach(auto net, config["subnets"].toStringList()) {
-        Subnet sub(net);
-        if(sub.protocol() == QAbstractSocket::IPv4Protocol)
-            subnets4 << sub;
-        else
-            subnets6 << sub;
-    }
-
-    foreach(auto context, Context::contexts()) {
-        if(context->protocol() == QAbstractSocket::IPv4Protocol)
-            context->setOtherNets(subnets4);
-        else
-            context->setOtherNets(subnets6);
-    }
 }
 
 
