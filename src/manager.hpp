@@ -16,7 +16,7 @@
  */
 
 #include "stack.hpp"
-#include "queries.hpp"
+#include "query.hpp"
 
 class Manager : public Stack
 {
