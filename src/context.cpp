@@ -82,12 +82,14 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     eXosip_set_user_agent(context, Stack::agent());
 
     auto proto = addr.protocol();
-    int ipv6 = 0;
+    int ipv6 = 0, rport = 1, dns = 2;
     if(proto == QAbstractSocket::IPv6Protocol) {
         netFamily = AF_INET6;
         ipv6 = 1;
-    }
+    } 
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
+    eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
+    eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
 
     if(!addr.isNull())
         netAddress = addr.toString().toUtf8();
@@ -294,7 +296,7 @@ bool Context::authenticated(const Event& ev) {
 
     // create challenge...
     osip_message_t *reply = nullptr;
-    time_t now;
+    time_t now;     //TODO: A real nonce generator and cache to verify replies
     QString nonce = QString::number(time(&now));
     QString challenge = QString("Digest Realm=\"") + Stack::realm() + QString("\", nonce=\"") + nonce + QString("\", algorithm=\"") + Stack::digestName() + QString("\"");
 

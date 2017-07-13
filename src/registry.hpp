@@ -31,11 +31,11 @@ class Endpoint final
     Q_DISABLE_COPY(Endpoint)
 
 public:
-    Endpoint(Context *ctx, const Address& addr, int expires, Registry *reg = nullptr);
+    Endpoint(Context *ctx, const Contact& addr, Registry *reg = nullptr);
     ~Endpoint();
 
     inline bool hasExpired() const {
-        return updated.hasExpired(expiration);
+        return address.hasExpired();
     }
 
     inline const QString host() const {
@@ -54,17 +54,21 @@ public:
         return registry;
     }
     
-    int expires(void) const;
-    void refresh(int expires);
+    inline time_t expires() const {
+        return address.expires();
+    }
+
+    inline void refresh(int expires) {
+        address.refresh(expires);
+    }
     
-    static Endpoint *find(const Context *ctx, const Address& addr);
+    static Endpoint *find(const Context *ctx, const Contact &addr);
 
 private:
     Registry *registry;             // registry that holds our endpoint
     Context *context;               // context endpoint exists on
-    Address address;                // network address of endpoint
+    Contact address;                // network address of endpoint
     QElapsedTimer updated;          // last refreshed registration
-    qint64 expiration;              // msecs to expiration
     QList<LocalSegment *> calls;    // local calls on this endpoint...
 };
 

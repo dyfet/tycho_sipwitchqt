@@ -72,7 +72,7 @@ public:
         return d->context;
     }
 
-    inline const QList<osip_contact_t*>& contacts() const {
+    inline const QList<Contact>& contacts() const {
         return d->contacts;
     }
 
@@ -151,7 +151,7 @@ public:
 
     const QString protocol() const;
     const QString toString() const;
-    const osip_contact_t *contact() const;
+    const Contact contact() const;
 
 private:
     class Data final : public QSharedData
@@ -170,7 +170,7 @@ private:
         eXosip_event_t *event;
         osip_authorization_t *authorization;
         Event::Association association;
-        QList<osip_contact_t *>contacts;
+        QList<Contact>contacts;
         QString userid, nonce, digest, algorithm, realm;
         Address source;  // if nat, has first nat
 

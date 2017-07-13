@@ -69,16 +69,80 @@ public:
         return pair.second == 0;
     }
 
-private:
+protected:
     QPair<QString,quint16> pair;
 
+private:
     friend uint qHash(const Address& key, uint seed) {
         return qHash(key.pair.first, seed) ^ key.port();
     }
 
 };
 
+class Contact final : public Address
+{
+public:
+    Contact(const QString& address, quint16 port, int duration = -1, const QString& user = "") noexcept;
+
+    Contact(const Address& address, int duration = -1, const QString& user = "") noexcept;
+
+    Contact() noexcept;
+
+    Contact(const Contact& from) noexcept;
+
+    Contact(Contact&& from) noexcept;
+
+    Contact& operator=(const Contact& from) {
+        pair = from.pair;
+        expiration = from.expiration;
+        username = from.username;
+        return *this;
+    }
+
+    Contact& operator=(Contact&& from) {
+        pair = std::move(from.pair);
+        from.pair.second = 0;
+        from.pair.first = "";
+        from.expiration = 0;
+        from.username = "";
+        return *this;
+    }
+
+    bool operator==(const Contact& other) const {
+        return pair == other.pair && username == other.username;
+    }
+
+    bool operator!=(const Contact& other) const {
+        return pair != other.pair || username != other.username;
+    }
+
+    time_t expires() const {
+        return expiration;
+    }
+
+    void refresh(int seconds) {
+        if(expiration)
+            expiration += seconds;
+    }
+
+    QString userId() const {
+        return username;
+    }
+
+    bool hasExpired() const;
+
+private:
+    time_t expiration;
+    QString username;
+
+private:
+    friend uint qHash(const Contact& key, uint seed) {
+        return qHash(key.username) ^ qHash(key.pair.first, seed) ^ key.port();
+    }
+};
+
 QDebug operator<<(QDebug dbg, const Address& addr);
+QDebug operator<<(QDebug dbg, const Contact& contact);
 
 /*!
  * Manage information on internet connections.
@@ -93,6 +157,15 @@ QDebug operator<<(QDebug dbg, const Address& addr);
  * as a host address and port number.  This uses strings so that the
  * actual host dns resolution happens in the eXosip2 library using c-ares
  * resolver on demand, rather than when the object is created.
+ * \author David Sugar <tychosoft@gmail.com>
+ * \ingroup Stack
+ */
+
+/*!
+ * \class Contact
+ * \brief A SIP endpoint contact.
+ * This provides a convenient means to represent a sip endpoint address
+ * along with it's expected duration.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
  */

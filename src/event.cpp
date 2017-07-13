@@ -34,13 +34,13 @@ expires(-1), hops(0), status(0), natted(false), context(ctx), event(evt), author
     // parse contact records and longest expiration from exosip2 event
     if(evt->response) {
         status = evt->response->status_code;
-        parseContacts(evt->response->contacts);
+        //parseContacts(evt->response->contacts);
     }
     else if(evt->request) {
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
-        parseContacts(evt->request->contacts);
         parseSource(evt->request->vias);
+        parseContacts(evt->request->contacts);
     }
 
     // parse out authorization for later use
@@ -111,13 +111,22 @@ void Event::Data::parseContacts(const osip_list_t& list)
     while(osip_list_eol(&list, pos) == 0) {
         auto contact = (osip_contact_t *)osip_list_get(&list, pos++);
         if(contact && contact->url) {
-            contacts << contact;
+            osip_uri_t *uri = contact->url;
             osip_uri_param_t *param = nullptr;
             osip_contact_param_get_byname(contact, (char *)"expires", &param);
+            int duration = -1;
             if(param && param->gvalue) {
-                auto interval = osip_atoi(param->gvalue);
-                if(interval > expires)
-                    expires = interval;
+                auto duration = osip_atoi(param->gvalue);
+                if(duration > expires)
+                    expires = duration;
+            }
+            if(natted)  // really make sure contact is natted too...
+                contacts << Contact(source, duration, uri->username);
+            else {
+                quint16 port = 5060;
+                if(uri->port && uri->port[0])
+                    port = atoi(uri->port);
+                contacts << Contact(uri->host, port, duration, uri->username);
             }
         }
     }
@@ -143,10 +152,10 @@ Event::~Event()
 }
 
 // used for events that support only one contact object...
-const osip_contact_t *Event::contact() const
+const Contact Event::contact() const
 {
     if(d->contacts.size() != 1)
-        return nullptr;
+        return Contact();
     return d->contacts[0];
 }
 

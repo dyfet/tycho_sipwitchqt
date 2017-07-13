@@ -40,10 +40,71 @@ pair("", 0)
 {
 }
 
+Contact::Contact(const QString& host, quint16 port, int duration, const QString& user) noexcept :
+Address(host, port), expiration(0), username(user)
+{
+    if(duration > -1) {
+        time(&expiration);
+        expiration += duration;
+    }
+}
+
+Contact::Contact(const Address& address, int duration, const QString& user) noexcept :
+Address(address), expiration(0), username(user)
+{
+    if(duration > -1) {
+        time(&expiration);
+        expiration += duration;
+    }
+}
+
+Contact::Contact(const Contact& from) noexcept
+{
+    pair = from.pair;
+    expiration = from.expiration;
+    username = from.username;
+}
+
+Contact::Contact(Contact&& from) noexcept
+{
+    pair = std::move(from.pair);
+    from.pair.second = 0;
+    from.pair.first = "";
+    from.expiration = 0;
+    from.username = "";
+}
+
+Contact::Contact() noexcept :
+Address(), expiration(0)
+{
+}
+
+bool Contact::hasExpired() const {
+    if(!expiration)
+        return false;
+    time_t now;
+    time(&now);
+    if(now >= expiration)
+        return true;
+}
+
 QDebug operator<<(QDebug dbg, const Address& addr)
 {
     dbg.nospace() << "Address(" << addr.host() << ":" << addr.port() << ")";
     return dbg.maybeSpace();
 }
 
-
+QDebug operator<<(QDebug dbg, const Contact& addr)
+{
+    time_t now, expireTime = addr.expires();
+    time(&now);
+    QString expires = "never";
+    if(expireTime) {
+        if(now >= expireTime)
+            expires = "expired";
+        else
+            expires = QString::number(expireTime - now) + "s";
+    }
+    dbg.nospace() << "Contact(" << addr.host() << ":" << addr.port() << ",expires=" << expires << ")";
+    return dbg.maybeSpace();
+}
