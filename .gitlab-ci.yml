@@ -1,13 +1,25 @@
 image: in1t3r/gitlabqt:latest
 
 stages:
+- test
 - build
 
+test:
+  stage: test
+  script:
+    - qmake
+    - make
+  tags:
+    - docker
+  only:
+    - master
 build:
   stage: build
   script:
     - qmake
     - make
+  when:
+    - on_success
   tags:
     - docker
   only:
