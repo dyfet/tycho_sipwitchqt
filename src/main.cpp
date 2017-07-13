@@ -143,7 +143,6 @@ int main(int argc, char **argv)
         {{"P", "port"}, tr("Specify network port to bind"), "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
-        {{"t", "trusted"}, tr("enable trusted subnets")},
         {{"x", "debug"}, tr("Enable debug output")},
         {{"abort"}, tr("Force server abort")},
         {{"control"}, tr("Control service")},
