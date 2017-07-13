@@ -140,6 +140,11 @@ public:
         return d->event->did;
     }
 
+    inline int tid() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->tid;
+    }
+
     inline Association association() const {
         return d->association;
     }

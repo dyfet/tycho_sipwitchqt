@@ -21,7 +21,6 @@ class Context final : public QObject
 {
     Q_DISABLE_COPY(Context)
     Q_OBJECT
-    friend class ContextLocker;
 public:
     enum Protocol : unsigned {
         UDP = 1<<0,
@@ -32,8 +31,9 @@ public:
 
     // permissions to pre-filter sip messages
     enum Allow : unsigned {
-        REGISTRY =  1 << 8,
-        REMOTE =    1 << 9, // restrict to local subnets...
+        REGISTRY =          1 << 8,
+        REMOTE =            1 << 9,     // restrict to local subnets...
+        UNAUTHENTICATED =   1 << 10,    // unathenticated requests allowed
     };
 
     typedef struct {
@@ -115,6 +115,7 @@ private:
     bool isLocal(const QHostAddress &target) const;
 
     bool process(const Event& ev);
+    bool authenticated(const Event& ev);
 
 signals:
     void registry(const Event& ev);
@@ -122,28 +123,6 @@ signals:
 
 private slots:
     void run();
-};
-
-class ContextLocker final
-{
-    inline ContextLocker(Context *ctx) :
-    context(ctx) {
-        Q_ASSERT(context != nullptr);
-        eXosip_lock(context->context);
-    }
-
-    inline ContextLocker(const Event &evt) :
-    context(evt.context()) {
-        Q_ASSERT(context != nullptr);
-        eXosip_lock(context->context);
-    }
-
-    inline ~ContextLocker() {
-        eXosip_unlock(context->context);
-    }
-
-private:
-    Context *context;
 };
 
 /*!
@@ -164,8 +143,9 @@ private:
  *
  * Each context runs it's own exosip2 event thread.  These threads then
  * will signal events back to the stack, thereby serializing requests under
- * the stack's own thread context.  This also may provide methods for low
- * level access to exosip2 functions.
+ * the stack's own thread context.  All low level access to exosip2 functions
+ * will occur thru context member functions, as Context also supports eXosip
+ * locking internally.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
  */

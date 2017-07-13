@@ -49,6 +49,25 @@ QList<Context::Schema> Context::Schemas = {
     {"dtls","sips:", Context::DTLS, 5061, IPPROTO_UDP},
 };
 
+// internal lock class
+class ContextLocker final
+{
+public:
+    inline ContextLocker(eXosip_t *ctx) :
+    context(ctx) {
+        Q_ASSERT(context != nullptr);
+        eXosip_lock(context);
+    }
+
+    inline ~ContextLocker() {
+        eXosip_unlock(context);
+    }
+
+private:
+    eXosip_t *context;
+};
+
+
 Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned mask, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 {
@@ -249,9 +268,8 @@ void Context::run()
         time(&currentEvent);
         if(currentEvent != priorEvent) {
             priorEvent = currentEvent;
-            eXosip_lock(context);
+            ContextLocker lock(context);    // scope lock automatic block...
             eXosip_automatic_action(context);
-            eXosip_unlock(context);
         }
         if(!event)
             continue;
@@ -268,10 +286,31 @@ void Context::run()
     --instanceCount;
 }
 
+bool Context::authenticated(const Event& ev) {
+    if(allow && Allow::UNAUTHENTICATED)
+        return true;
+    if(ev.authorization())
+        return true;
+
+    // create challenge...
+    osip_message_t *reply = nullptr;
+    time_t now;
+    QString nonce = QString::number(time(&now));
+    QString challenge = QString("Digest Realm=\"") + Stack::realm() + QString("\", nonce=\"") + nonce + QString("\", algorithm=\"") + Stack::digestName() + QString("\"");
+
+    ContextLocker lock(context);
+    eXosip_message_build_answer(context, ev.tid(), SIP_UNAUTHORIZED, &reply);
+    osip_message_set_header(reply, WWW_AUTHENTICATE, challenge.toUtf8().constData());
+    eXosip_message_send_answer(context, ev.tid(), SIP_UNAUTHORIZED, reply);
+    return false;
+}
+
 bool Context::process(const Event& ev) {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_REGISTER(ev.request())) {
+            if(!authenticated(ev))
+                return false;
             if(!(allow & Allow::REGISTRY))
                 return false;
             emit registry(ev);
