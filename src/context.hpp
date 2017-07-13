@@ -68,6 +68,10 @@ public:
         return schema.name;
     }
 
+    inline bool isLocal(const QString& host) const {
+        return localnames().contains(host);
+    }
+
     void setOtherNames(QStringList names);
     void setPublicName(QString name);
 
