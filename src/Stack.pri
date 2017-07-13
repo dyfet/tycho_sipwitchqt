@@ -13,10 +13,8 @@ SOURCES += \
     $${PWD}/context.cpp \
     $${PWD}/stack.cpp \
     $${PWD}/address.cpp \
-    $${PWD}/endpoint.cpp \
     $${PWD}/registry.cpp \
     $${PWD}/provider.cpp \
-    $${PWD}/segment.cpp \
     $${PWD}/call.cpp \
     $${PWD}/event.cpp \
 
