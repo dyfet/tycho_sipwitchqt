@@ -1,6 +1,16 @@
 image: in1t3r/gitlabqt:latest
 stages:
+- test
 - build
+test:
+  stage: test
+  script:
+    - qmake
+    - make
+  tags:
+    - docker
+  only:
+    - master
     
 build:
   stage: build
@@ -10,4 +20,6 @@ build:
   when: on_success
   tags:
     - docker
+  only:
+    - master
   allow_failure: false
