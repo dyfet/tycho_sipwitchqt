@@ -32,4 +32,5 @@ sipwitchqt
 moc_*
 qrc_*
 ui_*
+.gitlab-ci.yml
 
