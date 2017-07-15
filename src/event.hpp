@@ -17,7 +17,7 @@
 
 #include "compiler.hpp"
 #include "util.hpp"
-#include "address.hpp"
+#include "contact.hpp"
 
 #include <QThread>
 #include <QMutex>
@@ -25,7 +25,6 @@
 #include <QHostInfo>
 #include <QAbstractSocket>
 #include <QSharedData>
-#include <eXosip2/eXosip.h>
 
 class Context;
 
@@ -87,7 +86,7 @@ public:
         return d->hops;
     }
 
-    inline const Address source() const {
+    inline const Contact source() const {
         return d->source;
     }
 
@@ -113,6 +112,14 @@ public:
 
     inline osip_authorization_t *authorization() const {
         return d->authorization;
+    }
+
+    inline const Contact from() const {
+        return d->from;
+    }
+
+    inline const Contact to() const {
+        return d->to;
     }
 
     inline bool isNatted() const {
@@ -171,9 +178,10 @@ private:
         Event::Association association;
         QList<Contact>contacts;
         QString userid, nonce, digest, algorithm, realm;
-        Address source;  // if nat, has first nat
+        Contact source;  // if nat, has first nat
+        Contact from, to;
 
-        void parseContacts(const osip_list_t &list);
+        void parseContacts(const osip_from_t *uriFrom, const osip_to_t *uriTo, const osip_list_t &list);
         void parseSource(const osip_list_t &list);
     };
 

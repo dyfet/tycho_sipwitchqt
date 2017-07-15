@@ -18,7 +18,7 @@
 #include "stack.hpp"
 
 static QHash <const QString, Registry *> extensions, aliases;
-static QHash<const Context *, QHash<Address, Endpoint *>> Endpoints;
+static QHash<const Context *, QHash<Contact, Endpoint *>> Endpoints;
 
 Registry::Registry(const QSqlRecord& db) :
 extension(db), id(db.value("number").toString()), alias(db.value("alias").toString()), text(db.value("display").toString())
