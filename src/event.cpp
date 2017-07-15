@@ -76,7 +76,7 @@ void Event::Data::parseSource(const osip_list_t& list)
 {
     int pos = 0;
     osip_via_t *via;
-    Address nat;
+    Contact nat;
 
     while(osip_list_eol(&list, pos) == 0) {
         via = (osip_via_t *)osip_list_get(&list, pos++);
@@ -92,14 +92,14 @@ void Event::Data::parseSource(const osip_list_t& list)
                 rport = atoi(param->gvalue);
             if(via->port)
                 port = atoi(via->port);
-            source = Address(addr, port);
+            source = Contact(addr, port);
 
             // top nat only
             if(!nat && rport) {
                 param = nullptr;
                 osip_via_param_get_byname(via, (char *)"received", &param);
                 if(param && param->gvalue)
-                    nat = Address(param->gvalue, rport);
+                    nat = Contact(param->gvalue, rport);
             }
         }
     }
@@ -127,14 +127,10 @@ void Event::Data::parseContacts(const osip_list_t& list)
                 if(duration > expires)
                     expires = duration;
             }
-            if(natted)  // really make sure contact is natted too...
-                contacts << Contact(source, duration, uri->username);
-            else {
-                quint16 port = 5060;
-                if(uri->port && uri->port[0])
-                    port = atoi(uri->port);
-                contacts << Contact(uri->host, port, duration, uri->username);
-            }
+            quint16 port = 5060;
+            if(uri->port && uri->port[0])
+                port = atoi(uri->port);
+            contacts << Contact(uri->host, port, uri->username, duration);
         }
     }
 }

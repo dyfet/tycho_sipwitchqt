@@ -21,70 +21,12 @@
 #include <QHostAddress>
 #include <QPair>
 #include <QAbstractSocket>
+#include <eXosip2/eXosip.h>
 
-class Address
+class Contact final
 {
 public:
-    Address(const QString& address, quint16 port) noexcept;
-
-    Address() noexcept;
-
-    Address(const Address& from) noexcept;
-
-    Address(Address&& from) noexcept;
-
-    Address& operator=(const Address& from) {
-        pair = from.pair;
-        return *this;
-    }
-
-    Address& operator=(Address&& from) {
-        pair = std::move(from.pair);
-        from.pair.second = 0;
-        from.pair.first = "";
-        return *this;
-    }
-
-    bool operator==(const Address& other) const {
-        return pair == other.pair;
-    }
-
-    bool operator!=(const Address& other) const {
-        return pair != other.pair;
-    }
-
-    inline const QString host() const {
-        return pair.first;
-	}
-
-    inline quint16 port() const {
-        return pair.second;
-	}
-
-    inline operator bool() const {
-        return pair.second > 0;
-    }
-
-    inline bool operator!() const {
-        return pair.second == 0;
-    }
-
-protected:
-    QPair<QString,quint16> pair;
-
-private:
-    friend uint qHash(const Address& key, uint seed) {
-        return qHash(key.pair.first, seed) ^ key.port();
-    }
-
-};
-
-class Contact final : public Address
-{
-public:
-    Contact(const QString& address, quint16 port, int duration = -1, const QString& user = "") noexcept;
-
-    Contact(const Address& address, int duration = -1, const QString& user = "") noexcept;
+    Contact(const QString& address, quint16 port = 5060, const QString& user = "", int duration = -1) noexcept;
 
     Contact() noexcept;
 
@@ -108,6 +50,14 @@ public:
         return *this;
     }
 
+    operator bool() const {
+        return pair.second != 0;
+    }
+
+    bool operator!() const {
+        return pair.second == 0;
+    }
+
     bool operator==(const Contact& other) const {
         return pair == other.pair && username == other.username;
     }
@@ -129,9 +79,18 @@ public:
         return username;
     }
 
+    const QString host() const {
+        return pair.first;
+    }
+
+    quint16 port() const {
+        return pair.second;
+    }
+
     bool hasExpired() const;
 
 private:
+    QPair<QString,quint16> pair;
     time_t expiration;
     QString username;
 
@@ -141,7 +100,6 @@ private:
     }
 };
 
-QDebug operator<<(QDebug dbg, const Address& addr);
 QDebug operator<<(QDebug dbg, const Contact& contact);
 
 /*!
@@ -151,21 +109,12 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
  */
 
 /*!
- * \class Address
- * \brief A SIP endpoint address.
- * This provides a convenient means to represent a remote connection
- * as a host address and port number.  This uses strings so that the
- * actual host dns resolution happens in the eXosip2 library using c-ares
- * resolver on demand, rather than when the object is created.
- * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
- */
-
-/*!
  * \class Contact
  * \brief A SIP endpoint contact.
  * This provides a convenient means to represent a sip endpoint address
- * along with it's expected duration.
+ * along with it's expected duration and userid.  This uses strings for
+ * host address so that the actual dns resolution happens in the eXosip2
+ * library using the c-ares resolver.
  * \author David Sugar <tychosoft@gmail.com>
  * \ingroup Stack
  */

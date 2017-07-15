@@ -17,7 +17,7 @@
 
 #include "compiler.hpp"
 #include "util.hpp"
-#include "address.hpp"
+#include "contact.hpp"
 
 #include <QThread>
 #include <QMutex>
@@ -25,7 +25,6 @@
 #include <QHostInfo>
 #include <QAbstractSocket>
 #include <QSharedData>
-#include <eXosip2/eXosip.h>
 
 class Context;
 
@@ -87,7 +86,7 @@ public:
         return d->hops;
     }
 
-    inline const Address source() const {
+    inline const Contact source() const {
         return d->source;
     }
 
@@ -171,7 +170,7 @@ private:
         Event::Association association;
         QList<Contact>contacts;
         QString userid, nonce, digest, algorithm, realm;
-        Address source;  // if nat, has first nat
+        Contact source;  // if nat, has first nat
 
         void parseContacts(const osip_list_t &list);
         void parseSource(const osip_list_t &list);

@@ -16,42 +16,13 @@
  */
 
 #include "inline.hpp"
-#include "address.hpp"
+#include "contact.hpp"
 
-Address::Address(const QString& host, quint16 port) noexcept :
-pair(QPair<QString,quint16>(host, port))
+Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :
+expiration(0), username(user)
 {
-}
-
-Address::Address(const Address& from) noexcept :
-pair(from.pair)
-{
-}
-
-Address::Address(Address&& from) noexcept :
-pair(std::move(from.pair))
-{
-    from.pair.second = 0;
-    from.pair.first = "";
-}
-
-Address::Address() noexcept :
-pair("", 0)
-{
-}
-
-Contact::Contact(const QString& host, quint16 port, int duration, const QString& user) noexcept :
-Address(host, port), expiration(0), username(user)
-{
-    if(duration > -1) {
-        time(&expiration);
-        expiration += duration;
-    }
-}
-
-Contact::Contact(const Address& address, int duration, const QString& user) noexcept :
-Address(address), expiration(0), username(user)
-{
+    pair.first = address;
+    pair.second = port;
     if(duration > -1) {
         time(&expiration);
         expiration += duration;
@@ -75,7 +46,7 @@ Contact::Contact(Contact&& from) noexcept
 }
 
 Contact::Contact() noexcept :
-Address(), expiration(0)
+pair("", 0), expiration(0)
 {
 }
 
@@ -86,12 +57,7 @@ bool Contact::hasExpired() const {
     time(&now);
     if(now >= expiration)
         return true;
-}
-
-QDebug operator<<(QDebug dbg, const Address& addr)
-{
-    dbg.nospace() << "Address(" << addr.host() << ":" << addr.port() << ")";
-    return dbg.maybeSpace();
+    return false;
 }
 
 QDebug operator<<(QDebug dbg, const Contact& addr)

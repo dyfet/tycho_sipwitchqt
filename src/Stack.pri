@@ -3,7 +3,7 @@
 HEADERS += \
     $${PWD}/context.hpp \
     $${PWD}/stack.hpp \
-    $${PWD}/address.hpp \
+    $${PWD}/contact.hpp \
     $${PWD}/registry.hpp \
     $${PWD}/provider.hpp \
     $${PWD}/call.hpp \
@@ -12,7 +12,7 @@ HEADERS += \
 SOURCES += \
     $${PWD}/context.cpp \
     $${PWD}/stack.cpp \
-    $${PWD}/address.cpp \
+    $${PWD}/contact.cpp \
     $${PWD}/registry.cpp \
     $${PWD}/provider.cpp \
     $${PWD}/call.cpp \
