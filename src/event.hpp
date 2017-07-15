@@ -142,6 +142,18 @@ public:
         return d->message;
     }
 
+    inline const QByteArray body() const {
+        return d->body;
+    }
+
+    inline const QString content() const {
+        return d->content;
+    }
+
+    inline const QString subject() const {
+        return d->subject;
+    }
+
     inline int cid() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->cid;
@@ -184,9 +196,10 @@ private:
         osip_authorization_t *authorization;
         Event::Association association;
         QList<Contact>contacts;
-        QString userid, nonce, digest, algorithm, realm, agent, reason, method;
+        QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject;
         Contact source;  // if nat, has first nat
         Contact from, to, request;
+        QByteArray body;
 
         void parseMessage(osip_message_t *msg);
     };

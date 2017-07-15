@@ -17,6 +17,10 @@
 
 #include "context.hpp"
 
+#ifndef SESSION_EXPIRES
+#define SESSION_EXPIRES "session-expires"
+#endif
+
 Event::Data::Data() :
 expires(-1), status(0), hops(0), natted(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), association(NONE)
 {
@@ -82,6 +86,8 @@ void Event::Data::parseMessage(osip_message_t *msg)
     Contact nat;
 
     message = msg;
+    if(!msg)
+        return;
 
     pos = 0;
     while(osip_list_eol(&vlist, pos) == 0) {
@@ -116,10 +122,22 @@ void Event::Data::parseMessage(osip_message_t *msg)
         source = nat;
     }
 
-    osip_header_t *agentHeader = nullptr;
-    osip_message_header_get_byname(msg, USER_AGENT, 0, &agentHeader);
-    if(agentHeader && agentHeader->hvalue)
-        agent = agentHeader->hvalue;
+    osip_header_t *header;
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, USER_AGENT, 0, &header);
+    if(header && header->hvalue)
+        agent = header->hvalue;
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, SESSION_EXPIRES, 0, &header);
+    if(header && header->hvalue)
+        expires = atoi(header->hvalue);
+
+    header = nullptr;
+    osip_message_get_subject(msg, 0, &header);
+    if(header && header->hvalue)
+        subject = header->hvalue;
 
     pos = 0;
     while(osip_list_eol(&clist, pos) == 0) {
@@ -127,10 +145,22 @@ void Event::Data::parseMessage(osip_message_t *msg)
         if(contact && contact->url)
             contacts << Contact(contact);
     }
+
     if(msg->from)
         from = msg->from->url;
     if(msg->to)
         to = msg->to->url;
+
+    if(msg->content_type && msg->content_type->type) {
+        content = msg->content_type->type;
+        if(msg->content_type->subtype)
+            content += QString("/") + msg->content_type->subtype;
+    }
+
+    osip_body_t *data = nullptr;
+    osip_message_get_body(msg, 0, &data);
+    if(data && data->length)
+        body = QByteArray(data->body, data->length);
 }
 
 Event::Event()
