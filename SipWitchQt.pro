@@ -173,6 +173,7 @@ OTHER_FILES += \
     testdata/ping.xml \
     README.md \
     CONTRIBUTING.md \
+    TODO.md \
     LICENSE \
     Doxyfile \
     sipwitchqt.spec \
