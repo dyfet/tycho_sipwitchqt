@@ -31,16 +31,23 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), author
         return;
     }
 
-    // parse contact records and longest expiration from exosip2 event
-    if(evt->response) {
+    // start of event decompose by event type...
+    switch(evt->type) {
+    case EXOSIP_MESSAGE_ANSWERED:
+    case EXOSIP_REGISTRATION_SUCCESS:       // provider succeeded
+    case EXOSIP_REGISTRATION_FAILURE:       // provider failed
         status = evt->response->status_code;
         //parseContacts(evt->response->contacts);
-    }
-    else if(evt->request) {
+        break;
+    case EXOSIP_MESSAGE_NEW:
+    case EXOSIP_CALL_INVITE:
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseSource(evt->request->vias);
         parseContacts(evt->request->contacts);
+        break;
+    default:
+        break;
     }
 
     // parse out authorization for later use
