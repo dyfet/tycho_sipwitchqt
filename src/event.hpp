@@ -82,6 +82,10 @@ public:
         return d->status;
     }
 
+    inline const QString agent() const {
+        return d->agent;
+    }
+
     inline int hops() const {
         return d->hops;
     }
@@ -177,12 +181,11 @@ private:
         osip_authorization_t *authorization;
         Event::Association association;
         QList<Contact>contacts;
-        QString userid, nonce, digest, algorithm, realm;
+        QString userid, nonce, digest, algorithm, realm, agent;
         Contact source;  // if nat, has first nat
         Contact from, to;
 
-        void parseContacts(const osip_from_t *uriFrom, const osip_to_t *uriTo, const osip_list_t &list);
-        void parseSource(const osip_list_t &list);
+        void parseMessage(const osip_message_t *msg);
     };
 
     QSharedDataPointer<Event::Data> d;

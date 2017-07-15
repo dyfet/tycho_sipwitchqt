@@ -37,14 +37,13 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), author
     case EXOSIP_REGISTRATION_SUCCESS:       // provider succeeded
     case EXOSIP_REGISTRATION_FAILURE:       // provider failed
         status = evt->response->status_code;
-        parseContacts(evt->response->from, evt->response->to, evt->response->contacts);
+        parseMessage(evt->response);
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
-        parseSource(evt->request->vias);
-        parseContacts(evt->request->from, evt->request->to, evt->request->contacts);
+        parseMessage(evt->request);
         break;
     default:
         break;
@@ -71,15 +70,17 @@ Event::Data::~Data()
     }
 }
 
-// find effective source address of requesting endpoint, or address of nat
-void Event::Data::parseSource(const osip_list_t& list)
+void Event::Data::parseMessage(const osip_message_t *msg)
 {
-    int pos = 0;
+    const osip_list_t& clist = msg->contacts;
+    const osip_list_t& vlist = msg->vias;
+    int pos;
     osip_via_t *via;
     Contact nat;
 
-    while(osip_list_eol(&list, pos) == 0) {
-        via = (osip_via_t *)osip_list_get(&list, pos++);
+    pos = 0;
+    while(osip_list_eol(&vlist, pos) == 0) {
+        via = (osip_via_t *)osip_list_get(&vlist, pos++);
         ++hops;
         if(via->host) {
             const char *addr = via->host;
@@ -110,18 +111,21 @@ void Event::Data::parseSource(const osip_list_t& list)
         source = nat;
     }
 
-}
+    osip_header_t *agentHeader = nullptr;
+    osip_message_header_get_byname(msg, USER_AGENT, 0, &agentHeader);
+    if(agentHeader && agentHeader->hvalue)
+        agent = agentHeader->hvalue;
 
-void Event::Data::parseContacts(const osip_from_t *uriFrom, const osip_to_t *uriTo, const osip_list_t& list)
-{
-    int pos = 0;
-    while(osip_list_eol(&list, pos) == 0) {
-        auto contact = (osip_contact_t *)osip_list_get(&list, pos++);
+    pos = 0;
+    while(osip_list_eol(&clist, pos) == 0) {
+        auto contact = (osip_contact_t *)osip_list_get(&clist, pos++);
         if(contact && contact->url)
             contacts << Contact(contact);
     }
-    from = Contact(uriFrom->url);
-    to = Contact(uriTo->url);
+    if(msg->from)
+        from = Contact(msg->from->url);
+    if(msg->to)
+       to = Contact(msg->to->url);
 }
 
 Event::Event()
