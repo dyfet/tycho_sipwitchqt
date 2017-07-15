@@ -171,6 +171,7 @@ OTHER_FILES += \
     etc/archive.sh \
     testdata/service.conf \
     testdata/ping.xml \
+    testdata/siptest.sh \
     README.md \
     CONTRIBUTING.md \
     TODO.md \

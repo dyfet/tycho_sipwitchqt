@@ -227,5 +227,5 @@ Q_DECLARE_METATYPE(Event)
  *
  * \fn Event::contact()
  * Returns a single valid contact from the event.  If either no contacts,
- * or multiple contacts are present, then returns null.
+ * or multiple contacts are present, then returns empty Contact.
  */
