@@ -81,7 +81,11 @@ public:
         expiration = from.expiration;
     }
 
-    QString userId() const {
+    bool hasUserId() const {
+        return username.length() > 0;
+    }
+
+    const QString userId() const {
         return username;
     }
 
