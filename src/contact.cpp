@@ -29,6 +29,42 @@ expiration(0), username(user)
     }
 }
 
+Contact::Contact(osip_uri_t *uri)  noexcept :
+pair("", 0), expiration(0)
+{
+    if(!uri->host || uri->host[0] == 0)
+        return;
+
+    pair.first = uri->host;
+    pair.second = 5060;
+    username = uri->username;
+    if(uri->port && uri->port[0])
+        pair.second = atoi(uri->port);
+}
+
+Contact::Contact(osip_contact_t *contact)  noexcept :
+pair("", 0), expiration(0)
+{
+    if(!contact->url)
+        return;
+
+    osip_uri_t *uri = contact->url;
+    if(!uri->host || uri->host[0] == 0)
+        return;
+
+    // see if contact has expiration
+    osip_uri_param_t *param = nullptr;
+    osip_contact_param_get_byname(contact, (char *)"expires", &param);
+    if(param && param->gvalue)
+        refresh(osip_atoi(param->gvalue));
+
+    pair.first = uri->host;
+    pair.second = 5060;
+    username = uri->username;
+    if(uri->port && uri->port[0])
+        pair.second = atoi(uri->port);
+ }
+
 Contact::Contact(const Contact& from) noexcept
 {
     pair = from.pair;
@@ -59,6 +95,18 @@ bool Contact::hasExpired() const {
         return true;
     return false;
 }
+
+void Contact::refresh(int seconds) {
+    if(seconds < 0) {
+        expiration = 0;
+        return;
+    }
+
+    if(!expiration)
+        time(&expiration);
+    expiration += seconds;
+}
+
 
 QDebug operator<<(QDebug dbg, const Contact& addr)
 {

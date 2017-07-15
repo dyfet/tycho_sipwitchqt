@@ -117,21 +117,8 @@ void Event::Data::parseContacts(const osip_list_t& list)
     int pos = 0;
     while(osip_list_eol(&list, pos) == 0) {
         auto contact = (osip_contact_t *)osip_list_get(&list, pos++);
-        if(contact && contact->url) {
-            osip_uri_t *uri = contact->url;
-            osip_uri_param_t *param = nullptr;
-            osip_contact_param_get_byname(contact, (char *)"expires", &param);
-            int duration = -1;
-            if(param && param->gvalue) {
-                auto duration = osip_atoi(param->gvalue);
-                if(duration > expires)
-                    expires = duration;
-            }
-            quint16 port = 5060;
-            if(uri->port && uri->port[0])
-                port = atoi(uri->port);
-            contacts << Contact(uri->host, port, uri->username, duration);
-        }
+        if(contact && contact->url)
+            contacts << Contact(contact);
     }
 }
 

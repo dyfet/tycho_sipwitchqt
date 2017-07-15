@@ -28,6 +28,10 @@ class Contact final
 public:
     Contact(const QString& address, quint16 port = 5060, const QString& user = "", int duration = -1) noexcept;
 
+    Contact(osip_contact_t *contact) noexcept;
+
+    Contact(osip_uri_t *uri) noexcept;
+
     Contact() noexcept;
 
     Contact(const Contact& from) noexcept;
@@ -70,9 +74,11 @@ public:
         return expiration;
     }
 
-    void refresh(int seconds) {
-        if(expiration)
-            expiration += seconds;
+    void refresh(const Contact& from) {
+        if(from != *this)
+            return;
+
+        expiration = from.expiration;
     }
 
     QString userId() const {
@@ -88,6 +94,8 @@ public:
     }
 
     bool hasExpired() const;
+
+    void refresh(int seconds);
 
 private:
     QPair<QString,quint16> pair;
