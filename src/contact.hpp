@@ -85,6 +85,13 @@ public:
         return username;
     }
 
+    const QHostAddress address() const {
+        if(pair.second)
+            return QHostAddress(pair.first);
+        else
+            return QHostAddress();
+    }
+
     const QString host() const {
         return pair.first;
     }
@@ -94,6 +101,7 @@ public:
     }
 
     bool hasExpired() const;
+    const QString toString() const;
 
     void refresh(int seconds);
 

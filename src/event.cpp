@@ -18,12 +18,12 @@
 #include "context.hpp"
 
 Event::Data::Data() :
-expires(-1), status(0), hops(0), natted(false), context(nullptr), event(nullptr), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), association(NONE)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), association(NONE)
 {
     // ignore constructor parser if empty event;
     if(!evt) {
@@ -37,10 +37,13 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), author
     case EXOSIP_REGISTRATION_SUCCESS:       // provider succeeded
     case EXOSIP_REGISTRATION_FAILURE:       // provider failed
         status = evt->response->status_code;
+        reason = evt->response->reason_phrase;
         parseMessage(evt->response);
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
+        request = evt->request->req_uri;
+        method = QString(evt->request->sip_method).toUpper();
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseMessage(evt->request);
@@ -70,13 +73,15 @@ Event::Data::~Data()
     }
 }
 
-void Event::Data::parseMessage(const osip_message_t *msg)
+void Event::Data::parseMessage(osip_message_t *msg)
 {
     const osip_list_t& clist = msg->contacts;
     const osip_list_t& vlist = msg->vias;
     int pos;
     osip_via_t *via;
     Contact nat;
+
+    message = msg;
 
     pos = 0;
     while(osip_list_eol(&vlist, pos) == 0) {
@@ -123,9 +128,9 @@ void Event::Data::parseMessage(const osip_message_t *msg)
             contacts << Contact(contact);
     }
     if(msg->from)
-        from = Contact(msg->from->url);
+        from = msg->from->url;
     if(msg->to)
-       to = Contact(msg->to->url);
+        to = msg->to->url;
 }
 
 Event::Event()
@@ -164,7 +169,7 @@ const QString Event::protocol() const
 QDebug operator<<(QDebug dbg, const Event& ev)
 {
     if(ev)
-        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ",from=" << ev.from().host() << ":" << ev.from().port() << ")";
+        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ",from=" << ev.from().toString() << ")";
     else
         dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();

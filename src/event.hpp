@@ -86,6 +86,14 @@ public:
         return d->agent;
     }
 
+    inline const QString reason() const {
+        return d->reason;
+    }
+
+    inline const QString method() const {
+        return d->method;
+    }
+
     inline int hops() const {
         return d->hops;
     }
@@ -130,14 +138,8 @@ public:
         return d->natted;
     }
 
-    inline const osip_message_t* request() const {
-        Q_ASSERT(d->event != nullptr);
-        return d->event->request;
-    }
-
-    inline const osip_message_t* response() const {
-        Q_ASSERT(d->event != nullptr);
-        return d->event->response;
+    inline const osip_message_t* message() const {
+        return d->message;
     }
 
     inline int cid() const {
@@ -178,14 +180,15 @@ private:
         bool natted;
         Context *context;
         eXosip_event_t *event;
+        osip_message_t *message;
         osip_authorization_t *authorization;
         Event::Association association;
         QList<Contact>contacts;
-        QString userid, nonce, digest, algorithm, realm, agent;
+        QString userid, nonce, digest, algorithm, realm, agent, reason, method;
         Contact source;  // if nat, has first nat
-        Contact from, to;
+        Contact from, to, request;
 
-        void parseMessage(const osip_message_t *msg);
+        void parseMessage(osip_message_t *msg);
     };
 
     QSharedDataPointer<Event::Data> d;

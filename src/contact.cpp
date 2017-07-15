@@ -86,6 +86,15 @@ pair("", 0), expiration(0)
 {
 }
 
+const QString Contact::toString() const {
+    if(!pair.second)
+        return "invalid";
+    QHostAddress addr = address();
+    if(addr.protocol() == QAbstractSocket::IPv6Protocol)
+        return "[" + addr.toString() + "]" + ":" + QString::number(pair.second);
+    return addr.toString() + ":" + QString::number(pair.second);
+}
+
 bool Contact::hasExpired() const {
     if(!expiration)
         return false;

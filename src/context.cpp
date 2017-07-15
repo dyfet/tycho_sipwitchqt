@@ -227,7 +227,7 @@ bool Context::authenticated(const Event& ev) {
 bool Context::process(const Event& ev) {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
-        if(MSG_IS_REGISTER(ev.request())) {
+        if(MSG_IS_REGISTER(ev.message())) {
             if(!authenticated(ev))
                 return false;
             if(!(allow & Allow::REGISTRY))
