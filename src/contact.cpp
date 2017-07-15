@@ -32,7 +32,7 @@ expiration(0), username(user)
 Contact::Contact(osip_uri_t *uri)  noexcept :
 pair("", 0), expiration(0)
 {
-    if(!uri->host || uri->host[0] == 0)
+    if(!uri || !uri->host || uri->host[0] == 0)
         return;
 
     pair.first = uri->host;
@@ -45,7 +45,7 @@ pair("", 0), expiration(0)
 Contact::Contact(osip_contact_t *contact)  noexcept :
 pair("", 0), expiration(0)
 {
-    if(!contact->url)
+    if(!contact || !contact->url)
         return;
 
     osip_uri_t *uri = contact->url;

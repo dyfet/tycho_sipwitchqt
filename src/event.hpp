@@ -114,6 +114,14 @@ public:
         return d->authorization;
     }
 
+    inline const Contact from() const {
+        return d->from;
+    }
+
+    inline const Contact to() const {
+        return d->to;
+    }
+
     inline bool isNatted() const {
         return d->natted;
     }
@@ -171,8 +179,9 @@ private:
         QList<Contact>contacts;
         QString userid, nonce, digest, algorithm, realm;
         Contact source;  // if nat, has first nat
+        Contact from, to;
 
-        void parseContacts(const osip_list_t &list);
+        void parseContacts(const osip_from_t *uriFrom, const osip_to_t *uriTo, const osip_list_t &list);
         void parseSource(const osip_list_t &list);
     };
 

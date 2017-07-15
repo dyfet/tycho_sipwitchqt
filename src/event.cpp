@@ -37,14 +37,14 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), author
     case EXOSIP_REGISTRATION_SUCCESS:       // provider succeeded
     case EXOSIP_REGISTRATION_FAILURE:       // provider failed
         status = evt->response->status_code;
-        //parseContacts(evt->response->contacts);
+        parseContacts(evt->response->from, evt->response->to, evt->response->contacts);
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseSource(evt->request->vias);
-        parseContacts(evt->request->contacts);
+        parseContacts(evt->request->from, evt->request->to, evt->request->contacts);
         break;
     default:
         break;
@@ -112,7 +112,7 @@ void Event::Data::parseSource(const osip_list_t& list)
 
 }
 
-void Event::Data::parseContacts(const osip_list_t& list)
+void Event::Data::parseContacts(const osip_from_t *uriFrom, const osip_to_t *uriTo, const osip_list_t& list)
 {
     int pos = 0;
     while(osip_list_eol(&list, pos) == 0) {
@@ -120,6 +120,8 @@ void Event::Data::parseContacts(const osip_list_t& list)
         if(contact && contact->url)
             contacts << Contact(contact);
     }
+    from = Contact(uriFrom->url);
+    to = Contact(uriTo->url);
 }
 
 Event::Event()
@@ -158,7 +160,7 @@ const QString Event::protocol() const
 QDebug operator<<(QDebug dbg, const Event& ev)
 {
     if(ev)
-        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ")";
+        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ",from=" << ev.from().host() << ":" << ev.from().port() << ")";
     else
         dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();
