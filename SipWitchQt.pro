@@ -170,6 +170,7 @@ OTHER_FILES += \
     etc/README.md \
     etc/archive.sh \
     testdata/service.conf \
+    testdata/ping.xml \
     README.md \
     CONTRIBUTING.md \
     LICENSE \

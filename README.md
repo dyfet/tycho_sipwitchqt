@@ -46,3 +46,8 @@ Support
 =======
 
 At the moment I do not have infrastructure to offer support.  I have published this, and perhaps as of this writing, other telephony packages, to develop best practices for producing a new generation of telephony services.  I do maintain an email address for public contact for all similarly published Tycho Softworks projects as [tychosoft@gmail.com](mailto://tychosoft@gmail.com).  Merge requests may be accepted when I happen to have a chance and connectivity to do so.  I also will be using the gitlab [sipwitchqt](https://gitlab.com/tychosoft/sipwitchqt) issue tracker for bug reporting and project management.  Maybe in the future we will be able to put together a and commercially deliver a complete VoIP solution. 
+
+Testing
+=======
+
+The debug config (qmake CONFIG+=debug) builds a test server that uses the source "testdata/" directory to store databases and running files.  This is used to provide a stable and repeatable test environment.  An alternate CONFIG+=userdata option also exists to create a private per-developer test environment.  Currently the server binds for ipv4, so you have to use 127.0.0.1:4060 for localhost if localhost is set to ::1.  I am also adding SIPp test cases for the sipwitch server in the testdata directory.
