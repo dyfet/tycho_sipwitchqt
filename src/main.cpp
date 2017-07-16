@@ -139,6 +139,7 @@ int main(int argc, char **argv)
     Args::add(args, {
         {{"A", "address"}, tr("Specify network interface to bind"), tr("address"), "any"},
         {{"C", "config"}, tr("Specify config file"), tr("file"), SERVICE_CONF},
+        {{"H", "host", "public"}, tr("Specify public host name"), tr("host"), "%%host"},
         {{"N", "network", "domain"}, tr("Specify network domain to serve"), tr("name"), "%%network"},
         {{"P", "port"}, tr("Specify network port to bind"), "100-65534", "%%port"},
         {Args::HelpArgument},
@@ -169,9 +170,11 @@ int main(int argc, char **argv)
         {SERVER_LOGFILE,    LOGFILE},
         {SERVER_CONFIG,     "--config"},
         {CURRENT_NETWORK,   "--network"},
+        {CURRENT_HOSTNAME,  "--host"},
         {CURRENT_PORT,      "--port"},
         {CURRENT_ADDRESS,   "--address"},
         {DEFAULT_PORT,      5060},
+        {DEFAULT_HOSTNAME,  QHostInfo::localHostName()},
         {DEFAULT_ADDRESS,   QHostInfo::localHostName()},
         {DEFAULT_NETWORK,   Util::localDomain()},
     });

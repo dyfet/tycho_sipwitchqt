@@ -89,13 +89,6 @@ public:
         return username;
     }
 
-    const QHostAddress address() const {
-        if(pair.second)
-            return QHostAddress(pair.first);
-        else
-            return QHostAddress();
-    }
-
     const QString host() const {
         return pair.first;
     }

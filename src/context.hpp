@@ -50,12 +50,6 @@ public:
 
     Context(const QHostAddress& bind, int port, const Schema& choice, unsigned mask, unsigned index = 1);
 
-    inline const QString hostname() const {
-        if(localHosts.count() < 1)
-            return QHostInfo::localHostName();
-        return localHosts[0];
-    }
-
     const Contact contact(const QString& username = "") const {
         return Contact(uriHost, netPort, username);
     }
@@ -78,17 +72,19 @@ public:
         return schema.inPort;
     }
 
+    inline const Contact route(const QString& username = "") const {
+        return Contact(hostname(), netPort, username);
+    }
+
     inline bool isLocal(const QString& host) const {
+        if(localHosts.contains(host))
+            return true;
         return localnames().contains(host);
     }
 
-    void setOtherNames(QStringList names);
-    void setPublicName(QString name);
-
-    const Contact route(const Contact& source) const;
-
+    const QString hostname() const;
+    void setHostnames(const QStringList& names, const QString& host);
     const QStringList localnames() const;
-
     const QString uriTo(const Contact& address) const;
 
     inline static const QList<Context::Schema> schemas() {
@@ -100,7 +96,6 @@ public:
     }
 
     static void start(QThread::Priority priority = QThread::InheritPriority);
-
     static void shutdown();
 
 private:

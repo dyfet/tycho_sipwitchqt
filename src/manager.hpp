@@ -32,6 +32,7 @@ private:
     void applyNames();
 
     static QString SystemPassword;
+    static QString ServerHostname;
     static QString ServerMode;
 
 private slots:

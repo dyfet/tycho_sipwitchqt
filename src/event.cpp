@@ -51,7 +51,7 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), messag
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseMessage(evt->request);
-        target = ctx->route(source);
+        target = ctx->route(evt->request->req_uri->username);
         break;
     default:
         break;

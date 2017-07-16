@@ -123,8 +123,10 @@ Q_UNUSED(xyz)
 
 #define CURRENT_ADDRESS     "ADDRESS"
 #define CURRENT_NETWORK     "NETWORK"
+#define CURRENT_HOSTNAME    "HOST"
 #define CURRENT_PORT        "PORT"
 #define	CURRENT_UUID		"UUID"
+#define DEFAULT_HOSTNAME    "host"
 #define DEFAULT_ADDRESS     "address"
 #define DEFAULT_NETWORK     "network"
 #define DEFAULT_PORT        "port"

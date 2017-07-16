@@ -26,6 +26,7 @@
 
 QString Manager::ServerMode;
 QString Manager::SystemPassword;
+QString Manager::ServerHostname;
 
 Manager::Manager(unsigned order) :
 Stack(order)
@@ -62,10 +63,10 @@ void Manager::reportCounts(const QString& id, int count)
 
 void Manager::applyNames()
 {
-    QStringList names = ServerAliases + ServerNames;
+    QStringList names =  ServerAliases + ServerNames;
     qDebug() << "Apply names" << names;
     foreach(auto context, Context::contexts()) {
-        context->setOtherNames(names);
+        context->setHostnames(names, ServerHostname);
     }
 }
 
@@ -89,6 +90,7 @@ void Manager::applyConfig(const QVariantHash& config)
         Digest = QCryptographicHash::Sha256;
     else if(digest == "sha512" || digest == "sha-512")
         Digest = QCryptographicHash::Sha512; 
+    QString hostname = config["host"].toString();
     QString realm = config["realm"].toString();
     bool genpwd = false;
     if(realm.isEmpty()) {
@@ -96,6 +98,10 @@ void Manager::applyConfig(const QVariantHash& config)
         realm = Server::sym(CURRENT_NETWORK);
         if(realm.isEmpty() || realm == "local" || realm == "localhost" || realm == "localdomain")
             realm = Server::sym(CURRENT_UUID);
+    }
+    if(hostname != ServerHostname) {
+        ServerHostname = hostname;
+        Logging::info() << "starting as host " << ServerHostname;
     }
     if(realm != ServerRealm) {
         genpwd = true;

@@ -95,11 +95,10 @@ pair("", 0), expiration(0)
 const QString Contact::toString() const {
     if(!pair.second)
         return "invalid";
-    QHostAddress addr = address();
     QString port = ":" + QString::number(pair.second);
-    if(addr.protocol() == QAbstractSocket::IPv6Protocol)
-        return "[" + addr.toString() + "]" + port;
-    return addr.toString() + port;
+    if(pair.first.contains(":") && pair.first[0] != '[')
+        return "[" + pair.first + "]" + port;
+    return pair.first + port;
 }
 
 bool Contact::hasExpired() const {
