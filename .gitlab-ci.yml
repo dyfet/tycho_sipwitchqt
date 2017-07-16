@@ -19,7 +19,7 @@ docs:
   image: in1t3r/gitlabqt:documentation
   stage: docs
   script:
-    - qmake && doxygen && pdflatex refman.tex -output-format=pdf
+    - qmake && doxygen && pdflatex -output-format=pdf
   when: manual
   tags:
     - docker
