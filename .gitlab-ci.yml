@@ -19,7 +19,7 @@ docs:
   image: in1t3r/gitlabqt:documentation
   stage: docs
   script:
-    - qmake && doxygen -w latex  Doxyfile.out && pdflatex Doxyfile.out -output-format=pdf
+    - qmake && doxygen && pdflatex Doxyfile.out -output-format=pdf
   when: manual
   tags:
     - docker
