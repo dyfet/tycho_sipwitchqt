@@ -19,7 +19,8 @@ docs:
   image: in1t3r/gitlabqt:documentation
   stage: docs
   script:
-    - qmake && doxygen && pdflatex -output-format=pdf
+    - qmake
+    - make docs
   when: manual
   tags:
     - docker
