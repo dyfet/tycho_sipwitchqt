@@ -31,3 +31,5 @@ docs:
     expire_in: 1 week
     paths:
       - doc/
+  allow_failure: false
+  
