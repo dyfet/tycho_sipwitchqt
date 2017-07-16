@@ -176,6 +176,7 @@ public:
     const QString protocol() const;
     const QString toString() const;
     const Contact contact() const;
+    const QString text() const;
 
 private:
     class Data final : public QSharedData
@@ -196,7 +197,7 @@ private:
         osip_authorization_t *authorization;
         Event::Association association;
         QList<Contact>contacts;
-        QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject;
+        QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject, text;
         Contact source;  // if nat, has first nat
         Contact from, to, request;
         QByteArray body;

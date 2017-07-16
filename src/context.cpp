@@ -226,7 +226,8 @@ bool Context::authenticated(const Event& ev) {
     return false;
 }
 
-bool Context::process(const Event& ev) {
+bool Context::process(const Event& ev)
+{
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_REGISTER(ev.message())) {

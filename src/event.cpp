@@ -182,6 +182,24 @@ Event::~Event()
 {
 }
 
+const QString Event::text() const
+{
+    QString result;
+
+    if(!d->message)
+        return result;
+
+    char *data = nullptr;
+    size_t len;
+    osip_message_to_str(d->message, &data, &len);
+    if(data) {
+        data[len] = 0;
+        result = data;
+        osip_free(data);
+    }
+    return result;
+}
+
 // used for events that support only one contact object...
 const Contact Event::contact() const
 {
@@ -199,7 +217,7 @@ const QString Event::protocol() const
 QDebug operator<<(QDebug dbg, const Event& ev)
 {
     if(ev)
-        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.context()->objectName() << ",from=" << ev.from().toString() << ")";
+        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.context()->objectName() << ",source=" << ev.source().toString() << ")";
     else
         dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();
