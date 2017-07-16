@@ -19,9 +19,7 @@ docs:
   image: in1t3r/gitlabqt:documentation
   stage: docs
   script:
-    - qmake
-    - mkdir latex
-    - make docs
+    - qmake && make docs
   when: manual
   tags:
     - docker
