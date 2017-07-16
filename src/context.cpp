@@ -137,6 +137,9 @@ Context::~Context()
 
 const Contact Context::route(const Contact &source) const
 {
+    if(publicName.length() > 0)
+        return Contact(publicName, netPort);
+
     if(!multiInterface)
         return Contact(uriHost, netPort);
 
