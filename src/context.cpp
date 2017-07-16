@@ -118,6 +118,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     }
     localHosts << QHostInfo::localHostName() << Util::localDomain();
 
+    uriHost = uriAddress;
     if(netPort != schema.inPort)
         uriAddress += ":" + QString::number(netPort);
 

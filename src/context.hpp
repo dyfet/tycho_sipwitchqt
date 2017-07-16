@@ -56,11 +56,13 @@ public:
         return localHosts[0];
     }
 
-    const QString uriFrom() const {
-        return schema.uri + uriAddress;
+    const Contact contact(const QString& username = "") const {
+        return Contact(uriHost, netPort, username);
     }
 
-    inline const QString uriFrom(const QString& id) const {
+    inline const QString uriFrom(const QString& id = "") const {
+        if(id.length() == 0)
+            return schema.uri + uriAddress;
         return schema.uri + id + "@" + uriAddress;
     }
 
@@ -102,7 +104,7 @@ private:
     time_t currentEvent, priorEvent;
     int netFamily, netPort, netTLS, netProto;
     QByteArray netAddress;
-    QString uriAddress;
+    QString uriAddress, uriHost;
     QString publicName;
     QStringList localHosts, otherNames;
     mutable QMutex nameLock;

@@ -200,6 +200,14 @@ const QString Event::text() const
     return result;
 }
 
+const QString Event::uriContext(const QString& username) const
+{
+    if(!d->context)
+        return "";
+
+    return d->context->uriFrom(username);
+}
+
 // used for events that support only one contact object...
 const Contact Event::contact() const
 {
