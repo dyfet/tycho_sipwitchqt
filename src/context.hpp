@@ -72,10 +72,6 @@ public:
         return schema.inPort;
     }
 
-    inline const Contact route(const QString& username = "") const {
-        return Contact(hostname(), netPort, username);
-    }
-
     inline bool isLocal(const QString& host) const {
         if(localHosts.contains(host))
             return true;

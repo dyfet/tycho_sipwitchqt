@@ -154,6 +154,10 @@ public:
         return d->natted;
     }
 
+    inline bool isLocal() const {
+        return d->local;
+    }
+
     inline const osip_message_t* message() const {
         return d->message;
     }
@@ -208,7 +212,7 @@ private:
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops
-        bool natted;
+        bool natted, local;
         Context *context;
         eXosip_event_t *event;
         osip_message_t *message;
