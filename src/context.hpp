@@ -85,6 +85,8 @@ public:
     void setOtherNames(QStringList names);
     void setPublicName(QString name);
 
+    const Contact route(const Contact& source) const;
+
     const QStringList localnames() const;
 
     const QString uriTo(const Contact& address) const;
@@ -112,6 +114,7 @@ private:
     QString publicName;
     QStringList localHosts, otherNames;
     mutable QMutex nameLock;
+    bool multiInterface;
 
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;

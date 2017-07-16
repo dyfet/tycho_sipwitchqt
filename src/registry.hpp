@@ -68,7 +68,7 @@ private:
     Registry *registry;             // registry that holds our endpoint
     Context *context;               // context endpoint exists on
     Contact address;                // network address of endpoint
-    Contact from;                   // target of event; from for replies
+    Contact route;                  // our return route to endpoint
     QElapsedTimer updated;          // last refreshed registration
     QList<LocalSegment *> calls;    // local calls on this endpoint...
 };

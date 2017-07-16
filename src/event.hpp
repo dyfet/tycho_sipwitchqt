@@ -134,16 +134,20 @@ public:
         return d->to;
     }
 
+    inline const Contact request() const {
+        return d->request;
+    }
+
     inline const Contact target() const {
         return d->target;
     }
 
-    inline const QString uriTarget() const {
-        return uri(d->target);
-    }
-
     inline const QString uriSource() const {
         return uri(d->source);
+    }
+
+    inline const QString uriTarget() const {
+        return uri(d->target);
     }
 
     inline bool isNatted() const {
@@ -213,7 +217,7 @@ private:
         QList<Contact>contacts;
         QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject, text;
         Contact source;  // if nat, has first nat
-        Contact from, to, target;
+        Contact from, to, request, target;
         QByteArray body;
 
         void parseMessage(osip_message_t *msg);

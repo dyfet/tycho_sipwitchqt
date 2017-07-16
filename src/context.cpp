@@ -25,6 +25,7 @@
 #ifdef Q_OS_UNIX
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #endif
 
 #ifdef Q_OS_WIN
@@ -100,12 +101,14 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     Contexts << this;
 
     if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
+        multiInterface = false;
         if(ipv6)
             uriAddress = "[" + netAddress + "]";
         else
             uriAddress = netAddress;
     }
     else {
+        multiInterface = true;
         uriAddress = QHostInfo::localHostName();
     }
 
@@ -130,6 +133,53 @@ Context::~Context()
 {
     if(context)
         eXosip_quit(context);
+}
+
+const Contact Context::route(const Contact &source) const
+{
+    if(!multiInterface)
+        return Contact(uriHost, netPort);
+
+    int so = ::socket(netFamily, SOCK_DGRAM, 0);
+    QHostAddress host = source.address(), peer;
+    switch(netFamily) {
+    case AF_INET: {
+        struct sockaddr_in target, result;
+        socklen_t slen = sizeof(result);
+        memset(&target, 0, sizeof(target));
+        memset(&result, 0, sizeof(result));
+        target.sin_family = result.sin_family = netFamily;
+        target.sin_len = sizeof(target);
+        target.sin_addr.s_addr = host.toIPv4Address();
+        target.sin_port = ntohs(source.port());
+        ::connect(so, (const struct sockaddr *)&target, sizeof(target));
+        ::getsockname(so, (struct sockaddr *)&result, &slen);
+        peer = QHostAddress((const struct sockaddr *)&result);
+        break;
+    }
+#ifdef AF_INET6
+    case AF_INET6: {
+        struct sockaddr_in6 target, result;
+        socklen_t slen = sizeof(result);
+        memset(&target, 0, sizeof(target));
+        memset(&result, 0, sizeof(result));
+        target.sin6_family = result.sin6_family = netFamily;
+        target.sin6_len = sizeof(target);
+        auto addr = host.toIPv6Address();
+        memcpy(&target.sin6_addr, &addr, sizeof(addr));
+        target.sin6_port = ntohs(source.port());
+        ::connect(so, (const struct sockaddr *)&target, sizeof(target));
+        ::getsockname(so, (struct sockaddr *)&result, &slen);
+        peer = QHostAddress((const struct sockaddr *)&result);
+        break;
+    }
+#endif
+    default:
+        break;
+    }
+    ::shutdown(so, SHUT_RDWR);
+    ::close(so);
+    return Contact(peer.toString(), netPort);
 }
 
 const QString Context::uriTo(const Contact &address) const

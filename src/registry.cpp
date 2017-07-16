@@ -98,7 +98,7 @@ void Registry::events(const Event& ev)
 }
 
 Endpoint::Endpoint(Context *ctx, const Contact& addr, Contact &target, Registry *reg) :
-registry(reg), context(ctx), address(addr), from(target)
+registry(reg), context(ctx), address(addr), route(target)
 {
     Endpoints[ctx].insert(address, this);
 }
