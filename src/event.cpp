@@ -52,7 +52,7 @@ expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), even
         parseMessage(evt->request);
         if(evt->request->req_uri && evt->request->req_uri->host) {
             request = evt->request->req_uri;
-            target = Contact(ctx->hostname(), ctx->port(), request.userId());
+            target = Contact(ctx->hostname(), ctx->port(), request.user());
             local = ctx->isLocal(request.host());
         }
         break;

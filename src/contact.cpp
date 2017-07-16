@@ -19,10 +19,10 @@
 #include "contact.hpp"
 
 Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :
-expiration(0), username(user)
+expiration(0), userName(user)
 {
-    pair.first = address;
-    pair.second = port;
+    hostName = address;
+    hostPort = port;
     if(duration > -1) {
         time(&expiration);
         expiration += duration;
@@ -30,23 +30,23 @@ expiration(0), username(user)
 }
 
 Contact::Contact(osip_uri_t *uri)  noexcept :
-pair("", 0), expiration(0)
+hostPort(0), expiration(0)
 {
     if(!uri || !uri->host || uri->host[0] == 0)
         return;
 
-    pair.first = uri->host;
+    hostName = uri->host;
     if(uri->scheme && !strcmp(uri->scheme, "sips"))
-        pair.second = 5061;
+        hostPort = 5061;
     else
-        pair.second = 5060;
-    username = uri->username;
+        hostPort = 5060;
+    userName = uri->username;
     if(uri->port && uri->port[0])
-        pair.second = atoi(uri->port);
+        hostPort = atoi(uri->port);
 }
 
 Contact::Contact(osip_contact_t *contact)  noexcept :
-pair("", 0), expiration(0)
+hostPort(0), expiration(0)
 {
     if(!contact || !contact->url)
         return;
@@ -61,44 +61,42 @@ pair("", 0), expiration(0)
     if(param && param->gvalue)
         refresh(osip_atoi(param->gvalue));
 
-    pair.first = uri->host;
+    hostName = uri->host;
     if(uri->scheme && !strcmp(uri->scheme, "sips"))
-        pair.second = 5061;
+        hostPort = 5061;
     else
-        pair.second = 5060;
-    username = uri->username;
+        hostPort = 5060;
+    userName = uri->username;
     if(uri->port && uri->port[0])
-        pair.second = atoi(uri->port);
+        hostPort = atoi(uri->port);
  }
 
-Contact::Contact(const Contact& from) noexcept
+Contact::Contact(const Contact& from) noexcept :
+hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)
 {
-    pair = from.pair;
-    expiration = from.expiration;
-    username = from.username;
 }
 
-Contact::Contact(Contact&& from) noexcept
+Contact::Contact(Contact&& from) noexcept :
+hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)
 {
-    pair = std::move(from.pair);
-    from.pair.second = 0;
-    from.pair.first = "";
+    from.hostName = "";
+    from.hostPort = 0;
+    from.userName = "";
     from.expiration = 0;
-    from.username = "";
 }
 
 Contact::Contact() noexcept :
-pair("", 0), expiration(0)
+hostPort(0), expiration(0)
 {
 }
 
 const QString Contact::toString() const {
-    if(!pair.second)
+    if(!hostPort)
         return "invalid";
-    QString port = ":" + QString::number(pair.second);
-    if(pair.first.contains(":") && pair.first[0] != '[')
-        return "[" + pair.first + "]" + port;
-    return pair.first + port;
+    QString port = ":" + QString::number(hostPort);
+    if(hostName.contains(":") && hostName[0] != '[')
+        return "[" + hostName + "]" + port;
+    return hostName + port;
 }
 
 bool Contact::hasExpired() const {

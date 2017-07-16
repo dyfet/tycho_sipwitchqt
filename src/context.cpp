@@ -146,8 +146,8 @@ const QString Context::uriTo(const Contact &address) const
     if(address.port() != schema.inPort)
         port = ":" + QString::number(address.port());
 
-    if(address.userId().length() > 0)
-        return schema.uri + address.userId() + "@" + host + port;
+    if(address.user().length() > 0)
+        return schema.uri + address.user() + "@" + host + port;
     return schema.uri + host + port;
 }
 

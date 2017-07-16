@@ -39,35 +39,39 @@ public:
     Contact(Contact&& from) noexcept;
 
     Contact& operator=(const Contact& from) {
-        pair = from.pair;
+        hostName = from.hostName;
+        hostPort = from.hostPort;
+        userName = from.userName;
         expiration = from.expiration;
-        username = from.username;
         return *this;
     }
 
     Contact& operator=(Contact&& from) {
-        pair = std::move(from.pair);
-        from.pair.second = 0;
-        from.pair.first = "";
+        hostName = from.hostName;
+        hostPort = from.hostPort;
+        userName = from.userName;
+        expiration = from.expiration;
+        from.hostPort = 0;
+        from.hostName = "";
+        from.userName = "";
         from.expiration = 0;
-        from.username = "";
         return *this;
     }
 
     operator bool() const {
-        return pair.second != 0;
+        return hostPort != 0;
     }
 
     bool operator!() const {
-        return pair.second == 0;
+        return hostPort == 0;
     }
 
     bool operator==(const Contact& other) const {
-        return pair == other.pair && username == other.username;
+        return hostName == other.hostName && hostPort == other.hostPort && userName == other.userName;
     }
 
     bool operator!=(const Contact& other) const {
-        return pair != other.pair || username != other.username;
+        return hostName != other.hostName || hostPort != other.hostPort || userName != other.userName;
     }
 
     time_t expires() const {
@@ -81,20 +85,20 @@ public:
         expiration = from.expiration;
     }
 
-    bool hasUserId() const {
-        return username.length() > 0;
+    bool hasUser() const {
+        return userName.length() > 0;
     }
 
-    const QString userId() const {
-        return username;
+    const QString user() const {
+        return userName;
     }
 
     const QString host() const {
-        return pair.first;
+        return hostName;
     }
 
     quint16 port() const {
-        return pair.second;
+        return hostPort;
     }
 
     bool hasExpired() const;
@@ -103,13 +107,14 @@ public:
     void refresh(int seconds);
 
 private:
-    QPair<QString,quint16> pair;
+    QString hostName;
+    quint16 hostPort;
+    QString userName;
     time_t expiration;
-    QString username;
 
 private:
     friend uint qHash(const Contact& key, uint seed) {
-        return qHash(key.username) ^ qHash(key.pair.first, seed) ^ key.port();
+        return qHash(key.userName, seed) ^ qHash(key.hostName, seed) ^ key.hostPort;
     }
 };
 
