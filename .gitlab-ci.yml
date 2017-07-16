@@ -1,8 +1,10 @@
-image: in1t3r/gitlabqt:latest
 stages:
 - build
+- docs
+
 
 build:
+  image: in1t3r/gitlabqt:latest
   stage: build
   script:
     - qmake
@@ -12,4 +14,15 @@ build:
     - docker
   only:
     - master
-  allow_failure: false
+
+docs:
+  image: in1t3r/gitlabqt:documentation
+  stage: docs
+  script:
+    - qmake
+    - make docs
+  when: manually
+  tags:
+    - docker
+  only:
+    - master
