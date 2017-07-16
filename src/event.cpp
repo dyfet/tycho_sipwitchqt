@@ -199,7 +199,7 @@ const QString Event::protocol() const
 QDebug operator<<(QDebug dbg, const Event& ev)
 {
     if(ev)
-        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.protocol() << ",from=" << ev.from().toString() << ")";
+        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.context()->objectName() << ",from=" << ev.from().toString() << ")";
     else
         dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();

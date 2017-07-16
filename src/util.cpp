@@ -19,6 +19,7 @@
 #include "util.hpp"
 #include <QHostInfo>
 #include <QNetworkInterface>
+#include <sys/socket.h>
 #include "system.hpp"
 
 namespace Util {
@@ -92,7 +93,15 @@ namespace Util {
     const QList<QHostAddress> bindAddress(const QString& hostId)
     {
         QList<QHostAddress> list;
-        if(hostId == "*" || hostId == "all" || hostId == "any") {
+        if(hostId == "*" || hostId == "all") {
+#ifdef AF_INET6
+            list << QHostAddress(QHostAddress::AnyIPv4);
+            list << QHostAddress(QHostAddress::AnyIPv6);
+#else
+            list << QHostAddress(QHostAddress::Any);
+#endif
+        }
+        else if(hostId == "any") {
             list << QHostAddress(QHostAddress::Any);
         }
         else {
