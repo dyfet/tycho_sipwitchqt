@@ -31,7 +31,7 @@ class Endpoint final
     Q_DISABLE_COPY(Endpoint)
 
 public:
-    Endpoint(Context *ctx, const Contact& addr, Registry *reg = nullptr);
+    Endpoint(Context *ctx, const Contact& addr, Contact& target, Registry *reg = nullptr);
     ~Endpoint();
 
     inline bool hasExpired() const {
@@ -68,6 +68,7 @@ private:
     Registry *registry;             // registry that holds our endpoint
     Context *context;               // context endpoint exists on
     Contact address;                // network address of endpoint
+    Contact from;                   // target of event; from for replies
     QElapsedTimer updated;          // last refreshed registration
     QList<LocalSegment *> calls;    // local calls on this endpoint...
 };

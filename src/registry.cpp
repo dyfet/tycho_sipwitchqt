@@ -97,8 +97,8 @@ void Registry::events(const Event& ev)
     Q_UNUSED(ev);
 }
 
-Endpoint::Endpoint(Context *ctx, const Contact& addr, Registry *reg) :
-registry(reg), context(ctx), address(addr)
+Endpoint::Endpoint(Context *ctx, const Contact& addr, Contact &target, Registry *reg) :
+registry(reg), context(ctx), address(addr), from(target)
 {
     Endpoints[ctx].insert(address, this);
 }
