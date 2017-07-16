@@ -20,6 +20,7 @@ docs:
   stage: docs
   script:
     - qmake
+    - mkdir latex
     - make docs
   when: manual
   tags:
