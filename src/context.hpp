@@ -56,16 +56,20 @@ public:
         return localHosts[0];
     }
 
-    const QString uri() const {
+    const QString uriFrom() const {
         return schema.uri + uriAddress;
     }
 
-    inline const QString uri(const QString& id) const {
+    inline const QString uriFrom(const QString& id) const {
         return schema.uri + id + "@" + uriAddress;
     }
 
     inline const QString type() const {
         return schema.name;
+    }
+
+    inline quint16 defaultPort() const {
+        return schema.inPort;
     }
 
     inline bool isLocal(const QString& host) const {

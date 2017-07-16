@@ -36,7 +36,10 @@ pair("", 0), expiration(0)
         return;
 
     pair.first = uri->host;
-    pair.second = 5060;
+    if(uri->scheme && !strcmp(uri->scheme, "sips"))
+        pair.second = 5061;
+    else
+        pair.second = 5060;
     username = uri->username;
     if(uri->port && uri->port[0])
         pair.second = atoi(uri->port);
@@ -59,7 +62,10 @@ pair("", 0), expiration(0)
         refresh(osip_atoi(param->gvalue));
 
     pair.first = uri->host;
-    pair.second = 5060;
+    if(uri->scheme && !strcmp(uri->scheme, "sips"))
+        pair.second = 5061;
+    else
+        pair.second = 5060;
     username = uri->username;
     if(uri->port && uri->port[0])
         pair.second = atoi(uri->port);
@@ -90,9 +96,10 @@ const QString Contact::toString() const {
     if(!pair.second)
         return "invalid";
     QHostAddress addr = address();
+    QString port = ":" + QString::number(pair.second);
     if(addr.protocol() == QAbstractSocket::IPv6Protocol)
-        return "[" + addr.toString() + "]" + ":" + QString::number(pair.second);
-    return addr.toString() + ":" + QString::number(pair.second);
+        return "[" + addr.toString() + "]" + port;
+    return addr.toString() + port;
 }
 
 bool Contact::hasExpired() const {

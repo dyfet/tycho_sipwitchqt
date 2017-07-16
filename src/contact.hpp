@@ -26,7 +26,7 @@
 class Contact final
 {
 public:
-    Contact(const QString& address, quint16 port = 5060, const QString& user = "", int duration = -1) noexcept;
+    Contact(const QString& address, quint16 port, const QString& user = "", int duration = -1) noexcept;
 
     Contact(osip_contact_t *contact) noexcept;
 

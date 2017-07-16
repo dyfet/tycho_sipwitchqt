@@ -46,7 +46,7 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), messag
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
-        request = evt->request->req_uri;
+        target = evt->request->req_uri;
         method = QString(evt->request->sip_method).toUpper();
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
@@ -95,7 +95,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
         ++hops;
         if(via->host) {
             const char *addr = via->host;
-            quint16 port = 5060, rport = 0;
+            quint16 port = context->defaultPort(), rport = 0;
             if(via->port)
                 port = atoi(via->port);
             osip_uri_param_t *param = nullptr;
@@ -214,10 +214,19 @@ const QString Event::protocol() const
     return d->context->type();
 }
 
+inline const QString Event::uri(const Contact& addr) const {
+    Q_ASSERT(d->context != nullptr);
+    return d->context->uriTo(addr);
+}
+
 QDebug operator<<(QDebug dbg, const Event& ev)
 {
-    if(ev)
-        dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",proto=" << ev.context()->objectName() << ",source=" << ev.source().toString() << ")";
+    if(ev) {
+        if(ev.status())
+            dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",ctx=" << ev.context()->objectName() << ",source=" << ev.source().toString() << ",status=" << ev.status() << ")";
+        else
+            dbg.nospace() << "Event(" << ev.toString() << ",cid=" << ev.cid() << ",did=" << ev.did() << ",ctx=" << ev.context()->objectName() << ",source=" << ev.source().toString() << ",target=" << ev.target().toString() << ")";
+    }
     else
         dbg.nospace() << "Event(timeout)";
     return dbg.maybeSpace();
