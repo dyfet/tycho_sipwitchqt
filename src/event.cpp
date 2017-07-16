@@ -46,7 +46,8 @@ expires(-1), status(0), hops(0), natted(false), context(ctx), event(evt), messag
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
-        target = evt->request->req_uri;
+        target = Contact(evt->request->req_uri->host, ctx->port(), evt->request->req_uri->username);
+        qDebug() << "PORT " << evt->request->req_uri->port;
         method = QString(evt->request->sip_method).toUpper();
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;

@@ -70,6 +70,10 @@ public:
         return schema.name;
     }
 
+    inline quint16 port() const {
+        return netPort;
+    }
+
     inline quint16 defaultPort() const {
         return schema.inPort;
     }
