@@ -196,7 +196,7 @@ public:
     const QString protocol() const;
     const QString toString() const;
     const Contact contact() const;
-    const QString uriContext(const QString& username = "") const;
+    const QString uriContext(const QString& username = (char *)NULL) const;
     const QString text() const;
     const QString uri(const Contact &addr) const;
 

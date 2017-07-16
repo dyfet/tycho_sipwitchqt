@@ -50,11 +50,11 @@ public:
 
     Context(const QHostAddress& bind, int port, const Schema& choice, unsigned mask, unsigned index = 1);
 
-    const Contact contact(const QString& username = "") const {
+    const Contact contact(const QString& username = (char *)NULL) const {
         return Contact(uriHost, netPort, username);
     }
 
-    inline const QString uriFrom(const QString& id = "") const {
+    inline const QString uriFrom(const QString& id = (char *)NULL) const {
         if(id.length() == 0)
             return schema.uri + uriAddress;
         return schema.uri + id + "@" + uriAddress;

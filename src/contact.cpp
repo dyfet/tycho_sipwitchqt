@@ -79,9 +79,9 @@ hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expir
 Contact::Contact(Contact&& from) noexcept :
 hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)
 {
-    from.hostName = "";
+    from.hostName.clear();
     from.hostPort = 0;
-    from.userName = "";
+    from.userName.clear();
     from.expiration = 0;
 }
 
