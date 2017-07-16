@@ -21,7 +21,7 @@ docs:
   script:
     - qmake
     - make docs
-  when: manually
+  when: manual
   tags:
     - docker
   only:
