@@ -101,6 +101,16 @@ namespace Util {
             list << QHostAddress(QHostAddress::Any);
 #endif
         }
+        else if(hostId == "any6") {
+#ifdef AF_INET6
+            list << QHostAddress(QHostAddress::AnyIPv6);
+#else
+            list << QHostAddress(QHostAddress::Any);
+#endif
+        }
+        else if(hostId == "any4") {
+            list << QHostAddress(QHostAddress::AnyIPv4);
+        }
         else if(hostId == "any") {
             list << QHostAddress(QHostAddress::Any);
         }
