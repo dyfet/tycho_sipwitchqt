@@ -24,4 +24,3 @@
 	apt-get install -y gitlab-ci-multi-runner && \
 	rm -rf /var/lib/apt/lists/* 
 	RUN ln -s /usr/lib/libtcmalloc_minimal.so.4 /usr/lib/libtcmalloc_minimal.so
-	RUN apt-get update && apt-get -y install texlive graphviz doxygen
