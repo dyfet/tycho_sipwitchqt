@@ -22,6 +22,8 @@
 	make 
 	RUN apt-get install -y --no-install-recommends texlive-base \
 	graphviz \
+	texlive-fonts-recommended \
+	texlive-latex-recommended \
 	texlive-latex-extra \
 	doxygen && \
 	apt-get clean
