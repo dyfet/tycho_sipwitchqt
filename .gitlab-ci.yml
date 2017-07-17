@@ -4,7 +4,7 @@ stages:
 
 
 build:
-  image: in1t3r/gitlabqt:latest
+  image: in1t3r/gitlabqt:build
   stage: build
   script:
     - qmake
