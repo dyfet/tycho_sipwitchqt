@@ -3,7 +3,7 @@
 #set enviorment to noninteractive
 	ENV DEBIAN_FRONTEND=noninteractive
 #Install needed packages without recommends	
-	RUN apt-get update && apt-get install -y --no-install-recommends \
+	RUN apt-get update && apt-get install -y \
 	build-essential \
 	qtbase5-dev \
 	qtbase5-dev-tools \
@@ -19,8 +19,8 @@
 	libexosip2-dev \
 	libsystemd-dev \
 	libqt5sql5-sqlite \
-	make \
-	texlive-base \
+	make 
+	RUN apt-get install -y --no-install-recommends texlive-base \
 	graphviz \
 	texlive-latex-extra \
 	doxygen && \
