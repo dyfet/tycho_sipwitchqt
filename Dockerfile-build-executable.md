@@ -34,7 +34,7 @@
 	RUN gitlab-runner register \
 	  --url "https://gitlab.com/" \
  	 --registration-token "S6yboJN2yQSexj_vNpp5" \
- 	 --description "sipwitch documentation image" \
+ 	 --description "sipwitch build image" \
  	 --executor "docker" \
- 	 --docker-image in1t3r/gitlabqt:documentation 
+ 	 --docker-image in1t3r/gitlabqt:build 
 
