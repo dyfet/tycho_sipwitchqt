@@ -112,16 +112,14 @@ include(sip/Network.pri)
     target.path = $${PREFIX}/sbin
     target.depends = all
 }
-else:CONFIG(release, release|debug) {
+else {
     CONFIG += separate_debug_info force_debug_info
-    QMAKE_EXTRA_TARGETS += archive publish_and_archive
-    archive.depends = all
-    archive.commands += mkdir -p ../Archive &&
-    archive.commands += rm -rf ../Archive/$${TARGET}.app ../Archive/$${TARGET}.dSYM &&
-    archive.commands += cp -a $${TARGET}.app ../Archive &&
-    archive.commands += cp -a $${TARGET}.app.dSYM ../Archive/$${TARGET}.dSYM &&
-    archive.commands += cd ../Archive && macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
-    publish_and_archive.depends = publish archive
+
+    # xcode bundles always have to have local qt libs to run, even for testing
+    CONFIG(xcode_export) {
+        Config(release, release|debug):QMAKE_POST_LINK += macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
+        else:QMAKE_POST_LINK += macdeployqt $${TARGET}.app -debug -verbose=0 -always-overwrite
+    }
 }
 
 QMAKE_EXTRA_TARGETS += clean extra_clean
@@ -131,10 +129,21 @@ macx:extra_clean.commands += && rm -rf $${TARGET}.app $${TARGET}.app.dSYM
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
+publish.commands += $$QMAKE_DEL_FILE "$${ARCHIVE}-$${VERSION}.tar.gz" &&
 publish.commands += cd $${PWD} &&
-publish.commands += rm -f $${OUT_PWD}/$${ARCHIVE}-${VERSION}.tar.gz &&
-publish.commands += git archive --format tar --prefix=$${ARCHIVE}-$${VERSION}/ HEAD |
-publish.commands += gzip >$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz
+publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD 
+
+# archive support for bundled apps
+CONFIG(app_bundle):CONFIG(release, release|debug) {
+    QMAKE_EXTRA_TARGETS += archive publish_and_archive
+    archive.depends = all
+    archive.commands += $$sprintf($$QMAKE_MKDIR_CMD, $$shell_path("../Archive")) &&
+    archive.commands += rm -rf ../Archive/$${TARGET}.app ../Archive/$${TARGET}.dSYM &&
+    archive.commands += cp -a $${TARGET}.app ../Archive &&
+    archive.commands += cp -a $${TARGET}.app.dSYM ../Archive/$${TARGET}.dSYM &&
+    archive.commands += cd ../Archive && macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
+    publish_and_archive.depends = publish archive
+}
 
 # documentation processing
 QMAKE_EXTRA_TARGETS += docs
@@ -146,8 +155,6 @@ macx:docs.commands += PATH=/usr/local/bin:/usr/bin:/bin:/Library/Tex/texbin:$PAT
 docs.commands += cd $${OUT_PWD} && doxygen Doxyfile.out
 macx:docs.commands += && cd doc/html && make docset && cd ../..
 unix:docs.commands += && cd doc/latex && make
-unix:publish.depends += docs
-unix:publish.commands += && cp $${OUT_PWD}/doc/latex/refman.pdf $${OUT_PWD}/$${ARCHIVE}-$${VERSION}.pdf
 
 # clean additional testing files on distclean...
 QMAKE_EXTRA_TARGETS += distclean publishclean
