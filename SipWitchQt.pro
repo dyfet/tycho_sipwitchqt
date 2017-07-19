@@ -85,7 +85,7 @@ isEmpty(PROJECT_PREFIX) {
         SERVICE_ETCPATH=\\\"$${ETCPATH}\\\" \
         SERVICE_VARPATH=\\\"$${VARPATH}/$${SERVICE_NAME}\\\" \
         SERVICE_LOGPATH=\\\"$${LOGPATH}\\\" \
-        SERVICE_LIBEXEC=\\\$${PREFIX}/libexec/$${SERVICE_NAME}\\\" \
+        SERVICE_LIBEXEC=\\\"$${PREFIX}/libexec/$${SERVICE_NAME}\\\" \
 }
 else {
     DEFINES += \

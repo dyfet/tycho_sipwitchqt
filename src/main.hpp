@@ -43,7 +43,7 @@ Q_UNUSED(xyz)
 #define PIDFILE "service.pid"
 #else
 #define SERVICE_CONF    SERVICE_ETCPATH "//" SERVICE_NAME ".conf"
-#define LOGFILE SERVICE__LOGPATH "/" SERVICE_NAME ".log"
+#define LOGFILE SERVICE_LOGPATH "/" SERVICE_NAME ".log"
 #define PIDFILE "pidfile"
 #endif
 
