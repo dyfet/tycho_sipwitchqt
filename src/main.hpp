@@ -29,9 +29,6 @@
 Q_UNUSED(xyz)
 #endif
 
-#define CONFIG_STR1(x) #x
-#define CONFIG_STR(x) CONFIG_STR1(x)
-
 #define SERVICE_DOMAIN  "tychosoft.com"
 #define SERVICE_ORG     "Tycho Softworks"
 #define SERVICE_READY   SERVICE_NAME " started: Ready to process calls"

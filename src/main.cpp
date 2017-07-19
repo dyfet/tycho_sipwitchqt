@@ -59,8 +59,6 @@ Control(SETTING)
 {
     QStringList opt;
 
-    qDebug() << "SERVICE_LOGPATH" << SERVICE_LOGPATH;
-
     if(args.isSet("set-aliases")) {
         if(setValue("aliases", args.positionalArguments()))
             ::exit(0);
@@ -117,7 +115,7 @@ const QString Main::execute(const QStringList& args)
 #ifdef Q_OS_WIN
 
 SERVICE_TABLE_ENTRY DetachedServices[] = {
-    {(LPWSTR)TEXT(CONFIG_STR(PRODUCT_NAME)),
+    {(LPWSTR)TEXT(SERVICE_NAME),
         (LPSERVICE_MAIN_FUNCTION)System::detachService}, {NULL, NULL}
 };
 
@@ -131,7 +129,7 @@ int main(int argc, char **argv)
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
-    QCoreApplication::setApplicationName(CONFIG_STR(PRODUCT_NAME));
+    QCoreApplication::setApplicationName(SERVICE_NAME);
     QCoreApplication::setOrganizationDomain(SERVICE_DOMAIN);
     QCoreApplication::setOrganizationName(SERVICE_ORG);
 

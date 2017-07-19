@@ -2,7 +2,6 @@ TEMPLATE = app
 VERSION = 0.1.0
 COPYRIGHT = 2017
 ARCHIVE = sipwitchqt
-PRODUCT = SipWitchQt
 TARGET = $${ARCHIVE}
 
 # basic compile and link config
@@ -45,8 +44,8 @@ macx {
     }
     # else a bundled app with Qt runtime will be built
     else {
+        TARGET="SipWitchQt"
         system(rm -rf $${OUT_PWD}/$${TARGET}.app)
-        TARGET = $${PRODUCT}
         VARPATH=/var/lib
         LOGPATH=/var/log
         ETCPATH=/etc
@@ -128,7 +127,7 @@ else:CONFIG(release, release|debug) {
 QMAKE_EXTRA_TARGETS += clean extra_clean
 clean.depends += extra_clean
 extra_clean.commands += rm -f $${ARCHIVE}
-macx:extra_clean.commands += && rm -rf $${PRODUCT}.app $${PRODUCT}.app.dSYM 
+macx:extra_clean.commands += && rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
@@ -173,5 +172,5 @@ OTHER_FILES += \
 # common target properties
 QMAKE_TARGET_COMPANY = "Tycho Softworks"
 QMAKE_TARGET_COPYRIGHT = "$${COPYRIGHT} Tycho Softworks"
-QMAKE_TARGET_PRODUCT = "$${PRODUCT}"
+QMAKE_TARGET_PRODUCT = "SipWitchQt"
 QMAKE_TARGET_DESCRIPTION = "Tycho SIP Witch Service"
