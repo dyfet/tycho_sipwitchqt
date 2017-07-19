@@ -18,8 +18,8 @@
 #ifndef __STACK_HPP__
 #define __STACK_HPP__
 
-#include "compiler.hpp"
-#include "call.hpp"
+#include "../sys/compiler.hpp"
+#include "../sip/call.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 

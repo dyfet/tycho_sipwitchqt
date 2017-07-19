@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "manager.hpp"
-#include "logging.hpp"
+#include "../main/manager.hpp"
+#include "../sys/logging.hpp"
 
 #define TIMEOUT 10000       // 10 seconds because we can be lazy on these...
 

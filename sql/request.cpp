@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "compiler.hpp"
+#include "../sys/compiler.hpp"
 #include "request.hpp"
 
 #include <QEvent>

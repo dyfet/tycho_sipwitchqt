@@ -18,7 +18,7 @@
 #ifndef __REGISTRY_HPP__
 #define __REGISTRY_HPP__
 
-#include "compiler.hpp"
+#include "../sys/compiler.hpp"
 #include "context.hpp"
 
 #include <QSqlRecord>

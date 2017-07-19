@@ -18,8 +18,8 @@
 #ifndef __MANAGER_HPP__
 #define __MANAGER_HPP__
 
-#include "stack.hpp"
-#include "query.hpp"
+#include "../sip/stack.hpp"
+#include "../sql/query.hpp"
 
 class Manager : public Stack
 {

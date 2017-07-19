@@ -18,7 +18,7 @@
 #ifndef __CONTACT_HPP__
 #define __CONTACT_HPP__
 
-#include "compiler.hpp"
+#include "../sys/compiler.hpp"
 #include <QString>
 #include <QByteArray>
 #include <QHostAddress>

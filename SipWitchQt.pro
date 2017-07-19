@@ -96,10 +96,10 @@ else {
 }
 
 # project layout and components, this is really the cool part of qmake
-include(src/Common.pri)
-include(src/Database.pri)
-include(src/Main.pri)
-include(src/Network.pri)
+include(sys/Common.pri)
+include(sql/Database.pri)
+include(main/Main.pri)
+include(sip/Network.pri)
 
 # extra install targets based on bundle state
 !CONFIG(app_bundle) {
