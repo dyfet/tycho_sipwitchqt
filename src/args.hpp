@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __ARGS_HPP__
+#define __ARGS_HPP__
+
 #include <QCommandLineParser>
 #include <QStringList>
 #include <QPair>
@@ -61,7 +64,6 @@ private:
 /*!
  * Command line parsing support.
  * \file args.hpp
- * \ingroup Common
  */
 
 /*!
@@ -80,7 +82,6 @@ private:
  * Args constructors).  Afterward the QCommandLineParser.process(parser) method
  * can be used to process the argument list that was constructed.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Common
  *
  * \enum Args::ArgType
  * Used to distinguise the type of argument entry in an arguments list.
@@ -156,3 +157,5 @@ private:
     args.process(myapp);
   \endcode
  */
+
+#endif

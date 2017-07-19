@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __EVENT_HPP__
+#define __EVENT_HPP__
+
 #include "compiler.hpp"
 #include "util.hpp"
 #include "contact.hpp"
@@ -240,7 +243,6 @@ Q_DECLARE_METATYPE(Event)
  * context stacks and signaled sip events sent to the main
  * stack manager.
  * \file event.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -258,7 +260,6 @@ Q_DECLARE_METATYPE(Event)
  * before handed off; this maximizes compute in parallel listeners rather
  * than in bottlenecks like the stack manager thread.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  *
  * \fn Event::contacts()
  * Returns list of parsed contacts.  Register and 3xx responses can have
@@ -268,3 +269,9 @@ Q_DECLARE_METATYPE(Event)
  * Returns a single valid contact from the event.  If either no contacts,
  * or multiple contacts are present, then returns empty Contact.
  */
+
+/*!
+ * \namespace Util
+ */
+
+#endif

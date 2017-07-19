@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __CALL_HPP__
+#define __CALL_HPP__
+
 #include "compiler.hpp"
 #include "provider.hpp"
 
@@ -99,7 +102,6 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * locally managed devices and remote (provider or p2p) connections, the
  * segment is split into a base and derived local and remote classes.
  * \file call.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -110,7 +112,6 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * It could also happen if a dialed destination represents a uri of an actual endpoint
  * that is not registered thru us.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
 
 /*!
@@ -118,7 +119,6 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * \brief A call connection to a local endpoint.
  * This represents an active call connection tied to an endpoint registered with SipWitchQt.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
 
 /*!
@@ -127,7 +127,6 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * A base class to represent a call connection, whether local or remote.  A few segment
  * related utility functions may also be exposed thru here.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
 
 /*!
@@ -137,7 +136,6 @@ QDebug operator<<(QDebug dbg, const Call& cr);
  * a call that originated from a local or remote endpoint, and has a list of one or more
  * active destinations.  A separate Call and Conf class may be later derived.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
 
-
+#endif

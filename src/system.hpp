@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __SYSTEM_HPP__
+#define __SYSTEM_HPP__
+
 #include <QtGlobal>
 
 #ifdef Q_OS_UNIX
@@ -51,11 +54,11 @@ namespace System {
 /*!
  * Support for platform specific system operations.
  * \file system.hpp
- * \ingroup Common
  */
 
 /*!
  * \namespace System
  * \brief A namespace for cross-platform system functions.
- * \ingroup Common
  */
+
+#endif

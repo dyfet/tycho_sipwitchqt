@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __LOGGING_HPP__
+#define __LOGGING_HPP__
 
 #include <QObject>
 #include <QString>
@@ -85,7 +87,6 @@ private slots:
 
 /*! Support for service logging.
  * \file logging.hpp
- * \ingroup Common
  */
 
 /*!
@@ -98,5 +99,6 @@ private slots:
  * file, the log is closed while inactive.  This allows for clean log rotation.
  * A signal is emitted so that other components can listen to log events.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Common
  */
+
+#endif

@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __STACK_HPP__
+#define __STACK_HPP__
+
 #include "compiler.hpp"
 #include "call.hpp"
 #include <QMutex>
@@ -70,7 +73,6 @@ public slots:
 /*!
  * The stack is used to manage all sip activities.
  * \file stack.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -84,5 +86,6 @@ public slots:
  * all actions through here (or the derived class), correct order and
  * synchronization of object and state changes is guaranteed without locking.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
+
+#endif

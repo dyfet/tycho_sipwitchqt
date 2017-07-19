@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef	__COMPILER_HPP__
+#define __COMPILER_HPP__
+
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -50,7 +53,6 @@
 /*!
  * Provides pragmas and macros for use in every compilation unit.
  * \file compiler.hpp
- * \ingroup Common
  */
 
 /*!
@@ -62,3 +64,5 @@
  * \def FOR_RELEASE(block)
  * Defines a block of code only built in release builds.
  */
+
+#endif

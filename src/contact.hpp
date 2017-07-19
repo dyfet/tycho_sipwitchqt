@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __CONTACT_HPP__
+#define __CONTACT_HPP__
+
 #include "compiler.hpp"
 #include <QString>
 #include <QByteArray>
@@ -123,7 +126,6 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
 /*!
  * Manage information on internet connections.
  * \file address.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -134,5 +136,6 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
  * host address so that the actual dns resolution happens in the eXosip2
  * library using the c-ares resolver.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
+
+#endif

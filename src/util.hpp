@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __UTIL_HPP__
+#define __UTIL_HPP__
+
 #include <QCoreApplication>
 #include <QString>
 #include <QDebug>
@@ -32,7 +35,6 @@ namespace Util {
 /*!
  * Some generic utility functions.
  * \file util.hpp
- * \ingroup Common
  */
 
 /*!
@@ -40,5 +42,6 @@ namespace Util {
  * \brief Utility functions.
  * This namespace is typically used to create generic utility functions not necessarily
  * tied exclusively to our application.
- * \ingroup Common
  */
+
+#endif

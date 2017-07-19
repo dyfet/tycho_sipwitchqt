@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __MANAGER_HPP__
+#define __MANAGER_HPP__
+
 #include "stack.hpp"
 #include "query.hpp"
 
@@ -47,7 +50,6 @@ private slots:
 /*!
  * Derived sip stack management support.
  * \file manager.hpp
- * \ingroup Main
  */
 
 /*!
@@ -57,5 +59,6 @@ private slots:
  * behaviors, typically by overriding Stack virtuals.  It also provides
  * voip specific configuration support in conjunction with the Server.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Main
  */
+
+#endif

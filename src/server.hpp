@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __SERVER_HPP__
+#define __SERVER_HPP__
+
 #include <QHash>
 #include <QString>
 #include <QProcess>
@@ -128,7 +131,6 @@ signals:
 /*!
  * Daemon service management core.
  * \file server.hpp
- * \ingroup Common
  */
 
 /*!
@@ -147,5 +149,6 @@ signals:
  * A number of signals are emitted so that other components can be made
  * aware of the running state of the service and to update configurations.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Common
  */
+
+#endif

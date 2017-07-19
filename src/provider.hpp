@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __PROVIDER_HPP__
+#define __PROVIDER_HPP__
+
 #include "registry.hpp"
 
 class RemoteSegment;
@@ -64,7 +67,6 @@ QDebug operator<<(QDebug dbg, const Provider& prov);
  * later include routing objects and rules which may be associated with a
  * provider.
  * \file provider.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -74,5 +76,6 @@ QDebug operator<<(QDebug dbg, const Provider& prov);
  * with locally managed gateways, which will be handled thru the registry.
  * This provides contact information and external registration management.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
+
+#endif

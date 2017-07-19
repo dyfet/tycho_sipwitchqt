@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __SQLDRIVER_HPP__
+#define __SQLDRIVER_HPP__
+
 #include <QString>
 
 namespace Util {
@@ -26,5 +29,6 @@ namespace Util {
 /*!
  * Some database support utility classes and functions.
  * \file sqldriver.hpp
- * \ingroup Database
  */
+
+#endif

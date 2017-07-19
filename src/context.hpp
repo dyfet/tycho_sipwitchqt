@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __CONTEXT_HPP__
+#define __CONTEXT_HPP__
+
 #include "event.hpp"
 
 class Context final : public QObject
@@ -128,7 +131,6 @@ private slots:
  * to the stack, but cannot receive signals as they run inside an exosip
  * event loop.
  * \file context.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -145,5 +147,6 @@ private slots:
  * will occur thru context member functions, as Context also supports eXosip
  * locking internally.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
+
+#endif

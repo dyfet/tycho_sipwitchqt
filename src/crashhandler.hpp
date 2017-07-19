@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __CRASHHANDLER_HPP__
+#define __CRASHHANDLER_HPP__
+
 #include <QtGlobal>
 
 class CrashHandler
@@ -39,5 +42,6 @@ private:
 /*!
  * Crash handler support for service daemons.
  * \file crashhandler.hpp
- * \ingroup Common
  */
+
+#endif

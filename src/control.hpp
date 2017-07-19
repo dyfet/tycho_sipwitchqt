@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef	__CONTROL_HPP__
+#define __CONTROL_HPP__
+
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -82,7 +85,6 @@ private slots:
 /*!
  * Local IPC control support of a service daemon.
  * \file control.hpp
- * \ingroup Common
  */
 
 /*!
@@ -94,5 +96,6 @@ private slots:
  * built-in to the base class execute handler.  The fifo input is converted
  * to a QStringList for execute, and is managed thru QLocalSocket.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Common
  */
+
+#endif

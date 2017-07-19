@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __REGISTRY_HPP__
+#define __REGISTRY_HPP__
+
 #include "compiler.hpp"
 #include "context.hpp"
 
@@ -115,7 +118,6 @@ QDebug operator<<(QDebug dbg, const Registry& registry);
  * object associated with each physical sip user agent.  Multiple devices can
  * register under the same id.
  * \file registry.hpp
- * \ingroup Stack
  */
 
 /*!
@@ -124,7 +126,6 @@ QDebug operator<<(QDebug dbg, const Registry& registry);
  * This represents a single SIP device that is registered thru the stack under
  * a registry object.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
 
 /*!
@@ -133,5 +134,6 @@ QDebug operator<<(QDebug dbg, const Registry& registry);
  * A registration consists of a user, and all the endpoints that are
  * registered thru the stack which are associated with that user.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Stack
  */
+
+#endif

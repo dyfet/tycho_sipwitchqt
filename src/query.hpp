@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __QUERY_HPP__
+#define __QUERY_HPP__
+
 #include "compiler.hpp"
 #include "database.hpp"
 
@@ -46,5 +49,6 @@ private slots:
  * query set will be isolated into a separate class for easy componentization
  * and management of the code.
  * \file queries.hpp
- * \ingroup Main
  */
+
+#endif

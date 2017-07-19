@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __INLINE_HPP__
+#define __INLINE_HPP__
+
 #include "compiler.hpp"
 
 namespace Util {
@@ -42,10 +45,10 @@ namespace Util {
 /*!
  * Generic inline template functions and classes.
  * \file inline.hpp
- * \ingroup Common
  */
 
 /*!
  * \namespace Util
- * \ingroup Common
  */
+
+#endif

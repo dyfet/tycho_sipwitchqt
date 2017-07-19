@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __DATABASE_HPP__
+#define __DATABASE_HPP__
+
 #include "request.hpp"
 #include "sqldriver.hpp"
 
@@ -80,7 +83,6 @@ private slots:
  * A database system for sipwitch.  This can support direct database
  * access and queued requests.
  * \file database.hpp
- * \ingroup Database
  */
 
 /*!
@@ -96,5 +98,6 @@ private slots:
  * allows fully asychronous operations with other services that may have their
  * own thread contexts and event loops, such as the stack manager.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Database
  */
+
+#endif

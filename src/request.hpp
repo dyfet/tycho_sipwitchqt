@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __REQUEST_HPP__
+#define __REQUEST_HPP__
+
 #include <QVariant>
 #include <QCoreApplication>
 #include <QList>
@@ -70,7 +73,6 @@ private slots:
 /*!
  * Query request objects.
  * \file request.hpp
- * \ingroup Database
  */
 
 /*!
@@ -92,6 +94,6 @@ private slots:
  * and I do this in sipwitch to modularize & isolate the queries and db
  * handling code for simpler maintainability.
  * \author David Sugar <tychosoft@gmail.com>
- * \ingroup Database
  */
-	
+
+#endif	
