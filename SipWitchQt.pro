@@ -164,6 +164,7 @@ OTHER_FILES += \
     testdata/siptest.sh \
     README.md \
     CONTRIBUTING.md \
+    DOCKER.md \
     TODO.md \
     LICENSE \
     Doxyfile \
