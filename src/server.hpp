@@ -39,9 +39,7 @@
 #define SERVER_CONFIG   "SERVICE_CONFIG"
 #define SERVER_NAME     "SERVICE_NAME"
 #define SERVER_VERSION  "SERVICE_VERSION"
-#define DATA_PREFIX     "SERVICE_DATADIR"
-#define VAR_PREFIX      "SERVICE_PREFIX"
-#define VAR_LIBEXEC     "SERVICE_LIBEXEC"
+#define SERVER_PREFIX      "SERVICE_PREFIX"
 
 class Server final : public QObject
 {
@@ -93,7 +91,7 @@ public:
     }
 
     inline static const char *prefix() {
-        return sym(VAR_PREFIX);
+        return sym(SERVER_PREFIX);
     }
 
     inline static const QHash<QString, QByteArray> env(void) {

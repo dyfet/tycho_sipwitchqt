@@ -59,6 +59,8 @@ Control(SETTING)
 {
     QStringList opt;
 
+    qDebug() << "SERVICE_LOGPATH" << SERVICE_LOGPATH;
+
     if(args.isSet("set-aliases")) {
         if(setValue("aliases", args.positionalArguments()))
             ::exit(0);
@@ -128,7 +130,7 @@ int main(int argc, char **argv)
     static bool detached = System::detach(argc, SERVICE_VARPATH);
     int exitcode = 0;
 
-    QCoreApplication::setApplicationVersion(SERVICE_VERSION);
+    QCoreApplication::setApplicationVersion(PROJECT_VERSION);
     QCoreApplication::setApplicationName(CONFIG_STR(PRODUCT_NAME));
     QCoreApplication::setOrganizationDomain(SERVICE_DOMAIN);
     QCoreApplication::setOrganizationName(SERVICE_ORG);
@@ -162,10 +164,8 @@ int main(int argc, char **argv)
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
     Server server(detached, argc, argv, args, {
         {SERVER_NAME,       SERVICE_NAME},
-        {SERVER_VERSION,    SERVICE_VERSION},
-        {DATA_PREFIX,       SERVICE_DATADIR},
-        {VAR_LIBEXEC,       SERVICE_LIBEXEC},
-        {VAR_PREFIX,        SERVICE_VARPATH},
+        {SERVER_VERSION,    PROJECT_VERSION},
+        {SERVER_PREFIX,        SERVICE_VARPATH},
         {SERVER_PIDFILE,    PIDFILE},
         {SERVER_LOGFILE,    LOGFILE},
         {SERVER_CONFIG,     "--config"},

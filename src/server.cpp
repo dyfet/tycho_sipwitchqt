@@ -163,8 +163,8 @@ QObject(), app(argc, argv)
         }
     }
 
-    if(QDir::setCurrent(Env[VAR_PREFIX]))
-        Env[SYSTEM_PREFIX] = Env["CD"] = Env[VAR_PREFIX];
+    if(QDir::setCurrent(Env[SERVER_PREFIX]))
+        Env[SYSTEM_PREFIX] = Env["CD"] = Env[SERVER_PREFIX];
 
     reload();    // initial config...
 
