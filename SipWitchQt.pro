@@ -148,7 +148,11 @@ macx:CONFIG(release, release|debug):CONFIG(app_bundle) {
     CONFIG += separate_debug_info force_debug_info
     QMAKE_EXTRA_TARGETS += archive publish_and_archive
     archive.depends = all
-    archive.commands += $${PWD}/etc/archive.sh $${TARGET}
+    archive.commands += mkdir -p ../Archive &&
+    archive.commands += rm -rf ../Archive/$${TARGET}.app ../Archive/$${TARGET}.dSYM &&
+    archive.commands += cp -a $${TARGET}.app ../Archive &&
+    archive.commands += cp -a $${TARGET}.app.dSYM ../Archive/$${TARGET}.dSYM &&
+    archive.commands += cd ../Archive && macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
     publish_and_archive.depends = publish archive
 }
 
@@ -168,7 +172,6 @@ publish_clean.commands = rm -rf Archive $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $
 OTHER_FILES += \
     etc/sipwitchqt.conf \
     etc/README.md \
-    etc/archive.sh \
     testdata/service.conf \
     testdata/ping.xml \
     testdata/siptest.sh \
