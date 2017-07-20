@@ -71,6 +71,8 @@ static bool processing = false;
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
     Q_UNUSED(context);
+    Q_UNUSED(sig);
+    Q_UNUSED(siginfo);
 
     if(processing)
         return;
@@ -107,7 +109,7 @@ bool CrashHandler::installHandlers()
         return false;
 
     installed = true;
-        struct sigaction sa;
+    struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = handler;
     sigemptyset( &sa.sa_mask );
@@ -117,6 +119,7 @@ bool CrashHandler::installHandlers()
     sigaction( SIGILL,  &sa, NULL );
     sigaction( SIGFPE,  &sa, NULL );
     sigaction( SIGPIPE, &sa, NULL );
+    return true;
 }
 
 #else

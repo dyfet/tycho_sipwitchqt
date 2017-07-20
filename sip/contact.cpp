@@ -19,7 +19,7 @@
 #include "contact.hpp"
 
 Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :
-expiration(0), userName(user)
+userName(user), expiration(0)
 {
     hostName = address;
     hostPort = port;

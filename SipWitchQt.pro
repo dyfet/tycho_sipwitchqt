@@ -10,12 +10,25 @@ QT -= gui
 QT += network sql
 QMAKE_CXXFLAGS += -Wno-padded
 
-# prefix and build env
-win32-msvc*:error(*** windows no longer supported...)
+# build type specific options
+CONFIG(release,release|debug):DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_DEBUG
+else {
+    # the debug build target must be in etc for most python utils to work fully
+    DEFINES += DEBUG_LOGGING
+    !CONFIG(no-testdata) {
+        CONFIG(userdata):PROJECT_PREFIX=\"$${PWD}/userdata\"
+        else:PROJECT_PREFIX=\"$${PWD}/testdata\"
+        CONFIG -= app_bundle
+        # the debug target must be in etc for most python utils to work fully
+        unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
+    }
+}
+
+# prefix options
 isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
 
-# check if normal prefix...
 equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
+    CONFIG -= app_bundle
     VARPATH=/var/lib
     LOGPATH=/var/log
     ETCPATH=/etc
@@ -27,6 +40,8 @@ else {
 }
 
 # platform specific options
+win32-msvc*:error(*** windows no longer supported...)
+
 linux {
     !CONFIG(no-systemd) {
         CONFIG += link_pkgconfig
@@ -35,42 +50,12 @@ linux {
     }
 }
 
-macx {  
-    # check for building under homebrew directly...
-    equals(PREFIX, "/usr/local") {
-        CONFIG -= app_bundle
-        INCLUDEPATH += $${PREFIX}/include
-        LIBS += -L$${PREFIX}/lib
-    }
-    # else a bundled app with Qt runtime will be built
-    else {
-        TARGET="SipWitchQt"
-        system(rm -rf $${OUT_PWD}/$${TARGET}.app)
-        VARPATH=/var/lib
-        LOGPATH=/var/log
-        ETCPATH=/etc
-    }
-}
-
-# build type specific options
-CONFIG(release,release|debug) {
-    DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_DEBUG
-    unix:!macx:LIBS += -ltcmalloc_minimal
-}
-else {
-    # the debug build target must be in etc for most python utils to work fully
-    DEFINES += DEBUG_LOGGING
-    !CONFIG(no-testdata) {
-        CONFIG(userdata):PROJECT_PREFIX=\"$${PWD}/userdata\"
-        else:PROJECT_PREFIX=\"$${PWD}/testdata\"
-
-        # the debug target must be in etc for most python utils to work fully
-        macx:CONFIG -= app_bundle
-        macx:TARGET = $${ARCHIVE}
-        unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
-
-        DEFINES += DEBUG_TESTDATA
-    }
+macx:CONFIG(app_bundle) {
+    TARGET="SipWitchQt"
+    system(rm -rf $${OUT_PWD}/$${TARGET}.app)
+    VARPATH=/var/lib
+    LOGPATH=/var/log
+    ETCPATH=/etc
 }
 
 # global defines
@@ -112,20 +97,11 @@ include(sip/Network.pri)
     target.path = $${PREFIX}/sbin
     target.depends = all
 }
-else {
-    CONFIG += separate_debug_info force_debug_info
-
-    # xcode bundles always have to have local qt libs to run, even for testing
-    CONFIG(xcode_export) {
-        Config(release, release|debug):QMAKE_POST_LINK += macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
-        else:QMAKE_POST_LINK += macdeployqt $${TARGET}.app -debug -verbose=0 -always-overwrite
-    }
-}
 
 QMAKE_EXTRA_TARGETS += clean extra_clean
 clean.depends += extra_clean
-extra_clean.commands += rm -f $${ARCHIVE}
-macx:extra_clean.commands += && rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
+macx:app_bundle:extra_clean.commands += && rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
+else:extra_clean.commands += rm -f $${TARGET}
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish

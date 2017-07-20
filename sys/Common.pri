@@ -21,3 +21,5 @@ SOURCES += \
     $${PWD}/crashhandler.cpp \
 
 macx: LIBS += -framework CoreFoundation
+CONFIG(release, release|debug):unix:!macx:LIBS += -ltcmalloc_minimal
+

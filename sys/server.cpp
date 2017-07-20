@@ -195,7 +195,14 @@ int Server::start(QThread::Priority priority)
 {
     QLockFile pidfile(Env[SERVER_PIDFILE]);
     if(!pidfile.tryLock()) {
-        cerr << "Another instance is running." << endl;
+        switch(pidfile.error()) {
+        case QLockFile::LockFailedError:
+            cerr << "Another server instance is running" << endl;
+            break;
+        default:
+            cerr << "Unpriviledged server started" << endl;
+            break;
+        }
         ::exit(90);
     }
 
