@@ -29,12 +29,12 @@ isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$
 
 equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
     CONFIG -= app_bundle
-    VARPATH=/var/lib
+    VARPATH=/var/lib/sipwitchqt
     LOGPATH=/var/log
     ETCPATH=/etc
 }
 else {
-    VARPATH=$${PREFIX}/var
+    VARPATH=$${PREFIX}/var/sipwitchqt
     ETCPATH=$${PREFIX}/etc
     LOGPATH=$${PREFIX}/var/log
 }
@@ -53,7 +53,7 @@ linux {
 macx:CONFIG(app_bundle) {
     TARGET="SipWitchQt"
     system(rm -rf $${OUT_PWD}/$${TARGET}.app)
-    VARPATH=/var/lib
+    VARPATH=/var/lib/SipWitchQt
     LOGPATH=/var/log
     ETCPATH=/etc
 }

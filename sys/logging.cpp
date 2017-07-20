@@ -187,7 +187,7 @@ bool Logging::event(QEvent *ev)
     if(service && category) {
         if(level != LOGGING_IGNORE)
             report(level, msg);
-        category = nullptr;
+        //category = nullptr;
     }
 #endif
 

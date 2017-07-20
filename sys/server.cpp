@@ -93,9 +93,6 @@ QObject(), app(argc, argv)
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
-    // when server comes up logging is activated...
-    Logging::init();
-
     foreach(auto key, keypairs.keys()) {
         if(key[0] == '_' || (key[0].isUpper() && key.indexOf('/') < 0))
             Env[key] = keypairs.value(key).toString().toLocal8Bit();
@@ -197,7 +194,7 @@ int Server::start(QThread::Priority priority)
     if(!pidfile.tryLock()) {
         switch(pidfile.error()) {
         case QLockFile::LockFailedError:
-            cerr << "Another server instance is running" << endl;
+            cerr << "Multiple server instances running" << endl;
             break;
         default:
             cerr << "Unpriviledged server started" << endl;
@@ -211,6 +208,8 @@ int Server::start(QThread::Priority priority)
 
     System::enableSignals();
     qDebug() << "Starting" << name();
+    // when server comes up logging is activated...
+    Logging::init();
     emit aboutToStart();
     return app.exec();
 }

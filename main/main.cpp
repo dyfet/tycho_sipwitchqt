@@ -125,7 +125,7 @@ SERVICE_TABLE_ENTRY DetachedServices[] = {
 
 int main(int argc, char **argv)
 {
-    static bool detached = System::detach(argc, SERVICE_VARPATH);
+    static bool detached = System::detach(argc, SERVICE_VARPATH, argv[0]);
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);

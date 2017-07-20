@@ -400,6 +400,9 @@ namespace System {
                 alias = strrchr(argv0, '-');
         }
 
+        if(alias && !strcmp(alias, "-debug"))
+            return false;
+
         if(getppid() == 1 || (alias && !strcmp(alias, "-daemon")) || getenv("NOTIFY_SOCKET") || ((argc < 2) && !getuid())) {
             umask(007);
             if(!detachService()) {
