@@ -212,7 +212,7 @@ void Context::run()
 }
 
 bool Context::authenticated(const Event& ev) {
-    if(allow && Allow::UNAUTHENTICATED)
+    if(allow & Allow::UNAUTHENTICATED)
         return true;
     if(ev.authorization())
         return true;
