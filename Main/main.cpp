@@ -137,7 +137,7 @@ int main(int argc, char **argv)
     args.setApplicationDescription("Tycho SIP Witch Service");
 
     Args::add(args, {
-        {{"A", "address"}, tr("Specify network interface to bind"), tr("address"), "any"},
+        {{"A", "address"}, tr("Specify network interface to bind"), tr("address"), "%%address"},
         {{"C", "config"}, tr("Specify config file"), tr("file"), SERVICE_CONF},
         {{"H", "host", "public"}, tr("Specify public host name"), tr("host"), "%%host"},
         {{"N", "network", "domain"}, tr("Specify network domain to serve"), tr("name"), "%%network"},
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
         {CURRENT_ADDRESS,   "--address"},
         {DEFAULT_PORT,      5060},
         {DEFAULT_HOSTNAME,  QHostInfo::localHostName()},
-        {DEFAULT_ADDRESS,   QHostInfo::localHostName()},
+        {DEFAULT_ADDRESS,   "any"},
         {DEFAULT_NETWORK,   Util::localDomain()},
     });
 

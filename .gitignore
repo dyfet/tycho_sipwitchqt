@@ -29,7 +29,3 @@ doc/
 .DS_Store
 Makefile
 sipwitchqt
-
-moc_*
-qrc_*
-ui_*
