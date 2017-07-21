@@ -18,7 +18,7 @@
 #ifndef __CONTACT_HPP__
 #define __CONTACT_HPP__
 
-#include "../sys/compiler.hpp"
+#include <Common/compiler.hpp>
 #include <QString>
 #include <QByteArray>
 #include <QHostAddress>
@@ -30,36 +30,17 @@ class Contact final
 {
 public:
     Contact(const QString& address, quint16 port, const QString& user = (char *)NULL, int duration = -1) noexcept;
-
     Contact(osip_contact_t *contact) noexcept;
-
     Contact(osip_uri_t *uri) noexcept;
-
     Contact() noexcept;
-
     Contact(const Contact& from) noexcept;
 
-    Contact(Contact&& from) noexcept;
-
-    Contact& operator=(const Contact& from) {
-        hostName = from.hostName;
-        hostPort = from.hostPort;
-        userName = from.userName;
-        expiration = from.expiration;
+    Contact& operator+=(const Contact& from) {
+        refresh(from);
         return *this;
     }
 
-    Contact& operator=(Contact&& from) {
-        hostName = from.hostName;
-        hostPort = from.hostPort;
-        userName = from.userName;
-        expiration = from.expiration;
-        from.hostPort = 0;
-        from.hostName.clear();
-        from.userName.clear();
-        from.expiration = 0;
-        return *this;
-    }
+    Contact& operator=(const Contact& from);
 
     operator bool() const {
         return hostPort != 0;
@@ -82,10 +63,8 @@ public:
     }
 
     void refresh(const Contact& from) {
-        if(from != *this)
-            return;
-
-        expiration = from.expiration;
+        if(from == *this && from.expiration > 0)
+            expiration = from.expiration;
     }
 
     bool hasUser() const {
@@ -107,6 +86,7 @@ public:
     bool hasExpired() const;
     const QString toString() const;
 
+    void clear();
     void refresh(int seconds);
 
 private:

@@ -15,9 +15,9 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "../sys/server.hpp"
-#include "../sys/logging.hpp"
-#include "../sys/control.hpp"
+#include <Common/server.hpp>
+#include <Common/logging.hpp>
+#include <Common/control.hpp>
 #include "stack.hpp"
 
 #include <QNetworkInterface>

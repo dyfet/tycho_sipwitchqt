@@ -1,3 +1,4 @@
+PRODUCT = SipWitchQt
 TEMPLATE = app
 VERSION = 0.1.0
 COPYRIGHT = 2017
@@ -25,8 +26,6 @@ else {
 }
 
 # prefix options
-isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
-
 equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
     CONFIG -= app_bundle
     VARPATH=/var/lib/sipwitchqt
@@ -40,7 +39,10 @@ else {
 }
 
 # platform specific options
-win32-msvc*:error(*** windows no longer supported...)
+unix {
+    isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
+    system(rm -f "$${OUT_PWD}/$${TARGET}")
+}
 
 linux {
     !CONFIG(no-systemd) {
@@ -51,12 +53,14 @@ linux {
 }
 
 macx:CONFIG(app_bundle) {
-    TARGET="SipWitchQt"
-    system(rm -rf $${OUT_PWD}/$${TARGET}.app)
-    VARPATH=/var/lib/SipWitchQt
+    TARGET="$${PRODUCT}"
+    VARPATH=/var/lib/$${PRODUCT}
     LOGPATH=/var/log
     ETCPATH=/etc
+    system(rm -rf "$${OUT_PWD}/$${TARGET}.app")
 }
+
+win32-msvc*:error(*** windows no longer supported...)
 
 # global defines
 DEFINES += \
@@ -81,10 +85,35 @@ else {
 }
 
 # project layout and components, this is really the cool part of qmake
-include(sys/Common.pri)
-include(sql/Database.pri)
-include(main/Main.pri)
-include(sip/Network.pri)
+RCC_DIR = generated
+MOC_DIR = generated
+
+INCLUDEPATHS += "$${PWD}"
+
+HEADERS += \
+    $$files(Common/*.hpp) \
+    $$files(Database/*.hpp) \
+    $$files(Main/*.hpp) \
+    $$files(Stack/*.hpp) \
+
+SOURCES += \
+    $$files(Common/*.cpp) \
+    $$files(Database/*.cpp) \
+    $$files(Main/*.cpp) \
+    $$files(Stack/*.cpp) \
+
+macx: LIBS += -framework CoreFoundation
+CONFIG(release, release|debug):unix:!macx:LIBS += -ltcmalloc_minimal
+
+LIBS += -leXosip2 -losip2 -losipparser2
+
+# required osx homebrew dependencies
+macx {
+    !exists(/usr/local/opt/libexosip):error(*** brew install libexosip)
+
+    INCLUDEPATH += /usr/local/opt/libosip/include /usr/local/opt/libexosip/include
+    LIBS += -L/usr/local/opt/libosip/lib -L/usr/local/opt/libexosip/lib
+}
 
 # extra install targets based on bundle state
 !CONFIG(app_bundle) {
@@ -97,29 +126,20 @@ include(sip/Network.pri)
     target.path = $${PREFIX}/sbin
     target.depends = all
 }
+else {
+    CONFIG(release, release|debug):\
+        QMAKE_POST_LINK += macdeployqt "$${TARGET}.app" -verbose=0 -always-overwrite
 
-QMAKE_EXTRA_TARGETS += clean extra_clean
-clean.depends += extra_clean
-macx:app_bundle:extra_clean.commands += && rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
-else:extra_clean.commands += rm -f $${TARGET}
+    QMAKE_EXTRA_TARGETS += clean extra_clean
+    clean.depends += extra_clean
+    extra_clean.commands += rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
+}
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
 publish.commands += $$QMAKE_DEL_FILE "$${ARCHIVE}-$${VERSION}.tar.gz" &&
 publish.commands += cd $${PWD} &&
 publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD 
-
-# archive support for bundled apps
-CONFIG(app_bundle):CONFIG(release, release|debug) {
-    QMAKE_EXTRA_TARGETS += archive publish_and_archive
-    archive.depends = all
-    archive.commands += $$sprintf($$QMAKE_MKDIR_CMD, $$shell_path("../Archive")) &&
-    archive.commands += rm -rf ../Archive/$${TARGET}.app ../Archive/$${TARGET}.dSYM &&
-    archive.commands += cp -a $${TARGET}.app ../Archive &&
-    archive.commands += cp -a $${TARGET}.app.dSYM ../Archive/$${TARGET}.dSYM &&
-    archive.commands += cd ../Archive && macdeployqt $${TARGET}.app -verbose=0 -always-overwrite
-    publish_and_archive.depends = publish archive
-}
 
 # documentation processing
 QMAKE_EXTRA_TARGETS += docs
@@ -156,5 +176,5 @@ OTHER_FILES += \
 # common target properties
 QMAKE_TARGET_COMPANY = "Tycho Softworks"
 QMAKE_TARGET_COPYRIGHT = "$${COPYRIGHT} Tycho Softworks"
-QMAKE_TARGET_PRODUCT = "SipWitchQt"
+QMAKE_TARGET_PRODUCT = "$${PRODUCT}"
 QMAKE_TARGET_DESCRIPTION = "Tycho SIP Witch Service"

@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../sys/compiler.hpp"
-#include "../sys/server.hpp"
-#include "../sys/control.hpp"
-#include "../sys/logging.hpp"
+#include <Common/compiler.hpp>
+#include <Common/server.hpp>
+#include <Common/control.hpp>
+#include <Common/logging.hpp>
 #include "manager.hpp"
 #include "main.hpp"
 
