@@ -48,7 +48,7 @@ private slots:
  * operations with sipwitch state changes for the Manager.  Each database
  * query set will be isolated into a separate class for easy componentization
  * and management of the code.
- * \file queries.hpp
+ * \file query.hpp
  */
 
 #endif

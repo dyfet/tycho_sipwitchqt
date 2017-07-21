@@ -105,7 +105,7 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
 
 /*!
  * Manage information on internet connections.
- * \file address.hpp
+ * \file contact.hpp
  */
 
 /*!
