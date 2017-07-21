@@ -18,7 +18,7 @@
 #ifndef __QUERY_HPP__
 #define __QUERY_HPP__
 
-#include "../sys/compiler.hpp"
+#include <Common/compiler.hpp>
 #include "database.hpp"
 
 class ProviderQuery final : public Request

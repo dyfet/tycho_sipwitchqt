@@ -16,7 +16,7 @@
  */
 
 #include "../main/manager.hpp"
-#include "../sys/logging.hpp"
+#include <Common/logging.hpp>
 
 #define TIMEOUT 10000       // 10 seconds because we can be lazy on these...
 

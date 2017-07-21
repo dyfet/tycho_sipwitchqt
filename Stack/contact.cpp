@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../sys/inline.hpp"
+#include <Common/inline.hpp>
 #include "contact.hpp"
 
 Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :
@@ -76,18 +76,17 @@ hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expir
 {
 }
 
-Contact::Contact(Contact&& from) noexcept :
-hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)
-{
-    from.hostName.clear();
-    from.hostPort = 0;
-    from.userName.clear();
-    from.expiration = 0;
-}
-
 Contact::Contact() noexcept :
 hostPort(0), expiration(0)
 {
+}
+
+Contact& Contact::operator=(const Contact& from) {
+    hostName = from.hostName;
+    hostPort = from.hostPort;
+    userName = from.userName;
+    expiration = from.expiration;
+    return *this;
 }
 
 const QString Contact::toString() const {
@@ -97,6 +96,13 @@ const QString Contact::toString() const {
     if(hostName.contains(":") && hostName[0] != '[')
         return "[" + hostName + "]" + port;
     return hostName + port;
+}
+
+void Contact::clear() {
+    hostPort = 0;
+    hostName.clear();
+    userName.clear();
+    expiration = 0;
 }
 
 bool Contact::hasExpired() const {
@@ -119,7 +125,6 @@ void Contact::refresh(int seconds) {
         time(&expiration);
     expiration += seconds;
 }
-
 
 QDebug operator<<(QDebug dbg, const Contact& addr)
 {

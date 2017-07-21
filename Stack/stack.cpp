@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../sys/server.hpp"
-#include "../sys/control.hpp"
-#include "../sys/logging.hpp"
-#include "../sip/stack.hpp"
+#include <Common/server.hpp>
+#include <Common/control.hpp>
+#include <Common/logging.hpp>
+#include <Stack/stack.hpp>
 
 static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
     {QCryptographicHash::Md5,       "MD5"},
