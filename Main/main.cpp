@@ -121,8 +121,6 @@ SERVICE_TABLE_ENTRY DetachedServices[] = {
 
 #endif
 
-#define tr(x)   QCoreApplication::translate("Server", x)
-
 int main(int argc, char **argv)
 {
     static bool detached = System::detach(argc, SERVICE_VARPATH, argv[0]);
@@ -137,26 +135,26 @@ int main(int argc, char **argv)
     args.setApplicationDescription("Tycho SIP Witch Service");
 
     Args::add(args, {
-        {{"A", "address"}, tr("Specify network interface to bind"), tr("address"), "%%address"},
-        {{"C", "config"}, tr("Specify config file"), tr("file"), SERVICE_CONF},
-        {{"H", "host", "public"}, tr("Specify public host name"), tr("host"), "%%host"},
-        {{"N", "network", "domain"}, tr("Specify network domain to serve"), tr("name"), "%%network"},
-        {{"P", "port"}, tr("Specify network port to bind"), "100-65534", "%%port"},
+        {{"A", "address"}, "Specify network interface to bind", "address", "%%address"},
+        {{"C", "config"}, "Specify config file", "file", SERVICE_CONF},
+        {{"H", "host", "public"}, "Specify public host name", "host", "%%host"},
+        {{"N", "network", "domain"}, "Specify network domain to serve", "name", "%%network"},
+        {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
-        {{"x", "debug"}, tr("Enable debug output")},
-        {{"abort"}, tr("Force server abort")},
-        {{"control"}, tr("Control service")},
-        {{"reload"}, tr("Reload service config")},
-        {{"reset"}, tr("Reset service")},
-        {{"set-aliases"}, tr("Set aliases")},
-        {{"set-mode"}, tr("Set mode (day, night, etc)")},
-        {{"show-cache"}, tr("Show config cache")},
-        {{"show-config"}, tr("Show server config")},
-        {{"show-env"}, tr("Show server environment")},
-        {{"show-values"}, tr("Show server persisted values")},
-        {{"shutdown"}, tr("Shutdown service")},
-        {{"status"}, tr("Show server status")},
+        {{"x", "debug"}, "Enable debug output"},
+        {{"abort"}, "Force server abort"},
+        {{"control"}, "Control service"},
+        {{"reload"}, "Reload service config"},
+        {{"reset"}, "Reset service"},
+        {{"set-aliases"}, "Set aliases"},
+        {{"set-mode"}, "Set mode (day, night, etc)"},
+        {{"show-cache"}, "Show config cache"},
+        {{"show-config"}, "Show server config"},
+        {{"show-env"}, "Show server environment"},
+        {{"show-values"}, "Show server persisted values"},
+        {{"shutdown"}, "Shutdown service"},
+        {{"status"}, "Show server status"},
     });
 
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
