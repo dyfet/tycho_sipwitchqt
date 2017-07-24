@@ -19,7 +19,7 @@
 #define __STACK_HPP__
 
 #include <Common/compiler.hpp>
-#include <Stack/call.hpp>
+#include "invite.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 
