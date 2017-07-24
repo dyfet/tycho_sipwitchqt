@@ -15,37 +15,51 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "call.hpp"
+#include "invite.hpp"
 
-static QHash<QString,Call*> calls;
+static QHash<QString,Invite*> invites;
 static QHash<int,Segment*> segments;
 static QList<RemoteSegment*> peering;
 
-Call::Call(const QString id) :
+Invite::Invite(const QString id) :
 tag(id)
 {
-    calls.insert(tag, this);
+    invites.insert(tag, this);
 }
 
-Call::~Call()
+Invite::~Invite()
 {
-    calls.remove(tag);
+    invites.remove(tag);
 }
 
-QList<Call*> Call::list()
+QList<Invite*> Invite::list()
 {
-	return calls.values();
+    return invites.values();
 }
 
-Segment::Segment(int cid, Call *cp, Context *ctx) :
-call(cp), context(ctx), id(cid)
+Segment::Segment(int callid, Invite *ip, Context *ctx) :
+invite(ip), context(ctx), cid(callid), did(-1), tid(-1)
 {
-    segments.insert(id, this);
+    segments.insert(cid, this);
 }
 
 Segment::~Segment()
 {
-    segments.remove(id);
+    segments.remove(cid);
+}
+
+bool Segment::update(const Event *event)
+{
+    if(event->cid() != cid || context != event->context())
+        return false;
+
+    if(did == -1)
+        did = event->did();
+
+    if(tid == -1)
+        tid = event->tid();
+
+    return true;
 }
 
 QList <RemoteSegment *> Segment::peers()
@@ -53,18 +67,18 @@ QList <RemoteSegment *> Segment::peers()
     return peering;
 }        
 
-LocalSegment::LocalSegment(int cid, Call *cp, Endpoint *ep) :
-Segment(cid, cp, ep->sip()), endpoint(ep), registry(ep->parent())
+LocalSegment::LocalSegment(int cid, Invite *ip, Endpoint *ep) :
+Segment(cid, ip, ep->sip()), endpoint(ep), registry(ep->parent())
 {
 }
 
-RemoteSegment::RemoteSegment(int cid, Call *cp, Provider *pp) :
-Segment(cid, cp, pp->sip()), provider(pp)
+RemoteSegment::RemoteSegment(int cid, Invite *ip, Provider *pp) :
+Segment(cid, ip, pp->sip()), provider(pp)
 {
 }
 
-RemoteSegment::RemoteSegment(int cid, Call *cp, Context *ctx) :
-Segment(cid, cp, ctx), provider(nullptr)
+RemoteSegment::RemoteSegment(int cid, Invite *ip, Context *ctx) :
+Segment(cid, ip, ctx), provider(nullptr)
 {
     peering.append(this);
 }
