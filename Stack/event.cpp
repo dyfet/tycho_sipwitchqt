@@ -85,8 +85,8 @@ void Event::Data::parseMessage(osip_message_t *msg)
 {
     const osip_list_t& clist = msg->contacts;
     const osip_list_t& vlist = msg->vias;
+    const osip_list_t& rlist = msg->record_routes;
     int pos;
-    osip_via_t *via;
     Contact nat;
 
     message = msg;
@@ -95,7 +95,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
 
     pos = 0;
     while(osip_list_eol(&vlist, pos) == 0) {
-        via = (osip_via_t *)osip_list_get(&vlist, pos++);
+        auto via = (osip_via_t *)osip_list_get(&vlist, pos++);
         ++hops;
         if(via->host) {
             const char *addr = via->host;
@@ -146,8 +146,30 @@ void Event::Data::parseMessage(osip_message_t *msg)
     pos = 0;
     while(osip_list_eol(&clist, pos) == 0) {
         auto contact = (osip_contact_t *)osip_list_get(&clist, pos++);
-        if(contact && contact->url)
+        if(contact && contact->url && contact->url->host)
             contacts << Contact(contact);
+    }
+
+    pos = 0;
+    while(osip_list_eol(&rlist, pos) == 0) {
+        auto recroute = (osip_record_route_t*)osip_list_get(&rlist, pos++);
+        if(recroute->url && recroute->url->host) {
+            routes << Contact(recroute->url);
+        }
+    }
+
+    if(routes.count() > 0)
+        record = true;
+    else {
+        osip_route_t *route;
+        pos = 0;
+        const osip_list_t& list = msg->routes;
+        while(osip_list_eol(&list, pos = 0)) {
+            route = (osip_route_t *)osip_list_get(&list, pos++);
+            if(route->url && route->url->host) {
+                routes << Contact(route->url);
+            }
+        }
     }
 
     if(msg->from)
