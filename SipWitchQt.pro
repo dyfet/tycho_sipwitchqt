@@ -85,6 +85,7 @@ else {
 }
 
 # project layout and components, this is really the cool part of qmake
+OBJECTS_DIR = objects
 RCC_DIR = generated
 MOC_DIR = generated
 
@@ -119,11 +120,11 @@ macx {
 !CONFIG(app_bundle) {
     INSTALLS += target config
 
-    config.path = $${ETCPATH}
-    config.files = $${PWD}/etc/sipwitchqt.conf
+    config.path = "$${ETCPATH}"
+    config.files = etc/sipwitchqt.conf
     config.depends = target
 
-    target.path = $${PREFIX}/sbin
+    target.path = "$${PREFIX}/sbin"
     target.depends = all
 }
 else {
@@ -137,9 +138,11 @@ else {
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
-publish.commands += $$QMAKE_DEL_FILE "$${ARCHIVE}-$${VERSION}.tar.gz" &&
+publish.commands += $$QMAKE_DEL_FILE *.tar.gz &&
 publish.commands += cd $${PWD} &&
 publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD 
+linux:exists("/usr/bin/rpmbuild"):\
+    publish.commands += && rm -f *.src.rpm && rpmbuild --define \"_tmppath /tmp\" --define \"_sourcedir .\" --define \"_srcrpmdir .\" --nodeps -bs $${ARCHIVE}.spec
 
 # documentation processing
 QMAKE_EXTRA_TARGETS += docs
