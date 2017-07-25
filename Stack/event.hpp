@@ -77,6 +77,10 @@ public:
         return d->contacts;
     }
 
+    inline const QList<Contact>& routes() const {
+        return d->routes;
+    }
+
     inline int expires() const {
         return d->expires;
     }
@@ -99,6 +103,10 @@ public:
 
     inline int hops() const {
         return d->hops;
+    }
+
+    inline bool record() const {
+        return d->record;
     }
 
     inline const Contact source() const {
@@ -215,13 +223,13 @@ private:
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops
-        bool natted, local;
+        bool natted, local, record;
         Context *context;
         eXosip_event_t *event;
         osip_message_t *message;
         osip_authorization_t *authorization;
         Event::Association association;
-        QList<Contact>contacts;
+        QList<Contact> contacts, routes;
         QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject, text;
         Contact source;  // if nat, has first nat
         Contact from, to, request, target;
