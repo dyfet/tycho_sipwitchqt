@@ -164,7 +164,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
         osip_route_t *route;
         pos = 0;
         const osip_list_t& list = msg->routes;
-        while(osip_list_eol(&list, pos = 0)) {
+        while(osip_list_eol(&list, pos) == 0) {
             route = (osip_route_t *)osip_list_get(&list, pos++);
             if(route->url && route->url->host) {
                 routes << Contact(route->url);
