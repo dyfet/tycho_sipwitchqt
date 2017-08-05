@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/inline.hpp>
+#include "../Common/inline.hpp"
 #include "contact.hpp"
 
 Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :

@@ -18,7 +18,7 @@
 #ifndef __STACK_HPP__
 #define __STACK_HPP__
 
-#include <Common/compiler.hpp>
+#include "../Common/compiler.hpp"
 #include "invite.hpp"
 #include <QMutex>
 #include <QCryptographicHash>

@@ -18,7 +18,7 @@
 #ifndef __INVITE_HPP__
 #define __INVITE_HPP__
 
-#include <Common/compiler.hpp>
+#include "../Common/compiler.hpp"
 #include "provider.hpp"
 
 class Invite;

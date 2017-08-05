@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/compiler.hpp>
-#include <Common/server.hpp>
-#include <Common/logging.hpp>
-#include <Main/main.hpp>
+#include "../Common/compiler.hpp"
+#include "../Common/server.hpp"
+#include "../Common/logging.hpp"
+#include "../Main/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"
 

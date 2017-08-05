@@ -89,8 +89,6 @@ OBJECTS_DIR = objects
 RCC_DIR = generated
 MOC_DIR = generated
 
-INCLUDEPATHS += "$${PWD}"
-
 HEADERS += \
     $$files(Common/*.hpp) \
     $$files(Database/*.hpp) \
