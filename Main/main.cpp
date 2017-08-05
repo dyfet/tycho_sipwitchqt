@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/compiler.hpp>
-#include <Common/args.hpp>
-#include <Common/server.hpp>
-#include <Common/control.hpp>
-#include <Common/system.hpp>
-#include <Common/logging.hpp>
+#include "../Common/compiler.hpp"
+#include "../Common/args.hpp"
+#include "../Common/server.hpp"
+#include "../Common/control.hpp"
+#include "../Common/system.hpp"
+#include "../Common/logging.hpp"
 #include "main.hpp"
 #include "manager.hpp"
 

@@ -18,8 +18,8 @@
 #ifndef __EVENT_HPP__
 #define __EVENT_HPP__
 
-#include <Common/compiler.hpp>
-#include <Common/util.hpp>
+#include "../Common/compiler.hpp"
+#include "../Common/util.hpp"
 #include "contact.hpp"
 
 #include <QThread>
