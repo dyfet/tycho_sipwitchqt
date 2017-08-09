@@ -156,7 +156,7 @@ unix:docs.commands += && cd doc/latex && make
 # clean additional testing files on distclean...
 QMAKE_EXTRA_TARGETS += distclean publishclean
 distclean.depends += publishclean
-publishclean.commands = cd $${PWD} && rm -rf testdata/*.db etc/$${ARCHIVE} testdata/certs testdata/private $testdata/*.log 
+publishclean.commands += cd $${PWD} && rm -rf testdata/*.db etc/$${ARCHIVE} testdata/certs testdata/private $testdata/*.log &&
 publishclean.commands += cd $${OUT_PWD} && rm -rf Archive $${ARCHIVE}-*.tar.gz $${ARCHIVE}-*.pdf $${ARCHIVE} doc Doxyfile.out
 
 # other files...
