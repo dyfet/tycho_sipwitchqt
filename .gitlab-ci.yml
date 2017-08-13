@@ -1,20 +1,20 @@
 stages:
-- build
+#- build
 - test
 - docs
 
-
-build:
-  image: in1t3r/gitlabqt:build
-  stage: build
-  script:
-    - qmake
-    - make
-  when: on_success
-  tags:
-    - docker
-  only:
-    - master
+#We do not have need anymore for the build stage
+#build:
+#  image: in1t3r/gitlabqt:build
+#  stage: build
+#  script:
+#    - qmake
+#    - make
+#  when: on_success
+#  tags:
+#    - docker
+#  only:
+#    - master
     
     
 #tests every commit including merge requests    
