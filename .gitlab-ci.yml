@@ -1,5 +1,6 @@
 stages:
 - build
+- test
 - docs
 
 
@@ -14,6 +15,19 @@ build:
     - docker
   only:
     - master
+    
+    
+#tests every commit including merge requests    
+test:
+  image: in1t3r/gitlabqt:build
+  stage: test
+  script:
+    - qmake
+    - make
+  tags:
+    - docker
+
+    
 
 docs:
   image: in1t3r/gitlabqt:documentation
