@@ -121,7 +121,7 @@ SERVICE_TABLE_ENTRY DetachedServices[] = {
 
 #endif
 
-int notMain(int argc, char **argv)
+int main(int argc, char **argv)
 {
     static bool detached = System::detach(argc, SERVICE_VARPATH, argv[0]);
     int exitcode = 0;
