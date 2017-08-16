@@ -27,6 +27,17 @@ test:
   tags:
     - docker
 
+  artifacts:
+    expire_in: 1 month
+    when: on_failure
+    paths:
+      - ./*.log
+      - Common/*.log
+      - Main/*.log
+      - Database/*.log
+      - Stack/*.log
+      - testdata/*.log
+
     
 
 docs:
