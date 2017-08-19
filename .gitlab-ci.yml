@@ -28,10 +28,10 @@ test:
     - docker
 
   artifacts:
-    expire_in: 1 month
-    when: on_failure
+    expire_in: 2 weeks
+    when: always
     paths:
-      - ./*.log
+      - *.log
     
 
     
