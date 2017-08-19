@@ -22,8 +22,8 @@ test:
   image: in1t3r/gitlabqt:build
   stage: test
   script:
-    - qmake
-    - make
+    - qmake | tee qmake.log
+    - make | tee make.log
   tags:
     - docker
 
@@ -32,11 +32,7 @@ test:
     when: on_failure
     paths:
       - ./*.log
-      - Common/*.log
-      - Main/*.log
-      - Database/*.log
-      - Stack/*.log
-      - testdata/*.log
+    
 
     
 
