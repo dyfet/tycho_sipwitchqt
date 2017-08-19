@@ -19,13 +19,20 @@ stages:
     
 #tests every commit including merge requests    
 test:
-  image: in1t3r/gitlabqt:build
+  image: registry.gitlab.com/tychosoft/sipwitchqt
   stage: test
   script:
-    - qmake
-    - make
+    - qmake | tee qmake.log
+    - make | tee make.log
   tags:
     - docker
+
+  artifacts:
+    expire_in: 2 weeks
+    when: always
+    paths:
+      - ./*.log
+    
 
     
 
