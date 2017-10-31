@@ -102,11 +102,12 @@ bool Database::runQuery(const QString &request, QVariantList parms)
     query.prepare(request);
 
     int count = -1;
+        qDebug() << "Query" << request << "LIST" << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
         
-
     if(query.exec() != true) {
+        qDebug() << "Query Failed " << query.lastError().text();
         Logging::notice() << "Query failed; " << query.lastError().text();
         return false;
     }
@@ -121,6 +122,7 @@ QSqlRecord Database::getRecord(const QString& request, QVariantList parms)
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
+    qDebug() << "***** REQUEST " << request << " LIST " << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
@@ -212,13 +214,13 @@ bool Database::create()
 
     if(init) {
         runQuery(Util::createQuery(driver));
-        runQuery("INSERT INTO Tycho_Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
+        runQuery("INSERT INTO Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
     }
     else if(Util::dbIsFile(driver))
         runQuery("VACUUM");
 
-    if(!runQuery("UPDATE Tycho_Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
-        runQuery("INSERT INTO Tycho_Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
+    if(!runQuery("UPDATE Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
+        runQuery("INSERT INTO Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
 
     int count = getCount("Switches");
     if(!failed)
@@ -233,7 +235,7 @@ int Database::getCount(const QString& id)
 
     int count = 0;
     QSqlQuery query(db);
-    query.prepare(QString("SELECT COUNT (*) FROM Tycho_") + id + ";");
+    query.prepare(QString("SELECT COUNT (*) FROM ") + id + ";");
     if(!query.exec()) {
         Logging::err() << "Extensions; error=" << query.lastError().text();
         failed = true;
