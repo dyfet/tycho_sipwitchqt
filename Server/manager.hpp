@@ -15,21 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __STACK_HPP__
-#define __STACK_HPP__
+#ifndef __MANAGER_HPP__
+#define __MANAGER_HPP__
 
 #include "../Common/compiler.hpp"
+#include "../Database/query.hpp"
 #include "invite.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
 
-class Stack : public QObject
+class Manager final : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(Stack)
+    Q_DISABLE_COPY(Manager)
 
 public:
-    inline static Stack *instance() {
+    inline static Manager *instance() {
         Q_ASSERT(Instance != nullptr);
         return Instance;
     }
@@ -50,33 +51,46 @@ public:
     static const QByteArray computeDigest(const QString& id, const QString& secret);
     static void create(const QList<QHostAddress>& list, int port, unsigned mask);
     static void create(const QHostAddress& addr, int port, unsigned mask);
+    static void init(unsigned order);
 
-protected:
+private:
+    static QString SystemPassword;
+    static QString ServerHostname;
+    static QString ServerMode;
     static QStringList ServerAliases, ServerNames;
     static QString ServerRealm;
     static QString UserAgent;
     static QCryptographicHash::Algorithm Digest;
-    static Stack *Instance;
+    static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;
 
-    Stack(unsigned order = 0);
-    ~Stack();
+    void applyNames();
+
+    Manager(unsigned order = 0);
+    ~Manager();
 
 signals:
     void changeRealm(const QString& realm, const QString& digest);
 
 public slots:
     virtual void registry(const Event& ev);
+
+    void applyValue(const QString& id, const QVariant& value);
+    void applyConfig(const QVariantHash& config);
+
+#ifndef QT_NO_DEBUG
+    void reportCounts(const QString& id, int count);
+#endif
 };
 
 /*!
  * The stack is used to manage all sip activities.
- * \file stack.hpp
+ * \file manager.hpp
  */
 
 /*!
- * \class Stack
+ * \class Manager
  * \brief Master sip stack management class.
  * This is used to coordinate all sip activity and runs in it's own thread.
  * This class is meant to be derived into an application specific manager

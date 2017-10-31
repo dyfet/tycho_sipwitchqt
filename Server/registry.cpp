@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "stack.hpp"
+#include "manager.hpp"
 
 static QHash <const QString, Registry *> extensions, aliases;
 static QHash<const Context *, QHash<Contact, Endpoint *>> Endpoints;

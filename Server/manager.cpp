@@ -24,20 +24,43 @@
 
 #include <QUuid>
 
+static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
+    {QCryptographicHash::Md5,       "MD5"},
+    {QCryptographicHash::Sha256,    "SHA-256"},
+    {QCryptographicHash::Sha512,    "SHA-512"},
+};
+
 QString Manager::ServerMode;
 QString Manager::SystemPassword;
 QString Manager::ServerHostname;
+Manager *Manager::Instance = nullptr;
+QString Manager::UserAgent;
+QString Manager::ServerRealm;
+QStringList Manager::ServerAliases;
+QStringList Manager::ServerNames;
+QCryptographicHash::Algorithm Manager::Digest = QCryptographicHash::Md5;
+unsigned Manager::Contexts = 0;
 
-Manager::Manager(unsigned order) :
-Stack(order)
+Manager::Manager(unsigned order)
 {
+    Q_ASSERT(Instance == nullptr);
+    Instance = this;
+
+    qRegisterMetaType<Event>("Event");
+
+    moveToThread(Server::createThread("stack", order));
+    UserAgent = qApp->applicationName() + "/" + qApp->applicationVersion();
+#ifndef Q_OS_WIN
+    osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(Server::name()));
+#endif
+
     Control *control = Control::instance();
     Server *server = Server::instance();
-	Database *db = Database::instance();
+    Database *db = Database::instance();
 
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
-	connect(control, &Control::changeValue, this, &Manager::applyValue);
-	connect(server, &Server::changeConfig, this, &Manager::applyConfig);
+    connect(control, &Control::changeValue, this, &Manager::applyValue);
+    connect(server, &Server::changeConfig, this, &Manager::applyConfig);
 
 #ifndef QT_NO_DEBUG
     connect(db, &Database::countResults, this, &Manager::reportCounts);
@@ -46,11 +69,12 @@ Stack(order)
 
 Manager::~Manager()
 {
+    Instance = nullptr;
 }
 
 void Manager::init(unsigned order)
 {
-    Q_ASSERT(Stack::Instance == nullptr);
+    Q_ASSERT(Manager::Instance == nullptr);
     new Manager(order);
 }
 
@@ -72,10 +96,10 @@ void Manager::applyNames()
 
 void Manager::applyValue(const QString& id, const QVariant& value)
 {
-	if(id == "aliases") {
-		ServerAliases = value.toStringList();
+    if(id == "aliases") {
+        ServerAliases = value.toStringList();
         applyNames();
-	}
+    }
     else if(id == "mode") {
         ServerMode = value.toString();
         Logging::info() << "setting mode " << value.toString();
@@ -84,12 +108,12 @@ void Manager::applyValue(const QString& id, const QVariant& value)
 
 void Manager::applyConfig(const QVariantHash& config)
 {
-	ServerNames = config["localnames"].toStringList();
+    ServerNames = config["localnames"].toStringList();
     QString digest = config["digest"].toString().toLower();
     if(digest == "sha2" || digest == "sha256" || digest == "sha-256")
         Digest = QCryptographicHash::Sha256;
     else if(digest == "sha512" || digest == "sha-512")
-        Digest = QCryptographicHash::Sha512; 
+        Digest = QCryptographicHash::Sha512;
     QString hostname = config["host"].toString();
     QString realm = config["realm"].toString();
     bool genpwd = false;
@@ -108,12 +132,49 @@ void Manager::applyConfig(const QVariantHash& config)
         ServerRealm = realm;
         Logging::info() << "entering realm " << ServerRealm;
     }
-    if(genpwd) { 
+    if(genpwd) {
         SystemPassword = computeDigest("system", QUuid::createUuid().toString());
-        emit changeRealm(ServerRealm, SystemPassword);   
+        emit changeRealm(ServerRealm, SystemPassword);
     }
- 
     applyNames();
+}
+
+const QByteArray Manager::digestName()
+{
+    return digests.value(Digest, "");
+}
+
+const QByteArray Manager::computeDigest(const QString& id, const QString& secret)
+{
+    if(secret.isEmpty() || id.isEmpty())
+        return QByteArray();
+
+    return QCryptographicHash::hash(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8(), Digest);
+}
+
+void Manager::create(const QHostAddress& addr, int port, unsigned mask)
+{
+    unsigned index = ++Contexts;
+
+    qDebug().nospace() << "Creating sip" << index << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
+
+    foreach(auto schema, Context::schemas()) {
+        if(schema.proto & mask) {
+            new Context(addr, port, schema, mask, index);
+        }
+    }
+}
+
+void Manager::create(const QList<QHostAddress>& list, int port, unsigned  mask)
+{
+    foreach(auto host, list) {
+        create(host, port, mask);
+    }
+}
+
+void Manager::registry(const Event &ev)
+{
+    Registry::events(ev);
 }
 
 

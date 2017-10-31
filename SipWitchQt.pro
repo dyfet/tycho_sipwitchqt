@@ -92,14 +92,12 @@ MOC_DIR = generated
 HEADERS += \
     $$files(Common/*.hpp) \
     $$files(Database/*.hpp) \
-    $$files(Main/*.hpp) \
-    $$files(Stack/*.hpp) \
+    $$files(Server/*.hpp) \
 
 SOURCES += \
     $$files(Common/*.cpp) \
     $$files(Database/*.cpp) \
-    $$files(Main/*.cpp) \
-    $$files(Stack/*.cpp) \
+    $$files(Server/*.cpp) \
 
 macx: LIBS += -framework CoreFoundation
 CONFIG(release, release|debug):unix:!macx:LIBS += -ltcmalloc_minimal

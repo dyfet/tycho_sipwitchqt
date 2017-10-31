@@ -15,7 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../Main/manager.hpp"
+#include "query.hpp"
+#include "../Server/manager.hpp"
 #include "../Common/logging.hpp"
 
 #define TIMEOUT 10000       // 10 seconds because we can be lazy on these...

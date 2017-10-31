@@ -21,8 +21,8 @@
 #include "../Common/control.hpp"
 #include "../Common/system.hpp"
 #include "../Common/logging.hpp"
-#include "main.hpp"
 #include "manager.hpp"
+#include "main.hpp"
 
 #include <iostream>
 #include <QTextStream>

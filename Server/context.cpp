@@ -18,7 +18,7 @@
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
 #include "../Common/control.hpp"
-#include "stack.hpp"
+#include "manager.hpp"
 
 #include <QNetworkInterface>
 
@@ -80,7 +80,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 
     context = eXosip_malloc();
     eXosip_init(context);
-    eXosip_set_user_agent(context, Stack::agent());
+    eXosip_set_user_agent(context, Manager::agent());
 
     auto proto = addr.protocol();
     int ipv6 = 0, rport = 1, dns = 2;
@@ -164,9 +164,9 @@ void Context::run()
     ++instanceCount;
 
     // connect events to state handlers when we run...
-    auto stack = Stack::instance();
+    auto stack = Manager::instance();
     if(allow & Allow::REGISTRY)
-        connect(this, &Context::registry, stack, &Stack::registry);
+        connect(this, &Context::registry, stack, &Manager::registry);
 
     Logging::debug() << "Running " << objectName();
 
@@ -221,7 +221,7 @@ bool Context::authenticated(const Event& ev) {
     osip_message_t *reply = nullptr;
     time_t now;     //TODO: A real nonce generator and cache to verify replies
     QString nonce = QString::number(time(&now));
-    QString challenge = QString("Digest Realm=\"") + Stack::realm() + QString("\", nonce=\"") + nonce + QString("\", algorithm=\"") + Stack::digestName() + QString("\"");
+    QString challenge = QString("Digest Realm=\"") + Manager::realm() + QString("\", nonce=\"") + nonce + QString("\", algorithm=\"") + Manager::digestName() + QString("\"");
 
     ContextLocker lock(context);
     eXosip_message_build_answer(context, ev.tid(), SIP_UNAUTHORIZED, &reply);

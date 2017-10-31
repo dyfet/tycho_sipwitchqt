@@ -18,7 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
-#include "../Main/main.hpp"
+#include "../Server/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"
 
