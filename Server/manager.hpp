@@ -75,7 +75,6 @@ signals:
 public slots:
     virtual void registry(const Event& ev);
 
-    void applyValue(const QString& id, const QVariant& value);
     void applyConfig(const QVariantHash& config);
 
 #ifndef QT_NO_DEBUG

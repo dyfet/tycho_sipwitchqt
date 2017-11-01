@@ -63,6 +63,20 @@ Q_UNUSED(xyz)
 #define DEFAULT_NETWORK     "network"
 #define DEFAULT_PORT        "port"
 
+class Main final : public QObject
+{
+    Q_DISABLE_COPY(Main)
+
+public:
+    Main(Server *server);
+    ~Main();
+
+private slots:
+    void onStartup();
+    void onShutdown();
+};
+
+
 /*!
  * \mainpage SipWitchQt
  * A portable enterprise class sip server based on GNU SIP Witch.

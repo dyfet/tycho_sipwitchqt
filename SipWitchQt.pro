@@ -20,8 +20,6 @@ else {
         CONFIG(userdata):PROJECT_PREFIX=\"$${PWD}/userdata\"
         else:PROJECT_PREFIX=\"$${PWD}/testdata\"
         CONFIG -= app_bundle
-        # the debug target must be in etc for most python utils to work fully
-        unix:system(ln -sf $${OUT_PWD}/$${TARGET} $${PWD}/etc/$${ARCHIVE})
     }
 }
 

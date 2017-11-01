@@ -17,7 +17,6 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
-#include "../Common/control.hpp"
 #include "../Common/logging.hpp"
 #include "manager.hpp"
 #include "main.hpp"
@@ -53,12 +52,10 @@ Manager::Manager(unsigned order)
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(Server::name()));
 #endif
 
-    Control *control = Control::instance();
     Server *server = Server::instance();
     Database *db = Database::instance();
 
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
-    connect(control, &Control::changeValue, this, &Manager::applyValue);
     connect(server, &Server::changeConfig, this, &Manager::applyConfig);
 
 #ifndef QT_NO_DEBUG
@@ -90,18 +87,6 @@ void Manager::applyNames()
     qDebug() << "Apply names" << names;
     foreach(auto context, Context::contexts()) {
         context->setHostnames(names, ServerHostname);
-    }
-}
-
-void Manager::applyValue(const QString& id, const QVariant& value)
-{
-    if(id == "aliases") {
-        ServerAliases = value.toStringList();
-        applyNames();
-    }
-    else if(id == "mode") {
-        ServerMode = value.toString();
-        Logging::info() << "setting mode " << value.toString();
     }
 }
 

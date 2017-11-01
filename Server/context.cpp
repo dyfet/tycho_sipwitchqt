@@ -17,7 +17,6 @@
 
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
-#include "../Common/control.hpp"
 #include "manager.hpp"
 
 #include <QNetworkInterface>

@@ -19,7 +19,6 @@
 #include "server.hpp"
 #include "system.hpp"
 #include "logging.hpp"
-#include "control.hpp"
 
 #include <QSettings>
 #include <QCommandLineParser>

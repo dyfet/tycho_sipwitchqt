@@ -18,7 +18,6 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Common/server.hpp"
-#include "../Common/control.hpp"
 #include "../Common/system.hpp"
 #include "../Common/logging.hpp"
 #include "manager.hpp"
@@ -35,51 +34,20 @@
 #include <sys/stat.h>
 #endif
 
-class Main final : public Control
-{
-    Q_DISABLE_COPY(Main)
-
-public:
-    Main(QCommandLineParser& args);
-
-private:
-    void onStartup() final;
-    void onShutdown() final;
-    const QString execute(const QStringList& args) final;
-};
-
 static int port;
 static QList<QHostAddress> interfaces;
 static unsigned protocols = Context::UDP | Context::TCP;
 
 using namespace std;
 
-Main::Main(QCommandLineParser& args) :
-Control(SETTING)
+Main::Main(Server *server)
 {
-    QStringList opt;
+    connect(server, &Server::started, this, &Main::onStartup);
+    connect(server, &Server::finished, this, &Main::onShutdown);
+}
 
-    if(args.isSet("set-aliases")) {
-        if(setValue("aliases", args.positionalArguments()))
-            ::exit(0);
-        opt <<  QString("aliases");
-        opt << args.positionalArguments();
-        ::exit(request(opt));
-    }
-    else if(args.isSet("set-mode")) {
-        if(args.positionalArguments().count() != 1) {
-            cerr << "Invalid or missing mode setting." << endl;
-            exit(90);
-        }
-        if(setValue("mode", args.positionalArguments().at(0)))
-            ::exit(0);
-        opt << QString("mode");
-        opt << args.positionalArguments().at(0);
-        ::exit(request(opt));
-    }
-
-    if(settings.value("values/mode").isNull())
-        settings.setValue("values/mode", "day");
+Main::~Main()
+{
 }
 
 void Main::onStartup()
@@ -93,24 +61,6 @@ void Main::onShutdown()
     qDebug() << "Control manager shutdown";
     Context::shutdown();
 }
-
-const QString Main::execute(const QStringList& args)
-{
-    if((args.count() > 1) && (args[0] == "aliases")) {
-        QStringList list = args;
-        list.removeFirst();
-        storeValue("aliases", list);
-        return "0";
-    }
-    else if((args.count() == 2) && (args[0] == "mode")) {
-        storeValue("mode", args[1]);
-        if(Server::state() != Server::START)
-            Server::reload(); 
-        return "0";
-    }
-    else
-        return Control::execute(args);    
-}   
 
 #ifdef Q_OS_WIN
 
@@ -143,18 +93,7 @@ int main(int argc, char **argv)
         {Args::HelpArgument},
         {Args::VersionArgument},
         {{"x", "debug"}, "Enable debug output"},
-        {{"abort"}, "Force server abort"},
-        {{"control"}, "Control service"},
-        {{"reload"}, "Reload service config"},
-        {{"reset"}, "Reset service"},
-        {{"set-aliases"}, "Set aliases"},
-        {{"set-mode"}, "Set mode (day, night, etc)"},
         {{"show-cache"}, "Show config cache"},
-        {{"show-config"}, "Show server config"},
-        {{"show-env"}, "Show server environment"},
-        {{"show-values"}, "Show server persisted values"},
-        {{"shutdown"}, "Shutdown service"},
-        {{"status"}, "Show server status"},
     });
 
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
@@ -174,23 +113,6 @@ int main(int argc, char **argv)
         {DEFAULT_ADDRESS,   "any"},
         {DEFAULT_NETWORK,   Util::localDomain()},
     });
-
-    // check base argument parsing
-    if(Args::conflicting(args, {"status", "shutdown", "show-values", "show-env", "show-config", "show-cache", "set-mode", "set-aliases", "reset", "reload", "control", "abort"})) {
-        cerr << "Conflicting command line options." << endl;
-        exit(90);
-    }
-
-    if(Args::includes(args, {"status", "shutdown", "show-values", "show-env", "show-config", "show-cache", "set-mode", "set-aliases", "reload", "control", "abort"})) {
-        if(Args::includes(args, {"address", "network", "port"})) {
-            cerr << "Invalid option(s) used in offline mode." << endl;
-            exit(90);
-        }
-        if(detached) {
-            cerr << "Invalid option for detached server." << endl;
-            exit(90);
-        }
-    }
 
     // verify and setup working directory
     if(strcmp(Server::sym(SYSTEM_PREFIX), Server::prefix())) {
@@ -212,13 +134,9 @@ int main(int argc, char **argv)
     if(interfaces.count() < 1)
         Logging::crit(95) << "No valid interfaces specified";
 
-    if(args.isSet("reset"))
-        Main::reset(SETTING);
-
     // create controller, load settings..
 
-    Main controller(args);
-    controller.options(args);
+    Main controller(&server);
 
     // setup our contexts...allow registration
 
