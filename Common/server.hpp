@@ -73,6 +73,10 @@ public:
         return DebugVerbose;
     }
 
+    inline static QString uuid(void) {
+        return Uuid;
+    }
+
     static bool shutdown(int exitcode);
     static void reload();
     static void suspend();
@@ -104,6 +108,7 @@ private:
     QCoreApplication app;
 
     static Server *Instance;
+    static QString Uuid;
     static QVariantHash CurrentConfig, DefaultConfig;
     static ServerEnv Env;
     static bool DebugVerbose;

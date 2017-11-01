@@ -54,7 +54,6 @@ public:
     static void init(unsigned order);
 
 private:
-    static QString SystemPassword;
     static QString ServerHostname;
     static QString ServerMode;
     static QStringList ServerAliases, ServerNames;
@@ -71,7 +70,7 @@ private:
     ~Manager();
 
 signals:
-    void changeRealm(const QString& realm, const QString& digest);
+    void changeRealm(const QString& realm);
 
 public slots:
     virtual void registry(const Event& ev);

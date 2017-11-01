@@ -290,13 +290,13 @@ void Database::applyConfig(const QVariantHash& config)
     user = config["database/username"].toString();
     pass = config["database/password"].toString();
     driver = config["database/driver"].toString();
-    uuid = Server::sym(CURRENT_UUID);
+    uuid = Server::uuid();
     failed = false;
 
     if(realm.isEmpty()) {
         realm = Server::sym(CURRENT_NETWORK);
         if(realm.isEmpty() || realm == "local" || realm == "localhost" || realm == "localdomain")
-            realm = Server::sym(CURRENT_UUID);
+            realm = Server::uuid();
     }
 
     qDebug() << "DRIVER NAME " << driver;

@@ -31,7 +31,6 @@ static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
 };
 
 QString Manager::ServerMode;
-QString Manager::SystemPassword;
 QString Manager::ServerHostname;
 Manager *Manager::Instance = nullptr;
 QString Manager::UserAgent;
@@ -121,20 +120,16 @@ void Manager::applyConfig(const QVariantHash& config)
         genpwd = true;
         realm = Server::sym(CURRENT_NETWORK);
         if(realm.isEmpty() || realm == "local" || realm == "localhost" || realm == "localdomain")
-            realm = Server::sym(CURRENT_UUID);
+            realm = Server::uuid();
     }
     if(hostname != ServerHostname) {
         ServerHostname = hostname;
         Logging::info() << "starting as host " << ServerHostname;
     }
     if(realm != ServerRealm) {
-        genpwd = true;
         ServerRealm = realm;
         Logging::info() << "entering realm " << ServerRealm;
-    }
-    if(genpwd) {
-        SystemPassword = computeDigest("system", QUuid::createUuid().toString());
-        emit changeRealm(ServerRealm, SystemPassword);
+        emit changeRealm(ServerRealm);
     }
     applyNames();
 }

@@ -15,6 +15,7 @@
 
 testdata/*.log
 testdata/*.pid
+testdata/*.uuid
 testdata/*.db
 testdata/*.db-journal
 testdata/*.cnf

@@ -29,6 +29,7 @@
 #include <QLockFile>
 #include <iostream>
 #include <QHostInfo>
+#include <QUuid>
 
 #if defined(Q_OS_UNIX)
 #include <unistd.h>
@@ -80,6 +81,7 @@ static QList<Context> contexts;
 static unsigned maxOrder = 1;
 
 Server *Server::Instance = nullptr;
+QString Server::Uuid;
 QVariantHash Server::CurrentConfig;
 QVariantHash Server::DefaultConfig;
 Server::ServerEnv Server::Env;
@@ -162,6 +164,25 @@ QObject(), app(argc, argv)
 
     if(QDir::setCurrent(Env[SERVER_PREFIX]))
         Env[SYSTEM_PREFIX] = Env["CD"] = Env[SERVER_PREFIX];
+
+    // process uuid file...
+    QFile uuidFile( Env[SERVER_NAME] + ".uuid");
+
+    if(!uuidFile.exists()) {
+        QString uuid = QUuid::createUuid().toString();
+        Uuid = uuid.mid(2);
+        Uuid.chop(1);
+        uuidFile.open(QIODevice::WriteOnly);
+        QTextStream stream(&uuidFile);
+        stream << Uuid << endl;
+    }
+    else {
+        uuidFile.open(QIODevice::ReadOnly);
+        QTextStream stream(&uuidFile);
+        stream >> Uuid;
+    }
+    uuidFile.close();
+    qDebug() << "Server uuid " << Uuid;
 
     reload();    // initial config...
 
