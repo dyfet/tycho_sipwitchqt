@@ -43,9 +43,10 @@ isEmpty(PREFIX) {                                   # find prefix if not set...
 
 # system prefix will use system directories
 CONFIG(opt_prefix) {
-    PREFIX="/opt/sipwitchqt"
-    VARBASE="/var/opt"
-    ETCPATH="/etc/opt"
+    isEmpty(VENDOR):VENDOR="tychosoft"
+    PREFIX="/opt/$${VENDOR}"
+    VARBASE="/var/opt/$${VENDOR}"
+    ETCPATH="/etc/opt/$${VENDOR}"
 } else:equals(PREFIX, "/usr") {
     VARBASE="/var"
     ETCPATH=/etc
