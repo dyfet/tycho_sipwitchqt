@@ -28,5 +28,6 @@ doc/
 
 .qmake.*
 .DS_Store
+Custom.pri
 Makefile
 sipwitchqt

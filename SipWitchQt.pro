@@ -12,6 +12,8 @@ QT -= gui
 QT += network sql
 QMAKE_CXXFLAGS += -Wno-padded
 
+exists(Custom.pri):include(Custom.pri)
+
 # build type specific options
 CONFIG(release,release|debug):DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_DEBUG
 else {
@@ -135,13 +137,17 @@ CONFIG(release, release|debug) {
 }
 
 # publish support
-QMAKE_EXTRA_TARGETS += publish
-publish.commands += $$QMAKE_DEL_FILE *.tar.gz &&
-publish.commands += cd $${PWD} &&
-publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} ||
-publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD
-linux:exists("/usr/bin/rpmbuild"):\
-    publish.commands += && rm -f *.src.rpm && rpmbuild --define \"_tmppath /tmp\" --define \"_sourcedir .\" --define \"_srcrpmdir .\" --nodeps -bs $${ARCHIVE}.spec
+QMAKE_EXTRA_TARGETS += source
+source.commands += $$QMAKE_DEL_FILE *.tar.gz &&
+source.commands += cd $${PWD} &&
+source.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} ||
+source.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD
+
+linux:exists("/usr/bin/rpmbuild") {
+    QMAKE_EXTRA_TARGETS += srpm
+    srpm.depends = source
+    srpm.commands += && rm -f *.src.rpm && rpmbuild --define \"_tmppath /tmp\" --define \"_sourcedir .\" --define \"_srcrpmdir .\" --nodeps -bs $${ARCHIVE}.spec
+}
 
 # documentation processing
 QMAKE_EXTRA_TARGETS += docs
