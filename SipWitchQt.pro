@@ -37,21 +37,30 @@ macx:CONFIG += std_prefix                           # brew assumes /usr/local...
 isEmpty(PREFIX) {                                   # find prefix if not set...
     PREFIX=$$[QT_INSTALL_PREFIX]                    # qt prefix is a default...
     CONFIG(sys_prefix):PREFIX="/usr"                # system daemon...
+    else:CONFIG(pkg_prefix):PREFIX="/usr/pkg"       # bsd package prefix...
     else:CONFIG(std_prefix):PREFIX="/usr/local"     # generic unix install...
 }
 
-message("Installation Prefix: $${PREFIX}")
-
-!macx:equals(PREFIX, "/usr") {
-    VARPATH=/var/lib/sipwitchqt
-    LOGPATH=/var/log
+# system prefix will use system directories
+CONFIG(opt_prefix) {
+    PREFIX="/opt/sipwitchqt"
+    VARBASE="/var/opt"
+    ETCPATH="/etc/opt"
+} else:equals(PREFIX, "/usr") {
+    VARBASE="/var"
     ETCPATH=/etc
 }
 else {
-    VARPATH=$${PREFIX}/var/sipwitchqt
+    macx:VARBASE="$${PREFIX}/var"
+    else:VARBASE="/var"
     ETCPATH=$${PREFIX}/etc
-    LOGPATH=$${PREFIX}/var/log
 }
+VARPATH="$${VARBASE}/sipwitchqt"
+LOGPATH="$${VARBASE}/log"
+
+#message("Installation Prefix: $${PREFIX}")
+#message("Installation Var:    $${VARBASE}")
+#message("Installation Etc:    $${ETCPATH}")
 
 # global platform options
 win32-msvc*:error(*** windows not supported...)
