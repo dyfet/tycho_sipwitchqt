@@ -23,12 +23,22 @@ else {
     }
 }
 
-# prefix options
-macx:CONFIG += std_prefix                       # brew install assumed...
+# platform specific options
+linux {
+    !CONFIG(no-systemd) {
+        CONFIG += link_pkgconfig
+        PKGCONFIG += libsystemd
+        DEFINES += UNISTD_SYSTEMD
+    }
+}
 
-PREFIX=$$[QT_INSTALL_PREFIX]
-CONFIG(sys_prefix):PREFIX="/usr"                # system daemon...
-else:CONFIG(std_prefix):PREFIX="/usr/local"     # generic install...
+# prefix options
+macx:CONFIG += std_prefix                           # brew assumes /usr/local...
+isEmpty(PREFIX) {                                   # find prefix if not set...
+    PREFIX=$$[QT_INSTALL_PREFIX]                    # qt prefix is a default...
+    CONFIG(sys_prefix):PREFIX="/usr"                # system daemon...
+    else:CONFIG(std_prefix):PREFIX="/usr/local"     # generic unix install...
+}
 
 message("Installation Prefix: $${PREFIX}")
 
@@ -43,21 +53,9 @@ else {
     LOGPATH=$${PREFIX}/var/log
 }
 
-# platform specific options
-unix {
-    isEmpty(PREFIX):PREFIX=$$system(echo $$[QT_INSTALL_DATA] | sed s:/[a-z0-9]*/qt5$::)
-    system(rm -f "$${OUT_PWD}/$${TARGET}")
-}
-
-linux {
-    !CONFIG(no-systemd) {
-        CONFIG += link_pkgconfig
-        PKGCONFIG += libsystemd
-        DEFINES += UNISTD_SYSTEMD
-    }
-}
-
-win32-msvc*:error(*** windows no longer supported...)
+# global platform options
+win32-msvc*:error(*** windows not supported...)
+system(rm -f "$${OUT_PWD}/$${TARGET}")
 
 # global defines
 DEFINES += \
