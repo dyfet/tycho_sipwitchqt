@@ -17,7 +17,7 @@ A pbx server for the sip protocol
 %setup -q
 
 %build
-qmake-qt5 QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/true"
+qmake-qt5 CONFIG+=sys_prefix QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/true"
 %{__make} %{?_smp_mflags}
 
 %install
@@ -26,7 +26,9 @@ qmake-qt5 QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/true"
 %files
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
-%{_sbindir}/sipwithqt
+%{_sbindir}/sipwitchqt
+%{_sbindir}/sipwitchqt-daemon
+%{_sysconfdir}/sv/sipwitchqt/run
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
 
 

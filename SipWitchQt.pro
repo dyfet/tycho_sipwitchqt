@@ -24,8 +24,13 @@ else {
 }
 
 # prefix options
-CONFIG(sys_prefix):PREFIX="/usr/local"
-else:PREFIX=$$[QT_INSTALL_PREFIX]
+macx:CONFIG += std_prefix                       # brew install assumed...
+
+PREFIX=$$[QT_INSTALL_PREFIX]
+CONFIG(sys_prefix):PREFIX="/usr"                # system daemon...
+else:CONFIG(std_prefix):PREFIX="/usr/local"     # generic install...
+
+message("Installation Prefix: $${PREFIX}")
 
 !macx:equals(PREFIX, "/usr") {
     VARPATH=/var/lib/sipwitchqt
@@ -104,20 +109,22 @@ macx {
     LIBS += -L/usr/local/opt/libosip/lib -L/usr/local/opt/libexosip/lib
 }
 
-# extra install targets
-INSTALLS += target config runit
+# extra install targets, release only
+CONFIG(release, release|debug) {
+    INSTALLS += target config runit
 
-config.path = "$${ETCPATH}"
-config.files = etc/sipwitchqt.conf
-config.depends = target
+    config.path = "$${ETCPATH}"
+    config.files = etc/sipwitchqt.conf
+    config.depends = target
 
-runit.path = "$${ETCPATH}/sv/sipwitchqt"
-runit.files = etc/run
-runit.depends = config
-runit.commands += ln -s "$${PREFIX}/sbin/${TARGET}" "$${PREFIX}/sbin/${TARGET}-daemon"
+    runit.path = "$${ETCPATH}/sv/sipwitchqt"
+    runit.files = etc/run
+    runit.depends = config
+    runit.commands += ln -s "$${PREFIX}/sbin/${TARGET}" "$${PREFIX}/sbin/${TARGET}-daemon"
 
-target.path = "$${PREFIX}/sbin"
-target.depends = all
+    target.path = "$${PREFIX}/sbin"
+    target.depends = all
+}
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
