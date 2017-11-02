@@ -24,7 +24,10 @@ else {
 }
 
 # prefix options
-macx|equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
+CONFIG(sys_prefix):PREFIX="/usr/local"
+else:PREFIX=$$[QT_INSTALL_PREFIX]
+
+!macx:equals(PREFIX, "/usr") {
     VARPATH=/var/lib/sipwitchqt
     LOGPATH=/var/log
     ETCPATH=/etc
