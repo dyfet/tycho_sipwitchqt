@@ -17,7 +17,6 @@
 
 #include "compiler.hpp"
 #include "server.hpp"
-#include "system.hpp"
 #include "logging.hpp"
 
 
@@ -514,7 +513,7 @@ void Server::notify(SERVER_STATE state, const char *text)
 
     const char *cp;
     switch(state) {
-    case SERVICE_RUNNING:
+    case SERVER_RUNNING:
         if(!text) {
             cp = "started";
             text = "";
@@ -528,7 +527,7 @@ void Server::notify(SERVER_STATE state, const char *text)
             "MAINPID=%lu", cp, text, (unsigned long)getpid()
         );
         break;
-    case SERVICE_STOPPED:
+    case SERVER_STOPPED:
         sd_notify(0, "STOPPING=1");
         break;
     default:
@@ -637,7 +636,6 @@ bool Server::shutdown(int reason)
 
     exitReason = reason;
     disableSignals();
-    notify(SERVER_STOP_PENDING);
     QCoreApplication::postEvent(Instance, new ServerEvent(SERVER_SHUTDOWN, reason));
     return true;
 }

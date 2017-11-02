@@ -20,7 +20,6 @@
 #include <QHostInfo>
 #include <QNetworkInterface>
 #include <sys/socket.h>
-#include "system.hpp"
 
 namespace Util {
     const QString localDomain()
