@@ -140,7 +140,7 @@ CONFIG(release, release|debug) {
 QMAKE_EXTRA_TARGETS += source
 source.commands += $$QMAKE_DEL_FILE *.tar.gz &&
 source.commands += cd $${PWD} &&
-source.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} ||
+source.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} 2>/dev/null ||
 source.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD
 
 linux:exists("/usr/bin/rpmbuild") {
