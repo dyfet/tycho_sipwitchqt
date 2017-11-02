@@ -18,7 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Common/server.hpp"
-#include "../Common/system.hpp"
+#include "../Common/crashhandler.hpp"
 #include "../Common/logging.hpp"
 #include "manager.hpp"
 #include "main.hpp"
@@ -28,11 +28,6 @@
 #include <QIODevice>
 #include <QHostInfo>
 #include <QUuid>
-
-#ifdef Q_OS_UNIX
-#include <unistd.h>
-#include <sys/stat.h>
-#endif
 
 static int port;
 static QList<QHostAddress> interfaces;
@@ -62,18 +57,9 @@ void Main::onShutdown()
     Context::shutdown();
 }
 
-#ifdef Q_OS_WIN
-
-SERVICE_TABLE_ENTRY DetachedServices[] = {
-    {(LPWSTR)TEXT(SERVICE_NAME),
-        (LPSERVICE_MAIN_FUNCTION)System::detachService}, {NULL, NULL}
-};
-
-#endif
-
 int main(int argc, char **argv)
 {
-    static bool detached = System::detach(argc, SERVICE_VARPATH, argv[0]);
+    static bool detached = Server::detach(argc, SERVICE_VARPATH, argv[0]);
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
@@ -120,7 +106,7 @@ int main(int argc, char **argv)
         exit(90);
     }
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
+#if defined(Q_OS_MAC)
     QDir::current().mkdir("certs");
     QDir::current().mkdir("private");
 #endif
@@ -137,6 +123,8 @@ int main(int argc, char **argv)
     // create controller, load settings..
 
     Main controller(&server);
+    if(detached && CrashHandler::corefiles())
+            CrashHandler::installHandlers();
 
     // setup our contexts...allow registration
 

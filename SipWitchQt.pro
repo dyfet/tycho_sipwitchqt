@@ -7,6 +7,7 @@ TARGET = $${ARCHIVE}
 
 # basic compile and link config
 CONFIG += c++11 console
+CONFIG -= app_bundle
 QT -= gui
 QT += network sql
 QMAKE_CXXFLAGS += -Wno-padded
@@ -19,13 +20,11 @@ else {
     !CONFIG(no-testdata) {
         CONFIG(userdata):PROJECT_PREFIX=\"$${PWD}/userdata\"
         else:PROJECT_PREFIX=\"$${PWD}/testdata\"
-        CONFIG -= app_bundle
     }
 }
 
 # prefix options
-equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
-    CONFIG -= app_bundle
+macx|equals(PREFIX, "/usr")|equals(PREFIX, "/usr/local") {
     VARPATH=/var/lib/sipwitchqt
     LOGPATH=/var/log
     ETCPATH=/etc
@@ -48,14 +47,6 @@ linux {
         PKGCONFIG += libsystemd
         DEFINES += UNISTD_SYSTEMD
     }
-}
-
-macx:CONFIG(app_bundle) {
-    TARGET="$${PRODUCT}"
-    VARPATH=/var/lib/$${PRODUCT}
-    LOGPATH=/var/log
-    ETCPATH=/etc
-    system(rm -rf "$${OUT_PWD}/$${TARGET}.app")
 }
 
 win32-msvc*:error(*** windows no longer supported...)
@@ -110,31 +101,27 @@ macx {
     LIBS += -L/usr/local/opt/libosip/lib -L/usr/local/opt/libexosip/lib
 }
 
-# extra install targets based on bundle state
-!CONFIG(app_bundle) {
-    INSTALLS += target config
+# extra install targets
+INSTALLS += target config runit
 
-    config.path = "$${ETCPATH}"
-    config.files = etc/sipwitchqt.conf
-    config.depends = target
+config.path = "$${ETCPATH}"
+config.files = etc/sipwitchqt.conf
+config.depends = target
 
-    target.path = "$${PREFIX}/sbin"
-    target.depends = all
-}
-else {
-    CONFIG(release, release|debug):\
-        QMAKE_POST_LINK += macdeployqt "$${TARGET}.app" -verbose=0 -always-overwrite
+runit.path = "$${ETCPATH}/sv/sipwitchqt"
+runit.files = etc/run
+runit.depends = config
+runit.commands += ln -s "$${PREFIX}/sbin/${TARGET}" "$${PREFIX}/sbin/${TARGET}-daemon"
 
-    QMAKE_EXTRA_TARGETS += clean extra_clean
-    clean.depends += extra_clean
-    extra_clean.commands += rm -rf $${TARGET}.app $${TARGET}.app.dSYM 
-}
+target.path = "$${PREFIX}/sbin"
+target.depends = all
 
 # publish support
 QMAKE_EXTRA_TARGETS += publish
 publish.commands += $$QMAKE_DEL_FILE *.tar.gz &&
 publish.commands += cd $${PWD} &&
-publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} 
+publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ v$${VERSION} ||
+publish.commands += git archive --output="$${OUT_PWD}/$${ARCHIVE}-$${VERSION}.tar.gz" --format tar.gz  --prefix=$${ARCHIVE}-$${VERSION}/ HEAD
 linux:exists("/usr/bin/rpmbuild"):\
     publish.commands += && rm -f *.src.rpm && rpmbuild --define \"_tmppath /tmp\" --define \"_sourcedir .\" --define \"_srcrpmdir .\" --nodeps -bs $${ARCHIVE}.spec
 

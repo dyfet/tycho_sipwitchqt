@@ -48,9 +48,7 @@ Manager::Manager(unsigned order)
 
     moveToThread(Server::createThread("stack", order));
     UserAgent = qApp->applicationName() + "/" + qApp->applicationVersion();
-#ifndef Q_OS_WIN
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(Server::name()));
-#endif
 
     Server *server = Server::instance();
     Database *db = Database::instance();

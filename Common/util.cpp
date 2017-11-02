@@ -23,27 +23,6 @@
 #include "system.hpp"
 
 namespace Util {
-    const QStringList controlOptions(const char **argv)
-    {
-        QStringList cmds;
-        if(!argv[0] || !argv[1])
-            return cmds;
-
-        if(System::isShellAlias(argv[0]))
-            ++argv;
-#ifdef Q_OS_WIN
-        else if(!strcmp(argv[1], "/c"))
-            argv += 2;
-#endif
-        else
-            return cmds;
-
-        while(*argv) {
-            cmds << *(argv++);
-        }
-        return cmds;
-    }
-
     const QString localDomain()
     {
         QString domain = QHostInfo::localDomainName();

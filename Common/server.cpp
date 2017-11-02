@@ -20,6 +20,7 @@
 #include "system.hpp"
 #include "logging.hpp"
 
+
 #include <QSettings>
 #include <QCommandLineParser>
 #include <QAtomicInteger>
@@ -30,9 +31,23 @@
 #include <QHostInfo>
 #include <QUuid>
 
-#if defined(Q_OS_UNIX)
+#include <csignal>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <termios.h>
+#include <paths.h>
+#include <sys/ioctl.h>
+#include <sys/fcntl.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+#if defined(UNISTD_SYSTEMD)
+#include <systemd/sd-daemon.h>
+#endif
+
+#ifdef Q_OS_MAC
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
 #endif
 
 using namespace std;
@@ -74,6 +89,7 @@ private:
 
 ServerEvent::~ServerEvent() {}
 
+static bool notifySystemD = false;
 static int exitReason = 0;
 static bool staticConfig = false;
 static QList<Context> contexts;
@@ -87,6 +103,159 @@ Server::ServerEnv Server::Env;
 bool Server::DebugVerbose = false;
 bool Server::RunAsService = false;
 volatile Server::State Server::RunState = Server::START;
+
+#ifdef Q_OS_MAC
+
+// FIXME: This will require a new thread for cfrunloop to work!!
+
+static io_connect_t ioroot = 0;
+static io_object_t iopobj;
+static IONotificationPortRef iopref;
+
+static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
+    Q_UNUSED(ioservice);
+    Q_UNUSED(ref);
+
+    switch(mtype) {
+    case kIOMessageCanSystemSleep:
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemWillSleep:
+        Server::suspend();
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemHasPoweredOn:
+        Server::resume();
+        break;
+    default:
+        break;
+    }
+}
+
+static void iop_startup()
+{
+    void *ref = nullptr;
+
+    if(ioroot != 0)
+        return;
+
+    ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
+    if(!ioroot) {
+        Logging::err() << "Registration for power management failed";
+        return;
+    }
+    else
+        Logging::debug() << "Power management enabled";
+
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
+}
+
+#endif
+
+static bool detachProcess()
+{
+    pid_t pid;
+    int fd;
+
+    ::close(0);
+    ::close(1);
+    ::close(2);
+
+#ifdef SIGTTOU
+    ::signal(SIGTTOU, SIG_IGN);
+#endif
+
+#ifdef SIGTTIN
+    ::signal(SIGTTIN, SIG_IGN);
+#endif
+
+#ifdef SIGTSTP
+    ::signal(SIGTSTP, SIG_IGN);
+#endif
+    pid = ::fork();
+    if(pid > 0)
+        ::exit(0);
+    if(pid != 0)
+        return false;
+
+    if((fd = ::open(_PATH_TTY, O_RDWR)) >= 0) {
+        ::ioctl(fd, TIOCNOTTY, NULL);
+        ::close(fd);
+    }
+
+    if(setpgid(0, 0) != 0)
+        return false;
+
+    ::signal(SIGHUP, SIG_IGN);
+    pid = fork();
+    if(pid > 0)
+        ::exit(0);
+    if(pid != 0)
+        return false;
+
+    fd = ::open("/dev/null", O_RDWR);
+    if(fd > 0)
+        ::dup2(fd, 0);
+    if(fd != 1)
+        ::dup2(fd, 1);
+    if(fd != 2)
+        ::dup2(fd, 2);
+    if(fd > 2)
+        ::close(fd);
+
+    return true;
+}
+
+static void disableSignals()
+{
+    ::signal(SIGTERM, SIG_IGN);
+    ::signal(SIGINT, SIG_IGN);
+#ifdef SIGHUP
+    ::signal(SIGHUP, SIG_IGN);
+#endif
+#ifdef SIGKILL
+    ::signal(SIGKILL, SIG_IGN);
+#endif
+}
+
+static void handleSignals(int signo)
+{
+    switch(signo) {
+    case SIGINT:
+        printf("\n");
+        disableSignals();
+        Server::shutdown(signo);
+        break;
+#ifdef SIGKILL
+    case SIGKILL:
+#endif
+    case SIGTERM:
+        disableSignals();
+        Server::shutdown(signo);
+        break;
+#ifdef SIGHUP
+    case SIGHUP:
+        Server::reload();
+        break;
+#endif
+    }
+}
+
+static void enableSignals()
+{
+#ifdef Q_OS_MAC
+    iop_startup();
+#endif
+
+#ifdef SIGHUP
+    ::signal(SIGHUP, handleSignals);
+#endif
+#ifdef SIGKILL
+    ::signal(SIGKILL, handleSignals);
+#endif
+    ::signal(SIGINT, handleSignals);
+    ::signal(SIGTERM, handleSignals);
+}
 
 Server::Server(bool detached, int& argc, char **argv, QCommandLineParser& args, const QVariantHash& keypairs):
 QObject(), app(argc, argv)
@@ -108,14 +277,6 @@ QObject(), app(argc, argv)
     DebugVerbose = args.isSet("debug");
 #else
     DebugVerbose = true;
-#endif
-
-#if defined(Q_OS_WIN)
-    // for windows we will use registry...
-    QSettings regkeys(QSettings::SystemScope, app.organizationName(), app.applicationName());
-    foreach(auto key, regkeys.allKeys()) {
-        DefaultConfig[key] = regkeys.value(key);
-    }
 #endif
 
     foreach(auto key, QProcess::systemEnvironment()) {
@@ -140,15 +301,6 @@ QObject(), app(argc, argv)
             continue;
         }
 
-#ifdef Q_OS_WIN
-        if(key == "HOMEPATH") {
-            Env[SYSTEM_HOME] = value.toLocal8Bit();
-        }
-        else if(key == "USERNAME") {
-            Env["USER"] = value.toLocal8Bit();
-            Env[SYSTEM_USER] = value.toLocal8Bit();
-        }
-#endif
         Env[key] = value.toLocal8Bit();
     }
 
@@ -226,7 +378,7 @@ int Server::start(QThread::Priority priority)
     if(priority != QThread::InheritPriority)
         thread()->setPriority(priority);
 
-    System::enableSignals();
+    enableSignals();
     qDebug() << "Starting" << name();
     // when server comes up logging is activated...
     Logging::init();
@@ -327,9 +479,16 @@ void Server::startup()
         return;
     }
 
+    QString major = qApp->applicationVersion();
+    QString minor = major.mid(major.indexOf('.') + 1);
+    major = major.left(major.indexOf('.'));
+    minor = minor.left(minor.indexOf('.'));
+    unsigned abi = major.toUInt() * 100;
+    abi += minor.toUInt();
+
     // TODO: currently race if came up suspended first
     RunState = UP;
-    Logging::info("++") << "Service starting, version=" << app.applicationVersion() << ", abi=" << System::abiVersion();
+    Logging::info("++") << "Service starting, version=" << app.applicationVersion() << ", abi=" << abi;
 
     // start managed threads
     for(unsigned order = 0; order < maxOrder; ++order) {
@@ -344,7 +503,86 @@ void Server::startup()
 
     emit changeConfig(CurrentConfig);
     emit started();
-    System::notifyStatus(SERVICE_RUNNING, NO_ERROR, 0, "Ready to process calls");
+    notify(SERVER_RUNNING, "Ready to process calls");
+}
+
+void Server::notify(SERVER_STATE state, const char *text)
+{
+#if defined(UNISTD_SYSTEMD)
+    if(!notifySystemD)
+        return;
+
+    const char *cp;
+    switch(state) {
+    case SERVICE_RUNNING:
+        if(!text) {
+            cp = "started";
+            text = "";
+        }
+        else
+            cp = "started:";
+
+        sd_notifyf(0,
+            "READY=1\n"
+            "STATUS=%s%s\n"
+            "MAINPID=%lu", cp, text, (unsigned long)getpid()
+        );
+        break;
+    case SERVICE_STOPPED:
+        sd_notify(0, "STOPPING=1");
+        break;
+    default:
+        break;
+    }
+#else
+    Q_UNUSED(state);
+    Q_UNUSED(text);
+#endif
+}
+
+bool Server::detach(int argc, const char *path, const char *argv0)
+{
+    mkdir(path, 0770);
+    if(chdir(path))
+        return false;
+
+    const char *alias = nullptr;
+
+    // we may optionally use symlinks for special modes...
+    if(argv0) {
+        alias = strrchr(argv0, '/');
+        if(alias)
+            alias = strrchr(alias, '-');
+        else
+            alias = strrchr(argv0, '-');
+    }
+
+    // convenience for debug foreground...
+    if(alias && !strcmp(alias, "-debug"))
+        return false;
+
+    // "runit" managed daemon, made by simlink of server executable...
+    // we do not actually detach further so runsv can manage signals
+    if(alias && !strcmp(alias, "-daemon"))
+        return true;
+
+    if(getppid() == 1 || getenv("NOTIFY_SOCKET") || ((argc < 2) && !getuid())) {
+        umask(007);
+        if(getenv("NOTIFY_SOCKET")) {
+            notifySystemD = true;
+            return true;
+        }
+
+        if(getppid() == 1)
+            return true;
+
+        if(!detachProcess()) {
+            cerr << "Failed to detach server." << endl;
+            ::exit(90);
+        }
+        return true;
+    }
+    return false;
 }
 
 // since private, can only be triggered locally in our thread context.
@@ -360,7 +598,7 @@ void Server::exit(int reason)
 
     // do service shutdown while in main thread context...
     RunState = DOWN;
-    System::notifyStatus(SERVICE_STOPPED, exitReason, 0);
+    notify(SERVER_STOPPED);
     Logging::info("--") << "Service stopping, reason=" + QString::number(reason);
     app.processEvents();    // de-queue pending events
     emit aboutToFinish();
@@ -398,8 +636,8 @@ bool Server::shutdown(int reason)
         return false;
 
     exitReason = reason;
-    System::disableSignals();
-    System::notifyStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+    disableSignals();
+    notify(SERVER_STOP_PENDING);
     QCoreApplication::postEvent(Instance, new ServerEvent(SERVER_SHUTDOWN, reason));
     return true;
 }

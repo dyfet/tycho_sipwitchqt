@@ -318,8 +318,7 @@ void Database::applyConfig(const QVariantHash& config)
         name = "local.db";
     else if(name.isEmpty())
         name = "REALM_" + realm.toUpper();
-        
-    qDebug() << "*** Database realm" << realm;
+
     create();
 }
 

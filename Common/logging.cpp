@@ -24,19 +24,8 @@
 #include <QTimer>
 #include <ctime>
 #include <iostream>
-
-#if defined(Q_OS_WIN)
-#include <windows.h>
-#endif
-
-#if defined(Q_OS_UNIX)
 #include <unistd.h>
 #include <syslog.h>
-#endif
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-#define noquote nospace
-#endif
 
 using namespace std;
 
@@ -75,7 +64,7 @@ static QTime last;
 static FILE *fp = nullptr;
 static const char *logfile;
 
-#if defined(Q_OS_UNIX) && !defined(DEBUG_LOGGING)
+#if !defined(DEBUG_LOGGING)
 static void report(Logging::Level logtype, const char *text)
 {
     if(!up)
@@ -164,13 +153,6 @@ bool Logging::event(QEvent *ev)
             category = "notice";
             break;
         }
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-        if(*text == '%') {
-            level = LOGGING_INFO;
-            category = "info";
-            break;
-        }
-#endif
         break;
     case LOGGING_FATAL:
         category = "fatal";
@@ -183,7 +165,7 @@ bool Logging::event(QEvent *ev)
     if(level == LOGGING_IGNORE && !Server::verbose())
         return true;
 
-#if defined(Q_OS_UNIX) && !defined(DEBUG_LOGGING)
+#if !defined(DEBUG_LOGGING)
     if(service && category) {
         if(level != LOGGING_IGNORE)
             report(level, msg);
@@ -207,11 +189,7 @@ bool Logging::event(QEvent *ev)
 
 QDebug Logging::info(const char *prefix)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-    QDebug log = qWarning().noquote().nospace();
-#else
     QDebug log = qInfo().noquote().nospace();
-#endif
     log << prefix << " ";
     return log;
 }
@@ -249,10 +227,8 @@ void Logging::onStartup()
     service = Server::isService();
     qDebug() << "Starting logger";
 
-#ifdef Q_OS_UNIX
     if(service)
         ::openlog(Server::name(), LOG_CONS, LOG_DAEMON);
-#endif
 
     last.start();
     logfile = Server::sym(SERVER_LOGFILE);
@@ -270,9 +246,7 @@ void Logging::onShutdown()
     up = false;
     service = false;
     close();
-#ifdef Q_OS_UNIX
     ::closelog();
-#endif
     qDebug() << "Stopping logger";
 }
 
@@ -351,11 +325,9 @@ void Logging::logHandler(QtMsgType type, const QMessageLogContext& context, cons
         cerr.flush();
 #endif
         return;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
     case QtInfoMsg:
         logtype = Logging::LOGGING_INFO;
         break;
-#endif
     case QtWarningMsg:
         logtype = Logging::LOGGING_WARN;
         break;

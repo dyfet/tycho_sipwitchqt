@@ -41,6 +41,13 @@
 #define SERVER_VERSION  "SERVICE_VERSION"
 #define SERVER_PREFIX      "SERVICE_PREFIX"
 
+typedef enum {
+    SERVER_RUNNING,
+    SERVER_WATCHDOG,
+    SERVER_STOP_PENDING,
+    SERVER_STOPPED
+} SERVER_STATE;
+
 class Server final : public QObject
 {
     Q_OBJECT
@@ -77,11 +84,6 @@ public:
         return Uuid;
     }
 
-    static bool shutdown(int exitcode);
-    static void reload();
-    static void suspend();
-    static void resume();
-
     inline static bool isService(void) {
         return RunAsService;
     }
@@ -101,6 +103,13 @@ public:
     inline static const QHash<QString, QByteArray> env(void) {
         return Env;
     }
+
+    static bool detach(int argc, const char *path, const char *argv0);
+    static void notify(SERVER_STATE state, const char *text = nullptr);
+    static bool shutdown(int exitcode);
+    static void reload();
+    static void suspend();
+    static void resume();
 
 private:
     typedef QHash<QString, QByteArray> ServerEnv;
