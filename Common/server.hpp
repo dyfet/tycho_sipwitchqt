@@ -87,6 +87,10 @@ public:
         return RunAsService;
     }
 
+    inline static bool isDetached(void) {
+        return RunAsDetached;
+    }
+
     inline static const char *sym(const QString key) {
         return Env[key].constData();
     }
@@ -121,6 +125,7 @@ private:
     static ServerEnv Env;
     static bool DebugVerbose;
     static bool RunAsService;
+    static bool RunAsDetached;
     volatile static State RunState;
 
     bool event(QEvent *evt) final;

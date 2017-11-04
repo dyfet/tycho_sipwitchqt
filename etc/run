@@ -1,2 +1,3 @@
 #!/bin/sh
-exec 2>&1 chpst -b sipwitchqt-runit sipwitchqt
+PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+exec 2>&1 chpst -e ./env  -b sipwitchqt-runit sipwitchqt

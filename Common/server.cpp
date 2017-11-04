@@ -101,6 +101,7 @@ QVariantHash Server::DefaultConfig;
 Server::ServerEnv Server::Env;
 bool Server::DebugVerbose = false;
 bool Server::RunAsService = false;
+bool Server::RunAsDetached = false;
 volatile Server::State Server::RunState = Server::START;
 
 #ifdef Q_OS_MAC
@@ -561,6 +562,7 @@ bool Server::detach(char **argv, const char *path)
     }
 
     if(!getuid() && !argv[1]) {
+        RunAsDetached = true;           // detached process flag...
         if(!detachProcess()) {
             cerr << "Failed to detach server." << endl;
             ::exit(90);
