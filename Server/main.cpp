@@ -59,7 +59,7 @@ void Main::onShutdown()
 
 int main(int argc, char **argv)
 {
-    static bool detached = Server::detach(argc, SERVICE_VARPATH, argv[0]);
+    static bool detached = Server::detach(argc, SERVICE_VARPATH);
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);

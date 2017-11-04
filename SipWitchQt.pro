@@ -130,7 +130,6 @@ CONFIG(release, release|debug) {
     runit.path = "$${ETCPATH}/sv/sipwitchqt"
     runit.files = etc/run
     runit.depends = config
-    runit.commands += ln -s "$${PREFIX}/sbin/${TARGET}" "$${PREFIX}/sbin/${TARGET}-daemon"
 
     target.path = "$${PREFIX}/sbin"
     target.depends = all
@@ -170,6 +169,7 @@ publishclean.commands += cd $${OUT_PWD} && rm -rf Archive $${ARCHIVE}-*.tar.gz $
 OTHER_FILES += \
     etc/sipwitchqt.conf \
     etc/README.md \
+    etc/run \
     testdata/service.conf \
     testdata/ping.xml \
     testdata/siptest.sh \

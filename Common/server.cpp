@@ -539,30 +539,13 @@ void Server::notify(SERVER_STATE state, const char *text)
 #endif
 }
 
-bool Server::detach(int argc, const char *path, const char *argv0)
+bool Server::detach(int argc, const char *path)
 {
     mkdir(path, 0770);
     if(chdir(path))
         return false;
 
-    const char *alias = nullptr;
-
-    // we may optionally use symlinks for special modes...
-    if(argv0) {
-        alias = strrchr(argv0, '/');
-        if(alias)
-            alias = strrchr(alias, '-');
-        else
-            alias = strrchr(argv0, '-');
-    }
-
-    // convenience for debug foreground...
-    if(alias && !strcmp(alias, "-debug"))
-        return false;
-
-    // "runit" managed daemon, made by simlink of server executable...
-    // we do not actually detach further so runsv can manage signals
-    if(alias && !strcmp(alias, "-daemon"))
+    if(getenv("RUNIT_SERVICE"))
         return true;
 
     if(getppid() == 1 || getenv("NOTIFY_SOCKET") || ((argc < 2) && !getuid())) {

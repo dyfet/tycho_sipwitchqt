@@ -1,2 +1,2 @@
 #!/bin/sh
-exec sipwitchqt-daemon
+exec 2>&1 env RUNIT_SERVICE=1 sipwitchqt
