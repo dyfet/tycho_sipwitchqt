@@ -1,2 +1,2 @@
 #!/bin/sh
-exec 2>&1 env RUNIT_SERVICE=1 sipwitchqt
+exec 2>&1 chpst -b sipwitchqt-runit sipwitchqt

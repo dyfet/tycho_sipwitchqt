@@ -103,7 +103,7 @@ public:
         return Env;
     }
 
-    static bool detach(int argc, const char *path);
+    static bool detach(char **argv, const char *path);
     static void notify(SERVER_STATE state, const char *text = nullptr);
     static bool shutdown(int exitcode);
     static void reload();

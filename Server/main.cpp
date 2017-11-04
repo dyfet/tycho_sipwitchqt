@@ -59,7 +59,7 @@ void Main::onShutdown()
 
 int main(int argc, char **argv)
 {
-    static bool detached = Server::detach(argc, SERVICE_VARPATH);
+    static bool detached = Server::detach(argv, SERVICE_VARPATH);
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
@@ -78,6 +78,7 @@ int main(int argc, char **argv)
         {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
+        {{"f", "foreground"}, "Disable daemon detach"},
         {{"x", "debug"}, "Enable debug output"},
         {{"show-cache"}, "Show config cache"},
     });

@@ -539,25 +539,28 @@ void Server::notify(SERVER_STATE state, const char *text)
 #endif
 }
 
-bool Server::detach(int argc, const char *path)
+bool Server::detach(char **argv, const char *path)
 {
     mkdir(path, 0770);
     if(chdir(path))
         return false;
 
-    if(getenv("RUNIT_SERVICE"))
-        return true;
-
-    if(getppid() == 1 || getenv("NOTIFY_SOCKET") || ((argc < 2) && !getuid())) {
+    if(getenv("NOTIFY_SOCKET")) {
         umask(007);
-        if(getenv("NOTIFY_SOCKET")) {
-            notifySystemD = true;
-            return true;
-        }
+        notifySystemD = true;
+        return true;
+    }
 
-        if(getppid() == 1)
-            return true;
+    const char *alias = nullptr;
+    if(argv[0])
+        alias = strchr(argv[0], '-');
 
+    if(getppid() == 1 || (alias && !strcmp(alias, "-runit"))) {
+        umask(007);
+        return true;
+    }
+
+    if(!getuid() && !argv[1]) {
         if(!detachProcess()) {
             cerr << "Failed to detach server." << endl;
             ::exit(90);

@@ -27,7 +27,6 @@ qmake-qt5 CONFIG+=sys_prefix QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/t
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt
-%{_sbindir}/sipwitchqt-daemon
 %{_sysconfdir}/sv/sipwitchqt/run
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
 
