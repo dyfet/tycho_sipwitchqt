@@ -78,7 +78,8 @@ int main(int argc, char **argv)
         {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
-        {{"d", "detach"}, "Run as detached daemon"},
+        {{"d", "detached"}, "Run as detached background daemon"},
+        {{"f", "foreground"}, "Run as foreground daemon"},
         {{"x", "debug"}, "Enable debug output"},
         {{"show-cache"}, "Show config cache"},
     });
@@ -86,7 +87,7 @@ int main(int argc, char **argv)
     if(!QDir::setCurrent(SERVICE_VARPATH))
         crit(90) << SERVICE_VARPATH << ": cannot access";
 
-    qDebug() << "Prefix: " << SERVICE_VARPATH;
+    output() << "Prefix: " << SERVICE_VARPATH;
 
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
     Server server(argc, argv, args, {
@@ -138,6 +139,6 @@ int main(int argc, char **argv)
     exitcode = server.start();
 
     //config.sync();
-    qDebug() << "Exiting" << QCoreApplication::applicationName();
+    debug() << "Exiting" << QCoreApplication::applicationName();
     return exitcode;
 }

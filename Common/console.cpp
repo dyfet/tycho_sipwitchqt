@@ -16,33 +16,57 @@
  */
 
 #include "console.hpp"
+#include "server.hpp"
 #include <QCoreApplication>
 
-QMutex lock;
+static QMutex lock;
 
 crit::~crit()
 {
     if(!exitCode)
         return;
 
-    QTextStream out(stderr);
-    out << "** " << QCoreApplication::applicationName() << ": " << buffer << endl;
-    out.flush();
+    if(!Server::isDetached()) {
+        QMutexLocker locker(&lock);
+        QTextStream out(stderr);
+        out << "** " << QCoreApplication::applicationName() << ": " << buffer << endl;
+        out.flush();
+    }
     ::exit(exitCode);
 }
 
 output::~output()
 {
+    if(Server::isDetached())
+        return;
+
     QTextStream out(stdout);
     QMutexLocker locker(&lock);
     out << buffer << endl;
     out.flush();
 }
 
+debug::~debug()
+{
+    if(Server::isDetached() || !Server::verbose())
+        return;
+
+    QTextStream out(stderr);
+    QMutexLocker locker(&lock);
+    out << buffer << endl;
+    out.flush();
+}
+
+
 error::~error()
 {
+    if(Server::isDetached())
+        return;
+
     QTextStream out(stderr);
     QMutexLocker locker(&lock);
     out << "** " << QCoreApplication::applicationName() << ": " << buffer << endl;
     out.flush();
 }
+
+

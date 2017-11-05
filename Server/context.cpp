@@ -17,6 +17,7 @@
 
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
+#include "../Common/console.hpp"
 #include "manager.hpp"
 
 #include <QNetworkInterface>
@@ -194,7 +195,7 @@ void Context::run()
         if(Server::state() == Server::UP && process(event))
             continue;
     }
-    Logging::debug() << "Exiting " << objectName();
+    debug() << "Exiting " << objectName();
     emit finished();
     --instanceCount;
 }

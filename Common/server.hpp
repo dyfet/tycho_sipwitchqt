@@ -66,6 +66,10 @@ public:
         return RunState;
     }
 
+    inline static bool up(void) {
+        return RunState != START && RunState != DOWN;
+    }
+
     inline static bool verbose(void) {
         return DebugVerbose;
     }

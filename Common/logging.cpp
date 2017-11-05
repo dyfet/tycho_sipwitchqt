@@ -320,9 +320,11 @@ void Logging::logHandler(QtMsgType type, const QMessageLogContext& context, cons
 #ifdef QT_NO_DEBUG_OUTPUT
         Q_UNUSED(text);
 #else
-        text = localMsg.constData();
-        cerr << text << endl;
-        cerr.flush();
+        if(!Server::isDetached()) {
+            text = localMsg.constData();
+            cerr << text << endl;
+            cerr.flush();
+        }
 #endif
         return;
     case QtInfoMsg:

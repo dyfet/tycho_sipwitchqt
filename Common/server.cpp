@@ -18,7 +18,7 @@
 #include "compiler.hpp"
 #include "server.hpp"
 #include "logging.hpp"
-
+#include "console.hpp"
 
 #include <QSettings>
 #include <QCommandLineParser>
@@ -218,11 +218,15 @@ QObject(), app(argc, argv)
 
     args.process(app);
 
-    if(args.isSet("detach") || getppid() == 1) {
+    if(args.isSet("detached") || getppid() == 1) {
         RunAsService = true;
+        RunAsDetached = true;
         if(getenv("NOTIFY_SOCKET"))
             notifySystemD = true;
     }
+
+    if(args.isSet("foreground"))
+        RunAsService = true;
 
 #ifdef QT_NO_DEBUG
     DebugVerbose = args.isSet("debug");
@@ -277,7 +281,6 @@ QObject(), app(argc, argv)
         stream >> Uuid;
     }
     uuidFile.close();
-    qDebug() << "Server uuid " << Uuid;
 
     reload();    // initial config...
 
@@ -425,7 +428,7 @@ void Server::startup()
             const Context &ctx = contexts.at(pos);
             if(ctx.order != order)
                 continue;
-            qDebug() << "Starting thread:" << ctx.thread->objectName();
+            debug() << "Starting thread:" << ctx.thread->objectName();
             ctx.thread->start(ctx.priority);
         }
     }
@@ -493,7 +496,7 @@ void Server::exit(int reason)
             const Context &ctx = contexts.at(pos);
             if(ctx.order != maxOrder)
                 continue;
-            qDebug() << "Stopping thread:" << ctx.thread->objectName();
+            debug() << "Stopping thread:" << ctx.thread->objectName();
             ctx.thread->quit();
             ctx.thread->wait();
             delete ctx.thread;

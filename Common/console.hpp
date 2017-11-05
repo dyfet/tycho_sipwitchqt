@@ -34,6 +34,29 @@ private:
     QString buffer;
 };
 
+class debug final : public QTextStream
+{
+    Q_DISABLE_COPY(debug)
+public:
+    debug() : QTextStream(&buffer) {}
+
+    ~debug() override;
+
+private:
+    QString buffer;
+};
+
+class info final : public QTextStream
+{
+    Q_DISABLE_COPY(info)
+public:
+    info(const QString& prefix = "%% ") : QTextStream(&buffer) { *this << prefix; }
+    ~info() override;
+
+private:
+    QString buffer;
+};
+
 class error final : public QTextStream
 {
     Q_DISABLE_COPY(error)
