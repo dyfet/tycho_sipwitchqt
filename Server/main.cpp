@@ -20,6 +20,7 @@
 #include "../Common/server.hpp"
 #include "../Common/crashhandler.hpp"
 #include "../Common/logging.hpp"
+#include "../Common/console.hpp"
 #include "manager.hpp"
 #include "main.hpp"
 
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
     });
 
     if(!QDir::setCurrent(SERVICE_VARPATH))
-        Logging::crit(90) << SERVICE_VARPATH << ": cannot access";
+        crit(90) << SERVICE_VARPATH << ": cannot access";
 
     qDebug() << "Prefix: " << SERVICE_VARPATH;
 
@@ -109,15 +110,17 @@ int main(int argc, char **argv)
     // validate global parsing results...
     port = atoi(Server::sym("PORT"));
     if(port < 100 || port > 65534 || port % 2)
-        Logging::crit(95) << port << ": Invalid sip port value";
+        crit(95) << port << ": invalid sip port value";
 
     interfaces = Util::bindAddress(Server::sym("ADDRESS"));
     if(interfaces.count() < 1)
-        Logging::crit(95) << "No valid interfaces specified";
+        crit(95) << "no valid interfaces specified";
 
     // create controller, load settings..
 
     Main controller(&server);
+    Q_UNUSED(controller);
+
     if(Server::isDetached() && CrashHandler::corefiles())
             CrashHandler::installHandlers();
 
