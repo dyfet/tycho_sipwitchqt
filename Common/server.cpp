@@ -141,11 +141,11 @@ static void iop_startup()
 
     ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
     if(!ioroot) {
-        Logging::err() << "Registration for power management failed";
+        error() << "Registration for power management failed";
         return;
     }
     else
-        Logging::debug() << "Power management enabled";
+        debug() << "Power management enabled";
 
     CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
 }
@@ -311,7 +311,7 @@ int Server::start(QThread::Priority priority)
         thread()->setPriority(priority);
 
     enableSignals();
-    qDebug() << "Starting" << QCoreApplication::applicationName();
+    debug() << "Starting" << QCoreApplication::applicationName();
     // when server comes up logging is activated...
     Logging::init();
     emit aboutToStart();
@@ -411,16 +411,9 @@ void Server::startup()
         return;
     }
 
-    QString major = qApp->applicationVersion();
-    QString minor = major.mid(major.indexOf('.') + 1);
-    major = major.left(major.indexOf('.'));
-    minor = minor.left(minor.indexOf('.'));
-    unsigned abi = major.toUInt() * 100;
-    abi += minor.toUInt();
-
     // TODO: currently race if came up suspended first
     RunState = UP;
-    Logging::info("++") << "Service starting, version=" << app.applicationVersion() << ", abi=" << abi;
+    Logging::info("++") << "Service starting, version=" << app.applicationVersion();
 
     // start managed threads
     for(unsigned order = 0; order < maxOrder; ++order) {

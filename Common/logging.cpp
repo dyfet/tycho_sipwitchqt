@@ -225,7 +225,7 @@ void Logging::onStartup()
 {
     connect(&timer, &QTimer::timeout, this, &Logging::onTimeout);
     service = Server::isService();
-    qDebug() << "Starting logger";
+    debug() << "Starting logger";
 
     if(service)
         ::openlog(QCoreApplication::applicationName().toUtf8().constData(), LOG_CONS, LOG_DAEMON);
@@ -247,7 +247,7 @@ void Logging::onShutdown()
     service = false;
     close();
     ::closelog();
-    qDebug() << "Stopping logger";
+    debug() << "Stopping logger";
 }
 
 void Logging::onExiting()
