@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "console.hpp"
+#include "output.hpp"
 #include "server.hpp"
 #include <QCoreApplication>
+#include <syslog.h>
 
 static QMutex lock;
 
@@ -25,6 +26,9 @@ crit::~crit()
 {
     if(!exitCode)
         return;
+
+    if(Server::isService())
+        ::syslog(LOG_CRIT, "%s", buffer.toUtf8().constData());
 
     if(!Server::isDetached()) {
         QMutexLocker locker(&lock);
@@ -53,21 +57,63 @@ debug::~debug()
 
     QTextStream out(stdout);
     QMutexLocker locker(&lock);
-    out << buffer << endl;
+    out << "-- " << buffer << endl;
     out.flush();
 }
 
-
-error::~error()
+info::~info()
 {
+    if(Server::isService())
+        ::syslog(LOG_INFO, "%s", buffer.toUtf8().constData());
+
+    if(Server::isDetached())
+        return;
+
+    QTextStream out(stdout);
+    QMutexLocker locker(&lock);
+    out << "%% " << buffer << endl;
+    out.flush();
+}
+
+notice::~notice()
+{
+    if(Server::isService())
+        ::syslog(LOG_NOTICE, "%s", buffer.toUtf8().constData());
+
+    if(Server::isDetached())
+        return;
+
+    QTextStream out(stdout);
+    QMutexLocker locker(&lock);
+    out << "== " << buffer << endl;
+    out.flush();
+}
+
+warning::~warning()
+{
+    if(Server::isService())
+        ::syslog(LOG_WARNING, "%s", buffer.toUtf8().constData());
+
     if(Server::isDetached())
         return;
 
     QTextStream out(stderr);
     QMutexLocker locker(&lock);
-    if(prefix)
-    out << "** " << QCoreApplication::applicationName() << ": ";
-    out << buffer << endl;
+    out << "## " << buffer << endl;
+    out.flush();
+}
+
+error::~error()
+{
+    if(Server::isService())
+        ::syslog(LOG_ERR, "%s", buffer.toUtf8().constData());
+
+    if(Server::isDetached())
+        return;
+
+    QTextStream out(stderr);
+    QMutexLocker locker(&lock);
+    out << "** " << buffer << endl;
     out.flush();
 }
 

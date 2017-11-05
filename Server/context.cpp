@@ -16,8 +16,7 @@
  **/
 
 #include "../Common/server.hpp"
-#include "../Common/logging.hpp"
-#include "../Common/console.hpp"
+#include "../Common/output.hpp"
 #include "manager.hpp"
 
 #include <QNetworkInterface>
@@ -171,7 +170,7 @@ void Context::run()
     
     //qDebug() << "LISTEN " << proto << ap << port << family << NetTLS;
     if(eXosip_listen_addr(context, netProto, ap, netPort, netFamily, netTLS)) {
-        Logging::err() << objectName() << ": failed to bind and listen";
+        error() << objectName() << ": failed to bind and listen";
         context = nullptr;
     }
 
@@ -190,7 +189,7 @@ void Context::run()
 
         // skip extra code in event loop if we don't need it...
         if(Server::verbose())
-            Logging::debug() << event;
+            qDebug() << event;
 
         if(Server::state() == Server::UP && process(event))
             continue;
@@ -255,12 +254,12 @@ void Context::start(QThread::Priority priority)
         thread->start(priority);
     }
     QThread::msleep(100);
-    debug() << "Started contexts" << instanceCount;
+    debug() << "Started contexts " << instanceCount;
 }
 
 void Context::shutdown()
 {
-    debug() << "Shutdown contexts" << instanceCount;
+    debug() << "Shutdown contexts " << instanceCount;
     active = false;
 
     unsigned hanged = 50;   // up to 5 seconds, after we force...

@@ -17,8 +17,7 @@
 
 #include "compiler.hpp"
 #include "server.hpp"
-#include "logging.hpp"
-#include "console.hpp"
+#include "output.hpp"
 
 #include <QSettings>
 #include <QCommandLineParser>
@@ -39,6 +38,7 @@
 #include <sys/fcntl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <syslog.h>
 
 #if defined(UNISTD_SYSTEMD)
 #include <systemd/sd-daemon.h>
@@ -228,6 +228,9 @@ QObject(), app(argc, argv)
     if(args.isSet("foreground"))
         RunAsService = true;
 
+    if(RunAsService)
+        ::openlog(QCoreApplication::applicationName().toUtf8().constData(), LOG_CONS, LOG_DAEMON);
+
 #ifdef QT_NO_DEBUG
     DebugVerbose = args.isSet("debug");
 #else
@@ -313,7 +316,6 @@ int Server::start(QThread::Priority priority)
     enableSignals();
     debug() << "Starting " << QCoreApplication::applicationName();
     // when server comes up logging is activated...
-    Logging::init();
     emit aboutToStart();
     return app.exec();
 }
@@ -407,13 +409,13 @@ QThread *Server::createThread(const QString& name, unsigned order, QThread::Prio
 void Server::startup()
 {
     if(RunState != START) {
-        Logging::warn("??") << "Already started";
+        warning() << "Already started";
         return;
     }
 
     // TODO: currently race if came up suspended first
     RunState = UP;
-    Logging::info("++") << "Service starting, version=" << app.applicationVersion();
+    notice() << "Service starting, version=" << app.applicationVersion();
 
     // start managed threads
     for(unsigned order = 0; order < maxOrder; ++order) {
@@ -421,7 +423,7 @@ void Server::startup()
             const Context &ctx = contexts.at(pos);
             if(ctx.order != order)
                 continue;
-            debug() << "Starting thread:" << ctx.thread->objectName();
+            debug() << "Starting thread: " << ctx.thread->objectName();
             ctx.thread->start(ctx.priority);
         }
     }
@@ -479,7 +481,7 @@ void Server::exit(int reason)
     // do service shutdown while in main thread context...
     RunState = DOWN;
     notify(SERVER_STOPPED);
-    Logging::info("--") << "Service stopping, reason=" + QString::number(reason);
+    notice() << "Service stopping, reason=" + QString::number(reason);
     app.processEvents();    // de-queue pending events
     emit aboutToFinish();
 
@@ -489,7 +491,7 @@ void Server::exit(int reason)
             const Context &ctx = contexts.at(pos);
             if(ctx.order != maxOrder)
                 continue;
-            debug() << "Stopping thread:" << ctx.thread->objectName();
+            debug() << "Stopping thread: " << ctx.thread->objectName();
             ctx.thread->quit();
             ctx.thread->wait();
             delete ctx.thread;

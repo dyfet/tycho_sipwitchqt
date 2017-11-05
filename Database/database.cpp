@@ -17,8 +17,7 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
-#include "../Common/logging.hpp"
-#include "../Common/console.hpp"
+#include "../Common/output.hpp"
 #include "../Server/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"
@@ -108,8 +107,7 @@ bool Database::runQuery(const QString &request, QVariantList parms)
         query.bindValue(count, parms.at(count));
         
     if(query.exec() != true) {
-        qDebug() << "Query Failed " << query.lastError().text();
-        Logging::notice() << "Query failed; " << query.lastError().text();
+        notice() << "Query failed; " << query.lastError().text();
         return false;
     }
     return true;
@@ -211,7 +209,7 @@ bool Database::create()
     if(!reopen())
         return false;
 
-    Logging::info() << "Loaded database driver " << driver;
+    info() << "Loaded database driver " << driver;
 
     if(init) {
         runQuery(Util::createQuery(driver));
@@ -238,7 +236,7 @@ int Database::getCount(const QString& id)
     QSqlQuery query(db);
     query.prepare(QString("SELECT COUNT (*) FROM ") + id + ";");
     if(!query.exec()) {
-        Logging::err() << "Extensions; error=" << query.lastError().text();
+        error() << "Extensions; error=" << query.lastError().text();
         failed = true;
     }
     else if(query.next()) {

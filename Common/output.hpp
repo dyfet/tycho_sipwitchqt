@@ -50,12 +50,44 @@ class error final : public QTextStream
 {
     Q_DISABLE_COPY(error)
 public:
-    error(bool lead = true) : QTextStream(&buffer), prefix(lead) {}
+    error() : QTextStream(&buffer) {}
     ~error() override;
 
 private:
     QString buffer;
-    bool prefix;
+};
+
+class info final : public QTextStream
+{
+    Q_DISABLE_COPY(info)
+public:
+    info() : QTextStream(&buffer) {}
+    ~info() override;
+
+private:
+    QString buffer;
+};
+
+class notice final : public QTextStream
+{
+    Q_DISABLE_COPY(notice)
+public:
+    notice() : QTextStream(&buffer) {}
+    ~notice() override;
+
+private:
+    QString buffer;
+};
+
+class warning final : public QTextStream
+{
+    Q_DISABLE_COPY(warning)
+public:
+    warning() : QTextStream(&buffer) {}
+    ~warning() override;
+
+private:
+    QString buffer;
 };
 
 class crit final : public QTextStream
@@ -73,8 +105,8 @@ private:
 
 
 /*!
- * Basic console output support, used before Qt services and logging are started.
- * \file console.hpp
+ * Basic console output and system logging support.
+ * \file output.hpp
  */
 
 #endif

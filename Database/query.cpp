@@ -17,7 +17,7 @@
 
 #include "query.hpp"
 #include "../Server/manager.hpp"
-#include "../Common/logging.hpp"
+#include "../Common/output.hpp"
 
 #define TIMEOUT 10000       // 10 seconds because we can be lazy on these...
 
@@ -42,7 +42,7 @@ void ProviderQuery::reload(ErrorResult err, const QVariantHash& keys, const QLis
         Provider::reload(records);
         break;
     default:
-        Logging::err() << "Provider reload failed; error=" << err;
+        error() << "Provider reload failed; error=" << err;
         break;
     }
 
@@ -54,13 +54,13 @@ void ProviderQuery::update(ErrorResult err, const QVariantHash& keys, const QLis
     switch(err) {
     case Request::Success:
         if(records.count() < 1) {
-            Logging::err() << "Provider " << contact << " does not exist";
+            error() << "Provider " << contact << " does not exist";
             break;
         }
         Provider::update(records[0]);
         break;
     default:
-        Logging::err() << "Provider update failed; contact=" << contact << ", error=" << err;
+        error() << "Provider update failed; contact=" << contact << ", error=" << err;
         break;
     }
 }

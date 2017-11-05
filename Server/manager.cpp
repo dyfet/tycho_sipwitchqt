@@ -17,8 +17,7 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
-#include "../Common/logging.hpp"
-#include "../Common/console.hpp"
+#include "../Common/output.hpp"
 #include "manager.hpp"
 #include "main.hpp"
 
@@ -109,11 +108,11 @@ void Manager::applyConfig(const QVariantHash& config)
     }
     if(hostname != ServerHostname) {
         ServerHostname = hostname;
-        Logging::info() << "starting as host " << ServerHostname;
+        info() << "starting as host " << ServerHostname;
     }
     if(realm != ServerRealm) {
         ServerRealm = realm;
-        Logging::info() << "entering realm " << ServerRealm;
+        info() << "entering realm " << ServerRealm;
         emit changeRealm(ServerRealm);
     }
     applyNames();
