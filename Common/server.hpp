@@ -29,14 +29,8 @@
 #include <QVariant>
 #include <QMutex>
 
-#define SYSTEM_PREFIX   "PWD"
-#define SYSTEM_HOME     "HOME"
-#define SYSTEM_USER     "LOGNAME"
-#define SYSTEM_HOSTNAME "HOSTNAME"
-
-#define SERVER_LOGFILE  "_logfile"
-#define SERVER_CONFIG   "SERVICE_CONFIG"
-#define SERVER_VERSION  "SERVICE_VERSION"
+#define SERVER_LOGFILE  "LOGFILE"
+#define SERVER_CONFIG   "CONFIG"
 
 typedef enum {
     SERVER_RUNNING,

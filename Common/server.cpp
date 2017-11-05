@@ -288,7 +288,8 @@ QObject(), app(argc, argv)
             Env[key] = CurrentConfig[value.mid(2)].toString().toLocal8Bit();
     }
 
-    Env[SYSTEM_HOSTNAME] = QHostInfo::localHostName().toUtf8();
+    Env["HOSTNAME"] = QHostInfo::localHostName().toUtf8();
+    Env["CWD"] = QDir::currentPath().toUtf8();
 
     // Wouldn't it be great if Qt had an actual app starting signal??
     // This kinda fakes it in a way so that we can complete startup after

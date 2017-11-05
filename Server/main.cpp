@@ -89,7 +89,6 @@ int main(int argc, char **argv)
 
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
     Server server(argc, argv, args, {
-        {SERVER_VERSION,    PROJECT_VERSION},
         {SERVER_LOGFILE,    LOGFILE},
         {SERVER_CONFIG,     "--config"},
         {CURRENT_NETWORK,   "--network"},
