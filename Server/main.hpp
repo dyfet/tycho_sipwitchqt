@@ -32,10 +32,8 @@ Q_UNUSED(xyz)
 // Testdata mode is a server work prefix, rest relative to it
 #if defined(PROJECT_PREFIX)
 #define SERVICE_CONF "service.conf"
-#define LOGFILE "service.log"
 #else
 #define SERVICE_CONF    SERVICE_ETCPATH "//" SERVICE_NAME ".conf"
-#define LOGFILE SERVICE_LOGPATH "/" SERVICE_NAME ".log"
 #endif
 
 #define TRACEIT "trace.log"

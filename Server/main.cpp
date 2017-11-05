@@ -71,12 +71,12 @@ int main(int argc, char **argv)
 
     Args::add(args, {
         {{"A", "address"}, "Specify network interface to bind", "address", "%%address"},
-        {{"C", "config"}, "Specify config file", "file", SERVICE_CONF},
         {{"H", "host", "public"}, "Specify public host name", "host", "%%host"},
         {{"N", "network", "domain"}, "Specify network domain to serve", "name", "%%network"},
         {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
+        {{"c", "config"}, "Specify config file", "file", SERVICE_CONF},
         {{"d", "detached"}, "Run as detached background daemon"},
         {{"f", "foreground"}, "Run as foreground daemon"},
         {{"x", "debug"}, "Enable debug output"},
@@ -90,7 +90,6 @@ int main(int argc, char **argv)
 
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
     Server server(argc, argv, args, {
-        {SERVER_LOGFILE,    LOGFILE},
         {SERVER_CONFIG,     "--config"},
         {CURRENT_NETWORK,   "--network"},
         {CURRENT_HOSTNAME,  "--host"},

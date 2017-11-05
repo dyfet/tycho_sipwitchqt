@@ -29,7 +29,6 @@
 #include <QVariant>
 #include <QMutex>
 
-#define SERVER_LOGFILE  "LOGFILE"
 #define SERVER_CONFIG   "CONFIG"
 
 typedef enum {
