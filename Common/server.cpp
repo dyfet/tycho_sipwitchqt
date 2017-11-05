@@ -152,60 +152,6 @@ static void iop_startup()
 
 #endif
 
-static bool detachProcess()
-{
-    pid_t pid;
-    int fd;
-
-    ::close(0);
-    ::close(1);
-    ::close(2);
-
-#ifdef SIGTTOU
-    ::signal(SIGTTOU, SIG_IGN);
-#endif
-
-#ifdef SIGTTIN
-    ::signal(SIGTTIN, SIG_IGN);
-#endif
-
-#ifdef SIGTSTP
-    ::signal(SIGTSTP, SIG_IGN);
-#endif
-    pid = ::fork();
-    if(pid > 0)
-        ::exit(0);
-    if(pid != 0)
-        return false;
-
-    if((fd = ::open(_PATH_TTY, O_RDWR)) >= 0) {
-        ::ioctl(fd, TIOCNOTTY, NULL);
-        ::close(fd);
-    }
-
-    if(setpgid(0, 0) != 0)
-        return false;
-
-    ::signal(SIGHUP, SIG_IGN);
-    pid = fork();
-    if(pid > 0)
-        ::exit(0);
-    if(pid != 0)
-        return false;
-
-    fd = ::open("/dev/null", O_RDWR);
-    if(fd > 0)
-        ::dup2(fd, 0);
-    if(fd != 1)
-        ::dup2(fd, 1);
-    if(fd != 2)
-        ::dup2(fd, 2);
-    if(fd > 2)
-        ::close(fd);
-
-    return true;
-}
-
 static void disableSignals()
 {
     ::signal(SIGTERM, SIG_IGN);
@@ -257,7 +203,7 @@ static void enableSignals()
     ::signal(SIGTERM, handleSignals);
 }
 
-Server::Server(bool detached, int& argc, char **argv, QCommandLineParser& args, const QVariantHash& keypairs):
+Server::Server(int& argc, char **argv, QCommandLineParser& args, const QVariantHash& keypairs):
 QObject(), app(argc, argv)
 {
     Q_ASSERT(Instance == nullptr);
@@ -271,7 +217,12 @@ QObject(), app(argc, argv)
     }
 
     args.process(app);
-    RunAsService = detached;
+
+    if(args.isSet("detach") || getppid() == 1) {
+        RunAsService = true;
+        if(getenv("NOTIFY_SOCKET"))
+            notifySystemD = true;
+    }
 
 #ifdef QT_NO_DEBUG
     DebugVerbose = args.isSet("debug");
@@ -279,6 +230,7 @@ QObject(), app(argc, argv)
     DebugVerbose = true;
 #endif
 
+    QString cfgprefix = QCoreApplication::applicationName().toUpper() + "_";
     foreach(auto key, QProcess::systemEnvironment()) {
         if(!key[0].isUpper())
             continue;
@@ -292,12 +244,7 @@ QObject(), app(argc, argv)
         if(key.indexOf('_') > -1)
             continue;
 
-        QString cfgkey = "SERVICE_" + key;
-        QString cfgval = Env[cfgkey];
-        if((cfgval.left(2) == "--") && !args.isSet(cfgval.mid(3))) {
-            key = cfgkey;
-        }
-        else if(!Env[key].isEmpty() && (Env[key].left(2) != "--")) {
+        if(!Env[key].isEmpty() && (Env[key].left(2) != "--")) {
             continue;
         }
 
@@ -313,11 +260,8 @@ QObject(), app(argc, argv)
         }
     }
 
-    if(QDir::setCurrent(Env[SERVER_PREFIX]))
-        Env[SYSTEM_PREFIX] = Env["CD"] = Env[SERVER_PREFIX];
-
     // process uuid file...
-    QFile uuidFile( Env[SERVER_NAME] + ".uuid");
+    QFile uuidFile( QCoreApplication::applicationName() + ".uuid");
 
     if(!uuidFile.exists()) {
         QString uuid = QUuid::createUuid().toString();
@@ -344,9 +288,6 @@ QObject(), app(argc, argv)
             Env[key] = CurrentConfig[value.mid(2)].toString().toLocal8Bit();
     }
 
-    if(Env[SERVER_PIDFILE].isNull())
-        Env[SERVER_PIDFILE] = Env[SERVER_NAME] + ".pid";
-
     Env[SYSTEM_HOSTNAME] = QHostInfo::localHostName().toUtf8();
 
     // Wouldn't it be great if Qt had an actual app starting signal??
@@ -362,24 +303,11 @@ Server::~Server()
 
 int Server::start(QThread::Priority priority)
 {
-    QLockFile pidfile(Env[SERVER_PIDFILE]);
-    if(!pidfile.tryLock()) {
-        switch(pidfile.error()) {
-        case QLockFile::LockFailedError:
-            cerr << "Multiple server instances running" << endl;
-            break;
-        default:
-            cerr << "Unpriviledged server started" << endl;
-            break;
-        }
-        ::exit(90);
-    }
-
     if(priority != QThread::InheritPriority)
         thread()->setPriority(priority);
 
     enableSignals();
-    qDebug() << "Starting" << name();
+    qDebug() << "Starting" << QCoreApplication::applicationName();
     // when server comes up logging is activated...
     Logging::init();
     emit aboutToStart();
@@ -503,7 +431,7 @@ void Server::startup()
 
     emit changeConfig(CurrentConfig);
     emit started();
-    notify(SERVER_RUNNING, "Ready to process calls");
+    notify(SERVER_RUNNING, "Ready to process");
 }
 
 void Server::notify(SERVER_STATE state, const char *text)
@@ -538,38 +466,6 @@ void Server::notify(SERVER_STATE state, const char *text)
     Q_UNUSED(state);
     Q_UNUSED(text);
 #endif
-}
-
-bool Server::detach(char **argv, const char *path)
-{
-    mkdir(path, 0770);
-    if(chdir(path))
-        return false;
-
-    if(getenv("NOTIFY_SOCKET")) {
-        umask(007);
-        notifySystemD = true;
-        return true;
-    }
-
-    const char *alias = nullptr;
-    if(argv[0])
-        alias = strchr(argv[0], '-');
-
-    if(getppid() == 1 || (alias && !strcmp(alias, "-runit"))) {
-        umask(007);
-        return true;
-    }
-
-    if(!getuid() && !argv[1]) {
-        RunAsDetached = true;           // detached process flag...
-        if(!detachProcess()) {
-            cerr << "Failed to detach server." << endl;
-            ::exit(90);
-        }
-        return true;
-    }
-    return false;
 }
 
 // since private, can only be triggered locally in our thread context.

@@ -27,9 +27,9 @@
 
 #define EVENT_TIMER 500l    // 500ms...
 
-static volatile unsigned instanceCount = 0;
 static bool active = true;
 
+volatile unsigned Context::instanceCount = 0;
 QList<Context *> Context::Contexts;
 QList<Context::Schema> Context::Schemas = {
     {"udp", "sip:",  Context::UDP, 5060, IPPROTO_UDP},

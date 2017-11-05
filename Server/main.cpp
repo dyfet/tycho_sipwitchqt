@@ -59,13 +59,12 @@ void Main::onShutdown()
 
 int main(int argc, char **argv)
 {
-    static bool detached = Server::detach(argv, SERVICE_VARPATH);
     int exitcode = 0;
 
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
-    QCoreApplication::setApplicationName(SERVICE_NAME);
-    QCoreApplication::setOrganizationDomain(SERVICE_DOMAIN);
-    QCoreApplication::setOrganizationName(SERVICE_ORG);
+    QCoreApplication::setApplicationName("sipwitchqt");
+    QCoreApplication::setOrganizationDomain("tychosoft.com");
+    QCoreApplication::setOrganizationName("Tycho Softworks");
 
     QCommandLineParser args;
     args.setApplicationDescription("Tycho SIP Witch Service");
@@ -78,17 +77,19 @@ int main(int argc, char **argv)
         {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
         {Args::HelpArgument},
         {Args::VersionArgument},
-        {{"f", "foreground"}, "Disable daemon detach"},
+        {{"d", "detach"}, "Run as detached daemon"},
         {{"x", "debug"}, "Enable debug output"},
         {{"show-cache"}, "Show config cache"},
     });
 
+    if(!QDir::setCurrent(SERVICE_VARPATH))
+        Logging::crit(90) << SERVICE_VARPATH << ": cannot access";
+
+    qDebug() << "Prefix: " << SERVICE_VARPATH;
+
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
-    Server server(detached, argc, argv, args, {
-        {SERVER_NAME,       SERVICE_NAME},
+    Server server(argc, argv, args, {
         {SERVER_VERSION,    PROJECT_VERSION},
-        {SERVER_PREFIX,        SERVICE_VARPATH},
-        {SERVER_PIDFILE,    PIDFILE},
         {SERVER_LOGFILE,    LOGFILE},
         {SERVER_CONFIG,     "--config"},
         {CURRENT_NETWORK,   "--network"},
@@ -100,12 +101,6 @@ int main(int argc, char **argv)
         {DEFAULT_ADDRESS,   "any"},
         {DEFAULT_NETWORK,   Util::localDomain()},
     });
-
-    // verify and setup working directory
-    if(strcmp(Server::sym(SYSTEM_PREFIX), Server::prefix())) {
-        cerr << "Cannot access " << Server::prefix() << "." << endl;
-        exit(90);
-    }
 
 #if defined(Q_OS_MAC)
     QDir::current().mkdir("certs");
@@ -124,7 +119,7 @@ int main(int argc, char **argv)
     // create controller, load settings..
 
     Main controller(&server);
-    if(detached && CrashHandler::corefiles())
+    if(Server::isDetached() && CrashHandler::corefiles())
             CrashHandler::installHandlers();
 
     // setup our contexts...allow registration
@@ -141,6 +136,6 @@ int main(int argc, char **argv)
     exitcode = server.start();
 
     //config.sync();
-    qDebug() << "Exiting" << server.name();
+    qDebug() << "Exiting" << QCoreApplication::applicationName();
     return exitcode;
 }

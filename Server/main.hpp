@@ -29,19 +29,13 @@
 Q_UNUSED(xyz)
 #endif
 
-#define SERVICE_DOMAIN  "tychosoft.com"
-#define SERVICE_ORG     "Tycho Softworks"
-#define SERVICE_READY   SERVICE_NAME " started: Ready to process calls"
-
 // Testdata mode is a server work prefix, rest relative to it
 #if defined(PROJECT_PREFIX)
 #define SERVICE_CONF "service.conf"
 #define LOGFILE "service.log"
-#define PIDFILE "service.pid"
 #else
 #define SERVICE_CONF    SERVICE_ETCPATH "//" SERVICE_NAME ".conf"
 #define LOGFILE SERVICE_LOGPATH "/" SERVICE_NAME ".log"
-#define PIDFILE "pidfile"
 #endif
 
 #define TRACEIT "trace.log"
@@ -75,7 +69,6 @@ private slots:
     void onStartup();
     void onShutdown();
 };
-
 
 /*!
  * \mainpage SipWitchQt

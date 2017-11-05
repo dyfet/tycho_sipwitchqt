@@ -47,8 +47,9 @@ Manager::Manager(unsigned order)
     qRegisterMetaType<Event>("Event");
 
     moveToThread(Server::createThread("stack", order));
-    UserAgent = qApp->applicationName() + "/" + qApp->applicationVersion();
-    osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(Server::name()));
+    QByteArray name = QCoreApplication::applicationName().toUtf8();
+    UserAgent = name + "/" + qApp->applicationVersion();
+    osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(name.constData()));
 
     Server *server = Server::instance();
     Database *db = Database::instance();

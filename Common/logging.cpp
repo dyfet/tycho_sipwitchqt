@@ -228,7 +228,7 @@ void Logging::onStartup()
     qDebug() << "Starting logger";
 
     if(service)
-        ::openlog(Server::name(), LOG_CONS, LOG_DAEMON);
+        ::openlog(QCoreApplication::applicationName().toUtf8().constData(), LOG_CONS, LOG_DAEMON);
 
     last.start();
     logfile = Server::sym(SERVER_LOGFILE);

@@ -35,11 +35,8 @@
 #define SYSTEM_HOSTNAME "HOSTNAME"
 
 #define SERVER_LOGFILE  "_logfile"
-#define SERVER_PIDFILE  "_pidfile"
 #define SERVER_CONFIG   "SERVICE_CONFIG"
-#define SERVER_NAME     "SERVICE_NAME"
 #define SERVER_VERSION  "SERVICE_VERSION"
-#define SERVER_PREFIX      "SERVICE_PREFIX"
 
 typedef enum {
     SERVER_RUNNING,
@@ -57,7 +54,7 @@ class Server final : public QObject
 public:
     typedef enum { START, UP, SUSPENDED, DOWN } State;
 
-    Server(bool detached, int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
+    Server(int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
     ~Server();
 
     int start(QThread::Priority priority = QThread::InheritPriority);
@@ -95,19 +92,10 @@ public:
         return Env[key].constData();
     }
 
-    inline static const char *name() {
-        return sym(SERVER_NAME);
-    }
-
-    inline static const char *prefix() {
-        return sym(SERVER_PREFIX);
-    }
-
     inline static const QHash<QString, QByteArray> env(void) {
         return Env;
     }
 
-    static bool detach(char **argv, const char *path);
     static void notify(SERVER_STATE state, const char *text = nullptr);
     static bool shutdown(int exitcode);
     static void reload();

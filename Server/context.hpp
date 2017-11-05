@@ -94,6 +94,10 @@ public:
         return Contexts;
     }
 
+    inline static bool isActive() {
+        return instanceCount > 0;
+    }
+
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
 
@@ -110,6 +114,7 @@ private:
     mutable QMutex nameLock;
     bool multiInterface;
 
+    static volatile unsigned instanceCount;
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
 
