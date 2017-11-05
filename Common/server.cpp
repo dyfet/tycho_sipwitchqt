@@ -311,7 +311,7 @@ int Server::start(QThread::Priority priority)
         thread()->setPriority(priority);
 
     enableSignals();
-    debug() << "Starting" << QCoreApplication::applicationName();
+    debug() << "Starting " << QCoreApplication::applicationName();
     // when server comes up logging is activated...
     Logging::init();
     emit aboutToStart();
@@ -327,28 +327,28 @@ bool Server::event(QEvent *evt)
     auto se = static_cast<ServerEvent *>(evt);
     switch(id) {
     case SERVER_STARTUP: // used to process post app exec startup
-        qDebug() << "Server(STARTUP)";
+        debug() << "Server(STARTUP)";
         startup();
         return true;
     case SERVER_SHUTDOWN:
-        qDebug() << "Server(SHUTDOWN)";
+        debug() << "Server(SHUTDOWN)";
         exit(se->reason());
         return true;
     case SERVER_RELOAD:
-        qDebug() << "Server(RELOAD)";
+        debug() << "Server(RELOAD)";
         reconfig();
         return true;
     case SERVER_SUSPEND:
         if(RunState != SUSPENDED) {
             emit aboutToSuspend();
-            qDebug() << "Server(SUSPENDED)";
+            debug() << "Server(SUSPENDED)";
             RunState = SUSPENDED;
         }
         return true;
     case SERVER_RESUME:
         if(RunState == SUSPENDED) {
             emit aboutToResume();
-            qDebug() << "Server(RESUME)";
+            debug() << "Server(RESUME)";
             RunState = UP;
         }
         return true;

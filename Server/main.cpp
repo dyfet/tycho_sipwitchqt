@@ -48,13 +48,13 @@ Main::~Main()
 
 void Main::onStartup()
 {
-    qDebug() << "Control manager startup";
+    debug() << "Control manager startup";
     Context::start(QThread::HighPriority);
 }
 
 void Main::onShutdown()
 {
-    qDebug() << "Control manager shutdown";
+    debug() << "Control manager shutdown";
     Context::shutdown();
 }
 
@@ -139,6 +139,6 @@ int main(int argc, char **argv)
     exitcode = server.start();
 
     //config.sync();
-    debug() << "Exiting" << QCoreApplication::applicationName();
+    debug() << "Exiting " << QCoreApplication::applicationName();
     return exitcode;
 }

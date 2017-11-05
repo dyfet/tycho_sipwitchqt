@@ -51,7 +51,7 @@ debug::~debug()
     if(Server::isDetached() || !Server::verbose())
         return;
 
-    QTextStream out(stderr);
+    QTextStream out(stdout);
     QMutexLocker locker(&lock);
     out << buffer << endl;
     out.flush();
@@ -65,7 +65,9 @@ error::~error()
 
     QTextStream out(stderr);
     QMutexLocker locker(&lock);
-    out << "** " << QCoreApplication::applicationName() << ": " << buffer << endl;
+    if(prefix)
+    out << "** " << QCoreApplication::applicationName() << ": ";
+    out << buffer << endl;
     out.flush();
 }
 

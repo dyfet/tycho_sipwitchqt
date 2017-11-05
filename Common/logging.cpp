@@ -18,6 +18,7 @@
 #include "compiler.hpp"
 #include "server.hpp"
 #include "logging.hpp"
+#include "console.hpp"
 
 #include <QDate>
 #include <QTime>
@@ -176,10 +177,8 @@ bool Logging::event(QEvent *ev)
     if(category)
         append(category, msg);
 
-    if(!service) {
-        cerr << text << endl;
-        cerr.flush();
-    }
+    if(!service)
+        ::error(false) << text;
 
     if(level != LOGGING_IGNORE)
         emit notify(level, evt->when(), msg);
@@ -225,7 +224,7 @@ void Logging::onStartup()
 {
     connect(&timer, &QTimer::timeout, this, &Logging::onTimeout);
     service = Server::isService();
-    debug() << "Starting logger";
+    ::debug() << "Starting logger";
 
     if(service)
         ::openlog(QCoreApplication::applicationName().toUtf8().constData(), LOG_CONS, LOG_DAEMON);
@@ -247,7 +246,7 @@ void Logging::onShutdown()
     service = false;
     close();
     ::closelog();
-    debug() << "Stopping logger";
+    ::debug() << "Stopping logger";
 }
 
 void Logging::onExiting()
@@ -271,7 +270,7 @@ void Logging::append(const char *category, const char *text)
             return;
         }
         if(up) {
-            qDebug() << "Logging(OPEN)";
+            ::debug() << "Logging(OPEN)";
             timer.setInterval(1000);
             timer.start();
         }
@@ -297,7 +296,7 @@ void Logging::close()
 {
     timer.stop();
     if(fp) {
-        qDebug() << "Logging(CLOSE)";
+        ::debug() << "Logging(CLOSE)";
         fclose(fp);
         fp = nullptr;
     }
@@ -321,9 +320,7 @@ void Logging::logHandler(QtMsgType type, const QMessageLogContext& context, cons
         Q_UNUSED(text);
 #else
         if(!Server::isDetached()) {
-            text = localMsg.constData();
-            cerr << text << endl;
-            cerr.flush();
+            ::error(false) << localMsg;
         }
 #endif
         return;

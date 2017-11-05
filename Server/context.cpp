@@ -157,7 +157,7 @@ void Context::run()
     if(allow & Allow::REGISTRY)
         connect(this, &Context::registry, stack, &Manager::registry);
 
-    Logging::debug() << "Running " << objectName();
+    debug() << "Running " << objectName();
 
     const char *ap = nullptr;
 
@@ -255,12 +255,12 @@ void Context::start(QThread::Priority priority)
         thread->start(priority);
     }
     QThread::msleep(100);
-    qDebug() << "Started contexts" << instanceCount;
+    debug() << "Started contexts" << instanceCount;
 }
 
 void Context::shutdown()
 {
-    qDebug() << "Shutdown contexts" << instanceCount;
+    debug() << "Shutdown contexts" << instanceCount;
     active = false;
 
     unsigned hanged = 50;   // up to 5 seconds, after we force...

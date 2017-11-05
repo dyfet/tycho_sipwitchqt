@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
+#include "../Common/console.hpp"
 #include "../Server/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"
@@ -146,7 +147,7 @@ void Database::close()
     timer.stop();
     if(db.isOpen()) {
         db.close();
-        qDebug() << "Database(CLOSE)";
+        debug() << "Database(CLOSE)";
     }
     if(db.isValid()) {
         db = QSqlDatabase();
@@ -171,10 +172,10 @@ bool Database::reopen()
     if(!db.isValid()) {
         failed = true;
         FOR_DEBUG(
-            qDebug() << "Database(FAILED)";
+            debug() << "Database(FAILED)";
         )
         FOR_RELEASE(
-            Logging::err() << "Invalid database driver " << driver;
+            error() << "Invalid database driver " << driver;
         )
         return false;
     }
@@ -182,17 +183,17 @@ bool Database::reopen()
     db.open();
     if(!db.isOpen()) {
         FOR_DEBUG(
-            qDebug() << "Database(FAILED)";
+            debug() << "Database(FAILED)";
         )
         FOR_RELEASE(
-            Logging::err() << "Database failed; " << db.lastError().text();
+            error() << "Database failed; " << db.lastError().text();
         )
         return false;
     }
 
     runQuery(Util::pragmaQuery(driver));
 
-    qDebug() << "Database(OPEN)";
+    debug() << "Database(OPEN)";
     timer.setInterval(interval);
     timer.start();
     return true;

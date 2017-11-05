@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/server.hpp"
 #include "../Common/logging.hpp"
+#include "../Common/console.hpp"
 #include "manager.hpp"
 #include "main.hpp"
 
@@ -76,7 +77,7 @@ void Manager::init(unsigned order)
 #ifndef QT_NO_DEBUG
 void Manager::reportCounts(const QString& id, int count)
 {
-    qDebug() << "*** DB Count" << id << count;
+    qDebug() << "DB Count" << id << count;
 }
 #endif
 
@@ -135,7 +136,7 @@ void Manager::create(const QHostAddress& addr, int port, unsigned mask)
 {
     unsigned index = ++Contexts;
 
-    qDebug().nospace() << "Creating sip" << index << " " <<  addr << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
+    debug() << "Creating sip" << index << ": bind=" <<  addr.toString() << ", port=" << port << ", mask=" << QString("0x%1").arg(mask, 8, 16, QChar('0'));
 
     foreach(auto schema, Context::schemas()) {
         if(schema.proto & mask) {
