@@ -21,6 +21,7 @@ testdata/*.db-journal
 testdata/*.cnf
 userdata/
 generated/
+custom/
 doc/
 *.gch/
 

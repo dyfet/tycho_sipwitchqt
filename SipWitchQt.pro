@@ -12,7 +12,9 @@ QT -= gui
 QT += network sql
 QMAKE_CXXFLAGS += -Wno-padded
 
+# bind custom builds and resources
 exists(Custom.pri):include(Custom.pri)
+exists(custum/Custom.pri):include(custom/Custom.pri)
 
 # build type specific options
 CONFIG(release,release|debug):DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_DEBUG
