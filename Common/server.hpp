@@ -50,6 +50,14 @@ public:
     Server(int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
     ~Server();
 
+    inline QByteArray& operator[](const QString& key) {
+        return Env[key];
+    }
+
+    inline const QByteArray& operator[](const QString& key) const {
+        return Env[key];
+    }
+
     int start(QThread::Priority priority = QThread::InheritPriority);
 
     static QThread *createThread(const QString& name, unsigned order = 0, QThread::Priority = QThread::InheritPriority);
@@ -85,8 +93,8 @@ public:
         return RunAsDetached;
     }
 
-    inline static const char *sym(const QString key) {
-        return Env[key].constData();
+    inline static const QByteArray& sym(const QString& key) {
+        return Env[key];
     }
 
     inline static const QHash<QString, QByteArray> env(void) {

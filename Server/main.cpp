@@ -101,17 +101,19 @@ int main(int argc, char **argv)
         {DEFAULT_NETWORK,   Util::localDomain()},
     });
 
+    output() << "Config: " << server[SERVER_CONFIG];
+
 #if defined(Q_OS_MAC)
     QDir::current().mkdir("certs");
     QDir::current().mkdir("private");
 #endif
 
     // validate global parsing results...
-    port = atoi(Server::sym("PORT"));
+    port = server[CURRENT_PORT].toShort();
     if(port < 100 || port > 65534 || port % 2)
         crit(95) << port << ": invalid sip port value";
 
-    interfaces = Util::bindAddress(Server::sym("ADDRESS"));
+    interfaces = Util::bindAddress(server[CURRENT_ADDRESS]);
     if(interfaces.count() < 1)
         crit(95) << "no valid interfaces specified";
 
