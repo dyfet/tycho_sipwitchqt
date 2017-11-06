@@ -18,6 +18,7 @@
 #include "output.hpp"
 #include "server.hpp"
 #include <QCoreApplication>
+#include <QMutexLocker>
 #include <syslog.h>
 
 static QMutex lock;
