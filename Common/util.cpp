@@ -19,7 +19,9 @@
 #include "util.hpp"
 #include <QHostInfo>
 #include <QNetworkInterface>
+#ifndef Q_OS_WIN
 #include <sys/socket.h>
+#endif
 
 namespace Util {
     const QString localDomain()

@@ -49,7 +49,9 @@ Manager::Manager(unsigned order)
     moveToThread(Server::createThread("stack", order));
     QByteArray name = QCoreApplication::applicationName().toUtf8();
     UserAgent = name + "/" + qApp->applicationVersion();
+#ifndef Q_OS_WIN
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(name.constData()));
+#endif
 
     Server *server = Server::instance();
     Database *db = Database::instance();

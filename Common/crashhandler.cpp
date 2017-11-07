@@ -18,7 +18,9 @@
 #include "crashhandler.hpp"
 
 #include <QtDebug>
-
+#ifdef Q_OS_WIN
+#include <windows.h>
+#else
 #include <csignal>
 #include <execinfo.h>
 #include <cxxabi.h>
@@ -26,6 +28,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 
 static bool installed = false;
 
@@ -49,7 +52,19 @@ void CrashHandler::processHandlers()
     abort();
 }
 
-#if defined(QT_NO_DEBUG)
+#if defined(QT_NO_DEBUG) && defined(Q_OS_WIN)
+
+bool CrashHandler::installHandlers()
+{
+    return false;
+}
+
+bool CrashHandler::corefiles()
+{
+    return false;
+}
+
+#elif defined(QT_NO_DEBUG)  // mac and unix release...
 
 static bool processing = false;
 

@@ -28,8 +28,12 @@
 #include <iostream>
 #include <QHostInfo>
 #include <QUuid>
-
 #include <csignal>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <QAbstractNativeEventFilter>
+#else
 #include <unistd.h>
 #include <sys/stat.h>
 #include <termios.h>
@@ -39,6 +43,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <syslog.h>
+#endif
 
 #if defined(UNISTD_SYSTEMD)
 #include <systemd/sd-daemon.h>
@@ -152,6 +157,74 @@ static void iop_startup()
 
 #endif
 
+#ifdef Q_OS_WIN
+
+class NativeEvent final : public QAbstractNativeEventFilter
+{
+private:
+    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) final;
+};
+
+bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, long *result) {
+    Q_UNUSED(eventType);
+    Q_UNUSED(result);
+
+    MSG *msg = static_cast<MSG*>(message);
+    switch(msg->message) {
+    case WM_CLOSE:
+        if(Server::shutdown(15)) {
+            qApp->processEvents();
+            result = 0l;
+            return true;
+        }
+        break;
+    case WM_POWERBROADCAST:
+        switch(msg->wParam) {
+        case PBT_APMRESUMEAUTOMATIC:
+        case PBT_APMRESUMESUSPEND:
+            Server::resume();
+            break;
+        case PBT_APMSUSPEND:
+            Server::suspend();
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    return false;
+}
+
+static BOOL WINAPI consoleHandler(DWORD code)
+{
+    switch(code) {
+    case CTRL_LOGOFF_EVENT:
+        if(Server::shutdown(14))
+            return TRUE;
+        break;
+    case CTRL_C_EVENT:
+        if(Server::shutdown(2))
+            return TRUE;
+        break;
+    case CTRL_CLOSE_EVENT:
+    case CTRL_BREAK_EVENT:
+        if(Server::shutdown(3))
+            return TRUE;
+        break;
+    case CTRL_SHUTDOWN_EVENT:
+        if(Server::shutdown(9))
+            return TRUE;
+        break;
+    }
+    return FALSE;
+}
+
+static NativeEvent nativeEvents;
+
+#endif
+
 static void disableSignals()
 {
     ::signal(SIGTERM, SIG_IGN);
@@ -193,6 +266,12 @@ static void enableSignals()
     iop_startup();
 #endif
 
+#ifdef Q_OS_WIN
+    if(!Server::isService())
+        SetConsoleCtrlHandler((PHANDLER_ROUTINE)consoleHandler, TRUE);
+    qApp->installNativeEventFilter(&nativeEvents);
+#endif
+
 #ifdef SIGHUP
     ::signal(SIGHUP, handleSignals);
 #endif
@@ -218,18 +297,25 @@ QObject(), app(argc, argv)
 
     args.process(app);
 
+#ifdef Q_OS_WIN
+    if(args.isSet("detached"))
+        RunAsService = true;
+#else
     if(args.isSet("detached") || getppid() == 1) {
         RunAsService = true;
         RunAsDetached = true;
         if(getenv("NOTIFY_SOCKET"))
             notifySystemD = true;
     }
+#endif
 
     if(args.isSet("foreground"))
         RunAsService = true;
 
+#ifndef Q_OS_WIN
     if(RunAsService)
         ::openlog(QCoreApplication::applicationName().toUtf8().constData(), LOG_CONS, LOG_DAEMON);
+#endif
 
 #ifdef QT_NO_DEBUG
     DebugVerbose = args.isSet("debug");

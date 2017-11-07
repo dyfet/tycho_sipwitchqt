@@ -19,7 +19,10 @@
 #include "server.hpp"
 #include <QCoreApplication>
 #include <QMutexLocker>
+
+#ifndef Q_OS_WIN
 #include <syslog.h>
+#endif
 
 static QMutex lock;
 
@@ -28,8 +31,10 @@ crit::~crit()
     if(!exitCode)
         return;
 
+#ifndef Q_OS_WIN
     if(Server::isService())
         ::syslog(LOG_CRIT, "%s", buffer.toUtf8().constData());
+#endif
 
     if(!Server::isDetached()) {
         QMutexLocker locker(&lock);
@@ -64,8 +69,10 @@ debug::~debug()
 
 info::~info()
 {
+#ifndef Q_OS_WIN
     if(Server::isService())
         ::syslog(LOG_INFO, "%s", buffer.toUtf8().constData());
+#endif
 
     if(Server::isDetached())
         return;
@@ -78,8 +85,10 @@ info::~info()
 
 notice::~notice()
 {
+#ifndef Q_OS_WIN
     if(Server::isService())
         ::syslog(LOG_NOTICE, "%s", buffer.toUtf8().constData());
+#endif
 
     if(Server::isDetached())
         return;
@@ -92,8 +101,10 @@ notice::~notice()
 
 warning::~warning()
 {
+#ifndef Q_OS_WIN
     if(Server::isService())
         ::syslog(LOG_WARNING, "%s", buffer.toUtf8().constData());
+#endif
 
     if(Server::isDetached())
         return;
@@ -106,8 +117,10 @@ warning::~warning()
 
 error::~error()
 {
+#ifndef Q_OS_WIN
     if(Server::isService())
         ::syslog(LOG_ERR, "%s", buffer.toUtf8().constData());
+#endif
 
     if(Server::isDetached())
         return;

@@ -21,9 +21,20 @@
 
 #include <QNetworkInterface>
 
+#if defined(Q_OS_WIN)
+#include <WinSock2.h>
+#pragma comment(lib, "ssleay32.lib")
+#pragma comment(lib, "libeay32.lib")
+#pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "ws2_32.lib")
+#else
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#endif
 
 #define EVENT_TIMER 500l    // 500ms...
 

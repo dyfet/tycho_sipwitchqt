@@ -10,7 +10,7 @@ CONFIG += c++11 console
 CONFIG -= app_bundle
 QT -= gui
 QT += network sql
-QMAKE_CXXFLAGS += -Wno-padded
+!win32-msvc*:QMAKE_CXXFLAGS += -Wno-padded
 
 # bind custom builds and resources
 exists(Custom.pri):include(Custom.pri)
@@ -68,7 +68,7 @@ LOGPATH="$${VARBASE}/log"
 #message("Installation Etc:    $${ETCPATH}")
 
 # global platform options
-win32-msvc*:error(*** windows not supported...)
+win32-msvc*:isEmpty(PROJECT_PREFIX):PROJECT_PREFIX="C:/ProgramData/SipWitchQt"
 system(rm -f "$${OUT_PWD}/$${TARGET}")
 
 # global defines
