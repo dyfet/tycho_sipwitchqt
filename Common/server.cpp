@@ -45,7 +45,7 @@
 #include <syslog.h>
 #endif
 
-#if defined(UNISTD_SYSTEMD)
+#if defined(SYSTEMD_FOUND)
 #include <systemd/sd-daemon.h>
 #endif
 
@@ -521,7 +521,7 @@ void Server::startup()
 
 void Server::notify(SERVER_STATE state, const char *text)
 {
-#if defined(UNISTD_SYSTEMD)
+#if defined(SYSTEMD_FOUND)
     if(!notifySystemD)
         return;
 

@@ -18,6 +18,8 @@
 #ifndef	__COMPILER_HPP__
 #define __COMPILER_HPP__
 
+#include "config.hpp"
+
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wswitch-enum"

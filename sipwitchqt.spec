@@ -3,8 +3,13 @@ Epoch:   1
 Version: 0.1.0
 Release: 1
 Summary: Sip server system daemon
+
 License: GPLv3+
 URL:     https://gitlab.com/tychosoft/sipwitchqt
+Source0: https:///pub.cherokeesofidaho.org/tarballs/%{name}-%{version}.tar.gz
+Group:	 system/telephony
+
+BuildRequires: cmake >= 3.1.0
 BuildRequires: qt5-qtbase-devel, gcc-c++
 BuildRequires: libosip2-devel, libeXosip2-devel >= 4.0.0
 BuildRequires: gperftools-devel, systemd-devel
