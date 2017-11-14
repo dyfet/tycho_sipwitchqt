@@ -1,3 +1,6 @@
+Docker Configurations
+=====================
+
 This is used to describe our docker configurations.
 
 Used to generate the gitlab-ci image:
