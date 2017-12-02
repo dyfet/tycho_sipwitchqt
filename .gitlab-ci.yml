@@ -3,20 +3,6 @@ stages:
 - test
 - docs
 
-#We do not have need anymore for the build stage
-#build:
-#  image: in1t3r/gitlabqt:build
-#  stage: build
-#  script:
-#    - cmake
-#    - make
-#  when: on_success
-#  tags:
-#    - docker
-#  only:
-#    - master
-    
-    
 #tests every commit including merge requests    
 test:
   image: registry.gitlab.com/tychosoft/sipwitchqt
