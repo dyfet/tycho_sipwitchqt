@@ -46,7 +46,7 @@ expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), even
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
-        method = QString(evt->request->sip_method).toUpper();
+        method = UString(evt->request->sip_method).toUpper();
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseMessage(evt->request);
@@ -208,9 +208,9 @@ Event::~Event()
 {
 }
 
-const QString Event::text() const
+const UString Event::text() const
 {
-    QString result;
+    UString result;
 
     if(!d->message)
         return result;
@@ -343,7 +343,7 @@ const QString Event::toString() const
 }
 
 namespace Util {
-    QString removeQuotes(const QString& str)
+    UString removeQuotes(const UString& str)
     {
         if(str.startsWith("\"") && str.endsWith("\""))
             return str.mid(1, str.length() - 2);
@@ -351,5 +351,5 @@ namespace Util {
             return str.mid(1, str.length() - 2);
         return str;
     }
-};
+}
 

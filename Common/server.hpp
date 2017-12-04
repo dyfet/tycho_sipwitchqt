@@ -46,15 +46,12 @@ class Server final : public QObject
 
 public:
     typedef enum { START, UP, SUSPENDED, DOWN } State;
+    typedef QByteArray Symbol;  // convenience type for env symbol string
 
     Server(int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
     ~Server();
 
-    inline QByteArray& operator[](const QString& key) {
-        return Env[key];
-    }
-
-    inline const QByteArray& operator[](const QString& key) const {
+    inline const Symbol& operator[](const QString& key) const {
         return Env[key];
     }
 
@@ -93,11 +90,11 @@ public:
         return RunAsDetached;
     }
 
-    inline static const QByteArray& sym(const QString& key) {
+    inline static const Symbol& sym(const QString& key) {
         return Env[key];
     }
 
-    inline static const QHash<QString, QByteArray> env(void) {
+    inline static const QHash<QString, Symbol> env(void) {
         return Env;
     }
 
@@ -108,7 +105,7 @@ public:
     static void resume();
 
 private:
-    typedef QHash<QString, QByteArray> ServerEnv;
+    typedef QHash<QString, Symbol> ServerEnv;
 
     QCoreApplication app;
 

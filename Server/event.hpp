@@ -29,12 +29,15 @@
 #include <QAbstractSocket>
 #include <QSharedData>
 
+// convenience type cast...
+typedef QByteArray UString;
+
 class Context;
 
 namespace Util
 {
-    QString removeQuotes(const QString& str);
-};
+    UString removeQuotes(const UString& str);
+}
 
 class Event final
 {
@@ -89,15 +92,15 @@ public:
         return d->status;
     }
 
-    inline const QString agent() const {
+    inline const UString agent() const {
         return d->agent;
     }
 
-    inline const QString reason() const {
+    inline const UString reason() const {
         return d->reason;
     }
 
-    inline const QString method() const {
+    inline const UString method() const {
         return d->method;
     }
 
@@ -113,23 +116,23 @@ public:
         return d->source;
     }
 
-    inline const QString authorizingId() const {
+    inline const UString authorizingId() const {
         return d->userid;
     }
 
-    inline const QString authorizingDigest() const {
+    inline const UString authorizingDigest() const {
         return d->digest;
     }
 
-    inline const QString authorizingOnce() const {
+    inline const UString authorizingOnce() const {
         return d->nonce;
     }
 
-    inline const QString authorizingRealm() const {
+    inline const UString authorizingRealm() const {
         return d->realm;
     }
 
-    inline const QString authorizingAlgorithm() const {
+    inline const UString authorizingAlgorithm() const {
         return d->algorithm;
     }
 
@@ -177,11 +180,11 @@ public:
         return d->body;
     }
 
-    inline const QString content() const {
+    inline const UString content() const {
         return d->content;
     }
 
-    inline const QString subject() const {
+    inline const UString subject() const {
         return d->subject;
     }
 
@@ -208,7 +211,7 @@ public:
     const QString toString() const;
     const Contact contact() const;
     const QString uriContext(const QString& username = (char *)NULL) const;
-    const QString text() const;
+    const UString text() const;
     const QString uri(const Contact &addr) const;
 
 private:
@@ -230,7 +233,8 @@ private:
         osip_authorization_t *authorization;
         Event::Association association;
         QList<Contact> contacts, routes;
-        QString userid, nonce, digest, algorithm, realm, agent, reason, method, content, subject, text;
+        UString agent, method, subject, text, content, realm, reason;
+        UString userid, nonce, digest, algorithm;
         Contact source;  // if nat, has first nat
         Contact from, to, request, target;
         QByteArray body;

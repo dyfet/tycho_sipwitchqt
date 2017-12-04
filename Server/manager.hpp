@@ -35,11 +35,11 @@ public:
         return Instance;
     }
 
-    inline static const QByteArray agent() {
+    inline static const UString agent() {
         return UserAgent.toUtf8();
     }
 
-    inline static const QByteArray realm() {
+    inline static const UString realm() {
         return ServerRealm.toUtf8();
     }
 
@@ -47,7 +47,7 @@ public:
         return Digest;
     }
 
-    static const QByteArray digestName();
+    static const UString digestName();
     static const QByteArray computeDigest(const QString& id, const QString& secret);
     static void create(const QList<QHostAddress>& list, int port, unsigned mask);
     static void create(const QHostAddress& addr, int port, unsigned mask);

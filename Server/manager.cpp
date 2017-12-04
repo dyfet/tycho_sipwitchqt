@@ -47,7 +47,7 @@ Manager::Manager(unsigned order)
     qRegisterMetaType<Event>("Event");
 
     moveToThread(Server::createThread("stack", order));
-    QByteArray name = QCoreApplication::applicationName().toUtf8();
+    UString name = QCoreApplication::applicationName().toUtf8();
     UserAgent = name + "/" + qApp->applicationVersion();
 #ifndef Q_OS_WIN
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(name.constData()));
@@ -120,7 +120,7 @@ void Manager::applyConfig(const QVariantHash& config)
     applyNames();
 }
 
-const QByteArray Manager::digestName()
+const UString Manager::digestName()
 {
     return digests.value(Digest, "");
 }

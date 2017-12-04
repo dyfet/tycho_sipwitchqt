@@ -107,9 +107,7 @@ private:
     eXosip_t *context;
     time_t currentEvent, priorEvent;
     int netFamily, netPort, netTLS, netProto;
-    QByteArray netAddress;
-    QString uriAddress, uriHost;
-    QString publicName;
+    UString netAddress, uriAddress, uriHost, publicName;
     QStringList localHosts, otherNames;
     mutable QMutex nameLock;
     bool multiInterface;

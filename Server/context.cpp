@@ -101,7 +101,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     }
     else {
         multiInterface = true;
-        uriAddress = QHostInfo::localHostName();
+        uriAddress = QHostInfo::localHostName().toUtf8();
     }
 
     // reverse lookup so we can use interface name rather than addr...
@@ -292,7 +292,7 @@ void Context::setHostnames(const QStringList& names, const QString& host)
     if(host.length() > 0)
         otherNames << host;
     otherNames << names;
-    publicName = host;
+    publicName = host.toUtf8();
 }
 
 const QStringList Context::localnames() const
