@@ -306,6 +306,16 @@ const QStringList Context::localnames() const
     return names;
 }
 
+namespace Util {
+    UString removeQuotes(const UString& str)
+    {
+        if(str.startsWith("\"") && str.endsWith("\""))
+            return str.mid(1, str.length() - 2);
+        else if(str.startsWith("'") && str.endsWith("'"))
+            return str.mid(1, str.length() - 2);
+        return str;
+    }
+}
 
 
 

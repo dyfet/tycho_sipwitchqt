@@ -26,6 +26,15 @@
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
+// convenience type cast...
+typedef QByteArray UString;
+typedef QList<UString> UStringList;
+
+namespace Util
+{
+    UString removeQuotes(const UString& str);
+}
+
 class Contact final
 {
 public:
@@ -116,6 +125,10 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
  * host address so that the actual dns resolution happens in the eXosip2
  * library using the c-ares resolver.
  * \author David Sugar <tychosoft@gmail.com>
+ */
+
+/*!
+ * \namespace Util
  */
 
 #endif

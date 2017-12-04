@@ -29,15 +29,7 @@
 #include <QAbstractSocket>
 #include <QSharedData>
 
-// convenience type cast...
-typedef QByteArray UString;
-
 class Context;
-
-namespace Util
-{
-    UString removeQuotes(const UString& str);
-}
 
 class Event final
 {
@@ -280,10 +272,6 @@ Q_DECLARE_METATYPE(Event)
  * \fn Event::contact()
  * Returns a single valid contact from the event.  If either no contacts,
  * or multiple contacts are present, then returns empty Contact.
- */
-
-/*!
- * \namespace Util
  */
 
 #endif
