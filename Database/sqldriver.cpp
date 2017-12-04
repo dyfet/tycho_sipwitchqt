@@ -39,6 +39,7 @@ static QStringList sqliteTables = {
         "userid VARCHAR(32) PRIMARY KEY,"       // authorizing user id
         "number INTEGER,"                       // extension number tied to
         "secret VARCHAR(128),"                  // secret
+        "digest VARCHAR(8) DEFAULT 'MD5',"      // digest type
         "last DATETIME,"                        // last registration
         "FOREIGN KEY (number) REFERENCES Extensions(number));",
 

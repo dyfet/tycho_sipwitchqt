@@ -203,6 +203,9 @@ void Context::run()
     --instanceCount;
 }
 
+// challenge response currently assumes a single digest type.  The digest type
+// actually will depend on the authorizing identity, and have to happen after
+// a db query inside manager itself.
 bool Context::authenticated(const Event& ev) {
     if(allow & Allow::UNAUTHENTICATED)
         return true;

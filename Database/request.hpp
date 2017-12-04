@@ -31,12 +31,13 @@ class Request : public QObject
 	Q_DISABLE_COPY(Request)
 public:
     typedef enum {
-        Success = 0,
-        Timeout,
-        DbFailed,
-        NotFound,
-        Partial,
-        Invalid,
+        Success = 0,        // successful query
+        Timeout,            // query timed out
+        DbFailed,           // database connect failure
+        NotFound,           // query failed to select
+        Partial,            // partial result
+        Invalid,            // query invalid
+        Immediate,          // immediate result returned (same as success)
     }   ErrorResult;
 
     Request(QObject *parent, const QVariantHash& args, int timeout);
