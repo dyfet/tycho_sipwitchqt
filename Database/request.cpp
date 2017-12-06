@@ -51,8 +51,8 @@ private:
 RequestEvent::~RequestEvent() {}
 
 
-Request::Request(QObject *parent, const QVariantHash& args, int timeout) :
-QObject(parent), parms(args)
+Request::Request(QObject *parent, const Event& sip, int timeout) :
+QObject(parent), sipEvent(sip)
 {
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Request::timeout);
@@ -64,7 +64,7 @@ QObject(parent), parms(args)
 void Request::timeout()
 {
     timer->stop();
-    emit results(Timeout, parms, QList<QSqlRecord>());
+    emit results(Timeout, sipEvent, QList<QSqlRecord>());
 }
 
 bool Request::event(QEvent *evt)
@@ -78,10 +78,10 @@ bool Request::event(QEvent *evt)
         timer->stop();
         switch(id) {
         case REQUEST_SUCCESS:
-            emit results(reply->error(), parms, reply->results());
+            emit results(reply->error(), sipEvent, reply->results());
             break;
         case REQUEST_FAILED:
-            emit results(reply->error(), parms, QList<QSqlRecord>());
+            emit results(reply->error(), sipEvent, QList<QSqlRecord>());
             break;
         }
     }

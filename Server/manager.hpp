@@ -19,7 +19,7 @@
 #define __MANAGER_HPP__
 
 #include "../Common/compiler.hpp"
-#include "../Database/query.hpp"
+#include "../Database/database.hpp"
 #include "invite.hpp"
 #include <QMutex>
 #include <QCryptographicHash>

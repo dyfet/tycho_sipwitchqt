@@ -25,6 +25,8 @@
 #include <QSqlQuery>
 #include <QTimer>
 
+#include "../Server/event.hpp"
+
 class Request : public QObject
 {
 	Q_OBJECT
@@ -40,18 +42,10 @@ public:
         Immediate,          // immediate result returned (same as success)
     }   ErrorResult;
 
-    Request(QObject *parent, const QVariantHash& args, int timeout);
+    Request(QObject *parent, const Event& sip, int timeout);
 
-	inline const QVariant operator[](const QString& id) const {
-		return parms[id];
-	}
-
-	inline const QVariant value(const QString& id) const {
-		return parms[id];
-	}
-
-    void setValue(const QString& id, const QVariant& value) {
-        parms[id] = value;
+    const Event& event() const {
+        return sipEvent;
     }
 
     void notifySuccess(QSqlQuery &results, ErrorResult error = Success);
@@ -60,12 +54,12 @@ public:
 private:
 	QTimer *timer;
     ErrorResult status;
-    QVariantHash parms;
+    Event sipEvent;
 
     bool event(QEvent *evt) final;
 
 signals:
-    void results(ErrorResult, const QVariantHash&, const QList<QSqlRecord>&);
+    void results(ErrorResult, const Event&, const QList<QSqlRecord>&);
 
 private slots:
 	void timeout();
