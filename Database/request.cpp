@@ -54,7 +54,17 @@ RequestEvent::~RequestEvent() {}
 // emit DB_AUTHORIZE(new Request(this, event, &authResponse, 10000))
 // database receiver processes if(!request->cancelled())
 
-Request::Request(QObject *parent, const Event& sip, Reply method, int expires) :
+Request::Request(QObject *parent, const Event& sip, int expires) :
+QObject(parent), sipEvent(sip), signalled(false)
+{
+    // compute propogation delay...
+    expires -= sip.elapsed() - 20;
+    if(expires < 10)
+        expires = 10;
+    QTimer::singleShot(expires, Qt::CoarseTimer, this, &Request::timeout);
+}
+
+Request::Request(QObject *parent, const Event& sip, int expires, Reply method) :
 QObject(parent), sipEvent(sip), signalled(false)
 {
     connect(this, &Request::results, parent, method);

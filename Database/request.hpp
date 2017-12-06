@@ -44,7 +44,8 @@ public:
 
     typedef void (QObject::*Reply)(ErrorResult, const Event&, const QList<QSqlRecord>&);
 
-    Request(QObject *parent, const Event& sip, Reply method, int expires);
+    Request(QObject *parent, const Event& sip, int expires);
+    Request(QObject *parent, const Event& sip, int expires, Reply method);
 
     const Event& event() const {
         return sipEvent;
