@@ -52,9 +52,9 @@ public:
     void notifyFailed(ErrorResult error = DbFailed);
 	
 private:
-	QTimer *timer;
     ErrorResult status;
     Event sipEvent;
+    bool signalled;
 
     bool event(QEvent *evt) final;
 

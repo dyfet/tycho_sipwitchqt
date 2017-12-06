@@ -29,6 +29,9 @@ expires(-1), status(0), hops(0), natted(false), local(false), context(nullptr), 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
 expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), association(NONE)
 {
+    // start time of event creation
+    elapsed.start();
+
     // ignore constructor parser if empty event;
     if(!evt) {
         context = nullptr;

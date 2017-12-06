@@ -52,19 +52,21 @@ RequestEvent::~RequestEvent() {}
 
 
 Request::Request(QObject *parent, const Event& sip, int timeout) :
-QObject(parent), sipEvent(sip)
+QObject(parent), sipEvent(sip), signalled(false)
 {
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Request::timeout);
-    timer->setSingleShot(true);
-    timer->setInterval(timeout);
-    timer->start();
+    // compute propogation delay...
+    timeout -= sip.elapsed() - 20;
+    if(timeout < 60)
+        timeout = 60;
+    QTimer::singleShot(timeout, Qt::CoarseTimer, this, &Request::timeout);
 }
 
 void Request::timeout()
 {
-    timer->stop();
-    emit results(Timeout, sipEvent, QList<QSqlRecord>());
+    if(!signalled) {
+        emit results(Timeout, sipEvent, QList<QSqlRecord>());
+        signalled = true;
+    }
 }
 
 bool Request::event(QEvent *evt)
@@ -74,8 +76,7 @@ bool Request::event(QEvent *evt)
         return QObject::event(evt);
 
     auto reply = static_cast<RequestEvent *>(evt);
-    if(timer->isActive()) {
-        timer->stop();
+    if(!signalled) {
         switch(id) {
         case REQUEST_SUCCESS:
             emit results(reply->error(), sipEvent, reply->results());
@@ -84,6 +85,7 @@ bool Request::event(QEvent *evt)
             emit results(reply->error(), sipEvent, QList<QSqlRecord>());
             break;
         }
+        signalled = true;
     }
     deleteLater();
     return true;

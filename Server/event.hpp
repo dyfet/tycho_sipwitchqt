@@ -28,6 +28,7 @@
 #include <QHostInfo>
 #include <QAbstractSocket>
 #include <QSharedData>
+#include <QElapsedTimer>
 
 class Context;
 
@@ -199,6 +200,10 @@ public:
         return d->association;
     }
 
+    inline qint64 elapsed() const {
+        return d->elapsed.elapsed();
+    }
+
     const QString protocol() const;
     const QString toString() const;
     const Contact contact() const;
@@ -230,6 +235,7 @@ private:
         Contact source;  // if nat, has first nat
         Contact from, to, request, target;
         QByteArray body;
+        QElapsedTimer elapsed;
 
         void parseMessage(osip_message_t *msg);
     };
