@@ -43,12 +43,7 @@ public:
         return ServerRealm.toUtf8();
     }
 
-    inline static QCryptographicHash::Algorithm digestAlgorithm() {
-        return Digest;
-    }
-
-    static const UString digestName();
-    static const QByteArray computeDigest(const QString& id, const QString& secret);
+    static const QByteArray computeDigest(const QString& id, const QString& secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
     static void create(const QList<QHostAddress>& list, int port, unsigned mask);
     static void create(const QHostAddress& addr, int port, unsigned mask);
     static void init(unsigned order);
@@ -59,7 +54,6 @@ private:
     static QStringList ServerAliases, ServerNames;
     static QString ServerRealm;
     static QString UserAgent;
-    static QCryptographicHash::Algorithm Digest;
     static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;
@@ -73,7 +67,7 @@ signals:
     void changeRealm(const QString& realm);
 
 public slots:
-    virtual void registry(const Event& ev);
+    void sipRegister(const Event& ev);
 
     void applyConfig(const QVariantHash& config);
 

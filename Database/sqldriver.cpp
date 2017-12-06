@@ -22,25 +22,27 @@
 static QStringList sqliteTables = {
     "CREATE TABLE Switches ("
         "realm VARCHAR(128) NOT NULL,"          // realm we use
-        "digest VARCHAR(8) DEFAULT 'MD5',"      // digest type used
         "dialing CHAR(1) DEFAULT '3',"          // dialing plan used
         "uuid CHAR(36) NOT NULL,"               // switch uuid
-        "PRIMARY KEY (realm));",
+        "PRIMARY KEY (uuid));",
 
     "CREATE TABLE Extensions ("
         "number INTEGER NOT NULL,"              // ext number
         "type VARCHAR(8) DEFAULT 'NONE',"       // ext type/suspended state
         "alias VARCHAR(32) DEFAULT NULL,"       // public visible alias
+        "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
         "display VARCHAR(64),"                  // display name
         "PRIMARY KEY (number));",
     "CREATE UNIQUE INDEX Aliases ON Extensions(alias) WHERE alias IS NOT NULL;",
 
     "CREATE TABLE Authorize ("
-        "userid VARCHAR(32) PRIMARY KEY,"       // authorizing user id
+        "userid VARCHAR(32),"                   // authorizing user id
         "number INTEGER,"                       // extension number tied to
+        "digest VARCHAR(8) DEFAULT 'MD5',"      // digest format of secret
+        "realm VARCHAR(128) NOT NULL,"          // realm used for secret
         "secret VARCHAR(128),"                  // secret
-        "digest VARCHAR(8) DEFAULT 'MD5',"      // digest type
         "last DATETIME,"                        // last registration
+        "PRIMARY KEY (userid),"
         "FOREIGN KEY (number) REFERENCES Extensions(number));",
 
     "CREATE TABLE Forward ("

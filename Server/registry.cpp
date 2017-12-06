@@ -92,7 +92,13 @@ Registry *Registry::find(const QString& target)
 }
 
 // event handling for registration system as a whole...
-void Registry::events(const Event& ev)
+void Registry::process(const Event& ev)
+{
+    Q_UNUSED(ev);
+}
+
+// authorize registration processing
+void Registry::authorize(const Event& ev)
 {
     Q_UNUSED(ev);
 }

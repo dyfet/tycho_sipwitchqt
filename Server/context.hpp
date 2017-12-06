@@ -122,7 +122,7 @@ private:
     bool authenticated(const Event& ev);
 
 signals:
-    void registry(const Event& ev);
+    void SIP_REGISTER(const Event& ev);
     void finished();
 
 private slots:

@@ -36,7 +36,6 @@ QString Manager::UserAgent;
 QString Manager::ServerRealm;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
-QCryptographicHash::Algorithm Manager::Digest = QCryptographicHash::Md5;
 unsigned Manager::Contexts = 0;
 
 Manager::Manager(unsigned order)
@@ -94,11 +93,6 @@ void Manager::applyNames()
 void Manager::applyConfig(const QVariantHash& config)
 {
     ServerNames = config["localnames"].toStringList();
-    QString digest = config["digest"].toString().toLower();
-    if(digest == "sha2" || digest == "sha256" || digest == "sha-256")
-        Digest = QCryptographicHash::Sha256;
-    else if(digest == "sha512" || digest == "sha-512")
-        Digest = QCryptographicHash::Sha512;
     QString hostname = config["host"].toString();
     QString realm = config["realm"].toString();
     bool genpwd = false;
@@ -120,17 +114,12 @@ void Manager::applyConfig(const QVariantHash& config)
     applyNames();
 }
 
-const UString Manager::digestName()
-{
-    return digests.value(Digest, "");
-}
-
-const QByteArray Manager::computeDigest(const QString& id, const QString& secret)
+const QByteArray Manager::computeDigest(const QString& id, const QString& secret, QCryptographicHash::Algorithm digest)
 {
     if(secret.isEmpty() || id.isEmpty())
         return QByteArray();
 
-    return QCryptographicHash::hash(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8(), Digest);
+    return QCryptographicHash::hash(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8(), digest);
 }
 
 void Manager::create(const QHostAddress& addr, int port, unsigned mask)
@@ -153,9 +142,16 @@ void Manager::create(const QList<QHostAddress>& list, int port, unsigned  mask)
     }
 }
 
-void Manager::registry(const Event &ev)
+void Manager::sipRegister(const Event &ev)
 {
-    Registry::events(ev);
+    if(ev.authorization()) {
+        Registry::process(ev);
+    }
+    else {
+        Registry::authorize(ev);
+    }
+
+
 }
 
 

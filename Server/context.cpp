@@ -158,7 +158,7 @@ void Context::run()
     // connect events to state handlers when we run...
     auto stack = Manager::instance();
     if(allow & Allow::REGISTRY)
-        connect(this, &Context::registry, stack, &Manager::registry);
+        connect(this, &Context::SIP_REGISTER, stack, &Manager::sipRegister);
 
     debug() << "Running " << objectName();
 
@@ -203,38 +203,14 @@ void Context::run()
     --instanceCount;
 }
 
-// challenge response currently assumes a single digest type.  The digest type
-// actually will depend on the authorizing identity, and have to happen after
-// a db query inside manager itself.
-bool Context::authenticated(const Event& ev) {
-    if(allow & Allow::UNAUTHENTICATED)
-        return true;
-    if(ev.authorization())
-        return true;
-
-    // create challenge...
-    osip_message_t *reply = nullptr;
-    time_t now;     //TODO: A real nonce generator and cache to verify replies
-    QString nonce = QString::number(time(&now));
-    QString challenge = QString("Digest Realm=\"") + Manager::realm() + QString("\", nonce=\"") + nonce + QString("\", algorithm=\"") + Manager::digestName() + QString("\"");
-
-    ContextLocker lock(context);
-    eXosip_message_build_answer(context, ev.tid(), SIP_UNAUTHORIZED, &reply);
-    osip_message_set_header(reply, WWW_AUTHENTICATE, challenge.toUtf8().constData());
-    eXosip_message_send_answer(context, ev.tid(), SIP_UNAUTHORIZED, reply);
-    return false;
-}
-
 bool Context::process(const Event& ev)
 {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_REGISTER(ev.message())) {
-            if(!authenticated(ev))
-                return false;
             if(!(allow & Allow::REGISTRY))
                 return false;
-            emit registry(ev);
+            emit SIP_REGISTER(ev);
         }
         else
             return false;

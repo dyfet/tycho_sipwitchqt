@@ -55,6 +55,10 @@ public:
         return Env[key];
     }
 
+    inline Symbol value(const QString& key) const {
+        return Env[key];
+    }
+
     int start(QThread::Priority priority = QThread::InheritPriority);
 
     static QThread *createThread(const QString& name, unsigned order = 0, QThread::Priority = QThread::InheritPriority);

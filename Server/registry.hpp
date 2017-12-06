@@ -100,7 +100,8 @@ public:
 
     static QList<Registry *> list();
 
-    static void events(const Event& event);
+    static void process(const Event& event);
+    static void authorize(const Event& event);
 
 private:
     QSqlRecord extension;
