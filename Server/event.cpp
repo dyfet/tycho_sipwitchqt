@@ -16,6 +16,7 @@
  */
 
 #include "context.hpp"
+#include <QDebug>
 
 #ifndef SESSION_EXPIRES
 #define SESSION_EXPIRES "session-expires"
@@ -79,6 +80,7 @@ expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), even
 Event::Data::~Data()
 {
     if(event) {
+        qDebug().nospace() << "~Event(" << event->type << ",cid=" << event->cid << ",did=" << event->did << ",ctx=" << context->objectName() << ",source=" << source.toString() << ")";
         eXosip_event_free(event);
         event = nullptr;
     }

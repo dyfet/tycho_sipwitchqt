@@ -50,15 +50,21 @@ private:
 
 RequestEvent::~RequestEvent() {}
 
+// NOTE: Use case may be something like
+// emit DB_AUTHORIZE(new Request(this, event, &authResponse, 10000))
+// database receiver processes if(!request->cancelled())
 
-Request::Request(QObject *parent, const Event& sip, int timeout) :
+Request::Request(QObject *parent, const Event& sip, Reply method, int expires) :
 QObject(parent), sipEvent(sip), signalled(false)
 {
+    connect(this, &Request::results, parent, method);
+
     // compute propogation delay...
-    timeout -= sip.elapsed() - 20;
-    if(timeout < 60)
-        timeout = 60;
-    QTimer::singleShot(timeout, Qt::CoarseTimer, this, &Request::timeout);
+    expires -= sip.elapsed() - 20;
+    if(expires < 10)
+        timeout();
+    else
+        QTimer::singleShot(expires, Qt::CoarseTimer, this, &Request::timeout);
 }
 
 void Request::timeout()
@@ -69,6 +75,15 @@ void Request::timeout()
     }
 }
 
+bool Request::cancelled()
+{
+    if(signalled) {
+        deleteLater();
+        return true;
+    }
+    return false;
+}
+
 bool Request::event(QEvent *evt)
 {
     int id = static_cast<int>(evt->type());
@@ -77,6 +92,7 @@ bool Request::event(QEvent *evt)
 
     auto reply = static_cast<RequestEvent *>(evt);
     if(!signalled) {
+        signalled = true;
         switch(id) {
         case REQUEST_SUCCESS:
             emit results(reply->error(), sipEvent, reply->results());
@@ -85,7 +101,6 @@ bool Request::event(QEvent *evt)
             emit results(reply->error(), sipEvent, QList<QSqlRecord>());
             break;
         }
-        signalled = true;
     }
     deleteLater();
     return true;

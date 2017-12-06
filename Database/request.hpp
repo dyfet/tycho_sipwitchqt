@@ -42,11 +42,19 @@ public:
         Immediate,          // immediate result returned (same as success)
     }   ErrorResult;
 
-    Request(QObject *parent, const Event& sip, int timeout);
+    typedef void (QObject::*Reply)(ErrorResult, const Event&, const QList<QSqlRecord>&);
+
+    Request(QObject *parent, const Event& sip, Reply method, int expires);
 
     const Event& event() const {
         return sipEvent;
     }
+
+    inline bool isSignalled() {
+        return signalled;
+    }
+
+    bool cancelled(void);
 
     void notifySuccess(QSqlQuery &results, ErrorResult error = Success);
     void notifyFailed(ErrorResult error = DbFailed);
@@ -54,7 +62,7 @@ public:
 private:
     ErrorResult status;
     Event sipEvent;
-    bool signalled;
+    volatile bool signalled;
 
     bool event(QEvent *evt) final;
 

@@ -237,6 +237,8 @@ void Context::start(QThread::Priority priority)
         thread->start(priority);
     }
     QThread::msleep(100);
+    if(!instanceCount)
+        crit(99) << "** No contexts available";
     debug() << "Started contexts " << instanceCount;
 }
 
