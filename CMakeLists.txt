@@ -7,14 +7,10 @@ project(SipWitchQt VERSION 0.1.0 LANGUAGES CXX)
 string(TOLOWER "${PROJECT_NAME}" PROJECT_ARCHIVE)
 set(PROJECT_RELEASE "1")
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
+include(${CMAKE_CURRENT_SOURCE_DIR}/Custom/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 5.5.1 COMPONENTS
-    Core
-    Network
-    Sql
-)
+find_package(Qt5 5.5.1 COMPONENTS Core Network Sql REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 11)
