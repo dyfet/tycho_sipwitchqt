@@ -20,6 +20,8 @@
 
 #cmakedefine PROJECT_VERSION "${PROJECT_VERSION}"
 #cmakedefine PROJECT_PREFIX "${PROJECT_PREFIX}"
+#cmakedefine SYSTEMD_FOUND
+#cmakedefine QT_NO_DEBUG_OUTPUT
 
 #define SERVICE_NAME "${PROJECT_ARCHIVE}"
 #if defined(PROJECT_PREFIX)
@@ -33,9 +35,6 @@
 #define SERVICE_LOGPATH "${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/log"
 #define SERVICE_LIBEXEC "${CMAKE_INSTALL_FULL_LIBEXECDIR}/sipwitchqt"
 #endif
-
-#cmakedefine SYSTEMD_FOUND
-#cmakedefine QT_NO_DEBUG_OUTPUT
 
 /*!
  * Default configuration created from project file.
