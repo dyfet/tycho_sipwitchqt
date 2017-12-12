@@ -14,11 +14,7 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 5.5.1 COMPONENTS
-    Core
-    Network
-    Sql
-)
+find_package(Qt5 5.5.1 COMPONENTS Core Network Sql REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 11)
@@ -27,10 +23,10 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(WIN32)
-  set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-  set(system_libs ssleay32 libeay32 advapi32 user32 crypt32 gdi32 ws2_32)
+    set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(system_libs ssleay32 libeay32 advapi32 user32 crypt32 gdi32 ws2_32)
 elseif(APPLE)
     if(NOT EXISTS "/usr/local/opt/libexosip")
         message(FATAL_ERROR "*** requires: brew install libexosip")
