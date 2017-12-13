@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CONSOLE_HPP__
-#define __CONSOLE_HPP__
+#ifndef __OUTPUT_HPP__
+#define __OUTPUT_HPP__
 
 #include <QTextStream>
 #include <sstream>
