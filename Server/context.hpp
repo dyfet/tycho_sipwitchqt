@@ -98,6 +98,8 @@ public:
         return instanceCount > 0;
     }
 
+    static bool replyOptions(const Event& event, int code);
+
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
 
@@ -122,7 +124,10 @@ private:
     bool authenticated(const Event& ev);
 
 signals:
-    void SIP_REGISTER(const Event& ev);
+    void REQUEST_REGISTER(const Event& ev);
+    void REQUEST_OPTIONS(const Event& ev);
+    void SEND_MESSAGE(const Event& ev);
+    void CALL_INVITE(const Event& ev);
     void finished();
 
 private slots:

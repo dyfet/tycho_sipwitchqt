@@ -158,7 +158,7 @@ void Context::run()
     // connect events to state handlers when we run...
     auto stack = Manager::instance();
     if(allow & Allow::REGISTRY)
-        connect(this, &Context::SIP_REGISTER, stack, &Manager::sipRegister);
+        connect(this, &Context::REQUEST_REGISTER, stack, &Manager::sipRegister);
 
     debug() << "Running " << objectName();
 
@@ -207,10 +207,16 @@ bool Context::process(const Event& ev)
 {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
+        if(MSG_IS_OPTIONS(ev.message())) {
+            if(ev.isLocal() && !ev.target().hasUser()) {
+                return replyOptions(ev, SIP_OK);
+            }
+            emit REQUEST_OPTIONS(ev);
+        }
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return false;
-            emit SIP_REGISTER(ev);
+            emit REQUEST_REGISTER(ev);
         }
         else
             return false;
@@ -219,6 +225,23 @@ bool Context::process(const Event& ev)
         return false;
     }
 
+    return true;
+}
+
+bool Context::replyOptions(const Event& event, int code)
+{
+    osip_message_t *msg = nullptr;
+    auto context = event.context()->context;
+    auto tid = event.tid();
+
+    ContextLocker lock(context);
+    if(code == SIP_OK) {
+        eXosip_options_build_answer(context, tid, code, &msg);
+        if(!msg)
+            return false;
+        //TODO: fill in more headers...
+    }
+    eXosip_options_send_answer(context, tid, code, msg);
     return true;
 }
 
