@@ -18,7 +18,7 @@
 #include "../Common/inline.hpp"
 #include "contact.hpp"
 
-Contact::Contact(const QString& address, quint16 port, const QString& user, int duration) noexcept :
+Contact::Contact(const UString& address, quint16 port, const UString& user, int duration) noexcept :
 userName(user), expiration(0)
 {
     hostName = address;
@@ -89,7 +89,7 @@ Contact& Contact::operator=(const Contact& from) {
     return *this;
 }
 
-const QString Contact::toString() const {
+const UString Contact::toString() const {
     if(!hostPort)
         return "invalid";
     QString port = ":" + QString::number(hostPort);

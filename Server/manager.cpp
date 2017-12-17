@@ -44,6 +44,7 @@ Manager::Manager(unsigned order)
     Instance = this;
 
     qRegisterMetaType<Event>("Event");
+    qRegisterMetaType<UString>("UString");
 
     moveToThread(Server::createThread("stack", order));
     UString name = QCoreApplication::applicationName().toUtf8();

@@ -149,11 +149,11 @@ public:
         return d->target;
     }
 
-    inline const QString uriSource() const {
+    inline const UString uriSource() const {
         return uri(d->source);
     }
 
-    inline const QString uriTarget() const {
+    inline const UString uriTarget() const {
         return uri(d->target);
     }
 
@@ -204,12 +204,12 @@ public:
         return d->elapsed.elapsed();
     }
 
-    const QString protocol() const;
-    const QString toString() const;
+    const UString protocol() const;
+    const UString toString() const;
     const Contact contact() const;
-    const QString uriContext(const QString& username = (char *)NULL) const;
+    const UString uriContext(const UString& username = (char *)NULL) const;
     const UString text() const;
-    const QString uri(const Contact &addr) const;
+    const UString uri(const Contact &addr) const;
 
 private:
     class Data final : public QSharedData

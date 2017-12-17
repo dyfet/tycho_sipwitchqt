@@ -66,15 +66,15 @@ expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), even
 
     // parse out authorization for later use
     if(authorization && authorization->username)
-        userid = Util::removeQuotes(authorization->username);
+        userid = UString(authorization->username).unquote();
     if(authorization && authorization->response)
-        digest = Util::removeQuotes(authorization->response);
+        digest = UString(authorization->response).unquote();
     if(authorization && authorization->nonce)
-        nonce = Util::removeQuotes(authorization->nonce);
+        nonce = UString(authorization->nonce).unquote();
     if(authorization && authorization->realm)
-        realm = Util::removeQuotes(authorization->realm);
+        realm = UString(authorization->realm).unquote();
     if(authorization && authorization->algorithm)
-        algorithm = Util::removeQuotes(authorization->algorithm);
+        algorithm = UString(authorization->algorithm).unquote();
 }
 
 Event::Data::~Data()
@@ -185,7 +185,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
     if(msg->content_type && msg->content_type->type) {
         content = msg->content_type->type;
         if(msg->content_type->subtype)
-            content += QString("/") + msg->content_type->subtype;
+            content += UString("/") + msg->content_type->subtype;
     }
 
     osip_body_t *data = nullptr;
@@ -231,7 +231,7 @@ const UString Event::text() const
     return result;
 }
 
-const QString Event::uriContext(const QString& username) const
+const UString Event::uriContext(const UString& username) const
 {
     if(!d->context)
         return "";
@@ -247,13 +247,13 @@ const Contact Event::contact() const
     return d->contacts[0];
 }
 
-const QString Event::protocol() const
+const UString Event::protocol() const
 {
     Q_ASSERT(d->context != nullptr);
     return d->context->type();
 }
 
-inline const QString Event::uri(const Contact& addr) const {
+inline const UString Event::uri(const Contact& addr) const {
     Q_ASSERT(d->context != nullptr);
     return d->context->uriTo(addr);
 }
@@ -271,12 +271,12 @@ QDebug operator<<(QDebug dbg, const Event& ev)
     return dbg.maybeSpace();
 }
 
-const QString Event::toString() const
+const UString Event::toString() const
 {
     if(!d->event)
         return "none";
 
-    QString result = QString::number(d->event->type);
+    UString result = UString::number(d->event->type);
     switch(d->event->type) {
     case EXOSIP_REGISTRATION_SUCCESS:
         return result + "/register";

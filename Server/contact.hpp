@@ -18,7 +18,7 @@
 #ifndef __CONTACT_HPP__
 #define __CONTACT_HPP__
 
-#include "../Common/compiler.hpp"
+#include "../Common/types.hpp"
 #include <QString>
 #include <QByteArray>
 #include <QHostAddress>
@@ -26,19 +26,10 @@
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
-// convenience type cast...
-typedef QByteArray UString;
-typedef QList<UString> UStringList;
-
-namespace Util
-{
-    UString removeQuotes(const UString& str);
-}
-
 class Contact final
 {
 public:
-    Contact(const QString& address, quint16 port, const QString& user = (char *)NULL, int duration = -1) noexcept;
+    Contact(const UString& address, quint16 port, const UString& user = (char *)NULL, int duration = -1) noexcept;
     Contact(osip_contact_t *contact) noexcept;
     Contact(osip_uri_t *uri) noexcept;
     Contact() noexcept;
@@ -80,11 +71,11 @@ public:
         return userName.length() > 0;
     }
 
-    const QString user() const {
+    const UString user() const {
         return userName;
     }
 
-    const QString host() const {
+    const UString host() const {
         return hostName;
     }
 
@@ -93,15 +84,15 @@ public:
     }
 
     bool hasExpired() const;
-    const QString toString() const;
+    const UString toString() const;
 
     void clear();
     void refresh(int seconds);
 
 private:
-    QString hostName;
+    UString hostName;
     quint16 hostPort;
-    QString userName;
+    UString userName;
     time_t expiration;
 
 private:
