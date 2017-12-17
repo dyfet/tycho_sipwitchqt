@@ -98,8 +98,7 @@ public:
         return instanceCount > 0;
     }
 
-    static bool replyOptions(const Event& event, int code);
-
+    static bool reply(const Event& event, int code);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
 

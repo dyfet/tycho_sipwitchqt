@@ -209,7 +209,7 @@ bool Context::process(const Event& ev)
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_OPTIONS(ev.message())) {
             if(ev.isLocal() && !ev.target().hasUser()) {
-                return replyOptions(ev, SIP_OK);
+                return reply(ev, SIP_OK);
             }
             emit REQUEST_OPTIONS(ev);
         }
@@ -228,21 +228,33 @@ bool Context::process(const Event& ev)
     return true;
 }
 
-bool Context::replyOptions(const Event& event, int code)
+bool Context::reply(const Event& event, int code)
 {
     osip_message_t *msg = nullptr;
     auto context = event.context()->context;
     auto tid = event.tid();
+    auto did = event.did();
+    auto cid = event.cid();
 
     ContextLocker lock(context);
-    if(code == SIP_OK) {
-        eXosip_options_build_answer(context, tid, code, &msg);
-        if(!msg)
-            return false;
-        //TODO: fill in more headers...
+    switch(event.type()) {
+    case EXOSIP_MESSAGE_NEW:
+        if(MSG_IS_OPTIONS(event.message())) {
+            if(code == SIP_OK) {
+                eXosip_options_build_answer(context, tid, code, &msg);
+                if(!msg)
+                    return false;
+                //TODO: fill in more headers...
+            }
+            eXosip_options_send_answer(context, tid, code, msg);
+            return true;
+        }
+        break;
+    default:
+        break;
     }
-    eXosip_options_send_answer(context, tid, code, msg);
-    return true;
+    warning() << "reply for unknown event";
+    return false;
 }
 
 void Context::start(QThread::Priority priority)
