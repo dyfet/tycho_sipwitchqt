@@ -95,7 +95,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     if(addr != QHostAddress::Any && addr != QHostAddress::AnyIPv4 && addr != QHostAddress::AnyIPv6) {
         multiInterface = false;
         if(ipv6)
-            uriAddress = "[" + netAddress + "]";
+            uriAddress = netAddress.quote("[]");
         else
             uriAddress = netAddress;
     }
@@ -115,7 +115,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 
     uriHost = uriAddress;
     if(netPort != schema.inPort)
-        uriAddress += ":" + QString::number(netPort);
+        uriAddress += ":" + UString::number(netPort);
 
     //qDebug() << "****** URI TO " << uriTo(QHostAddress("4.2.2.1"));
     //qDebug() << "**** LOCAL URI" << uri();
@@ -127,16 +127,16 @@ Context::~Context()
         eXosip_quit(context);
 }
 
-const QString Context::uriTo(const Contact &address) const
+const UString Context::uriTo(const Contact &address) const
 {
-    QString host = address.host();
-    QString port = "";
+    UString host = address.host();
+    UString port = "";
 
-    if(host[0] != QChar('[') && host.contains(":"))
-        host = "[" + host + "]";
+    if(host[0] != '[' && host.contains(":"))
+        host = host.quote("[]");
 
     if(address.port() != schema.inPort)
-        port = ":" + QString::number(address.port());
+        port = ":" + UString::number(address.port());
 
     if(address.user().length() > 0)
         return schema.uri + address.user() + "@" + host + port;
@@ -228,6 +228,33 @@ bool Context::process(const Event& ev)
     return true;
 }
 
+bool Context::authenticate(const Event &event, const QSqlRecord &auth)
+{
+    osip_message_t *msg = nullptr;
+    auto ctx = event.context();
+    auto context = ctx->context;
+    auto tid = event.tid();
+
+    if(ctx->allow & Allow::UNAUTHENTICATED)
+        return true;
+
+    if(event.authorization())
+        return true;
+
+    //TODO: a real nounce generator and cache to verify
+    time_t now;
+    UString nounce = UString::number((int)time(&now));
+    UString realm = auth.value("realm").toString().toUtf8();
+    UString digest = auth.value("digest").toString().toUtf8();
+    UString challenge = "Digest Realm=" + realm.quote() + ", nounce=" + nounce.quote() + ", algorithm=" + digest.quote();
+
+    ContextLocker lock(context);
+    eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);
+    osip_message_set_header(msg, WWW_AUTHENTICATE, challenge);
+    eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
+    return false;
+}
+
 bool Context::reply(const Event& event, int code)
 {
     osip_message_t *msg = nullptr;
@@ -289,7 +316,7 @@ void Context::shutdown()
     }
 }
 
-const QString Context::hostname() const {
+const UString Context::hostname() const {
     QMutexLocker lock(&nameLock);
     if(publicName.length() > 0)
         return publicName;
@@ -319,16 +346,6 @@ const QStringList Context::localnames() const
     return names;
 }
 
-namespace Util {
-    UString removeQuotes(const UString& str)
-    {
-        if(str.startsWith("\"") && str.endsWith("\""))
-            return str.mid(1, str.length() - 2);
-        else if(str.startsWith("'") && str.endsWith("'"))
-            return str.mid(1, str.length() - 2);
-        return str;
-    }
-}
 
 
 

@@ -92,9 +92,9 @@ Contact& Contact::operator=(const Contact& from) {
 const UString Contact::toString() const {
     if(!hostPort)
         return "invalid";
-    QString port = ":" + QString::number(hostPort);
+    UString port = ":" + UString::number(hostPort);
     if(hostName.contains(":") && hostName[0] != '[')
-        return "[" + hostName + "]" + port;
+        return hostName.quote("[]") + port;
     return hostName + port;
 }
 

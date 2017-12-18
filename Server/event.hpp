@@ -35,12 +35,6 @@ class Context;
 class Event final
 {
 public:
-    enum Association {
-        LOCAL,
-        REMOTE,
-        NONE,
-    };
-
     Event();
     Event(eXosip_event_t *evt, Context *ctx);
     Event(const Event& copy);
@@ -165,6 +159,10 @@ public:
         return d->local;
     }
 
+    inline bool isAssociated() const {
+        return d->associated;
+    }
+
     inline const osip_message_t* message() const {
         return d->message;
     }
@@ -196,10 +194,6 @@ public:
         return d->event->tid;
     }
 
-    inline Association association() const {
-        return d->association;
-    }
-
     inline qint64 elapsed() const {
         return d->elapsed.elapsed();
     }
@@ -223,12 +217,11 @@ private:
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops
-        bool natted, local, record;
+        bool natted, local, associated, record;
         Context *context;
         eXosip_event_t *event;
         osip_message_t *message;
         osip_authorization_t *authorization;
-        Event::Association association;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason;
         UString userid, nonce, digest, algorithm;

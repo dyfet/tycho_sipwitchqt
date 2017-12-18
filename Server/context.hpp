@@ -19,6 +19,7 @@
 #define __CONTEXT_HPP__
 
 #include "event.hpp"
+#include <QSqlRecord>
 
 class Context final : public QObject
 {
@@ -40,8 +41,8 @@ public:
     };
 
     typedef struct {
-        const char *name;
-        const char *uri;
+        UString name;
+        UString uri;
         Protocol proto;
         quint16 inPort;
         int inProto;
@@ -57,13 +58,13 @@ public:
         return Contact(uriHost, netPort, username);
     }
 
-    inline const QString uriFrom(const QString& id = (char *)NULL) const {
+    inline const UString uriFrom(const UString& id = (char *)NULL) const {
         if(id.length() == 0)
             return schema.uri + uriAddress;
         return schema.uri + id + "@" + uriAddress;
     }
 
-    inline const QString type() const {
+    inline const UString type() const {
         return schema.name;
     }
 
@@ -81,10 +82,10 @@ public:
         return localnames().contains(host);
     }
 
-    const QString hostname() const;
+    const UString hostname() const;
     void setHostnames(const QStringList& names, const QString& host);
     const QStringList localnames() const;
-    const QString uriTo(const Contact& address) const;
+    const UString uriTo(const Contact& address) const;
 
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
@@ -98,6 +99,7 @@ public:
         return instanceCount > 0;
     }
 
+    static bool authenticate(const Event& event, const QSqlRecord& auth);
     static bool reply(const Event& event, int code);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
@@ -120,7 +122,6 @@ private:
     ~Context();
 
     bool process(const Event& ev);
-    bool authenticated(const Event& ev);
 
 signals:
     void REQUEST_REGISTER(const Event& ev);

@@ -43,7 +43,7 @@ public:
         return ServerRealm.toUtf8();
     }
 
-    static const QByteArray computeDigest(const QString& id, const QString& secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
+    static const QByteArray computeDigest(const UString &id, const UString &secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
     static void create(const QList<QHostAddress>& list, int port, unsigned mask);
     static void create(const QHostAddress& addr, int port, unsigned mask);
     static void init(unsigned order);

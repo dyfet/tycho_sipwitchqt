@@ -18,7 +18,6 @@
 #include "compiler.hpp"
 #include "types.hpp"
 
-
 UString UString::unquote() const
 {
     if(startsWith("\"") && endsWith("\""))
@@ -26,4 +25,16 @@ UString UString::unquote() const
     else if(startsWith("'") && endsWith("'"))
         return mid(1, length() - 2);
     return *this;
+}
+
+UString UString::quote(const char *qc) const
+{
+    char q1 = qc[0], q2 = qc[0];
+    if(qc[1])
+        q2 = qc[1];
+    UString quoted;
+    quoted.append(q1);
+    quoted.append(constData());
+    quoted.append(q2);
+    return quoted;
 }

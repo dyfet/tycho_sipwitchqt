@@ -33,6 +33,7 @@ public:
     UString(const std::string& ref) : QByteArray(ref.c_str()) {}
     UString(const UString& ref) : QByteArray(ref) {}
     UString(UString&& from) : QByteArray(std::move(from)) {}
+    explicit UString(char ch) : QByteArray() { append(ch); }
 
     operator std::string() const {
         return std::string(constData());
@@ -49,6 +50,7 @@ public:
     }
 
     UString unquote() const;
+    UString quote(const char *qc = "\"") const;
 };
 
 inline UString operator+(const UString& str, char *add) {
@@ -60,6 +62,42 @@ inline UString operator+(const UString& str, char *add) {
 inline UString operator+(const UString& str, const char *add) {
     UString result(str);
     result.append(add);
+    return result;
+}
+
+inline UString operator+(const UString& str, const std::string& add) {
+    UString result(str);
+    result.append(add.c_str());
+    return result;
+}
+
+inline UString operator+(const std::string& str, const UString& add) {
+    UString result(str.c_str());
+    result.append(add);
+    return result;
+}
+
+inline UString operator+(const UString& str, const UString& add) {
+    UString result(str);
+    result.append(add);
+    return result;
+}
+
+inline UString operator+(const char *str, const UString& add) {
+    UString result(str);
+    result.append(add);
+    return result;
+}
+
+inline QString operator+(const QString& str, const UString& add) {
+    QString result(str);
+    result.append(add);
+    return result;
+}
+
+inline QString operator+(const UString& str, const QString& add) {
+    QString result(str.constData());
+    result.append(add.toUtf8());
     return result;
 }
 

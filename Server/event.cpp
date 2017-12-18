@@ -23,12 +23,12 @@
 #endif
 
 Event::Data::Data() :
-expires(-1), status(0), hops(0), natted(false), local(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), status(0), hops(0), natted(false), local(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), association(NONE)
+expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
 {
     // start time of event creation
     elapsed.start();

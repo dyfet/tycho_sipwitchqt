@@ -115,12 +115,12 @@ void Manager::applyConfig(const QVariantHash& config)
     applyNames();
 }
 
-const QByteArray Manager::computeDigest(const QString& id, const QString& secret, QCryptographicHash::Algorithm digest)
+const QByteArray Manager::computeDigest(const UString& id, const UString& secret, QCryptographicHash::Algorithm digest)
 {
     if(secret.isEmpty() || id.isEmpty())
         return QByteArray();
 
-    return QCryptographicHash::hash(id.toUtf8() + ":" + realm() + ":" + secret.toUtf8(), digest);
+    return QCryptographicHash::hash(id + ":" + realm() + ":" + secret, digest);
 }
 
 void Manager::create(const QHostAddress& addr, int port, unsigned mask)
