@@ -87,7 +87,7 @@ void Manager::applyNames()
     QStringList names =  ServerAliases + ServerNames;
     qDebug() << "Apply names" << names;
     foreach(auto context, Context::contexts()) {
-        context->setHostnames(names, ServerHostname);
+        context->applyHostnames(names, ServerHostname);
     }
 }
 

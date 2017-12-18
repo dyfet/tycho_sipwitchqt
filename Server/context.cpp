@@ -325,7 +325,7 @@ const UString Context::hostname() const {
     return QHostInfo::localHostName();
 }
 
-void Context::setHostnames(const QStringList& names, const QString& host)
+void Context::applyHostnames(const QStringList& names, const QString& host)
 {
     QMutexLocker lock(&nameLock);
     otherNames.clear();

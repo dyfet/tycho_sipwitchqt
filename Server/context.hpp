@@ -83,8 +83,7 @@ public:
     }
 
     const UString hostname() const;
-    void setHostnames(const QStringList& names, const QString& host);
-    const QStringList localnames() const;
+    void applyHostnames(const QStringList& names, const QString& host);
     const UString uriTo(const Contact& address) const;
 
     inline static const QList<Context::Schema> schemas() {
@@ -114,6 +113,8 @@ private:
     QStringList localHosts, otherNames;
     mutable QMutex nameLock;
     bool multiInterface;
+
+    const QStringList localnames() const;
 
     static volatile unsigned instanceCount;
     static QList<Context::Schema> Schemas;
