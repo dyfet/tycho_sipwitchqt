@@ -17,7 +17,7 @@
 
 #include "manager.hpp"
 
-static QHash <const QString, Registry *> extensions, aliases;
+static QHash <const UString, Registry *> extensions, aliases;
 static QHash<const Context *, QHash<Contact, Endpoint *>> Endpoints;
 
 Registry::Registry(const QSqlRecord& db) :
@@ -75,7 +75,7 @@ int Registry::expires() const
     return remaining;
 }
 
-Registry *Registry::find(const QString& target)
+Registry *Registry::find(const UString& target)
 {
     Registry *registry = nullptr;
 

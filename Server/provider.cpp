@@ -20,7 +20,7 @@
 #include <QVariant>
 #include <QDebug>
 
-static QHash<const QString, Provider *> providers;
+static QHash<const UString, Provider *> providers;
 static QHash<int, Provider *> registrations;
 
 Provider::Provider(const QSqlRecord& db, Context *ctx, int rid) :
@@ -45,7 +45,7 @@ Provider *Provider::find(int rid)
     return registrations.value(rid);
 }
 
-Provider *Provider::find(const QString& target)
+Provider *Provider::find(const UString& target)
 {
     return providers.value(target);
 }

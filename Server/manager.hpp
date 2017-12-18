@@ -36,11 +36,11 @@ public:
     }
 
     inline static const UString agent() {
-        return UserAgent.toUtf8();
+        return UserAgent;
     }
 
     inline static const UString realm() {
-        return ServerRealm.toUtf8();
+        return ServerRealm;
     }
 
     static const QByteArray computeDigest(const UString &id, const UString &secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
@@ -49,11 +49,11 @@ public:
     static void init(unsigned order);
 
 private:
-    static QString ServerHostname;
-    static QString ServerMode;
     static QStringList ServerAliases, ServerNames;
-    static QString ServerRealm;
-    static QString UserAgent;
+    static UString ServerHostname;
+    static UString ServerMode;
+    static UString ServerRealm;
+    static UString UserAgent;
     static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;

@@ -74,14 +74,14 @@ class Invite
     Q_DISABLE_COPY(Invite)
 
 public:
-    Invite(const QString id);
+    Invite(const UString id);
     ~Invite();
 
     inline Segment *origin() const {
         return from;
     }
 
-    inline const QString display() const {
+    inline const UString display() const {
         return text;
     }
 
@@ -90,8 +90,8 @@ public:
 private:
     Segment *from;
     QList<Segment*> to;
-    QString tag;
-    QString text;
+    UString tag;
+    UString text;
 };
 
 QDebug operator<<(QDebug dbg, const Segment& seg);

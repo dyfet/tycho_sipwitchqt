@@ -29,11 +29,11 @@ static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
     {QCryptographicHash::Sha512,    "SHA-512"},
 };
 
-QString Manager::ServerMode;
-QString Manager::ServerHostname;
 Manager *Manager::Instance = nullptr;
-QString Manager::UserAgent;
-QString Manager::ServerRealm;
+UString Manager::ServerMode;
+UString Manager::ServerHostname;
+UString Manager::UserAgent;
+UString Manager::ServerRealm;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
 unsigned Manager::Contexts = 0;

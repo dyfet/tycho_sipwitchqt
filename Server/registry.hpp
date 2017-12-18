@@ -41,7 +41,7 @@ public:
         return address.hasExpired();
     }
 
-    inline const QString host() const {
+    inline const UString host() const {
         return address.host();
     }
 
@@ -88,7 +88,7 @@ public:
         return extension;
     }
 
-    const QString display() const {
+    const UString display() const {
         return text;
     }
 
@@ -96,7 +96,7 @@ public:
 
     int expires() const;
 
-    static Registry *find(const QString& target);
+    static Registry *find(const UString& target);
 
     static QList<Registry *> list();
 
@@ -105,7 +105,7 @@ public:
 
 private:
     QSqlRecord extension;
-    QString id, alias, text;
+    UString id, alias, text;
 
     QList<Endpoint*> endpoints;         // endpoint nodes
 };

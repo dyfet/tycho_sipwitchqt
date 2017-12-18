@@ -54,7 +54,7 @@ public:
 
     Context(const QHostAddress& bind, int port, const Schema& choice, unsigned mask, unsigned index = 1);
 
-    const Contact contact(const QString& username = (char *)NULL) const {
+    const Contact contact(const UString& username = (char *)NULL) const {
         return Contact(uriHost, netPort, username);
     }
 
@@ -76,7 +76,7 @@ public:
         return schema.inPort;
     }
 
-    inline bool isLocal(const QString& host) const {
+    inline bool isLocal(const UString& host) const {
         if(localHosts.contains(host))
             return true;
         return localnames().contains(host);

@@ -38,14 +38,14 @@ public:
         return context;
     }
 
-    inline const QString display() const {
+    inline const UString display() const {
         return text;
     }
 
     static void reload(const QList<QSqlRecord>& records);
     static void update(const QSqlRecord& record);
 
-    static Provider *find(const QString& target);
+    static Provider *find(const UString &target);
 
     static Provider *find(int rid);
 
@@ -53,7 +53,7 @@ public:
 
 private:
     QSqlRecord provider;
-    QString uri, text;
+    UString uri, text;
     Context *context;                   // to be set based on uri...
     int id;                             // exosip registration id
 
