@@ -49,8 +49,9 @@ public:
         return *this;
     }
 
-    UString unquote() const;
+    UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
+    bool isQuoted(const char *qc = "\"") const;
 };
 
 inline UString operator+(const UString& str, char *add) {

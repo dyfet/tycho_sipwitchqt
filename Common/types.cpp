@@ -18,13 +18,34 @@
 #include "compiler.hpp"
 #include "types.hpp"
 
-UString UString::unquote() const
+bool UString::isQuoted(const char *qc) const
 {
-    if(startsWith("\"") && endsWith("\""))
+    char q1[2], q2[2];
+    q1[1] = q2[1] = 0;
+    q1[0] = q2[0] = *qc;
+
+    if(qc[1])
+        q2[0] = qc[1];
+
+    if(startsWith(q1) && endsWith(q2))
+        return true;
+
+    return false;
+}
+
+UString UString::unquote(const char *qc) const
+{
+    char q1[2], q2[2];
+    q1[1] = q2[1] = 0;
+    q1[0] = q2[0] = *qc;
+
+    if(qc[1])
+        q2[0] = qc[1];
+
+    if(startsWith(q1) && endsWith(q2))
         return mid(1, length() - 2);
-    else if(startsWith("'") && endsWith("'"))
-        return mid(1, length() - 2);
-    return *this;
+
+    return trimmed();
 }
 
 UString UString::quote(const char *qc) const
