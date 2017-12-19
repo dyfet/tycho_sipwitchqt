@@ -22,6 +22,7 @@
 static QStringList sqliteTables = {
     "CREATE TABLE Switches ("
         "realm VARCHAR(128) NOT NULL,"          // realm we use
+        "series INTEGER DEFAULT 0,"             // db series # supported
         "dialing CHAR(1) DEFAULT '3',"          // dialing plan used
         "uuid CHAR(36) NOT NULL,"               // switch uuid
         "PRIMARY KEY (uuid));",
@@ -38,9 +39,9 @@ static QStringList sqliteTables = {
     "CREATE TABLE Authorize ("
         "userid VARCHAR(32),"                   // authorizing user id
         "number INTEGER,"                       // extension number tied to
-        "digest VARCHAR(8) DEFAULT 'MD5',"      // digest format of secret
+        "digest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
         "realm VARCHAR(128) NOT NULL,"          // realm used for secret
-        "secret VARCHAR(128),"                  // secret
+        "secret VARCHAR(128) DEFAULT '',"       // secret to use
         "last DATETIME,"                        // last registration
         "PRIMARY KEY (userid),"
         "FOREIGN KEY (number) REFERENCES Extensions(number));",
