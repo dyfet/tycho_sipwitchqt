@@ -1,0 +1,65 @@
+.\" swlite-authorize - manage sipwitchqt user authorizations in sqlite backend
+.\" Copyright (c) 2017 Tycho Softworks
+.\"
+.\" This manual page is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc.,59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"
+.\" This manual page is written especially for Debian GNU/Linux.
+.\"
+.TH swlite-authorize "1" "December 2017" "SipWitchQt" "Tycho Softworks"
+.SH NAME
+swlite-authorize \- manage sipwitchqt user authorizations in sqlite backend
+.SH SYNOPSIS
+.B swlite-authorize
+.RI [options ]
+.RI [ extension ]
+.I user
+.br
+.B swlite-authorize
+.br
+.SH DESCRIPTION
+The purpose of swlite-authorize is to manage authorization records for a backend 
+sqlite sipwitchqt database.  This includes both creating and removing (or suspending)
+authorized users, and also setting the SIP digest password.
+
+If used with no options the current authorization realm is shown.  If a userid is given
+then the password to use will be prompted on the console.  If an extension # is given
+in front of the user id, then a new user authorization record is created.  Otherwise
+options can be used to set digest mode, and whether to suspend or drop a user.
+.SH OPTIONS
+.TP
+.B \-\-sha256
+Use a SHA-256 digest when setting a password (default is MD5).
+.TP
+.B \-\-sha512
+Use a SHA-512 digest when setting a password (default is MD5).
+.TP
+.B \-\-drop
+Drop (remove) the authorized user and associated extension record.  Any active calls or
+registrations should also be terminated.
+.TP
+.B \-\-suspend
+Suspend the users account.  Any active calls and registrations should also be cancelled.
+.SH AUTHOR
+.B swlite-authorize
+was written by David Sugar <tychosoft@gmail.com>.
+.SH "REPORTING BUGS"
+Report bugs to tychosoft@gmail.com.
+.SH COPYRIGHT
+Copyright \(co 2017 Tycho Softworks.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+

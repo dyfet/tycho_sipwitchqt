@@ -77,6 +77,8 @@ target_link_libraries(sipwitchqt Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${
 
 add_custom_target(support SOURCES sipwitchqt.spec config.hpp.in Doxyfile.in)
 
+add_subdirectory(utils)
+
 find_program(DOXYGEN doxygen)
 find_program(GRAPHVIZ dot)
 if(DOXYGEN AND GRAPHVIZ)

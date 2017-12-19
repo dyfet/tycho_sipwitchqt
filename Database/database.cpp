@@ -214,6 +214,8 @@ bool Database::create()
     if(init) {
         runQuery(Util::createQuery(driver));
         runQuery("INSERT INTO Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
+        runQuery("INSERT INTO Extensions(number, type, alias, access, display) VALUES (?,?,?,?,?);", {0, "SYSTEM", "system", "LOCAL", "SIP Witch Server"});
+        runQuery("INSERT INTO Authorize(userid, number, realm) VALUES(?,?,?);", {"system", 0, realm});
     }
     else if(Util::dbIsFile(driver))
         runQuery("VACUUM");

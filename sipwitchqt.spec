@@ -13,10 +13,26 @@ BuildRequires: cmake >= 3.1.0
 BuildRequires: qt5-qtbase-devel, gcc-c++
 BuildRequires: libosip2-devel, libeXosip2-devel >= 4.0.0
 BuildRequires: gperftools-devel, systemd-devel
+
+%package mysql
+Requires: sipwitchqt%{?_isa} = %{version}-%{release}
 Requires: qt5-qtbase-mysql
+Summary: sipwitchqt mysql support
+
+%package sqlite3
+Requires: sipwitchqt%{?_isa} = %{version}-%{release}
+Requires: ruby-sqlite3
+Summary: sipwitchqt sqlite3 local administration support
 
 %description
 A pbx server for the sip protocol
+
+%description mysql
+Mysql backend support for SipWitchQt.
+
+%description sqlite3
+Sqlite3 local db administration support for SipWitchQt.  This includes ruby admin
+scripts used to manage the local sqlite3 database of the sipwitchqt server instance.
 
 %prep
 %setup -q
@@ -33,7 +49,13 @@ qmake-qt5 CONFIG+=sys_prefix QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/t
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt
 %{_sysconfdir}/sv/sipwitchqt/run
-%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
+%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
+
+%files sqlite
+%defattr(-,root,root)
+%{_sbindir}/swlite-*
+%{_mandir}/man1/swlite-*
+
 
 
 
