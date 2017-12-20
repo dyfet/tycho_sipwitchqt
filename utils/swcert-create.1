@@ -1,4 +1,4 @@
-.\" swlite-authorize - manage sipwitchqt user authorizations in sqlite backend
+.\" swcert-create - creates a sip tls certificate pair
 .\" Copyright (c) 2017 Tycho Softworks
 .\"
 .\" This manual page is free software; you can redistribute it and/or modify
@@ -17,44 +17,31 @@
 .\"
 .\" This manual page is written especially for Debian GNU/Linux.
 .\"
-.TH swlite-authorize "1" "December 2017" "SipWitchQt" "Tycho Softworks"
+.TH swcert-create "1" "December 2017" "SipWitchQt" "Tycho Softworks"
 .SH NAME
-swlite-authorize \- manage sipwitchqt user authorizations in sqlite backend
+swcert-create \- generates a sipwitch tls certificate pair
 .SH SYNOPSIS
-.B swlite-authorize
+.B swcert-create
 .RI [ options ]
-.RI [ extension ]
-.I user
-.br
-.B swlite-authorize
 .br
 .SH DESCRIPTION
-The purpose of swlite-authorize is to manage authorization records for a backend 
-sqlite sipwitchqt database.  This includes both creating and removing (or suspending)
-authorized users, and also setting the SIP digest password.
-
-If used with no options the current authorization realm is shown.  If a userid is given
-then the password to use will be prompted on the console.  If an extension # is given
-in front of the user id, then a new user authorization record is created.  Otherwise
-options can be used to set digest mode, and whether to suspend or drop a user.
+This is used to create a self-signed public/private certificate pair for SipWitchQt 
+sip tls support.  
 .SH OPTIONS
 .TP
-.B \-\-sha256
-Use a SHA-256 digest when setting a password (default is MD5).
+.B \-\-server
+Server hostname this certificate and the tls session will be associated with.
 .TP
-.B \-\-sha512
-Use a SHA-512 digest when setting a password (default is MD5).
+.B \-\-country
+Two character country abbreviation this server is operating in.
 .TP
-.B \-\-drop
-Drop (remove) the authorized user and associated extension record.  Any active calls or
-registrations should also be terminated.
+.B \-\-organization
+The organizing issuing this certificate.
 .TP
-.B \-\-suspend
-Suspend the users account.  Any active calls and registrations should also be cancelled.
 .B \-\-userdata
 Uses the local userdata testing path for the local sqlite database.
 .SH AUTHOR
-.B swlite-authorize
+.B swcert-create
 was written by David Sugar <tychosoft@gmail.com>.
 .SH "REPORTING BUGS"
 Report bugs to tychosoft@gmail.com.

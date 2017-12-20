@@ -46,6 +46,7 @@ private:
     static const int interval = 10000;
 
     QSqlDatabase db;
+    QSqlRecord config;
     QTimer timer;
     QString uuid;
     QString realm;

@@ -213,15 +213,28 @@ bool Database::create()
 
     if(init) {
         runQuery(Util::createQuery(driver));
-        runQuery("INSERT INTO Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
+        runQuery("INSERT INTO Config(realm) VALUES(?);", {realm});
+        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
         runQuery("INSERT INTO Extensions(number, type, alias, access, display) VALUES (?,?,?,?,?);", {0, "SYSTEM", "system", "LOCAL", "SIP Witch Server"});
         runQuery("INSERT INTO Authorize(userid, number, realm) VALUES(?,?,?);", {"system", 0, realm});
     }
-    else if(Util::dbIsFile(driver))
+    else if(Util::dbIsFile(driver)) {
+        runQuery("UPDATE INTO Config SET realm=? WHERE id=1;", {realm});
         runQuery("VACUUM");
+    }
 
-    if(!runQuery("UPDATE Switches SET uuid=? WHERE realm=?;", {uuid, realm}))
-        runQuery("INSERT INTO Switches(uuid, realm) VALUES (?,?);", {uuid, realm});
+    QSqlQuery query(db);
+    query.prepare("SELECT realm, series, dialing FROM Config WHERE id=1;");
+    if(!query.exec()) {
+        error() << "No config found " << driver;
+        close();
+        return false;
+    }
+    else if(query.next())
+        config = query.record();
+
+    if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, uuid}))
+        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
 
     int count = getCount("Switches");
     if(!failed)

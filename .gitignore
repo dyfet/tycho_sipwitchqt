@@ -13,6 +13,8 @@ Release/
 *.qm
 *.o
 *.rpm
+*.key
+*.pem
 
 *.tar.gz
 *.zip

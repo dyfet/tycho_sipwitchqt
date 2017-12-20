@@ -24,8 +24,16 @@ Requires: sipwitchqt%{?_isa} = %{version}-%{release}
 Requires: ruby-sqlite3
 Summary: sipwitchqt sqlite3 local administration support
 
+%package utils
+Recommends: sipwitchqt
+Requires: ruby
+Summary: sipwitchqt utility scripts and commands
+
 %description
 A pbx server for the sip protocol
+
+%description utils
+Extra utility commands and scripts to use with sipwitchqt.  Some may be used stand-alone.
 
 %description mysql
 Mysql backend support for SipWitchQt.
@@ -50,6 +58,11 @@ qmake-qt5 CONFIG+=sys_prefix QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/t
 %{_sbindir}/sipwitchqt
 %{_sysconfdir}/sv/sipwitchqt/run
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
+
+%files utils
+%defattr(-,root,root)
+%{_sbindir}/swcert-*
+%{_mandir}/man1/swcert-*
 
 %files sqlite
 %defattr(-,root,root)

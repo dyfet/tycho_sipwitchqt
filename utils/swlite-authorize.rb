@@ -21,6 +21,9 @@ end
 banner = 'Usage: swlite-authorize [[extension-to-create] id]'
 digest = 'MD5'
 number = -1
+minext = 100
+maxext = 699
+user = nil
 domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
 dbname = '../testdata/local.db' if File.writable?('../testdata/local.db')
@@ -35,6 +38,10 @@ OptionParser.new do |opts|
 
   opts.on('-s', '--suspend', 'suspend user') do
     digest = 'NONE'
+  end
+
+  opts.on('-u', '--userdata', 'db in userdata directory') do
+    dbname = '../userdata/local.db'
   end
 
   opts.on('-2', '--sha256', 'use sha-256') do
@@ -55,22 +62,34 @@ abort(banner) if(ARGV.size < 0 || ARGV.size > 2)
 if ARGV.size > 1
     user = ARGV[1]
     number = ARGV[0].to_i
-    abort("*** swlite-authorize: #{number}: extension must be 100-699") if number < 100 or number > 699
 else
     user = ARGV[0]
 end
 
 begin 
   db = SQLite3::Database.open dbname
-  db.execute("SELECT realm FROM Switches") do |row|
-    abort("*** swlite-authorize: multiple switch entries") unless domain == nil
+  db.execute("SELECT realm, dialing FROM Config") do |row|
+    abort("*** swlite-authorize: multiple config entries") unless domain == nil
     domain = row[0]
+    dialing = row[1]
+    case dialing
+    when 'STD3'
+      minext = 100
+      maxext = 699
+    else
+      abort("*** swlite-authorize: #{dialing}: invalid dialing plan used")
+    end
   end
 rescue SQLite3::SQLException
   abort("*** swlite-authorize: no switch table")
 end
 
+if number > -1
+  abort("*** swlite-authorize: #{number}: extension must be #{minext}-#{maxext}") if number < minext or number > maxext
+end
+
 print "Realm #{domain}\n"
+exit if user == nil
 
 begin
   # check if creating extension and already exists...

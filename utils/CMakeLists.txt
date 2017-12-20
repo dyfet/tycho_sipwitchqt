@@ -8,4 +8,8 @@ add_custom_target(scripts SOURCES ${ruby})
 
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/swlite-authorize.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME swlite-authorize)
 
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/swcert-create.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME swcert-create)
+
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/swcert-read.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME swcert-read)
+
 install(FILES ${man1} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

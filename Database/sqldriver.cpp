@@ -20,11 +20,16 @@
 #include <QStringList>
 
 static QStringList sqliteTables = {
+    "CREATE TABLE Config ("
+        "id INTEGER PRIMARY KEY,"               // rowid in sqlite
+        "realm VARCHAR(128) NOT NULL,"          // site realm
+        "series INTEGER DEFAULT 9,"             // site db series
+        "dialing VARCHAR(8) DEFAULT 'STD3');",  // site dialing plan
+
     "CREATE TABLE Switches ("
-        "realm VARCHAR(128) NOT NULL,"          // realm we use
-        "series INTEGER DEFAULT 0,"             // db series # supported
-        "dialing CHAR(1) DEFAULT '3',"          // dialing plan used
+        "version VARCHAR(8) NOT NULL,"          // db series # supported
         "uuid CHAR(36) NOT NULL,"               // switch uuid
+        "last DATETIME,"
         "PRIMARY KEY (uuid));",
 
     "CREATE TABLE Extensions ("

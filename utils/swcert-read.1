@@ -1,0 +1,49 @@
+.\" swcert-read - read current sipwitch certificate
+.\" Copyright (c) 2017 Tycho Softworks
+.\"
+.\" This manual page is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc.,59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"
+.\" This manual page is written especially for Debian GNU/Linux.
+.\"
+.TH swcert-read "1" "December 2017" "SipWitchQt" "Tycho Softworks"
+.SH NAME
+swcert-read \- reads current sipwitch certificate
+.SH SYNOPSIS
+.B swcert-read
+.RI [ options ]
+.br
+.SH DESCRIPTION
+This will read and output basic information information about the server.  The
+most useful part is the common name, which is the hostname this certificate is
+associated with.
+.SH OPTIONS
+.TP
+.B \-\-output
+Output certificate to stdout instead of reporting info.  Can be redirected to a file.
+.TP
+.B \-\-userdata
+Examine userdata path instead of default paths.
+.SH AUTHOR
+.B swcert-read
+was written by David Sugar <tychosoft@gmail.com>.
+.SH "REPORTING BUGS"
+Report bugs to tychosoft@gmail.com.
+.SH COPYRIGHT
+Copyright \(co 2017 Tycho Softworks.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
