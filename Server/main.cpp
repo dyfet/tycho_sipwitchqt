@@ -103,11 +103,6 @@ int main(int argc, char **argv)
 
     output() << "Config: " << server[SERVER_CONFIG];
 
-#if defined(Q_OS_MAC)
-    QDir::current().mkdir("certs");
-    QDir::current().mkdir("private");
-#endif
-
     // validate global parsing results...
     port = server[CURRENT_PORT].toShort();
     if(port < 100 || port > 65534 || port % 2)
