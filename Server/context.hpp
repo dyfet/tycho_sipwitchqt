@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CONTEXT_HPP__
-#define __CONTEXT_HPP__
+#ifndef CONTEXT_HPP_
+#define CONTEXT_HPP_
 
 #include "event.hpp"
 #include <QSqlRecord>
@@ -52,13 +52,13 @@ public:
 
     static const unsigned max = 1<<4;
 
-    Context(const QHostAddress& bind, int port, const Schema& choice, unsigned mask, unsigned index = 1);
+    Context(const QHostAddress& bind, quint16 port, const Schema& choice, unsigned mask, unsigned index = 1);
 
-    const Contact contact(const UString& username = (char *)NULL) const {
+    const Contact contact(const UString& username = UString()) const {
         return Contact(uriHost, netPort, username);
     }
 
-    inline const UString uriFrom(const UString& id = (char *)NULL) const {
+    inline const UString uriFrom(const UString& id = UString()) const {
         if(id.length() == 0)
             return schema.uri + uriAddress;
         return schema.uri + id + "@" + uriAddress;
@@ -108,7 +108,8 @@ private:
     unsigned allow;
     eXosip_t *context;
     time_t currentEvent, priorEvent;
-    int netFamily, netPort, netTLS, netProto;
+    int netFamily, netTLS, netProto;
+    quint16 netPort;
     UString netAddress, uriAddress, uriHost, publicName;
     QStringList localHosts, otherNames;
     mutable QMutex nameLock;

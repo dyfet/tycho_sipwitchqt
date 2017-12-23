@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef	__COMPILER_HPP__
-#define __COMPILER_HPP__
+#ifndef	COMPILER_HPP_
+#define COMPILER_HPP_
 
 #include "config.hpp"
 
@@ -37,6 +37,7 @@
 #if _MSC_VER < 1900
 #include <xkeycheck.h>
 #define noexcept
+#define NORETURN
 #endif
 
 #if !defined(_MT) && !defined(__MT__)
@@ -50,6 +51,10 @@
 #else
 #define FOR_DEBUG(x)      {x;}
 #define FOR_RELEASE(x)
+#endif
+
+#ifndef NORETURN
+#define NORETURN [[noreturn]]
 #endif
 
 /*!

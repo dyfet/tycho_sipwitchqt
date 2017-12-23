@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __DATABASE_HPP__
-#define __DATABASE_HPP__
+#ifndef DATABASE_HPP_
+#define DATABASE_HPP_
 
 #include "request.hpp"
 #include "sqldriver.hpp"

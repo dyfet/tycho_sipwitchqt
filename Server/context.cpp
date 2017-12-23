@@ -61,7 +61,7 @@ private:
 };
 
 
-Context::Context(const QHostAddress& addr, int port, const Schema& choice, unsigned mask, unsigned index):
+Context::Context(const QHostAddress& addr, quint16 port, const Schema& choice, unsigned mask, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 {
     allow = mask & 0xffffff00;
@@ -243,7 +243,7 @@ bool Context::authenticate(const Event &event, const QSqlRecord &auth)
 
     //TODO: a real nounce generator and cache to verify
     time_t now;
-    UString nounce = UString::number((int)time(&now));
+    UString nounce = UString::number(static_cast<int>(time(&now) & 0xffffffff));
     UString realm = auth.value("realm").toString().toUtf8();
     UString digest = auth.value("digest").toString().toUtf8();
     UString challenge = "Digest Realm=" + realm.quote() + ", nounce=" + nounce.quote() + ", algorithm=" + digest.quote();

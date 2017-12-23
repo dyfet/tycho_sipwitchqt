@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SQLDRIVER_HPP__
-#define __SQLDRIVER_HPP__
+#ifndef SQLDRIVER_HPP_
+#define SQLDRIVER_HPP_
 
 #include <QString>
 

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __AUTHORIZE_HPP__
-#define __AUTHORIZE_HPP__
+#ifndef AUTHORIZE_HPP_
+#define AUTHORIZE_HPP_
 
 #include "database.hpp"
 

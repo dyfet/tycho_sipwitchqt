@@ -43,6 +43,10 @@ CrashHandler::CrashHandler()
     HandlerList = this;
 }
 
+CrashHandler::~CrashHandler()
+{
+}
+
 void CrashHandler::processHandlers()
 {
     while(HandlerList) {

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __REQUEST_HPP__
-#define __REQUEST_HPP__
+#ifndef REQUEST_HPP_
+#define REQUEST_HPP_
 
 #include <QVariant>
 #include <QCoreApplication>

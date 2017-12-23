@@ -58,9 +58,6 @@ Database *Database::Instance = nullptr;
 
 Database::Database(unsigned order)
 {
-    Q_ASSERT(Instance == nullptr);
-    Instance = this;
-
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
     timer.setSingleShot(true);
@@ -107,7 +104,7 @@ bool Database::runQuery(const QString &request, QVariantList parms)
         query.bindValue(count, parms.at(count));
         
     if(query.exec() != true) {
-        notice() << "Query failed; " << query.lastError().text();
+        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return false;
     }
     return true;
@@ -136,8 +133,8 @@ QSqlRecord Database::getRecord(const QString& request, QVariantList parms)
 
 void Database::init(unsigned order)
 {
-    Q_ASSERT(Database::Instance == nullptr);
-    new Database(order);
+    Q_ASSERT(Instance == nullptr);
+    Instance = new Database(order);
 }
 
 void Database::close()
@@ -219,7 +216,7 @@ bool Database::create()
         runQuery("INSERT INTO Authorize(userid, number, realm) VALUES(?,?,?);", {"system", 0, realm});
     }
     else if(Util::dbIsFile(driver)) {
-        runQuery("UPDATE INTO Config SET realm=? WHERE id=1;", {realm});
+        runQuery("UPDATE Config SET realm=? WHERE id=1;", {realm});
         runQuery("VACUUM");
     }
 

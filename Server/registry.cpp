@@ -64,11 +64,11 @@ bool Registry::hasExpired() const
 }
 
 // find longest remaining time in endpoints...
-int Registry::expires() const
+time_t Registry::expires() const
 {
-    int remaining = 0;
+    time_t remaining = 0;
     foreach(auto endpoint, endpoints) {
-        int expiration = endpoint->expires();
+        time_t expiration = endpoint->expires();
         if(expiration > remaining)
             remaining = expiration;
     }

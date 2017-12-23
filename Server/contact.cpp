@@ -16,6 +16,7 @@
  */
 
 #include "../Common/inline.hpp"
+#include "../Common/util.hpp"
 #include "contact.hpp"
 
 Contact::Contact(const UString& address, quint16 port, const UString& user, int duration) noexcept :
@@ -42,7 +43,7 @@ hostPort(0), expiration(0)
         hostPort = 5060;
     userName = uri->username;
     if(uri->port && uri->port[0])
-        hostPort = atoi(uri->port);
+        hostPort = Util::portNumber(uri->port);
 }
 
 Contact::Contact(osip_contact_t *contact)  noexcept :
@@ -57,7 +58,7 @@ hostPort(0), expiration(0)
 
     // see if contact has expiration
     osip_uri_param_t *param = nullptr;
-    osip_contact_param_get_byname(contact, (char *)"expires", &param);
+    osip_contact_param_get_byname(contact, const_cast<char *>("expires"), &param);
     if(param && param->gvalue)
         refresh(osip_atoi(param->gvalue));
 
@@ -68,7 +69,7 @@ hostPort(0), expiration(0)
         hostPort = 5060;
     userName = uri->username;
     if(uri->port && uri->port[0])
-        hostPort = atoi(uri->port);
+        hostPort = Util::portNumber(uri->port);
  }
 
 Contact::Contact(const Contact& from) noexcept :

@@ -16,6 +16,7 @@
  */
 
 #include "../Common/compiler.hpp"
+#include "../Common/server.hpp"
 #include <QtDebug>
 #include <QString>
 #include <QChar>
@@ -25,10 +26,6 @@
 #include <QThread>
 #include <QHash>
 #include <QDir>
-
-#ifdef XYZ // needed to force conditional highlighting in qtcreator! Yuck!
-Q_UNUSED(xyz)
-#endif
 
 // Testdata mode is a server work prefix, rest relative to it
 #if defined(PROJECT_PREFIX)

@@ -23,101 +23,96 @@
 #include <sys/socket.h>
 #endif
 
-namespace Util {
-    const QString localDomain()
-    {
-        QString domain = QHostInfo::localDomainName();
-        if(domain.isEmpty()) {
-            QString host = QHostInfo::localHostName();
-            int pos = host.indexOf(".");
-            if(pos < 0)
-                domain = "localdomain";
-            else
-                domain = host.mid(++pos);
-        }
-        return domain;
+const QString Util::localDomain()
+{
+    QString domain = QHostInfo::localDomainName();
+    if(domain.isEmpty()) {
+        QString host = QHostInfo::localHostName();
+        int pos = host.indexOf(".");
+        if(pos < 0)
+            domain = "localdomain";
+        else
+            domain = host.mid(++pos);
     }
+    return domain;
+}
 
-    const QList<QHostAddress> hostAddress(const QString& hostId)
-    {
-        int pos = hostId.indexOf(":");
-        QString bindId = hostId;
+const QList<QHostAddress> Util::hostAddress(const QString& hostId)
+{
+    int pos = hostId.indexOf(":");
+    QString bindId = hostId;
 
-        if(pos > 0)
-            bindId = hostId.left(pos);
+    if(pos > 0)
+        bindId = hostId.left(pos);
 
-        QList<QHostAddress> list;
-        if(bindId != "none") {
-            auto iface = QNetworkInterface::interfaceFromName(bindId);
-            if(iface.isValid()) {
-                auto entries = iface.addressEntries();
-                foreach(auto entry, entries) {
-                    list << entry.ip();
-                }
+    QList<QHostAddress> list;
+    if(bindId != "none") {
+        auto iface = QNetworkInterface::interfaceFromName(bindId);
+        if(iface.isValid()) {
+            auto entries = iface.addressEntries();
+            foreach(auto entry, entries) {
+                list << entry.ip();
             }
         }
-        return list;
     }
+    return list;
+}
 
-    int hostPort(const QString& hostId)
-    {
-        int pos = hostId.indexOf(":");
-        if(pos < 1)
-            return 0;
-        pos = hostId.mid(pos).toInt();
-        if((pos < 0) || (pos > 65535))
-            pos = 0;
-        return pos;
+int Util::hostPort(const QString& hostId)
+{
+    int pos = hostId.indexOf(":");
+    if(pos < 1)
+        return 0;
+    pos = hostId.mid(pos).toInt();
+    if((pos < 0) || (pos > 65535))
+        pos = 0;
+    return pos;
+}
+
+const QList<QHostAddress> Util::bindAddress(const QString& hostId)
+{
+    QList<QHostAddress> list;
+    if(hostId == "*" || hostId == "all") {
+#ifdef AF_INET6
+        list << QHostAddress(QHostAddress::AnyIPv4);
+        list << QHostAddress(QHostAddress::AnyIPv6);
+#else
+        list << QHostAddress(QHostAddress::Any);
+#endif
     }
-
-    const QList<QHostAddress> bindAddress(const QString& hostId)
-    {
-        QList<QHostAddress> list;
-        if(hostId == "*" || hostId == "all") {
+    else if(hostId == "any6") {
 #ifdef AF_INET6
-            list << QHostAddress(QHostAddress::AnyIPv4);
-            list << QHostAddress(QHostAddress::AnyIPv6);
+        list << QHostAddress(QHostAddress::AnyIPv6);
 #else
-            list << QHostAddress(QHostAddress::Any);
+        list << QHostAddress(QHostAddress::Any);
 #endif
-        }
-        else if(hostId == "any6") {
-#ifdef AF_INET6
-            list << QHostAddress(QHostAddress::AnyIPv6);
-#else
-            list << QHostAddress(QHostAddress::Any);
-#endif
-        }
-        else if(hostId == "any4") {
-            list << QHostAddress(QHostAddress::AnyIPv4);
-        }
-        else if(hostId == "any") {
-            list << QHostAddress(QHostAddress::Any);
+    }
+    else if(hostId == "any4") {
+        list << QHostAddress(QHostAddress::AnyIPv4);
+    }
+    else if(hostId == "any") {
+        list << QHostAddress(QHostAddress::Any);
+    }
+    else {
+        auto iface = QNetworkInterface::interfaceFromName(hostId);
+        if(iface.isValid()) {
+            auto entries = iface.addressEntries();
+            foreach(auto entry, entries) {
+                list << entry.ip();
+            }
         }
         else {
-            auto iface = QNetworkInterface::interfaceFromName(hostId);
-            if(iface.isValid()) {
-                auto entries = iface.addressEntries();
-                foreach(auto entry, entries) {
-                    list << entry.ip();
-                }
-            }
-            else {
-                QHostInfo hostinfo = QHostInfo::fromName(hostId);
-                list = hostinfo.addresses();
-            }
+            QHostInfo hostinfo = QHostInfo::fromName(hostId);
+            list = hostinfo.addresses();
         }
-        return list;
     }
+    return list;
+}
 
-    const QString exePath(const QString& path)
-    {
-        if(path.startsWith("../"))
-            return QCoreApplication::applicationDirPath() + "/" + path;
-        if(path.startsWith("./"))
-            return QCoreApplication::applicationDirPath() + "/" + path.mid(3);
-        if(path == ".")
-            return QCoreApplication::applicationDirPath();
-        return path;
-    }
+quint16 Util::portNumber(const char *cp)
+{
+    if(!cp)
+        return 0;
+
+    return static_cast<quint16>(atoi(cp));
 }
