@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TYPES_HPP__
-#define __TYPES_HPP__
+#ifndef TYPES_HPP_
+#define TYPES_HPP_
 
 #include "compiler.hpp"
 #include <QByteArray>

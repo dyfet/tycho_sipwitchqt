@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __REGISTRY_HPP__
-#define __REGISTRY_HPP__
+#ifndef REGISTRY_HPP_
+#define REGISTRY_HPP_
 
 #include "../Common/compiler.hpp"
 #include "context.hpp"
@@ -94,7 +94,7 @@ public:
 
     bool hasExpired() const;
 
-    int expires() const;
+    time_t expires() const;
 
     static Registry *find(const UString& target);
 

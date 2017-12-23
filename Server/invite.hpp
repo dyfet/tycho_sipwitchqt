@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __INVITE_HPP__
-#define __INVITE_HPP__
+#ifndef INVITE_HPP_
+#define INVITE_HPP_
 
 #include "../Common/compiler.hpp"
 #include "provider.hpp"

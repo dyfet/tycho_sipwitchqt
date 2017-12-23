@@ -40,9 +40,6 @@ unsigned Manager::Contexts = 0;
 
 Manager::Manager(unsigned order)
 {
-    Q_ASSERT(Instance == nullptr);
-    Instance = this;
-
     qRegisterMetaType<Event>("Event");
     qRegisterMetaType<UString>("UString");
 
@@ -71,8 +68,8 @@ Manager::~Manager()
 
 void Manager::init(unsigned order)
 {
-    Q_ASSERT(Manager::Instance == nullptr);
-    new Manager(order);
+    Q_ASSERT(Instance == nullptr);
+    Instance = new Manager(order);
 }
 
 #ifndef QT_NO_DEBUG
@@ -96,9 +93,8 @@ void Manager::applyConfig(const QVariantHash& config)
     ServerNames = config["localnames"].toStringList();
     QString hostname = config["host"].toString();
     QString realm = config["realm"].toString();
-    bool genpwd = false;
+
     if(realm.isEmpty()) {
-        genpwd = true;
         realm = Server::sym(CURRENT_NETWORK);
         if(realm.isEmpty() || realm == "local" || realm == "localhost" || realm == "localdomain")
             realm = Server::uuid();
@@ -123,7 +119,7 @@ const QByteArray Manager::computeDigest(const UString& id, const UString& secret
     return QCryptographicHash::hash(id + ":" + realm() + ":" + secret, digest);
 }
 
-void Manager::create(const QHostAddress& addr, int port, unsigned mask)
+void Manager::create(const QHostAddress& addr, quint16 port, unsigned mask)
 {
     unsigned index = ++Contexts;
 
@@ -136,7 +132,7 @@ void Manager::create(const QHostAddress& addr, int port, unsigned mask)
     }
 }
 
-void Manager::create(const QList<QHostAddress>& list, int port, unsigned  mask)
+void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  mask)
 {
     foreach(auto host, list) {
         create(host, port, mask);

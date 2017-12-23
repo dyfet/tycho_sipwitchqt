@@ -124,7 +124,7 @@ begin
     db.execute("UPDATE Authorize set digest='NONE', secret='', realm='#{domain}' WHERE userid='#{user}'")
   when 'DROP'
     abort("*** swlite-authorize: #{user}: no such user") unless row.size > 0
-    abort("*** swlite-authorize: system: cannot drop") unless user != 'system'
+    abort("*** swlite-authorize: #{number}: extension must be #{minext}-#{maxext}") if number < minext or number > maxext
     print "Dropping user #{user}\n"
     db.execute("DELETE FROM Extensions WHERE number='#{number}'")
   else

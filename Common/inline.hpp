@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __INLINE_HPP__
-#define __INLINE_HPP__
+#ifndef INLINE_HPP_
+#define INLINE_HPP_
 
 #include "compiler.hpp"
 

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MANAGER_HPP__
-#define __MANAGER_HPP__
+#ifndef MANAGER_HPP_
+#define MANAGER_HPP_
 
 #include "../Common/compiler.hpp"
 #include "../Database/database.hpp"
@@ -44,8 +44,8 @@ public:
     }
 
     static const QByteArray computeDigest(const UString &id, const UString &secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
-    static void create(const QList<QHostAddress>& list, int port, unsigned mask);
-    static void create(const QHostAddress& addr, int port, unsigned mask);
+    static void create(const QList<QHostAddress>& list, quint16 port, unsigned mask);
+    static void create(const QHostAddress& addr, quint16 port, unsigned mask);
     static void init(unsigned order);
 
 private:

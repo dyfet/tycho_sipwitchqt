@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CONTACT_HPP__
-#define __CONTACT_HPP__
+#ifndef CONTACT_HPP_
+#define CONTACT_HPP_
 
 #include "../Common/types.hpp"
 #include <QString>
@@ -29,7 +29,7 @@
 class Contact final
 {
 public:
-    Contact(const UString& address, quint16 port, const UString& user = (char *)NULL, int duration = -1) noexcept;
+    Contact(const UString& address, quint16 port, const UString& user = UString(), int duration = -1) noexcept;
     Contact(osip_contact_t *contact) noexcept;
     Contact(osip_uri_t *uri) noexcept;
     Contact() noexcept;

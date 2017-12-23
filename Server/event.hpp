@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __EVENT_HPP__
-#define __EVENT_HPP__
+#ifndef EVENT_HPP_
+#define EVENT_HPP_
 
 #include "../Common/compiler.hpp"
 #include "../Common/util.hpp"
@@ -201,7 +201,7 @@ public:
     const UString protocol() const;
     const UString toString() const;
     const Contact contact() const;
-    const UString uriContext(const UString& username = (char *)NULL) const;
+    const UString uriContext(const UString& username = UString()) const;
     const UString text() const;
     const UString uri(const Contact &addr) const;
 

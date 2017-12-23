@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CRASHHANDLER_HPP__
-#define __CRASHHANDLER_HPP__
+#ifndef CRASHHANDLER_HPP_
+#define CRASHHANDLER_HPP_
 
+#include "compiler.hpp"
 #include <QtGlobal>
 
 class CrashHandler
@@ -25,10 +26,11 @@ class CrashHandler
     Q_DISABLE_COPY(CrashHandler)
 public:
     CrashHandler();
+    virtual ~CrashHandler();
 
     static bool corefiles();
     static bool installHandlers();
-    static void processHandlers();
+    NORETURN static void processHandlers();
     
 protected:
     virtual void crashHandler() = 0;

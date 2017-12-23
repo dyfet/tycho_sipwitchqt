@@ -121,6 +121,9 @@ static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, voi
     Q_UNUSED(ioservice);
     Q_UNUSED(ref);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+
     switch(mtype) {
     case kIOMessageCanSystemSleep:
         IOAllowPowerChange(ioroot, (long)args);
@@ -135,6 +138,8 @@ static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, voi
     default:
         break;
     }
+
+#pragma clang pop
 }
 
 static void iop_startup()

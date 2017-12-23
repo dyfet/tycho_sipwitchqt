@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __UTIL_HPP__
-#define __UTIL_HPP__
+#ifndef UTIL_HPP_
+#define UTIL_HPP_
 
 #include <QCoreApplication>
 #include <QString>
@@ -25,6 +25,7 @@
 #include <QCommandLineParser>
 
 namespace Util {
+    quint16 portNumber(const char *cp);
     const QString localDomain();
     const QList<QHostAddress> bindAddress(const QString& hostId);
     const QList<QHostAddress> hostAddress(const QString& hostId);

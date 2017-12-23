@@ -100,25 +100,25 @@ void Event::Data::parseMessage(osip_message_t *msg)
 
     pos = 0;
     while(osip_list_eol(&vlist, pos) == 0) {
-        auto via = (osip_via_t *)osip_list_get(&vlist, pos++);
+        auto via = static_cast<osip_via_t *>(osip_list_get(&vlist, pos++));
         ++hops;
         if(via->host) {
             const char *addr = via->host;
             quint16 port = context->defaultPort(), rport = 0;
             if(via->port)
-                port = atoi(via->port);
+                port = Util::portNumber(via->port);
             osip_uri_param_t *param = nullptr;
-            osip_via_param_get_byname(via, (char *)"rport", &param);
+            osip_via_param_get_byname(via, const_cast<char *>("rport"), &param);
             if(param && param->gvalue)
-                rport = atoi(param->gvalue);
+                rport = Util::portNumber(param->gvalue);
             if(via->port)
-                port = atoi(via->port);
+                port = Util::portNumber(via->port);
             source = Contact(addr, port);
 
             // top nat only
             if(!nat && rport) {
                 param = nullptr;
-                osip_via_param_get_byname(via, (char *)"received", &param);
+                osip_via_param_get_byname(via, const_cast<char *>("received"), &param);
                 if(param && param->gvalue)
                     nat = Contact(param->gvalue, rport);
             }
@@ -141,23 +141,23 @@ void Event::Data::parseMessage(osip_message_t *msg)
     header = nullptr;
     osip_message_header_get_byname(msg, SESSION_EXPIRES, 0, &header);
     if(header && header->hvalue)
-        expires = atoi(header->hvalue);
+        expires = Util::portNumber(header->hvalue);
 
     header = nullptr;
-    osip_message_get_subject(msg, 0, &header);
+    osip_message_header_get_byname(msg, "subject", 0, &header);
     if(header && header->hvalue)
         subject = header->hvalue;
 
     pos = 0;
     while(osip_list_eol(&clist, pos) == 0) {
-        auto contact = (osip_contact_t *)osip_list_get(&clist, pos++);
+        auto contact = static_cast<osip_contact_t *>(osip_list_get(&clist, pos++));
         if(contact && contact->url && contact->url->host)
             contacts << Contact(contact);
     }
 
     pos = 0;
     while(osip_list_eol(&rlist, pos) == 0) {
-        auto recroute = (osip_record_route_t*)osip_list_get(&rlist, pos++);
+        auto recroute = static_cast<osip_record_route_t*>(osip_list_get(&rlist, pos++));
         if(recroute->url && recroute->url->host) {
             routes << Contact(recroute->url);
         }
@@ -170,7 +170,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
         pos = 0;
         const osip_list_t& list = msg->routes;
         while(osip_list_eol(&list, pos) == 0) {
-            route = (osip_route_t *)osip_list_get(&list, pos++);
+            route = static_cast<osip_route_t *>(osip_list_get(&list, pos++));
             if(route->url && route->url->host) {
                 routes << Contact(route->url);
             }
@@ -191,7 +191,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
     osip_body_t *data = nullptr;
     osip_message_get_body(msg, 0, &data);
     if(data && data->length)
-        body = QByteArray(data->body, data->length);
+        body = QByteArray(data->body, static_cast<int>(data->length));
 }
 
 Event::Event()

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PROVIDER_HPP__
-#define __PROVIDER_HPP__
+#ifndef PROVIDER_HPP_
+#define PROVIDER_HPP_
 
 #include "registry.hpp"
 

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SERVER_HPP__
-#define __SERVER_HPP__
+#ifndef SERVER_HPP_
+#define SERVER_HPP_
 
 #include <QHash>
 #include <QString>
