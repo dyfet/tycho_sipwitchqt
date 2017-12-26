@@ -15,8 +15,8 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "../Common/server.hpp"
-#include "../Common/output.hpp"
+#include "server.hpp"
+#include "output.hpp"
 #include "manager.hpp"
 
 #include <QNetworkInterface>

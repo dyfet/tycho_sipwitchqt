@@ -16,8 +16,8 @@
  */
 
 #include "../Common/compiler.hpp"
-#include "../Common/server.hpp"
-#include "../Common/output.hpp"
+#include "../Server/server.hpp"
+#include "../Server/output.hpp"
 #include "../Server/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"

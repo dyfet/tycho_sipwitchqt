@@ -16,7 +16,7 @@
  */
 
 #include "../Common/compiler.hpp"
-#include "../Common/server.hpp"
+#include "server.hpp"
 #include <QtDebug>
 #include <QString>
 #include <QChar>

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "compiler.hpp"
+#include "../Common/compiler.hpp"
 #include "server.hpp"
 #include "output.hpp"
 
