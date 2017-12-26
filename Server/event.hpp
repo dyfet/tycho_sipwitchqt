@@ -20,7 +20,7 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/util.hpp"
-#include "contact.hpp"
+#include "../Common/contact.hpp"
 
 #include <QThread>
 #include <QMutex>

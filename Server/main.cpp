@@ -17,9 +17,9 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
-#include "../Common/server.hpp"
 #include "../Common/crashhandler.hpp"
-#include "../Common/output.hpp"
+#include "server.hpp"
+#include "output.hpp"
 #include "manager.hpp"
 #include "main.hpp"
 

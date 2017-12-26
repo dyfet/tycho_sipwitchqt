@@ -14,9 +14,11 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 5.5.1 COMPONENTS Core Network Sql REQUIRED)
+find_package(Qt5 5.5.1 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -72,9 +74,15 @@ file(GLOB server_src Server/*.cpp)
 file(GLOB common_hdr Common/*.hpp)
 file(GLOB database_hdr Database/*.hpp)
 file(GLOB server_hdr Server/*.hpp)
+file(GLOB desktop_hdr Desktop/*.hpp)
+file(GLOB desktop_src Desktop/*.cpp)
+file(GLOB desktop_uic Desktop/*.ui)
 file(GLOB markdown *.md)
 
 set(voip_libs eXosip2 osip2 osipparser2)
+
+add_executable(antisipate ${common_src} ${common_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} Resources/desktop.qrc)
+target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets ${voip_libs} ${system_libs})
 
 add_executable(sipwitchqt ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
 target_link_libraries(sipwitchqt Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})

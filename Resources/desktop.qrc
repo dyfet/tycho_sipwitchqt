@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/images">
+	<file>downarrow.png</file>
+	<file>searchicon.png</file>
+	<file>tribal.png</file>
+</qresource>
+</RCC>
