@@ -21,6 +21,7 @@
 #include "ui_desktop.h"
 
 #include <QTranslator>
+#include <QFile>
 
 static Ui::MainWindow ui;
 
@@ -35,15 +36,8 @@ QMainWindow(), settings(CONFIG_FROM)
     if(reset)
         settings.clear();
 
-#if defined(Q_OS_WIN)
-    setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    setIconSize(QSize(24, 24));         // uniform icon size...
-#elif defined(Q_OS_MAC)
     setToolButtonStyle(Qt::ToolButtonIconOnly);
-    setIconSize(QSize(24, 24));
-#else
-    setToolButtonStyle(Qt::ToolButtonFollowStyle);
-#endif
+    setIconSize(QSize(16, 16));
 
     ui.setupUi(static_cast<QMainWindow *>(this));
     toolbar = new Toolbar(this, ui.toolBar);
@@ -78,6 +72,14 @@ int main(int argc, char *argv[])
 #endif
     if(!localize.isEmpty())
         app.installTranslator(&localize);
+
+    QFile style(":/styles/desktop.css");
+    if(style.exists()) {
+        style.open(QFile::ReadOnly);
+        QString css = QLatin1String(style.readAll());
+        style.close();
+        qApp->setStyleSheet(css);
+    }
 
     args.setApplicationDescription("SipWitchQt Desktop Client");
     Args::add(args, {
