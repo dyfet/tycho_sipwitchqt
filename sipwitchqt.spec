@@ -52,6 +52,22 @@ qmake-qt5 CONFIG+=sys_prefix QMAKE_CXXFLAGS+="\"%optflags\"" QMAKE_STRIP="/bin/t
 %install
 %{__make} install INSTALL_ROOT=%{buildroot}
 
+%post
+/sbin/chkconfig --add sipwitchqt
+
+%preun
+if [ "$1" = 0 ]; then
+	/sbin/service sipwitchqt stop >/dev/null 2>&1
+	/sbin/chkconfig --del sipwitchqt
+fi	 
+exit 0
+
+%postun
+if [ "$1" -ge 1 ] ; then
+	/sbin/service sipwitchqt condrestart >/dev/null 2>&1
+fi
+exit 0
+
 %files
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG

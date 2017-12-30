@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-<author>David Sugar</author>
+ <author>David Sugar</author>
  <comment>** Copyright (C) 2017 Tycho Softworks.
 **
 ** This program is free software: you can redistribute it and/or modify
@@ -37,10 +37,34 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>26</height>
+    </size>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::NoToolBarArea</set>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <property name="floatable">
     <bool>false</bool>
    </property>
    <attribute name="toolBarArea">
@@ -52,9 +76,14 @@
    <addaction name="actionLogin"/>
    <addaction name="actionSessions"/>
    <addaction name="actionContacts"/>
-   <addaction name="actionOptions"/>
+   <addaction name="actionDialpad"/>
+   <addaction name="actionSettings"/>
   </widget>
   <action name="actionSessions">
+   <property name="icon">
+    <iconset resource="../Resources/desktop.qrc">
+     <normaloff>:/icons/people.png</normaloff>:/icons/people.png</iconset>
+   </property>
    <property name="text">
     <string>Activity</string>
    </property>
@@ -62,7 +91,20 @@
     <string>Call and message activity</string>
    </property>
   </action>
-  <action name="actionOptions">
+  <action name="actionDialpad">
+   <property name="icon">
+    <iconset resource="../Resources/desktop.qrc">
+     <normaloff>:/icons/dialpad.png</normaloff>:/icons/dialpad.png</iconset>
+   </property>
+   <property name="text">
+    <string>Dialpad</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="icon">
+    <iconset resource="../Resources/desktop.qrc">
+     <normaloff>:/icons/settings.png</normaloff>:/icons/settings.png</iconset>
+   </property>
    <property name="text">
     <string>Settings</string>
    </property>
@@ -81,6 +123,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../Resources/desktop.qrc"/>
+ </resources>
  <connections/>
 </ui>
