@@ -19,6 +19,7 @@
 #define	DESKTOP_HPP_
 
 #include "../Common/compiler.hpp"
+#include "../Connect/control.hpp"
 #include "toolbar.hpp"
 #include "statusbar.hpp"
 
@@ -54,6 +55,7 @@ public:
     QWidget *extendToolbar(QToolBar *bar, QMenuBar *menu = nullptr);
 
 private:
+    Control *control;
     Toolbar *toolbar;
     Statusbar *statusbar;
     QSettings settings;

@@ -39,6 +39,8 @@ QMainWindow(), settings(CONFIG_FROM)
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
+    control = new Control(this);
+
     ui.setupUi(static_cast<QMainWindow *>(this));
     toolbar = new Toolbar(this, ui.toolBar);
     statusbar = new Statusbar(ui.centralwidget, ui.statusBar);
@@ -46,6 +48,10 @@ QMainWindow(), settings(CONFIG_FROM)
 
 Desktop::~Desktop()
 {
+    if(control) {
+        delete control;
+        control = nullptr;
+    }
 }
 
 int main(int argc, char *argv[])

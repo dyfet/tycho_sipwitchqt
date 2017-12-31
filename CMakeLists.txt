@@ -69,9 +69,11 @@ endif()
 configure_file(config.hpp.in config.hpp)
 
 file(GLOB common_src Common/*.cpp)
+file(GLOB connect_src Connect/*.cpp)
 file(GLOB database_src Database/*.cpp)
 file(GLOB server_src Server/*.cpp)
 file(GLOB common_hdr Common/*.hpp)
+file(GLOB connect_hdr Connect/*.hpp)
 file(GLOB database_hdr Database/*.hpp)
 file(GLOB server_hdr Server/*.hpp)
 file(GLOB desktop_hdr Desktop/*.hpp)
@@ -81,7 +83,7 @@ file(GLOB markdown *.md)
 
 set(voip_libs eXosip2 osip2 osipparser2)
 
-add_executable(antisipate ${common_src} ${common_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} Resources/desktop.qrc)
+add_executable(antisipate ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} Resources/desktop.qrc)
 target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets ${voip_libs} ${system_libs})
 
 add_executable(sipwitchqt ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
