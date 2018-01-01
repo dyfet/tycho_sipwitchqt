@@ -57,8 +57,13 @@ QMainWindow(), settings(CONFIG_FROM)
         return;
 
     trayIcon = new QSystemTrayIcon(this);
-    if(trayIcon)
+    if(trayIcon) {
         trayMenu = new QMenu();
+        trayIcon->setContextMenu(trayMenu);
+        trayIcon->setIcon(QIcon(":/icons/offline.png"));
+        trayIcon->setVisible(true);
+        trayIcon->show();
+    }
 }
 
 Desktop::~Desktop()

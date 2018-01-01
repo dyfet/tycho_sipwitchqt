@@ -3,6 +3,10 @@
 	<file>tribal.png</file>
 </qresource>
 <qresource prefix="/icons">
+	<file>idle.png</file>
+	<file>idle@2x.png</file>
+	<file>offline.png</file>
+	<file>offline@2x.png</file>
 	<file>search.png</file>
 	<file>search@2x.png</file>
 	<file>settings.png</file>
