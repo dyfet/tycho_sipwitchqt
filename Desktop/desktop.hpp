@@ -60,10 +60,8 @@ private:
     Statusbar *statusbar;
     QSettings settings;
     QSystemTrayIcon *trayIcon;
-    QMenu *trayMenu, *dockMenu;
+    QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag;
-
-    QMenu *appMenu(const QString& id);
 
     static Desktop *Instance;
 };

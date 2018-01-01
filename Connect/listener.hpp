@@ -15,52 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONTROL_HPP_
-#define	CONTROL_HPP_
+#ifndef LISTENER_HPP_
+#define LISTENER_HPP_
 
-#include "../Common/types.hpp"
-#include <QObject>
-#include <QString>
-#include <QStringList>
-#include <QSettings>
-#include <QLocalServer>
-#include <QLockFile>
-#include <QVariant>
-#include <QHash>
+#include "../Common/compiler.hpp"
+#include "../Common/util.hpp"
+#include "../Common/contact.hpp"
 
-class Control : public QObject
+#include <QThread>
+#include <QSslCertificate>
+
+class Listener final : public QObject
 {
+	Q_DISABLE_COPY(Listener)
 	Q_OBJECT
-	Q_DISABLE_COPY(Control)
 
 public:
-    Control(QObject *parent);
-	~Control();
-
-	inline static Control *instance() {
+	static Listener *instance() {
 		return Instance;
 	}
 
-	static int command(const QString& value, bool verbose = false, int timeout = 1000);
-
-	static int request(const QStringList& args, bool verbose = true, int timeout = 1000);
+    static void start(const UString& address, quint16 port = 5060);
+	static void start(const QSslCertificate& cert);
+	static void stop();
 
 private:
-    QLockFile lockFile;
-    QLocalServer localServer;
+    bool active;
+    UString serverAddress;
+    quint16 serverPort;
 
-	static Control *Instance;
+    Listener(const UString& address, quint16 port);
+	Listener(const QSslCertificate& cert);
+
+    static Listener *Instance;
 
 signals:
-    void request(const QString& msg);
+	void finished();
 
 private slots:
-	void acceptConnection();
+	void run();
 };
 
 /*!
- * Local IPC control support of a sipwitchqt client.
- * \file control.hpp
+ * Interface to remote sip server.
+ * \file listener.hpp
  */
 
-#endif	
+#endif

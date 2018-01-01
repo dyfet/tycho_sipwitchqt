@@ -44,6 +44,21 @@ QMainWindow(), settings(CONFIG_FROM)
     ui.setupUi(static_cast<QMainWindow *>(this));
     toolbar = new Toolbar(this, ui.toolBar);
     statusbar = new Statusbar(ui.centralwidget, ui.statusBar);
+
+    trayIcon = nullptr;
+    trayMenu = dockMenu = appMenu = nullptr;
+
+#if defined(Q_OS_MAC)
+    dockMenu = new QMenu();
+    qt_mac_set_dock_menu(dockMenu);
+#endif
+
+    if(!tray)
+        return;
+
+    trayIcon = new QSystemTrayIcon(this);
+    if(trayIcon)
+        trayMenu = new QMenu();
 }
 
 Desktop::~Desktop()

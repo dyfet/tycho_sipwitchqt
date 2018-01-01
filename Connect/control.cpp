@@ -27,13 +27,18 @@ Control *Control::Instance = nullptr;
 static QString runtimePath(const QString& fileName)
 {
     auto path = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+#ifdef Q_OS_UNIX
+    if(path.isEmpty())
+        return "/tmp/." + fileName;
+#else
     if(path.isEmpty())
         return fileName;
+#endif
     return path + "/" + fileName;
 }
 
 Control::Control(QObject *parent) :
-QObject(parent), lockFile(runtimePath("sipwitchqt-lock")), localServer(nullptr)
+QObject(parent), lockFile(runtimePath("sipwitchqt-lock"))
 {
 	Q_ASSERT(Instance == nullptr);
 	Instance = this;
@@ -45,30 +50,24 @@ QObject(parent), lockFile(runtimePath("sipwitchqt-lock")), localServer(nullptr)
         ::exit(91);
     }
 
-	localServer = new QLocalServer(this);
-	localServer->setSocketOptions(QLocalServer::GroupAccessOption | QLocalServer::UserAccessOption);
-    if(!localServer->listen(runtimePath("sipwitchqt-ipc"))) {
+    localServer.setSocketOptions(QLocalServer::GroupAccessOption | QLocalServer::UserAccessOption);
+    if(!localServer.listen("sipwitchqt-ipc")) {
         qWarning() << "Cannot create control.";
 		::exit(90);
 	}
 
-	connect(localServer, &QLocalServer::newConnection, this, &Control::acceptConnection);
+    connect(&localServer, &QLocalServer::newConnection, this, &Control::acceptConnection);
 }
 
 Control::~Control()
 {
     if(lockFile.isLocked())
         lockFile.unlock();
-
-	if(localServer) {
-		delete localServer;
-		localServer = nullptr;
-	}
 }
 
 void Control::acceptConnection()
 {
-    QLocalSocket* socket = localServer->nextPendingConnection();
+    QLocalSocket* socket = localServer.nextPendingConnection();
     if (!socket)
         return;
 
