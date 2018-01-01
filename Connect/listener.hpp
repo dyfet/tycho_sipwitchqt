@@ -43,9 +43,13 @@ private:
     bool active;
     UString serverAddress;
     quint16 serverPort;
+    eXosip_t *context;
+    int family, tls;
 
     Listener(const UString& address, quint16 port);
 	Listener(const QSslCertificate& cert);
+
+    void threading();
 
     static Listener *Instance;
 
