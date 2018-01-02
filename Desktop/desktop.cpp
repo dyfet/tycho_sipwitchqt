@@ -84,6 +84,9 @@ void Desktop::offline()
 {
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/offline.png"));
+
+    connected = false;
+    listener = nullptr;
 }
 
 void Desktop::connecting()
@@ -96,6 +99,8 @@ void Desktop::online()
 {
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/online.png"));
+
+    connected = true;
 }
 
 void Desktop::listen()
