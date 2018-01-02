@@ -20,6 +20,7 @@
 
 #include "../Common/compiler.hpp"
 #include "../Connect/control.hpp"
+#include "../Connect/listener.hpp"
 #include "toolbar.hpp"
 #include "statusbar.hpp"
 
@@ -56,14 +57,28 @@ public:
 
 private:
     Control *control;
+    Listener *listener;
     Toolbar *toolbar;
     Statusbar *statusbar;
     QSettings settings;
     QSystemTrayIcon *trayIcon;
     QMenu *trayMenu, *dockMenu, *appMenu;
-    bool restart_flag;
+    bool restart_flag, connected;
+
+    void listen(const UString& address, quint16 port = 5060) {
+        Q_ASSERT(listener == nullptr);
+        listener = new Listener(address, port);
+        listen();
+    }
+
+    void listen();
 
     static Desktop *Instance;
+
+public slots:
+    void online(void);
+    void offline(void);
+    void connecting(void);
 };
 
 #endif

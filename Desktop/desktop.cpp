@@ -28,10 +28,11 @@ static Ui::MainWindow ui;
 Desktop *Desktop::Instance = nullptr;
 
 Desktop::Desktop(bool tray, bool reset) :
-QMainWindow(), settings(CONFIG_FROM)
+QMainWindow(), listener(nullptr), settings(CONFIG_FROM)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
+    connected = false;
 
     if(reset)
         settings.clear();
@@ -68,10 +69,40 @@ QMainWindow(), settings(CONFIG_FROM)
 
 Desktop::~Desktop()
 {
+    if(listener) {
+        listener->stop();
+        listener = nullptr;
+    }
+
     if(control) {
         delete control;
         control = nullptr;
     }
+}
+
+void Desktop::offline()
+{
+    if(trayIcon)
+        trayIcon->setIcon(QIcon(":/icons/offline.png"));
+}
+
+void Desktop::connecting()
+{
+    if(trayIcon)
+        trayIcon->setIcon(QIcon(":/icons/activate.png"));
+}
+
+void Desktop::online()
+{
+    if(trayIcon)
+        trayIcon->setIcon(QIcon(":/icons/online.png"));
+}
+
+void Desktop::listen()
+{
+    connect(listener, &Listener::starting, this, &Desktop::connecting);
+    connect(listener, &Listener::finished, this, &Desktop::offline);
+    listener->start(QThread::HighPriority);
 }
 
 int main(int argc, char *argv[])

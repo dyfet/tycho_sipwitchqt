@@ -31,29 +31,26 @@ class Listener final : public QObject
 	Q_OBJECT
 
 public:
-	static Listener *instance() {
-		return Instance;
-	}
+    Listener(const UString& address, quint16 port);
+    Listener(const QSslCertificate& cert);
 
-    static void start(const UString& address, quint16 port = 5060);
-	static void start(const QSslCertificate& cert);
-	static void stop();
+    inline void start(QThread::Priority priority) {
+        thread()->start(priority);
+    }
+
+    void stop();
 
 private:
-    bool active;
+    volatile bool active;
     UString serverAddress;
     quint16 serverPort;
     eXosip_t *context;
     int family, tls;
 
-    Listener(const UString& address, quint16 port);
-	Listener(const QSslCertificate& cert);
-
-    void threading();
-
-    static Listener *Instance;
+    void listen();
 
 signals:
+    void starting();
 	void finished();
 
 private slots:

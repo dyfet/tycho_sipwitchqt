@@ -45,8 +45,6 @@ private:
     eXosip_t *context;
 };
 
-Listener *Listener::Instance = nullptr;
-
 Listener::Listener(const UString& address, quint16 port) :
 QObject(), active(true)
 {
@@ -55,10 +53,10 @@ QObject(), active(true)
     family = AF_INET;
     tls = 0;
 
-    threading();
+    listen();
 }
 
-void Listener::threading()
+void Listener::listen()
 {
     QThread *thread = new QThread;
     this->moveToThread(thread);
@@ -67,7 +65,6 @@ void Listener::threading()
     connect(this, &Listener::finished, thread, &QThread::quit);
     connect(this, &Listener::finished, this, &QObject::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-    thread->start(QThread::HighPriority);
 }
 
 void Listener::run()
@@ -88,6 +85,8 @@ void Listener::run()
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
     eXosip_set_user_agent(context, UString("Antisipate/") + PROJECT_VERSION);
     eXosip_listen_addr(context, IPPROTO_UDP, NULL, 0, family, tls);
+
+    emit starting();
 
     while(active) {
         int s = EVENT_TIMER / 1000l;
@@ -113,17 +112,8 @@ void Listener::run()
     context = nullptr;
 }
 
-void Listener::start(const UString& address, quint16 port)
-{
-    Q_ASSERT(Instance == nullptr);
-    Instance = new Listener(address, port);
-}
-
 void Listener::stop()
 {
-    if(Instance) {
-        Instance->active = false;
-        Instance = nullptr;
-        QThread::msleep(100);
-    }
+    active = false;
+    QThread::msleep(100);
 }
