@@ -26,6 +26,7 @@
 #include "statusbar.hpp"
 
 #include "login.hpp"
+#include "sessions.hpp"
 
 #include <QMainWindow>
 #include <QString>
@@ -89,6 +90,7 @@ public:
 
 private:
     Login *login;
+    Sessions *sessions;
     Control *control;
     Listener *listener;
     Storage *storage;

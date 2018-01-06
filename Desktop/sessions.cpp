@@ -16,18 +16,19 @@
  */
 
 #include "desktop.hpp"
-#include "ui_login.h"
+#include "ui_sessions.h"
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-static Ui::LoginWindow ui;
+static Ui::SessionsWindow ui;
 
-Login::Login(Desktop *control) :
+Sessions::Sessions(Desktop *control) :
 QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
-    connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
+    ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
+    ui.messages->setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 

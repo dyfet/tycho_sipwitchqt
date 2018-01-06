@@ -58,7 +58,9 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
 #endif
 
     login = new Login(this);
+    sessions = new Sessions(this);
     ui.pagerStack->addWidget(login);
+    ui.pagerStack->addWidget(sessions);
 
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
@@ -145,7 +147,7 @@ void Desktop::initial()
 {
     // storage = new Storage(login->credentials());
     ui.toolBar->show();
-    // set current widget to main session...
+    ui.pagerStack->setCurrentWidget(sessions);
     authorizing();
 }
 
@@ -154,6 +156,7 @@ void Desktop::authorizing()
     // listen()...
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/activate.png"));
+    status("Connecting...");
     State = AUTHORIZING;
 }
 

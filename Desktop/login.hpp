@@ -26,12 +26,12 @@ class Desktop;
 class Login : public QWidget
 {
 public:
-	Login(Desktop *main);
+    Login(Desktop *main);
 
     QVariantHash credentials();     // gathers local ones...
 
 private:
-	Desktop *desktop;
+    Desktop *desktop;
 };
 
 #endif

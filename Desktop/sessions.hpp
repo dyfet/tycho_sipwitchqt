@@ -15,19 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "desktop.hpp"
-#include "ui_login.h"
+#ifndef SESSIONS_HPP_
+#define	SESSIONS_HPP_
 
-#ifdef  HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <QWidget>
+#include <QVariantHash>
 
-static Ui::LoginWindow ui;
+class Desktop;
 
-Login::Login(Desktop *control) :
-QWidget(), desktop(control)
+class Sessions : public QWidget
 {
-    ui.setupUi(static_cast<QWidget *>(this));
-    connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
-}
+public:
+    Sessions(Desktop *main);
+
+private:
+    Desktop *desktop;
+};
+
+#endif
 
