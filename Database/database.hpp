@@ -63,9 +63,9 @@ private:
 
     int getCount(const QString& id);
 
-    bool runQuery(const QString& string, QVariantList parms = QVariantList());
+    bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
     int runQuery(const QStringList& list);
-    QSqlRecord getRecord(const QString& request, QVariantList parms = QVariantList());
+    QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
     bool reopen();
     bool create();
     void close();

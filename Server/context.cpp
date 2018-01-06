@@ -72,7 +72,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
 
     context = eXosip_malloc();
     eXosip_init(context);
-    eXosip_set_user_agent(context, Manager::agent());
+    eXosip_set_user_agent(context, UString("SipWitchQt-server/") + PROJECT_VERSION);
 
     auto proto = addr.protocol();
     int ipv6 = 0, rport = 1, dns = 2;

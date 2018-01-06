@@ -28,7 +28,7 @@ static Ui::MainWindow ui;
 Desktop *Desktop::Instance = nullptr;
 
 Desktop::Desktop(bool tray, bool reset) :
-QMainWindow(), listener(nullptr), settings(CONFIG_FROM)
+QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
@@ -54,6 +54,9 @@ QMainWindow(), listener(nullptr), settings(CONFIG_FROM)
     qt_mac_set_dock_menu(dockMenu);
 #endif
 
+    if(Storage::exists())
+        storage = new Storage();
+
     if(!tray)
         return;
 
@@ -72,6 +75,11 @@ Desktop::~Desktop()
     if(listener) {
         listener->stop();
         listener = nullptr;
+    }
+
+    if(storage) {
+        delete storage;
+        storage = nullptr;
     }
 
     if(control) {
@@ -103,11 +111,11 @@ void Desktop::online()
     connected = true;
 }
 
-void Desktop::listen()
+void Desktop::_listen()
 {
     connect(listener, &Listener::starting, this, &Desktop::connecting);
     connect(listener, &Listener::finished, this, &Desktop::offline);
-    listener->start(QThread::HighPriority);
+    listener->start();
 }
 
 int main(int argc, char *argv[])

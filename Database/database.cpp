@@ -90,7 +90,7 @@ int Database::runQuery(const QStringList& list)
     return count;
 }
 
-bool Database::runQuery(const QString &request, QVariantList parms)
+bool Database::runQuery(const QString &request, const QVariantList &parms)
 {
     if(!reopen())
         return false;
@@ -110,7 +110,7 @@ bool Database::runQuery(const QString &request, QVariantList parms)
     return true;
 }
 
-QSqlRecord Database::getRecord(const QString& request, QVariantList parms)
+QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms)
 {
     if(!reopen())
         return QSqlRecord();

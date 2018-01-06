@@ -32,7 +32,6 @@ static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
 Manager *Manager::Instance = nullptr;
 UString Manager::ServerMode;
 UString Manager::ServerHostname;
-UString Manager::UserAgent;
 UString Manager::ServerRealm;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
@@ -44,10 +43,8 @@ Manager::Manager(unsigned order)
     qRegisterMetaType<UString>("UString");
 
     moveToThread(Server::createThread("stack", order));
-    UString name = QCoreApplication::applicationName().toUtf8();
-    UserAgent = name + "/" + qApp->applicationVersion();
 #ifndef Q_OS_WIN
-    osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>(name.constData()));
+    osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>("sipwitchqt"));
 #endif
 
     Server *server = Server::instance();

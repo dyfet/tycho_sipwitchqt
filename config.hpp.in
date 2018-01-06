@@ -20,6 +20,7 @@
 
 #cmakedefine PROJECT_VERSION "${PROJECT_VERSION}"
 #cmakedefine PROJECT_PREFIX "${PROJECT_PREFIX}"
+#cmakedefine DESKTOP_PREFIX "${DESKTOP_PREFIX}"
 #cmakedefine SYSTEMD_FOUND
 #cmakedefine QT_NO_DEBUG_OUTPUT
 
