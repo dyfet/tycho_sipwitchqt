@@ -45,21 +45,26 @@ private:
     eXosip_t *context;
 };
 
-Listener::Listener(const UString& address, quint16 port) :
+Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true)
 {
-    // if test server, and no port, map to 4060...
-    if(!port && address == "127.0.0.1")
-        port = 4060;
+    serverAddress = cred["server"].toString();
+    serverPort = static_cast<quint16>(cred["port"].toUInt());
 
-    if(!port)
-        port = 5060;
+    if(!serverPort && serverAddress == "127.0.0.1")
+        serverPort = 4060;
 
-    serverAddress = address;
-    serverPort = port;
+    if(!serverPort)
+        serverPort = 5060;
+
     family = AF_INET;
     tls = 0;
     rid = -1;
+
+    if(!cert.isNull()) {
+        ++tls;
+        ++serverPort;
+    }
 
     _listen();
 }

@@ -80,6 +80,7 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
              "user VARCHAR(64) NOT NULL,"           // auth userid
              "secret VARCHAR(64) NOT NULL,"         // auth secret
              "server VARCHAR(64) NOT NULL,"         // server we use
+             "port INTEGER DEFAULT 0,"              // server port
              "realm VARCHAR(128) NOT NULL,"         // remote realm
              "type VARCHAR(16) NOT NULL,"           // algorithm used
              "series INTEGER DEFAULT 9);",          // site db series
@@ -95,8 +96,8 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
         "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > 0;",
     });
 
-    runQuery("INSERT INTO Credentials(user, secret, type, realm) VALUES(?,?,?,?,?);",
-        {cred["user"], cred["secret"], cred["server"], cred["type"], cred["realm"]});
+    runQuery("INSERT INTO Credentials(user, secret, server, port, type, realm) VALUES(?,?,?,?,?,?);",
+        {cred["user"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
 }
 
 Storage::~Storage()
@@ -224,8 +225,8 @@ void Storage::updateCredentials(const QHash<QString,QString> &update)
     auto cred = credentials();
     foreach(auto key, update.keys())
         cred[key] = update[key];
-    runQuery("UPDATE Credentials SET user=?, secret=?, server=?, type=?, realm=? WHERE id=1;",
-        {cred["user"], cred["secret"], cred["server"], cred["type"], cred["realm"]});
+    runQuery("UPDATE Credentials SET user=?, secret=?, server=?, port=?, type=?, realm=? WHERE id=1;",
+        {cred["user"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
 }
 
 bool Storage::exists()

@@ -31,8 +31,7 @@ class Listener final : public QObject
 	Q_OBJECT
 
 public:
-    Listener(const UString& address, quint16 port);
-    Listener(const QSslCertificate& cert);
+    Listener(const QVariantHash& credentials, const QSslCertificate& cert = QSslCertificate());
 
     inline void start() {
         thread()->start(QThread::HighPriority);

@@ -99,13 +99,9 @@ private:
     QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag, connected;
 
-    void listen(const UString& address, quint16 port = 0) {
-        Q_ASSERT(listener == nullptr);
-        listener = new Listener(address, port);
-        _listen();
-    }
+    void listen();
 
-    void _listen();
+    // status bar functions...
     void warning(const QString& msg);
     void error(const QString& msg);
     void status(const QString& msg);

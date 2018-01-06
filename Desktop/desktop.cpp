@@ -151,7 +151,7 @@ void Desktop::initial()
 
 void Desktop::authorizing()
 {
-    // listener = new Listener...
+    // listen()...
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/activate.png"));
     State = AUTHORIZING;
@@ -166,8 +166,12 @@ void Desktop::online()
     State = ONLINE;
 }
 
-void Desktop::_listen()
+void Desktop::listen()
 {
+    Q_ASSERT(listener == nullptr);
+    Q_ASSERT(storage != nullptr);
+
+    listener = new Listener(storage->credentials());
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     listener->start();
