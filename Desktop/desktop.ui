@@ -99,6 +99,9 @@
    <property name="text">
     <string>Dialpad</string>
    </property>
+   <property name="toolTip">
+    <string>Enable dialpad mode</string>
+   </property>
   </action>
   <action name="actionSettings">
    <property name="icon">
@@ -108,8 +111,15 @@
    <property name="text">
     <string>Settings</string>
    </property>
+   <property name="toolTip">
+    <string>Change settings</string>
+   </property>
   </action>
   <action name="actionContacts">
+   <property name="icon">
+    <iconset resource="../Resources/desktop.qrc">
+     <normaloff>:/icons/phonebook@2x.png</normaloff>:/icons/phonebook@2x.png</iconset>
+   </property>
    <property name="text">
     <string>Contacts</string>
    </property>
@@ -118,8 +128,15 @@
    </property>
   </action>
   <action name="actionLogin">
+   <property name="icon">
+    <iconset resource="../Resources/desktop.qrc">
+     <normaloff>:/images/menu.png</normaloff>:/images/menu.png</iconset>
+   </property>
    <property name="text">
     <string>Login</string>
+   </property>
+   <property name="toolTip">
+    <string>Login and menu actions</string>
    </property>
   </action>
  </widget>

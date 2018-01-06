@@ -46,6 +46,7 @@ private:
     quint16 serverPort;
     eXosip_t *context;
     int family, tls;
+    int rid;
 
     void _listen();
 

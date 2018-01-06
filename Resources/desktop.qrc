@@ -1,6 +1,9 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/images">
 	<file>tribal.png</file>
+	<file>logo.png</file>
+	<file>menu.png</file>
+	<file>blocked.png</file>
 </qresource>
 <qresource prefix="/icons">
 	<file>idle.png</file>
@@ -17,6 +20,12 @@
 	<file>dialpad@2x.png</file>
 	<file>people.png</file>
 	<file>people@2x.png</file>
+	<file>locked.png</file>
+	<file>locked@2x.png</file>
+	<file>unlocked.png</file>
+	<file>unlocked@2x.png</file>
+	<file>phonebook.png</file>
+	<file>phonebook@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>
