@@ -61,6 +61,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     sessions = new Sessions(this);
     ui.pagerStack->addWidget(login);
     ui.pagerStack->addWidget(sessions);
+    ui.console->setHidden(true);
 
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
