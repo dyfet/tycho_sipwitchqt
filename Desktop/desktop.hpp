@@ -21,6 +21,7 @@
 #include "../Common/compiler.hpp"
 #include "../Connect/control.hpp"
 #include "../Connect/listener.hpp"
+#include "../Connect/storage.hpp"
 #include "toolbar.hpp"
 #include "statusbar.hpp"
 
@@ -32,7 +33,9 @@
 #include <QSystemTrayIcon>
 #include <QSettings>
 
-#if defined(Q_OS_MAC)
+#if defined(DESKTOP_PREFIX)
+#define CONFIG_FROM DESKTOP_PREFIX "/settings.cfg", QSettings::IniFormat
+#elif defined(Q_OS_MAC)
 #define CONFIG_FROM "tychosoft.com", "Antisipate"
 #elif defined(Q_OS_WIN)
 #define CONFIG_FROM "Tycho Softworks", "Antisipate"
@@ -43,21 +46,36 @@
 class Desktop final : public QMainWindow
 {
 	Q_OBJECT
+    Q_DISABLE_COPY(Desktop)
+
 public:
     Desktop(bool tray, bool reset);
     virtual ~Desktop();
 
-    inline static Desktop *instance() {
-	    return Instance;
+    bool isConnected() {
+        return connected;
+    }
+
+    bool isActive() {
+        return listener != nullptr;
+    }
+
+    bool isOpened() {
+        return storage != nullptr;
     }
 
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
     QWidget *extendToolbar(QToolBar *bar, QMenuBar *menu = nullptr);
 
+    inline static Desktop *instance() {
+        return Instance;
+    }
+
 private:
     Control *control;
     Listener *listener;
+    Storage *storage;
     Toolbar *toolbar;
     Statusbar *statusbar;
     QSettings settings;
@@ -65,13 +83,13 @@ private:
     QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag, connected;
 
-    void listen(const UString& address, quint16 port = 5060) {
+    void listen(const UString& address, quint16 port = 0) {
         Q_ASSERT(listener == nullptr);
         listener = new Listener(address, port);
-        listen();
+        _listen();
     }
 
-    void listen();
+    void _listen();
 
     static Desktop *Instance;
 

@@ -35,10 +35,6 @@ public:
         return Instance;
     }
 
-    inline static const UString agent() {
-        return UserAgent;
-    }
-
     inline static const UString realm() {
         return ServerRealm;
     }
@@ -53,7 +49,6 @@ private:
     static UString ServerHostname;
     static UString ServerMode;
     static UString ServerRealm;
-    static UString UserAgent;
     static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;

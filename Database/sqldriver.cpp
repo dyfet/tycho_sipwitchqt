@@ -37,6 +37,7 @@ static QStringList sqliteTables = {
         "type VARCHAR(8) DEFAULT 'NONE',"       // ext type/suspended state
         "alias VARCHAR(32) DEFAULT NULL,"       // public visible alias
         "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
         "display VARCHAR(64),"                  // display name
         "PRIMARY KEY (number));",
     "CREATE UNIQUE INDEX Aliases ON Extensions(alias) WHERE alias IS NOT NULL;",

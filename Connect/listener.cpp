@@ -48,15 +48,22 @@ private:
 Listener::Listener(const UString& address, quint16 port) :
 QObject(), active(true)
 {
+    // if test server, and no port, map to 4060...
+    if(!port && address == "127.0.0.1")
+        port = 4060;
+
+    if(!port)
+        port = 5060;
+
     serverAddress = address;
     serverPort = port;
     family = AF_INET;
     tls = 0;
 
-    listen();
+    _listen();
 }
 
-void Listener::listen()
+void Listener::_listen()
 {
     QThread *thread = new QThread;
     this->moveToThread(thread);
@@ -83,7 +90,7 @@ void Listener::run()
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
     eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
-    eXosip_set_user_agent(context, UString("Antisipate/") + PROJECT_VERSION);
+    eXosip_set_user_agent(context, UString("SipWitchQt-client/") + PROJECT_VERSION);
     eXosip_listen_addr(context, IPPROTO_UDP, NULL, 0, family, tls);
 
     emit starting();

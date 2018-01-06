@@ -30,32 +30,32 @@
 
 class Control : public QObject
 {
-	Q_OBJECT
-	Q_DISABLE_COPY(Control)
+    Q_OBJECT
+    Q_DISABLE_COPY(Control)
 
 public:
     Control(QObject *parent);
-	~Control();
+    ~Control();
 
-	inline static Control *instance() {
-		return Instance;
-	}
+    inline static Control *instance() {
+	return Instance;
+    }
 
-	static int command(const QString& value, bool verbose = false, int timeout = 1000);
+    static int command(const QString& value, bool verbose = false, int timeout = 1000);
 
-	static int request(const QStringList& args, bool verbose = true, int timeout = 1000);
+    static int request(const QStringList& args, bool verbose = true, int timeout = 1000);
 
 private:
     QLockFile lockFile;
     QLocalServer localServer;
 
-	static Control *Instance;
+    static Control *Instance;
 
 signals:
     void request(const QString& msg);
 
 private slots:
-	void acceptConnection();
+    void acceptConnection();
 };
 
 /*!

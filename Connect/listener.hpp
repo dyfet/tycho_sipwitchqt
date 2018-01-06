@@ -34,8 +34,8 @@ public:
     Listener(const UString& address, quint16 port);
     Listener(const QSslCertificate& cert);
 
-    inline void start(QThread::Priority priority) {
-        thread()->start(priority);
+    inline void start() {
+        thread()->start(QThread::HighPriority);
     }
 
     void stop();
@@ -47,7 +47,7 @@ private:
     eXosip_t *context;
     int family, tls;
 
-    void listen();
+    void _listen();
 
 signals:
     void starting();
@@ -58,7 +58,10 @@ private slots:
 };
 
 /*!
- * Interface to remote sip server.
+ * Interface to remote sip server.  A key difference between listener and
+ * the server sip context is that there is only one listener, and it
+ * represents a single active authenticated session.  All sip functionality
+ * is also enclosed here.
  * \file listener.hpp
  */
 

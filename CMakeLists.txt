@@ -58,12 +58,18 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+    if(UNIX OR WIN32)
+        set(DESKTOP_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+    endif()
 else()
     set(QT_NO_DEBUG_OUTPUT TRUE)
 endif()
 
 if(ENABLE_USERCONFIG)
     set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/userdata")
+    if(UNIX OR WIN32)
+        set(DESKTOP_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/userdata")
+    endif()
 endif()
 
 configure_file(config.hpp.in config.hpp)
@@ -84,7 +90,7 @@ file(GLOB markdown *.md)
 set(voip_libs eXosip2 osip2 osipparser2)
 
 add_executable(antisipate ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} Resources/desktop.qrc)
-target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets ${voip_libs} ${system_libs})
+target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${system_libs})
 
 add_executable(sipwitchqt ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
 target_link_libraries(sipwitchqt Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
