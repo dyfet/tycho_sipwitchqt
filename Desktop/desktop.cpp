@@ -26,6 +26,7 @@
 static Ui::MainWindow ui;
 
 Desktop *Desktop::Instance = nullptr;
+Desktop::state_t Desktop::State = Desktop::INITIAL;
 
 Desktop::Desktop(bool tray, bool reset) :
 QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
@@ -34,8 +35,10 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     Instance = this;
     connected = false;
 
-    if(reset)
+    if(reset) {
+        Storage::remove();
         settings.clear();
+    }
 
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
@@ -54,19 +57,35 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     qt_mac_set_dock_menu(dockMenu);
 #endif
 
-    if(Storage::exists())
-        storage = new Storage();
+    login = new Login(this);
+    ui.pagerStack->addWidget(login);
 
-    if(!tray)
-        return;
+    if(tray)
+        trayIcon = new QSystemTrayIcon(this);
 
-    trayIcon = new QSystemTrayIcon(this);
     if(trayIcon) {
         trayMenu = new QMenu();
         trayIcon->setContextMenu(trayMenu);
         trayIcon->setIcon(QIcon(":/icons/offline.png"));
         trayIcon->setVisible(true);
         trayIcon->show();
+    }
+
+    login = new Login(this);
+    ui.pagerStack->addWidget(login);
+
+    if(Storage::exists()) {
+        storage = new Storage();
+        // hide();
+        // authorizing();
+        // attempt active login...
+    }
+    else {
+        setWindowTitle("Welcome");
+        warning("No local database active");
+        ui.toolBar->hide();
+        ui.pagerStack->setCurrentWidget(login);
+        show();
     }
 }
 
@@ -88,6 +107,30 @@ Desktop::~Desktop()
     }
 }
 
+void Desktop::warning(const QString& text)
+{
+    ui.statusBar->setStyleSheet("color: orange;");
+    ui.statusBar->showMessage(text);
+}
+
+void Desktop::error(const QString& text)
+{
+    ui.statusBar->setStyleSheet("color: red;");
+    ui.statusBar->showMessage(text);
+}
+
+void Desktop::status(const QString& text)
+{
+    ui.statusBar->setStyleSheet("color: blue;");
+    ui.statusBar->showMessage(text);
+}
+
+void Desktop::clear()
+{
+    ui.statusBar->showMessage("");
+}
+
+
 void Desktop::offline()
 {
     if(trayIcon)
@@ -95,12 +138,23 @@ void Desktop::offline()
 
     connected = false;
     listener = nullptr;
+    State = OFFLINE;
 }
 
-void Desktop::connecting()
+void Desktop::initial()
 {
+    // storage = new Storage(login->credentials());
+    ui.toolBar->show();
+    // set current widget to main session...
+    authorizing();
+}
+
+void Desktop::authorizing()
+{
+    // listener = new Listener...
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/activate.png"));
+    State = AUTHORIZING;
 }
 
 void Desktop::online()
@@ -109,11 +163,12 @@ void Desktop::online()
         trayIcon->setIcon(QIcon(":/icons/online.png"));
 
     connected = true;
+    State = ONLINE;
 }
 
 void Desktop::_listen()
 {
-    connect(listener, &Listener::starting, this, &Desktop::connecting);
+    connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     listener->start();
 }
@@ -161,6 +216,5 @@ int main(int argc, char *argv[])
 
     args.process(app);
     Desktop w(!args.isSet("notray"), args.isSet("reset"));
-    w.show();
     return app.exec();
 }

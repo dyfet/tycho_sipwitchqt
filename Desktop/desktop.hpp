@@ -25,6 +25,8 @@
 #include "toolbar.hpp"
 #include "statusbar.hpp"
 
+#include "login.hpp"
+
 #include <QMainWindow>
 #include <QString>
 #include <QMenu>
@@ -49,6 +51,15 @@ class Desktop final : public QMainWindow
     Q_DISABLE_COPY(Desktop)
 
 public:
+    typedef enum {
+        INITIAL,
+        OFFLINE,
+        AUTHORIZING,
+        CALLING,
+        DISCONNECTING,
+        ONLINE,
+    } state_t;
+
     Desktop(bool tray, bool reset);
     virtual ~Desktop();
 
@@ -72,7 +83,12 @@ public:
         return Instance;
     }
 
+    inline static state_t state() {
+        return State;
+    }
+
 private:
+    Login *login;
     Control *control;
     Listener *listener;
     Storage *storage;
@@ -90,13 +106,19 @@ private:
     }
 
     void _listen();
+    void warning(const QString& msg);
+    void error(const QString& msg);
+    void status(const QString& msg);
+    void clear();
 
     static Desktop *Instance;
+    static state_t State;
 
 public slots:
-    void online(void);
-    void offline(void);
-    void connecting(void);
+    void online(void);              // server authorized
+    void offline(void);             // lost server connection
+    void authorizing(void);         // registering with sip server...
+    void initial(void);             // initial connection
 };
 
 #endif

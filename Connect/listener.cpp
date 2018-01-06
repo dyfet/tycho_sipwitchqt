@@ -59,6 +59,7 @@ QObject(), active(true)
     serverPort = port;
     family = AF_INET;
     tls = 0;
+    rid = -1;
 
     _listen();
 }
@@ -112,6 +113,15 @@ void Listener::run()
         // event dispatch....
 
         eXosip_event_free(event);
+    }
+
+    // de-register if we are ending the session while registered
+    if(rid > -1) {
+        osip_message_t *msg = nullptr;
+        Locker lock(context);
+        eXosip_register_build_register(context, rid, 0, &msg);
+        if(msg)
+            eXosip_register_send_register(context, rid, msg);
     }
 
     emit finished();
