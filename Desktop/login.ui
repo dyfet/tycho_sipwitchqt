@@ -161,8 +161,8 @@
           <widget class="QPushButton" name="certificate">
            <property name="maximumSize">
             <size>
-             <width>18</width>
-             <height>18</height>
+             <width>22</width>
+             <height>22</height>
             </size>
            </property>
            <property name="toolTip">
@@ -185,7 +185,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="spacing">
-          <number>-1</number>
+          <number>6</number>
          </property>
          <property name="rightMargin">
           <number>0</number>

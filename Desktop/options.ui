@@ -296,8 +296,8 @@
            <widget class="QPushButton" name="pushButton_2">
             <property name="maximumSize">
              <size>
-              <width>18</width>
-              <height>18</height>
+              <width>22</width>
+              <height>22</height>
              </size>
             </property>
             <property name="text">
@@ -316,8 +316,8 @@
            <widget class="QPushButton" name="pushButton_3">
             <property name="maximumSize">
              <size>
-              <width>18</width>
-              <height>18</height>
+              <width>22</width>
+              <height>22</height>
              </size>
             </property>
             <property name="text">
@@ -336,8 +336,8 @@
            <widget class="QPushButton" name="pushButton_4">
             <property name="maximumSize">
              <size>
-              <width>18</width>
-              <height>18</height>
+              <width>22</width>
+              <height>22</height>
              </size>
             </property>
             <property name="text">
