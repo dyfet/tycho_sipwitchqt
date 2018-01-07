@@ -17,6 +17,7 @@ QLineEdit#searchText {
     padding: 1px;
     margin: 0px;
     padding-left: 0px;
+    background: white;
 }
 
 QToolBar#toolBar {
@@ -26,6 +27,6 @@ QToolBar#toolBar {
     background: white;
 }
 
-QMainWindow, QStatusBar {
+QMainWindow, QStatusBar, QListView {
     background: white;
 }
