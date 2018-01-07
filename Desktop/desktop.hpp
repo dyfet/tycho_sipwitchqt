@@ -27,6 +27,8 @@
 
 #include "login.hpp"
 #include "sessions.hpp"
+#include "phonebook.hpp"
+#include "options.hpp"
 
 #include <QMainWindow>
 #include <QString>
@@ -91,6 +93,8 @@ public:
 private:
     Login *login;
     Sessions *sessions;
+    Phonebook *phonebook;
+    Options *options;
     Control *control;
     Listener *listener;
     Storage *storage;
@@ -117,6 +121,11 @@ public slots:
     void offline(void);             // lost server connection
     void authorizing(void);         // registering with sip server...
     void initial(void);             // initial connection
+
+private slots:
+    void gotoOptions(void);
+    void gotoSessions(void);
+    void gotoPhonebook(void);
 };
 
 #endif

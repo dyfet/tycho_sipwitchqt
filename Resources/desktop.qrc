@@ -26,6 +26,8 @@
 	<file>unlocked@2x.png</file>
 	<file>phonebook.png</file>
 	<file>phonebook@2x.png</file>
+	<file>person.png</file>
+	<file>person@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>

@@ -59,9 +59,17 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
 
     login = new Login(this);
     sessions = new Sessions(this);
+    options = new Options(this);
+    phonebook = new Phonebook(this);
     ui.pagerStack->addWidget(login);
     ui.pagerStack->addWidget(sessions);
+    ui.pagerStack->addWidget(phonebook);
+    ui.pagerStack->addWidget(options);
     ui.console->setHidden(true);
+
+    connect(ui.actionSettings, &QAction::triggered, this, &Desktop::gotoOptions);
+    connect(ui.actionSessions, &QAction::triggered, this, &Desktop::gotoSessions);
+    connect(ui.actionContacts, &QAction::triggered, this, &Desktop::gotoPhonebook);
 
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
@@ -108,6 +116,21 @@ Desktop::~Desktop()
         delete control;
         control = nullptr;
     }
+}
+
+void Desktop::gotoOptions()
+{
+    ui.pagerStack->setCurrentWidget(options);
+}
+
+void Desktop::gotoSessions()
+{
+    ui.pagerStack->setCurrentWidget(sessions);
+}
+
+void Desktop::gotoPhonebook()
+{
+    ui.pagerStack->setCurrentWidget(phonebook);
 }
 
 void Desktop::warning(const QString& text)
