@@ -28,6 +28,8 @@ class Sessions : public QWidget
 public:
     Sessions(Desktop *main);
 
+    void enter(void);
+
 private:
     Desktop *desktop;
 };

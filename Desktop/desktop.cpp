@@ -121,16 +121,19 @@ Desktop::~Desktop()
 void Desktop::gotoOptions()
 {
     ui.pagerStack->setCurrentWidget(options);
+    options->enter();
 }
 
 void Desktop::gotoSessions()
 {
     ui.pagerStack->setCurrentWidget(sessions);
+    sessions->enter();
 }
 
 void Desktop::gotoPhonebook()
 {
     ui.pagerStack->setCurrentWidget(phonebook);
+    phonebook->enter();
 }
 
 void Desktop::warning(const QString& text)
@@ -171,7 +174,7 @@ void Desktop::initial()
 {
     // storage = new Storage(login->credentials());
     ui.toolBar->show();
-    ui.pagerStack->setCurrentWidget(sessions);
+    gotoSessions();
     authorizing();
 }
 

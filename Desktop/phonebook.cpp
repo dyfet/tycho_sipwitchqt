@@ -31,3 +31,7 @@ QWidget(), desktop(control)
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 
+void Phonebook::enter()
+{
+    ui.contacts->setFocus();
+}

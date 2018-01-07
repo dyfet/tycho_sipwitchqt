@@ -28,6 +28,8 @@ class Phonebook : public QWidget
 public:
     Phonebook(Desktop *main);
 
+    void enter();
+
 private:
     Desktop *desktop;
 };

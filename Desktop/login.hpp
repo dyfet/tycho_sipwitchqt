@@ -28,6 +28,8 @@ class Login : public QWidget
 public:
     Login(Desktop *main);
 
+    void enter();
+
     QVariantHash credentials();     // gathers local ones...
 
 private:

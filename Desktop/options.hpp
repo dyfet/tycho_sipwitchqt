@@ -28,6 +28,8 @@ class Options : public QWidget
 public:
     Options(Desktop *main);
 
+    void enter();
+
 private:
     Desktop *desktop;
 };

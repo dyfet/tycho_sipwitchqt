@@ -30,3 +30,7 @@ QWidget(), desktop(control)
     ui.setupUi(static_cast<QWidget *>(this));
 }
 
+void Options::enter()
+{
+    ui.autoLogin->setFocus();
+}

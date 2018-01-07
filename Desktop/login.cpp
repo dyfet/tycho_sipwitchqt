@@ -29,5 +29,13 @@ QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
     connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
+
+    enter();
 }
 
+void Login::enter()
+{
+    ui.secret->setText("");
+    ui.identity->setText("");
+    ui.identity->setFocus();
+}

@@ -32,3 +32,7 @@ QWidget(), desktop(control)
     ui.messages->setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 
+void Sessions::enter()
+{
+    ui.input->setFocus();
+}
