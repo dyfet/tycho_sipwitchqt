@@ -27,6 +27,6 @@ QToolBar#toolBar {
     background: white;
 }
 
-QMainWindow, QStatusBar, QListView {
+QMainWindow, QStatusBar, QListView, QGroupBox {
     background: white;
 }
