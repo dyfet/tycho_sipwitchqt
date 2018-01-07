@@ -17,6 +17,8 @@
 
 #include "listener.hpp"
 
+#include <QTimer>
+
 #if defined(Q_OS_WIN)
 #include <WinSock2.h>
 #else
@@ -46,7 +48,7 @@ private:
 };
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
-QObject(), active(true)
+QObject(), active(true), connected(false)
 {
     serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
@@ -71,6 +73,7 @@ QObject(), active(true)
             ++serverPort;
     }
 
+    QTimer::singleShot(5000, this, &Listener::timeout);
     QThread *thread = new QThread;
     this->moveToThread(thread);
 
@@ -104,7 +107,6 @@ void Listener::run()
     osip_message_t *msg = nullptr;
     UString identity = serverSchema + serverUser + "@" + serverHost + ":" + UString::number(serverPort);
     UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
-
     rid = eXosip_register_build_initial_register(context, identity, server, NULL, 1800, &msg);
     if(msg && rid > -1) {
         osip_message_set_supported(msg, "100rel");
@@ -129,8 +131,10 @@ void Listener::run()
             eXosip_automatic_action(context);
             continue;
         }
-        else
+        else {
+            connected = true;
             qDebug() << "type=" << event->type << " cid=" << event->cid;
+        }
 
         // event dispatch....
 
@@ -149,6 +153,15 @@ void Listener::run()
     emit finished();
     eXosip_quit(context);
     context = nullptr;
+}
+
+void Listener::timeout()
+{
+    if(connected)
+        return;
+
+    emit failure(666);
+    active = false;
 }
 
 void Listener::stop()

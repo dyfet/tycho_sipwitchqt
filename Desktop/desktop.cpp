@@ -159,9 +159,22 @@ void Desktop::clear()
     ui.statusBar->showMessage("");
 }
 
+void Desktop::failed(int error_code)
+{
+    switch(error_code) {
+    case 666:
+        error(tr("Cannot reach server"));
+        break;
+    }
+    offline();
+}
 
 void Desktop::offline()
 {
+    // if already offline, we can ignore...
+    if(!listener)
+        return;
+
     if(trayIcon)
         trayIcon->setIcon(QIcon(":/icons/offline.png"));
 
@@ -207,6 +220,7 @@ void Desktop::listen(const QVariantHash& cred)
     listener = new Listener(cred);
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
+    connect(listener, &Listener::failure, this, &Desktop::failed);
     listener->start();
 }
 

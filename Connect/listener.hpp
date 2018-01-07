@@ -24,6 +24,7 @@
 
 #include <QThread>
 #include <QSslCertificate>
+#include <QTimer>
 
 class Listener final : public QObject
 {
@@ -40,7 +41,8 @@ public:
     void stop();
 
 private:
-    volatile bool active;
+    volatile bool active, connected;
+
     UString serverUser;
     UString serverHost;
     UString serverSchema;
@@ -50,10 +52,12 @@ private:
     int rid;
 
 signals:
+    void failure(int code);
     void starting();
 	void finished();
 
 private slots:
+    void timeout();
 	void run();
 };
 

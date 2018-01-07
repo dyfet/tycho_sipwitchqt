@@ -64,15 +64,15 @@ QVariantHash Login::credentials()
     cred["realm"] = cred["type"] = "unknown";
     qDebug() << "LOGIN CREDENTIALS" << cred;
 
-    if(cred["secret"].isNull()) {
-        ui.secret->setFocus();
-        desktop->error(tr("No password entered"));
-        return QVariantHash();
-    }
-
     if(cred["userid"].isNull() || cred["server"].isNull()) {
         ui.identity->setFocus();
         desktop->error(tr("No identity specified"));
+        return QVariantHash();
+    }
+
+    if(cred["secret"].isNull()) {
+        ui.secret->setFocus();
+        desktop->error(tr("No password entered"));
         return QVariantHash();
     }
 

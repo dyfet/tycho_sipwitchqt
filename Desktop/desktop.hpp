@@ -117,12 +117,14 @@ private:
     static state_t State;
 
 public slots:
+    void initial(void);
+
+private slots:
     void online(void);              // server authorized
     void offline(void);             // lost server connection
     void authorizing(void);         // registering with sip server...
-    void initial(void);             // initial connection
+    void failed(int error_code);    // sip session fatal error
 
-private slots:
     void gotoOptions(void);
     void gotoSessions(void);
     void gotoPhonebook(void);
