@@ -41,13 +41,13 @@ public:
 
 private:
     volatile bool active;
-    UString serverAddress;
+    UString serverUser;
+    UString serverHost;
+    UString serverSchema;
     quint16 serverPort;
     eXosip_t *context;
     int family, tls;
     int rid;
-
-    void _listen();
 
 signals:
     void starting();

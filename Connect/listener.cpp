@@ -48,11 +48,10 @@ private:
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true)
 {
-    serverAddress = cred["server"].toString();
+    serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
-
-    if(!serverPort && serverAddress == "127.0.0.1")
-        serverPort = 4060;
+    serverUser = cred["user"].toString();
+    serverSchema = "sip:";
 
     if(!serverPort)
         serverPort = 5060;
@@ -62,15 +61,16 @@ QObject(), active(true)
     rid = -1;
 
     if(!cert.isNull()) {
+        serverSchema = "sips:";
         ++tls;
-        ++serverPort;
     }
 
-    _listen();
-}
+    if(!serverPort) {
+        serverPort = 5060;
+        if(tls)
+            ++serverPort;
+    }
 
-void Listener::_listen()
-{
     QThread *thread = new QThread;
     this->moveToThread(thread);
 
@@ -85,7 +85,7 @@ void Listener::run()
     int ipv6 = 0, rport = 1, dns = 2;
 
 #ifdef AF_INET6
-    if(family == AF_INET && serverAddress.contains(':')) {
+    if(family == AF_INET && serverHost.contains(':')) {
         family = AF_INET6;
         ++ipv6;
     }
@@ -101,6 +101,20 @@ void Listener::run()
 
     emit starting();
 
+    osip_message_t *msg = nullptr;
+    UString identity = serverSchema + serverUser + "@" + serverHost + ":" + UString::number(serverPort);
+    UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
+
+    rid = eXosip_register_build_initial_register(context, identity, server, NULL, 1800, &msg);
+    if(msg && rid > -1) {
+        osip_message_set_supported(msg, "100rel");
+        osip_message_set_header(msg, "Event", "Registration");
+        osip_message_set_header(msg, "Allow-Events", "presence");
+        eXosip_register_send_register(context, rid, msg);
+    }
+    else
+        active = false;
+
     while(active) {
         int s = EVENT_TIMER / 1000l;
         int ms = EVENT_TIMER % 1000l;
@@ -110,10 +124,13 @@ void Listener::run()
 
         // timeout...
         if(!event) {
+            qDebug() << "timeout";
             Locker lock(context);
             eXosip_automatic_action(context);
             continue;
         }
+        else
+            qDebug() << "type=" << event->type << " cid=" << event->cid;
 
         // event dispatch....
 

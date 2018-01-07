@@ -111,7 +111,7 @@ private:
     QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag, connected;
 
-    void listen();
+    void listen(const QVariantHash &cred);
 
     static Desktop *Instance;
     static state_t State;

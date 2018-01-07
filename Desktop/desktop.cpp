@@ -176,7 +176,7 @@ void Desktop::initial()
     if(cred.isEmpty())
         return;
 
-    // storage = new Storage(cred);
+    listen(cred);
     ui.toolBar->show();
     gotoSessions();
     authorizing();
@@ -200,12 +200,11 @@ void Desktop::online()
     State = ONLINE;
 }
 
-void Desktop::listen()
+void Desktop::listen(const QVariantHash& cred)
 {
     Q_ASSERT(listener == nullptr);
-    Q_ASSERT(storage != nullptr);
 
-    listener = new Listener(storage->credentials());
+    listener = new Listener(cred);
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     listener->start();

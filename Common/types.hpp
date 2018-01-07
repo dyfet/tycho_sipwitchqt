@@ -52,6 +52,11 @@ public:
     UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
     bool isQuoted(const char *qc = "\"") const;
+
+
+    static UString number(int num, int base = 10) {
+        return QByteArray::number(num, base);
+    }
 };
 
 inline UString operator+(const UString& str, char *add) {
