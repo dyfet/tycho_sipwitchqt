@@ -161,8 +161,8 @@
           <widget class="QPushButton" name="certificate">
            <property name="maximumSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>18</width>
+             <height>18</height>
             </size>
            </property>
            <property name="toolTip">

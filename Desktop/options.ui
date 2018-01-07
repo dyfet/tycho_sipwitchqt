@@ -249,6 +249,9 @@
    </item>
    <item row="7" column="1">
     <layout class="QVBoxLayout" name="verticalLayout_7">
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
@@ -257,15 +260,18 @@
           <string>Forwarding</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_3"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>No Answer</string>
+             <string>Busy</string>
             </property>
            </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEdit_2"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="lineEdit"/>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_3">
@@ -274,16 +280,73 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineEdit"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_2"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_5">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>Busy</string>
+             <string>No Answer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_3"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="pushButton_2">
+            <property name="maximumSize">
+             <size>
+              <width>18</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../Resources/desktop.qrc">
+              <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="pushButton_3">
+            <property name="maximumSize">
+             <size>
+              <width>18</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../Resources/desktop.qrc">
+              <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="pushButton_4">
+            <property name="maximumSize">
+             <size>
+              <width>18</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../Resources/desktop.qrc">
+              <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -338,6 +401,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../Resources/desktop.qrc"/>
+ </resources>
  <connections/>
 </ui>
