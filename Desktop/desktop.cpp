@@ -172,7 +172,11 @@ void Desktop::offline()
 
 void Desktop::initial()
 {
-    // storage = new Storage(login->credentials());
+    auto cred = login->credentials();
+    if(cred.isEmpty())
+        return;
+
+    // storage = new Storage(cred);
     ui.toolBar->show();
     gotoSessions();
     authorizing();

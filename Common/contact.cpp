@@ -30,6 +30,56 @@ userName(user), expiration(0)
     }
 }
 
+Contact::Contact(const QString& uri, QString server) noexcept :
+hostPort(0), expiration(0)
+{
+    int lead = 0;
+
+    if(uri.left(4).toLower() == "sip:") {
+        hostPort = 5060;
+        lead = 4;
+    }
+    else if(uri.left(5).toLower() == "sips:") {
+        hostPort = 5061;
+        lead = 5;
+    }
+
+    int pos = uri.indexOf("@");
+    if(pos > 0) {
+        userName = uri.mid(lead, pos - lead);
+        server = uri.mid(pos + 1);
+    } else {
+        userName = uri.mid(lead);
+        if(server.left(4).toLower() == "sip:") {
+            server = server.mid(4);
+            if(!hostPort)
+                hostPort = 5060;
+        }
+        else if(server.left(5).toLower() == "sips:") {
+            server = server.mid(5);
+            if(!hostPort)
+                hostPort = 5061;
+        }
+    }
+    lead = server.indexOf("[");
+    if(lead < 1)
+        lead = 0;
+
+    if(server.mid(lead).indexOf(":") == server.lastIndexOf(":"))
+    {
+        if(lead > 0)
+            hostName = server.left(lead);
+        else
+            hostName = server.left(server.indexOf(":"));
+        hostPort = static_cast<quint16>(server.mid(server.lastIndexOf(":") + 1).toInt());
+    }
+    else
+        hostName = server;
+
+    if(!hostPort)
+        hostPort = 5060;
+}
+
 Contact::Contact(osip_uri_t *uri)  noexcept :
 hostPort(0), expiration(0)
 {

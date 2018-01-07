@@ -98,11 +98,23 @@
      </item>
      <item>
       <widget class="QLabel" name="label_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string>Enter server login credentials</string>
+        <string>You will enter your server sipwitch login credentials.</string>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -185,7 +197,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="spacing">
-          <number>6</number>
+          <number>12</number>
          </property>
          <property name="rightMargin">
           <number>0</number>
@@ -238,5 +250,22 @@
  <resources>
   <include location="../Resources/desktop.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>identity</sender>
+   <signal>returnPressed()</signal>
+   <receiver>secret</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>242</x>
+     <y>176</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>196</x>
+     <y>218</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

@@ -78,6 +78,12 @@ public:
         return storage != nullptr;
     }
 
+    // status bar functions...
+    void warning(const QString& msg);
+    void error(const QString& msg);
+    void status(const QString& msg);
+    void clear();
+
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
     QWidget *extendToolbar(QToolBar *bar, QMenuBar *menu = nullptr);
@@ -106,12 +112,6 @@ private:
     bool restart_flag, connected;
 
     void listen();
-
-    // status bar functions...
-    void warning(const QString& msg);
-    void error(const QString& msg);
-    void status(const QString& msg);
-    void clear();
 
     static Desktop *Instance;
     static state_t State;

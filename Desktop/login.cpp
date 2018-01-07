@@ -29,6 +29,12 @@ QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
     connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
+    connect(ui.secret, &QLineEdit::returnPressed, desktop, &Desktop::initial);
+//    connect(ui.identity, &QLineEdit::returnPressed, ui.secret, &QLineEdit::setFocus);
+
+#ifndef NDEBUG
+    ui.server->setText("sip:127.0.0.1:4060");
+#endif
 
     enter();
 }
@@ -39,3 +45,37 @@ void Login::enter()
     ui.identity->setText("");
     ui.identity->setFocus();
 }
+
+QVariantHash Login::credentials()
+{
+    QVariantHash cred;
+    Contact uri(ui.identity->text(), ui.server->text());
+
+    if(!ui.secret->text().isEmpty())
+        cred["secret"] = ui.secret->text();
+
+    if(uri && uri.host().toLower() != "none") {
+        cred["server"] = uri.host();
+        cred["port"] = uri.port();
+        if(!uri.user().isEmpty())
+            cred["userid"] = uri.user();
+    }
+
+    cred["realm"] = cred["type"] = "unknown";
+    qDebug() << "LOGIN CREDENTIALS" << cred;
+
+    if(cred["secret"].isNull()) {
+        ui.secret->setFocus();
+        desktop->error(tr("No password entered"));
+        return QVariantHash();
+    }
+
+    if(cred["userid"].isNull() || cred["server"].isNull()) {
+        ui.identity->setFocus();
+        desktop->error(tr("No identity specified"));
+        return QVariantHash();
+    }
+
+    return cred;
+}
+
