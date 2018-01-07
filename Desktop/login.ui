@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,6 +97,22 @@
       </layout>
      </item>
      <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QLabel" name="label_3">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -105,13 +121,29 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>You will enter your server sipwitch login credentials.</string>
+        <string>Please enter your server login credentials.</string>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>For a cloud server, the lock icon can be used to install your providers certificate. </string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -165,7 +197,7 @@
             <string/>
            </property>
            <property name="placeholderText">
-            <string>Ext #, userid, or user@server</string>
+            <string>Ext #, userid, user@server, or sip uri</string>
            </property>
           </widget>
          </item>
@@ -185,7 +217,7 @@
            </property>
            <property name="icon">
             <iconset resource="../Resources/desktop.qrc">
-             <normaloff>:/icons/unlocked.png</normaloff>:/icons/unlocked.png</iconset>
+             <normaloff>:/icons/locked.png</normaloff>:/icons/locked.png</iconset>
            </property>
            <property name="flat">
             <bool>true</bool>
