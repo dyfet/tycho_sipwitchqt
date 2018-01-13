@@ -29,6 +29,8 @@
 
 #define EVENT_TIMER 500l    // 500ms...
 
+static const char *eid(eXosip_event_type ev);
+
 // internal lock class
 class Locker final
 {
@@ -53,6 +55,7 @@ QObject(), active(true), connected(false)
     serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverUser = cred["user"].toString();
+    serverLabel = cred["label"].toString();
     serverSchema = "sip:";
 
     if(!serverPort)
@@ -73,6 +76,8 @@ QObject(), active(true), connected(false)
             ++serverPort;
     }
 
+    // timer has to be connected before we move listener to it's own thread...
+    // this is required for udp
     QTimer::singleShot(5000, this, &Listener::timeout);
     QThread *thread = new QThread;
     this->moveToThread(thread);
@@ -100,26 +105,30 @@ void Listener::run()
     eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
     eXosip_set_user_agent(context, UString("SipWitchQt-client/") + PROJECT_VERSION);
-    eXosip_listen_addr(context, IPPROTO_UDP, NULL, 0, family, tls);
+    eXosip_listen_addr(context, IPPROTO_TCP, NULL, 0, family, tls);
 
     emit starting();
 
     osip_message_t *msg = nullptr;
     UString identity = serverSchema + serverUser + "@" + serverHost + ":" + UString::number(serverPort);
     UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
+    qDebug() << "Connecting to" << server;
+
     rid = eXosip_register_build_initial_register(context, identity, server, NULL, 1800, &msg);
     if(msg && rid > -1) {
         osip_message_set_supported(msg, "100rel");
         osip_message_set_header(msg, "Event", "Registration");
         osip_message_set_header(msg, "Allow-Events", "presence");
+        osip_message_set_header(msg, "X-Label", serverLabel);
         eXosip_register_send_register(context, rid, msg);
     }
     else
         active = false;
 
+    int s = EVENT_TIMER / 1000l;
+    int ms = EVENT_TIMER % 1000l;
+
     while(active) {
-        int s = EVENT_TIMER / 1000l;
-        int ms = EVENT_TIMER % 1000l;
         auto event = eXosip_event_wait(context, s, ms);
         if(!active)
             break;
@@ -133,9 +142,21 @@ void Listener::run()
         }
         else {
             connected = true;
-            qDebug() << "type=" << event->type << " cid=" << event->cid;
+            qDebug().nospace() << "type=" << eid(event->type) << " cid=" << event->cid;
         }
 
+        switch(event->type) {
+        case EXOSIP_REGISTRATION_FAILURE:
+            if(event->rid != rid)
+                break;
+            if(!event->response) {
+                active = false;
+                emit failure(666);      // no connection failure...
+            }
+            break;
+        default:
+            break;
+        }
         // event dispatch....
 
         eXosip_event_free(event);
@@ -150,6 +171,14 @@ void Listener::run()
             eXosip_register_send_register(context, rid, msg);
     }
 
+    // clean up exiting transactions...
+    for(;;) {
+        auto event = eXosip_event_wait(context, s, ms);
+        if(event == nullptr)
+            break;
+        eXosip_event_free(event);
+    }
+
     emit finished();
     eXosip_quit(context);
     context = nullptr;
@@ -160,12 +189,84 @@ void Listener::timeout()
     if(connected)
         return;
 
-    emit failure(666);
     active = false;
+    emit failure(666);  // special code for unable to reach server...
 }
 
 void Listener::stop()
 {
     active = false;
-    QThread::msleep(100);
+    QThread::msleep(650);
+}
+
+static const char *eid(eXosip_event_type ev)
+{
+    switch(ev) {
+    case EXOSIP_REGISTRATION_SUCCESS:
+        return "register";
+    case EXOSIP_CALL_INVITE:
+        return "invite";
+    case EXOSIP_CALL_REINVITE:
+        return "reinvite";
+    case EXOSIP_CALL_NOANSWER:
+    case EXOSIP_SUBSCRIPTION_NOANSWER:
+    case EXOSIP_NOTIFICATION_NOANSWER:
+        return "noanswer";
+    case EXOSIP_MESSAGE_PROCEEDING:
+    case EXOSIP_NOTIFICATION_PROCEEDING:
+    case EXOSIP_CALL_MESSAGE_PROCEEDING:
+    case EXOSIP_SUBSCRIPTION_PROCEEDING:
+    case EXOSIP_CALL_PROCEEDING:
+        return "proceed";
+    case EXOSIP_CALL_RINGING:
+        return "ring";
+    case EXOSIP_MESSAGE_ANSWERED:
+    case EXOSIP_CALL_ANSWERED:
+    case EXOSIP_CALL_MESSAGE_ANSWERED:
+    case EXOSIP_SUBSCRIPTION_ANSWERED:
+    case EXOSIP_NOTIFICATION_ANSWERED:
+        return "answer";
+    case EXOSIP_SUBSCRIPTION_REDIRECTED:
+    case EXOSIP_NOTIFICATION_REDIRECTED:
+    case EXOSIP_CALL_MESSAGE_REDIRECTED:
+    case EXOSIP_CALL_REDIRECTED:
+    case EXOSIP_MESSAGE_REDIRECTED:
+        return "redirect";
+    case EXOSIP_REGISTRATION_FAILURE:
+        return "noreg";
+    case EXOSIP_SUBSCRIPTION_REQUESTFAILURE:
+    case EXOSIP_NOTIFICATION_REQUESTFAILURE:
+    case EXOSIP_CALL_REQUESTFAILURE:
+    case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
+    case EXOSIP_MESSAGE_REQUESTFAILURE:
+        return "failed";
+    case EXOSIP_SUBSCRIPTION_SERVERFAILURE:
+    case EXOSIP_NOTIFICATION_SERVERFAILURE:
+    case EXOSIP_CALL_SERVERFAILURE:
+    case EXOSIP_CALL_MESSAGE_SERVERFAILURE:
+    case EXOSIP_MESSAGE_SERVERFAILURE:
+        return "server";
+    case EXOSIP_SUBSCRIPTION_GLOBALFAILURE:
+    case EXOSIP_NOTIFICATION_GLOBALFAILURE:
+    case EXOSIP_CALL_GLOBALFAILURE:
+    case EXOSIP_CALL_MESSAGE_GLOBALFAILURE:
+    case EXOSIP_MESSAGE_GLOBALFAILURE:
+        return "global";
+    case EXOSIP_CALL_ACK:
+        return "ack";
+    case EXOSIP_CALL_CLOSED:
+    case EXOSIP_CALL_RELEASED:
+        return "bye";
+    case EXOSIP_CALL_CANCELLED:
+        return "cancel";
+    case EXOSIP_MESSAGE_NEW:
+    case EXOSIP_CALL_MESSAGE_NEW:
+    case EXOSIP_IN_SUBSCRIPTION_NEW:
+        return "new";
+    case EXOSIP_SUBSCRIPTION_NOTIFY:
+        return "notify";
+    default:
+        break;
+    }
+    return "unknown";
 }

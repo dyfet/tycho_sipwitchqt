@@ -32,5 +32,5 @@ QWidget(), desktop(control)
 
 void Options::enter()
 {
-    ui.testButton->setFocus();
+    ui.listButton->setFocus();
 }

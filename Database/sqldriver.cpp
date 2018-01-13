@@ -32,32 +32,70 @@ static QStringList sqliteTables = {
         "last DATETIME,"
         "PRIMARY KEY (uuid));",
 
+    "CREATE TABLE Authorize ("
+        "name VARCHAR(32),"                     // authorizing user or group id
+        "type VARCHAR(8) DEFAULT 'USER',"       // group type
+        "digest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
+        "realm VARCHAR(128),"                   // realm used for secret
+        "secret VARCHAR(128),"                  // secret to use
+        "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "PRIMARY KEY (name));",
+
     "CREATE TABLE Extensions ("
         "number INTEGER NOT NULL,"              // ext number
-        "type VARCHAR(8) DEFAULT 'NONE',"       // ext type/suspended state
-        "alias VARCHAR(32) DEFAULT NULL,"       // public visible alias
-        "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
-        "created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-        "display VARCHAR(64),"                  // display name
-        "PRIMARY KEY (number));",
-    "CREATE UNIQUE INDEX Aliases ON Extensions(alias) WHERE alias IS NOT NULL;",
+        "name VARCHAR(32) DEFAULT '@nobody',"   // group affinity
+        "priority INTEGER DEFAULT 0,"           // ring/dial priority
+        "restrict INTEGER DEFAULT 0,"           // outgoing restrictions
+        "describe VARCHAR(64),"                 // location info
+        "display VARCHAR(64),"                  // can override group display
+        "offline INTEGER,"                      // forwarding offline
+        "away INTEGER,"                         // forwarding away
+        "busy INTEGER,"                         // forwarding busy
+        "noanswer INTEGER,"                     // forwarding no answer
+        "PRIMARY KEY (number),"
+        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE);",
 
-    "CREATE TABLE Authorize ("
-        "userid VARCHAR(32),"                   // authorizing user id
-        "number INTEGER,"                       // extension number tied to
-        "digest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
-        "realm VARCHAR(128) NOT NULL,"          // realm used for secret
-        "secret VARCHAR(128) DEFAULT '',"       // secret to use
-        "last DATETIME,"                        // last registration
-        "PRIMARY KEY (userid),"
-        "FOREIGN KEY (number) REFERENCES Extensions(number));",
+    "CREATE TABLE Endpoints ("
+        "endpoint INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "number INTEGER NOT NULL,"              // extension of endpoint
+        "label VARCHAR(32) DEFAULT 'PHONE',"    // label id
+        "agent VARCHAR(64),"                    // agent id
+        "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "last DATETIME,"
+        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+            "ON DELETE CASCADE);",
+    "CREATE UNIQUE INDEX Registry ON Endpoints(number, label);",
 
-    "CREATE TABLE Forward ("
-        "number INTEGER,"                       // extension number tied to
-        "type VARCHAR(8),"                      // forward type (busy, na, etc)
-        "target VARCHAR(256),"                  // destination
-        "CONSTRAINT FwdType PRIMARY KEY (number, type),"
-        "FOREIGN KEY (number) REFERENCES Extensions(number));",
+    // the "system" speed dialing is system group 10-99
+    // per extension group personal speed dials 01-09 (#1-#9)
+
+    "CREATE TABLE Speeds ("
+        "name VARCHAR(32),"                     // speed dial for...
+        "target VARCHAR(128),"                  // local or external uri
+        "number INTEGER,"                       // speed dial #
+        "CONSTRAINT Dialing PRIMARY KEY (name, number),"
+        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE);",
+
+    "CREATE TABLE Calling ("
+        "name VARCHAR(32),"                     // group hunt is part of
+        "number INTEGER,"                       // extension # to ring
+        "priority INTEGER DEFAULT 0,"           // hunt group priority order
+        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE,"
+        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+            "ON DELETE CASCADE);",
+
+    "CREATE TABLE Teams ("
+        "name VARCHAR(32),"                     // group tied to
+        "member VARCHAR(32),"                     // group member
+        "priority INTEGER DEFAULT -1,"          // coverage priority
+        "CONSTRAINT Grouping PRIMARY KEY (name, member),"
+        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE,"
+        "FOREIGN KEY (member) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE);",
 
     "CREATE TABLE Providers ("
         "contact VARCHAR(128) NOT NULL,"        // provider host uri

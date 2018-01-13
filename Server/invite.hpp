@@ -49,10 +49,9 @@ class LocalSegment final : public Segment
     Q_DISABLE_COPY(LocalSegment)
 
 public:
-    LocalSegment(int callid, Invite *ip, Endpoint *ep);
+    LocalSegment(int callid, Invite *ip, Registry *rp);
 
 private:
-    const Endpoint *endpoint;
     const Registry *registry;
 };
 

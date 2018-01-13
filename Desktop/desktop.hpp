@@ -124,6 +124,7 @@ private slots:
     void offline(void);             // lost server connection
     void authorizing(void);         // registering with sip server...
     void failed(int error_code);    // sip session fatal error
+    void shutdown();                // application shutdown
 
     void gotoOptions(void);
     void gotoSessions(void);

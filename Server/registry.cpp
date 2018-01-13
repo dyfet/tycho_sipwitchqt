@@ -17,35 +17,33 @@
 
 #include "manager.hpp"
 
-static QHash <const UString, Registry *> extensions, aliases;
-static QHash<const Context *, QHash<Contact, Endpoint *>> Endpoints;
+#include <QMultiHash>
 
-Registry::Registry(const QSqlRecord& db) :
-extension(db), id(db.value("number").toString()), alias(db.value("alias").toString()), text(db.value("display").toString())
+static QMultiHash<int, Registry*> extensions;
+static QMultiHash<UString, Registry*> aliases;
+static QHash<QPair<int,UString>, Registry *> registries;
+
+Registry::Registry(const QSqlRecord& db, const Event &event) :
+extension(db)
 {    
-    if(id.toInt() > 0)
-        extensions.insert(id, this);
+    text = db.value("display").toString();
+    alias = db.value("name").toString();
+    number = db.value("number").toInt();
+    label = db.value("label").toString();
+    agent = event.agent();
 
-    if(alias.length() > 0)
-        aliases.insert(alias, this);
-
-    if(text.length() < 1)
-        text = alias;
-    if(text.length() < 1)
-        text = id;
+    QPair<int,UString> key(number, label);
+    extensions.insert(number, this);
+    aliases.insert(alias, this);
+    registries.insert(key, this);
 }
 
 Registry::~Registry()
 {
-    if(id.toInt() > 0)
-        extensions.remove(id);
-
-    if(alias.length() > 0)
-        aliases.remove(alias);
-
-    foreach(auto endpoint, endpoints) {
-        delete endpoint;
-    }
+    QPair<int,UString> key(number, label);
+    registries.remove(key);
+    extensions.remove(number, this);
+    aliases.remove(alias, this);
 }
 
 QList<Registry *> Registry::list()
@@ -53,42 +51,26 @@ QList<Registry *> Registry::list()
     return extensions.values();
 }
 
-// find at least one un-expired endpoint...
-bool Registry::hasExpired() const
+Registry *Registry::find(const QSqlRecord& db)
 {
-    foreach(auto endpoint, endpoints) {
-        if(!endpoint->hasExpired())
-            return false;
-    }
-    return true;
+    QPair<int,UString> key(db.value("number").toInt(), db.value("label").toString());
+    return registries.value(key, nullptr);
 }
 
-// find longest remaining time in endpoints...
-time_t Registry::expires() const
+QList<Registry *> Registry::find(const UString& target)
 {
-    time_t remaining = 0;
-    foreach(auto endpoint, endpoints) {
-        time_t expiration = endpoint->expires();
-        if(expiration > remaining)
-            remaining = expiration;
-    }
-    return remaining;
-}
-
-Registry *Registry::find(const UString& target)
-{
-    Registry *registry = nullptr;
+    QList<Registry *> list;
 
     if(target.length() < 1)
-        return nullptr;
+        return list;
 
-    if(target.toInt() > 0)
-        registry = extensions.value(target, nullptr);
+    if(target.toInt() > 0) {
+        list = extensions.values(target.toInt());
+        if(list.count() > 0)
+            return list;
+    }
 
-    if(!registry)
-        registry = aliases.value(target, nullptr);
-
-    return registry;
+    return aliases.values(target);
 }
 
 // event handling for registration system as a whole...
@@ -102,31 +84,6 @@ void Registry::authorize(const Event& ev)
 {
     Q_UNUSED(ev);
 }
-
-Endpoint::Endpoint(Context *ctx, const Contact& addr, Contact &target, Registry *reg) :
-registry(reg), context(ctx), address(addr), route(target)
-{
-    Endpoints[ctx].insert(address, this);
-}
-
-Endpoint::~Endpoint()
-{
-    Endpoints[context].remove(address);
-}
-
-Endpoint *Endpoint::find(const Context *ctx, const Contact& addr) {
-    if(Endpoints.contains(ctx))
-        return Endpoints[ctx].value(addr, nullptr);
-    else
-        return nullptr;
-}
-
-QDebug operator<<(QDebug dbg, const Endpoint& endpoint)
-{
-    dbg.nospace() << "Endpoint(" << endpoint.host() << ":" << endpoint.port() << ")";
-    return dbg.maybeSpace();
-}
-
 
 QDebug operator<<(QDebug dbg, const Registry& registry)
 {

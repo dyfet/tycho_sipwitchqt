@@ -23,20 +23,18 @@ swlite-authorize \- manage sipwitchqt user authorizations in sqlite backend
 .SH SYNOPSIS
 .B swlite-authorize
 .RI [ options ]
-.RI [ extension ]
 .I user
 .br
 .B swlite-authorize
 .br
 .SH DESCRIPTION
-The purpose of swlite-authorize is to manage authorization records for a backend 
+The purpose of swlite-authorize is to manage authorization group records for a backend 
 sqlite sipwitchqt database.  This includes both creating and removing (or suspending)
 authorized users, and also setting the SIP digest password.
 
 If used with no options the current authorization realm is shown.  If a userid is given
-then the password to use will be prompted on the console.  If an extension # is given
-in front of the user id, then a new user authorization record is created.  Otherwise
-options can be used to set digest mode, and whether to suspend or drop a user.
+then the password to use will be prompted on the console.  Otherwise optios can be
+used to set digest mode, and whether to suspend or drop a user.
 .SH OPTIONS
 .TP
 .B \-\-sha256
@@ -45,14 +43,27 @@ Use a SHA-256 digest when setting a password (default is MD5).
 .B \-\-sha512
 Use a SHA-512 digest when setting a password (default is MD5).
 .TP
+.B \-\-create
+Create (add) the authorization if it does not exist.
+.TP
 .B \-\-drop
 Drop (remove) the authorized user and associated extension record.  Any active calls or
 registrations should also be terminated.
 .TP
+.B \-\-local
+Local device group authorization.
+.TP
+.BI \-\-password value
+Force setting of password.  Useful for script driven db setup.
+.TP
+.B \-\-remote
+Remote accessible user authorization.
+.TP
 .B \-\-suspend
 Suspend the users account.  Any active calls and registrations should also be cancelled.
-.B \-\-userdata
-Uses the local userdata testing path for the local sqlite database.
+.TP
+.B \-\-team
+Team group authorization.
 .SH AUTHOR
 .B swlite-authorize
 was written by David Sugar <tychosoft@gmail.com>.

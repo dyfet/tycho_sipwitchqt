@@ -6,6 +6,8 @@
 	<file>blocked.png</file>
 </qresource>
 <qresource prefix="/icons">
+	<file>clear.png</file>
+	<file>clear@2x.png</file>
 	<file>idle.png</file>
 	<file>idle@2x.png</file>
 	<file>offline.png</file>
