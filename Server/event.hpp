@@ -194,6 +194,11 @@ public:
         return d->event->tid;
     }
 
+    inline int rid() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->rid;
+    }
+
     inline qint64 elapsed() const {
         return d->elapsed.elapsed();
     }

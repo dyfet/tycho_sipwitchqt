@@ -46,6 +46,7 @@ private:
     UString serverUser;
     UString serverHost;
     UString serverSchema;
+    UString serverLabel;
     quint16 serverPort;
     eXosip_t *context;
     int family, tls;

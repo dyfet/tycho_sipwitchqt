@@ -18,30 +18,55 @@ else
   end
 end
 
-banner = 'Usage: swlite-authorize [[extension-to-create] id]'
+access = 'LOCAL'
 digest = 'MD5'
 number = -1
 minext = 100
 maxext = 699
 user = nil
+password = nil
+mode = 'USER'
+prefix = ''
+create = false
 domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
 dbname = '../testdata/local.db' if File.writable?('../testdata/local.db')
+dbname = '../userdata/local.db' if File.writable?('../userdata/local.db')
 abort("*** swlite-authorize: no database") unless File.writable?(dbname)
 
 OptionParser.new do |opts|
-  opts.banner = banner
+  opts.banner = 'Usage: swlite-authorize [id]'
 
-  opts.on('d', '--drop', 'deauthorize and remove user') do
+  opts.on('-c', '--create', 'deauthorize and remove user') do
+    create = true
+  end
+
+  opts.on('-d', '--drop', 'deauthorize and remove user') do
     digest = 'DROP'
+  end
+
+  opts.on('-l', '--local', 'local device group') do
+    prefix = '@'
+    mode = 'DEVICE'
+    access = 'LOCAL'
+  end
+
+  opts.on('-p', '--password [SECRET]', 'force password set') do |secret|
+    password = secret
+  end
+
+  opts.on('-r', '--remote', 'remote user access') do
+    access = 'REMOTE'
   end
 
   opts.on('-s', '--suspend', 'suspend user') do
     digest = 'NONE'
   end
 
-  opts.on('-u', '--userdata', 'db in userdata directory') do
-    dbname = '../userdata/local.db'
+  opts.on('-t', '--team', 'team authorization') do
+    prefix = '#'
+    mode = 'TEAM'
+    access = 'TEAM'
   end
 
   opts.on('-2', '--sha256', 'use sha-256') do
@@ -57,14 +82,8 @@ OptionParser.new do |opts|
     exit
   end
 end.parse!
-abort(banner) if(ARGV.size < 0 || ARGV.size > 2)
-
-if ARGV.size > 1
-    user = ARGV[1]
-    number = ARGV[0].to_i
-else
-    user = ARGV[0]
-end
+abort(opts.banner) if(ARGV.size > 1)
+user = prefix + ARGV[0]
 
 begin 
   db = SQLite3::Database.open dbname
@@ -84,68 +103,60 @@ rescue SQLite3::SQLException
   abort("*** swlite-authorize: no switch table")
 end
 
-if number > -1
-  abort("*** swlite-authorize: #{number}: extension must be #{minext}-#{maxext}") if number < minext or number > maxext
-end
-
 print "Realm #{domain}\n"
 exit if user == nil
 
 begin
-  # check if creating extension and already exists...
-  if number > -1
-    ext = db.execute("SELECT * FROM Extensions WHERE number='#{number}'")
-    abort("*** swlite-authorize: #{number}: extension already exists") if ext.size > 0
+  type = 'NONE'
+  db.execute("SELECT name, type, access FROM Authorize WHERE name='#{user}'") do |row|
+    type = row[1]
+    access = row[2]
   end
-  row = db.execute("SELECT userid, number FROM Authorize WHERE userid='#{user}'")
-  abort("*** swlite-authorize: #{user}: multiple entries") if row.size > 1
-  abort("*** swlite-authorize: #{user}: already exists") if number > -1 and row.size > 0
-  if number > -1
-    db.execute("INSERT INTO Extensions (number, type, alias, access, display) VALUES(#{number},'USER','#{user}','LOCAL','#{user}')")
-    db.execute("INSERT INTO Authorize (userid, number, realm) VALUES('#{user}',#{number},'#{domain}')")
-    row = db.execute("SELECT userid, number FROM Authorize WHERE userid='#{user}'")
-  else
-    if row.size < 1
-      # fix bad db case where extension for alias exists, but there is no
-      # matching authorize record found
-      row = db.execute("SELECT alias, number FROM Extensions WHERE alias='#{user}'")
-      if row.size == 1
-        number = row[0][1]
-        db.execute("INSERT INTO Authorize (userid, number, realm) VALUES('#{user}',#{number},'#{domain}')") 
-      end
-    else
-      number = row[0][1] if row.size > 0
-    end
+  if type == 'NONE'
+    abort("*** swlite-authorize: #{user}: no such authorization") if create != true or digest == 'DROP'
+    row = db.execute("INSERT INTO Authorize (name, type, realm, access) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
+    type = mode
+    abort("*** swlite-authorize: #{user}: failed to create") if row.size < 1
   end
   case digest
   when 'NONE'
-    abort("*** swlite-authorize: #{user}: no such user") unless row.size > 0
-    print "Suspending user #{user}\n"
+    print "Suspending authorization #{user}\n"
     db.execute("UPDATE Authorize set digest='NONE', secret='', realm='#{domain}' WHERE userid='#{user}'")
   when 'DROP'
-    abort("*** swlite-authorize: #{user}: no such user") unless row.size > 0
-    abort("*** swlite-authorize: #{number}: extension must be #{minext}-#{maxext}") if number < minext or number > maxext
-    print "Dropping user #{user}\n"
-    db.execute("DELETE FROM Extensions WHERE number='#{number}'")
-  else
-    abort("*** swlite-authorize: #{user}: no such user") unless row.size > 0
-    print "Changing password for #{user}\n"
-    pass1 = get_password
-    print "\n"
-    exit unless pass1.size > 0
-    pass2 = get_password "Retype Password: "
-    print "\n"
-    exit unless pass2.size > 0
-    abort("*** swlite-authorize: passwords do not match") unless pass1 == pass2
-    case digest
-    when 'SHA-256'
-      secret = Digest::SHA256.hexdigest "#{user}:#{domain}:#{pass1}"
-    when 'SHA-512'
-      secret = Digest::SHA512.hexdigest "#{user}:#{domain}:#{pass1}"
+    case type
+    when 'USER', 'DEVICE', 'TEAM'
+      print "Dropping authorization #{user}\n"
+      db.execute("DELETE FROM Authorize WHERE name='#{user}'")
     else
-      secret = Digest::MD5.hexdigest "#{user}:#{domain}:#{pass1}"
+      abort("*** swlite-authorize: #{user}: cannot drop authorization as #{type}")
     end
-    db.execute("UPDATE Authorize set digest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE userid='#{user}'")
+  else
+    case access
+    when 'LOCAL', 'REMOTE', 'TEAM'
+      print "Changing password for #{user}\n"
+      if password == nil
+        pass1 = get_password
+        print "\n"
+        exit unless pass1.size > 0
+        pass2 = get_password "Retype Password: "
+        print "\n"
+      else
+        pass1 = pass2 = password
+      end
+      exit unless pass2.size > 0
+      abort("*** swlite-authorize: passwords do not match") unless pass1 == pass2
+      case digest
+      when 'SHA-256'
+        secret = Digest::SHA256.hexdigest "#{user}:#{domain}:#{pass1}"
+      when 'SHA-512'
+        secret = Digest::SHA512.hexdigest "#{user}:#{domain}:#{pass1}"
+      else
+        secret = Digest::MD5.hexdigest "#{user}:#{domain}:#{pass1}"
+      end
+      db.execute("UPDATE Authorize set digest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE userid='#{user}'")
+    else
+      abort("*** swlite-authorize: #{user}: not able to authorize as #{access}")
+    end
   end
 rescue SQLite3::SQLException
   abort("*** swlite-authorize: database error")

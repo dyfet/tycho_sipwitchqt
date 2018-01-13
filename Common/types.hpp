@@ -49,6 +49,8 @@ public:
         return *this;
     }
 
+    bool isNumber() const;
+    bool isLabel() const;
     UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
     bool isQuoted(const char *qc = "\"") const;

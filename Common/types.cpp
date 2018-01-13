@@ -17,6 +17,41 @@
 
 #include "compiler.hpp"
 #include "types.hpp"
+#include <cctype>
+
+bool UString::isNumber() const
+{
+    auto cp = constData();
+
+    if(!*cp)
+        return false;
+
+    if(*cp == '0' && !cp[1])
+        return true;
+
+    while(*cp) {
+        if(!isdigit(*(cp++)))
+            return false;
+    }
+
+    return true;
+}
+
+bool UString::isLabel() const
+{
+    auto cp = constData();
+    if(!*cp)
+        return false;
+
+    if(!isalpha(*cp))
+        return false;
+
+    while(*cp) {
+        if(!isalnum(*(cp++)))
+            return false;
+    }
+    return true;
+}
 
 bool UString::isQuoted(const char *qc) const
 {

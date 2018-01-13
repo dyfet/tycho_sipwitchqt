@@ -67,8 +67,8 @@ QList <RemoteSegment *> Segment::peers()
     return peering;
 }        
 
-LocalSegment::LocalSegment(int cid, Invite *ip, Endpoint *ep) :
-Segment(cid, ip, ep->sip()), endpoint(ep), registry(ep->parent())
+LocalSegment::LocalSegment(int cid, Invite *ip, Registry *rp) :
+Segment(cid, ip, rp->sip()), registry(rp)
 {
 }
 

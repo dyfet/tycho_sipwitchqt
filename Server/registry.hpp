@@ -28,14 +28,21 @@ class LocalSegment;
 class Registry;
 class Event;
 
-class Endpoint final
+class Registry final
 {
-    friend class Registry;
-    Q_DISABLE_COPY(Endpoint)
+    Q_DISABLE_COPY(Registry)
 
 public:
-    Endpoint(Context *ctx, const Contact& addr, Contact& target, Registry *reg = nullptr);
-    ~Endpoint();
+    Registry(const QSqlRecord& db, const Event& event);
+    ~Registry();
+
+    inline const QSqlRecord data() const {
+        return extension;
+    }
+
+    const UString display() const {
+        return text;
+    }
 
     inline bool hasExpired() const {
         return address.hasExpired();
@@ -53,10 +60,6 @@ public:
         return context;
     }
 
-    inline Registry *parent() const {
-        return registry;
-    }
-    
     inline time_t expires() const {
         return address.expires();
     }
@@ -64,53 +67,26 @@ public:
     inline void refresh(int expires) {
         address.refresh(expires);
     }
-    
-    static Endpoint *find(const Context *ctx, const Contact &addr);
 
-private:
-    Registry *registry;             // registry that holds our endpoint
-    Context *context;               // context endpoint exists on
-    Contact address;                // network address of endpoint
-    Contact route;                  // our return route to endpoint
-    QElapsedTimer updated;          // last refreshed registration
-    QList<LocalSegment *> calls;    // local calls on this endpoint...
-};
-
-class Registry final
-{
-    Q_DISABLE_COPY(Registry)
-
-public:
-    Registry(const QSqlRecord& db);
-    ~Registry();
-
-    inline const QSqlRecord data() const {
-        return extension;
-    }
-
-    const UString display() const {
-        return text;
-    }
-
-    bool hasExpired() const;
-
-    time_t expires() const;
-
-    static Registry *find(const UString& target);
-
+    static Registry *find(const QSqlRecord& db);
+    static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
 
     static void process(const Event& event);
     static void authorize(const Event& event);
 
 private:
-    QSqlRecord extension;
-    UString id, alias, text;
-
-    QList<Endpoint*> endpoints;         // endpoint nodes
+    UString alias, label;
+    UString text, agent;
+    int number, rid;
+    Context *context;                   // context of endpoint
+    Contact address;                    // contact record for endpoint
+    Contact route;                      // our return route to endpoint
+    QElapsedTimer updated;              // last refershed registration
+    QSqlRecord extension;               // extension + group union
+    QList<LocalSegment *> calls;        // local calls on this endpoint
 };
 
-QDebug operator<<(QDebug dbg, const Endpoint& endpoint);
 QDebug operator<<(QDebug dbg, const Registry& registry);
 
 /*!
@@ -122,18 +98,10 @@ QDebug operator<<(QDebug dbg, const Registry& registry);
  */
 
 /*!
- * \class Endpoint
- * \brief A registration endpoint.
- * This represents a single SIP device that is registered thru the stack under
- * a registry object.
- * \author David Sugar <tychosoft@gmail.com>
- */
-
-/*!
  * \class Registry
  * \brief An active registration.
- * A registration consists of a user, and all the endpoints that are
- * registered thru the stack which are associated with that user.
+ * A registration consists of a user endpoints that is registered
+ * thru the stack which are associated with that user.
  * \author David Sugar <tychosoft@gmail.com>
  */
 

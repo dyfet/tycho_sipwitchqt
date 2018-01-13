@@ -70,6 +70,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     connect(ui.actionSettings, &QAction::triggered, this, &Desktop::gotoOptions);
     connect(ui.actionSessions, &QAction::triggered, this, &Desktop::gotoSessions);
     connect(ui.actionContacts, &QAction::triggered, this, &Desktop::gotoPhonebook);
+    connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown);
 
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
@@ -96,11 +97,17 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
         warning("No local database active");
         ui.toolBar->hide();
         ui.pagerStack->setCurrentWidget(login);
+        login->enter();
         show();
     }
 }
 
 Desktop::~Desktop()
+{
+    shutdown();
+}
+
+void Desktop::shutdown()
 {
     if(listener) {
         listener->stop();
@@ -164,6 +171,9 @@ void Desktop::failed(int error_code)
     switch(error_code) {
     case 666:
         error(tr("Cannot reach server"));
+        break;
+    default:
+        error(tr("Unknown server failure"));
         break;
     }
     offline();
