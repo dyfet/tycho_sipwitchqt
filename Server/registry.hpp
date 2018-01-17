@@ -68,6 +68,10 @@ public:
         address.refresh(expires);
     }
 
+    inline bool allow(UString id) const {
+        return allows.indexOf(id.toLower()) > -1;
+    }
+
     static Registry *find(const QSqlRecord& db);
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
@@ -85,6 +89,7 @@ private:
     QElapsedTimer updated;              // last refershed registration
     QSqlRecord extension;               // extension + group union
     QList<LocalSegment *> calls;        // local calls on this endpoint
+    QList<UString> allows;
 };
 
 QDebug operator<<(QDebug dbg, const Registry& registry);

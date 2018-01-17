@@ -59,7 +59,7 @@ static QStringList sqliteTables = {
     "CREATE TABLE Endpoints ("
         "endpoint INTEGER PRIMARY KEY AUTOINCREMENT,"
         "number INTEGER NOT NULL,"              // extension of endpoint
-        "label VARCHAR(32) DEFAULT 'PHONE',"    // label id
+        "label VARCHAR(32) DEFAULT 'NONE',"  // label id
         "agent VARCHAR(64),"                    // agent id
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "last DATETIME,"

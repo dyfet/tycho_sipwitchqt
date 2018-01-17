@@ -203,6 +203,14 @@ public:
         return d->elapsed.elapsed();
     }
 
+    inline QList<UString> allows() const {
+        return d->allows;
+    }
+
+    inline UString label() const {
+        return d->label;
+    }
+
     const UString protocol() const;
     const UString toString() const;
     const Contact contact() const;
@@ -229,9 +237,10 @@ private:
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason;
-        UString userid, nonce, digest, algorithm;
+        UString userid, nonce, digest, algorithm, label;
         Contact source;  // if nat, has first nat
         Contact from, to, request, target;
+        QList<UString> allows;
         QByteArray body;
         QElapsedTimer elapsed;
 

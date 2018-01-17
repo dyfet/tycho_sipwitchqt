@@ -14,6 +14,8 @@ QLineEdit#searchText {
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     border-left: 0px;
+    border-bottom-left-radius: 0px;
+    border-top-left-radius: 0px;
     padding: 1px;
     margin: 0px;
     padding-left: 0px;
@@ -25,6 +27,46 @@ QToolBar#toolBar {
     padding: 0px;
     margin: 0px;
     background: white;
+}
+
+QLineEdit {
+    background: white;
+    border: 1px solid lightgray;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+QComboBox {
+    background: white;
+    border: 1px solid lightgray;
+    border-radius: 4px;
+    padding: 2px;
+    padding-left: 6px;
+}
+
+QComboBox::drop-down {
+/*    subcontrol-origin: padding;
+    subcontrol-position: top right; */
+    background: white;
+    border: 0px;
+    margin: 2px;
+}
+
+QComboBox::down-arrow {
+    image: url(:/images/downarrow.png)
+}
+
+QComboBox::item:selected {
+    color: black;
+    font: bold;
+}
+
+QCheckBox::indicator::unchecked {
+    image: url(:/images/unchecked.png)
+}
+
+QCheckBox::indicator::checked {
+    image: url(:/images/checked.png)
 }
 
 QMainWindow, QStatusBar, QListView, QGroupBox {

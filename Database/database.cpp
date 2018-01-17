@@ -212,10 +212,11 @@ bool Database::create()
         runQuery(Util::createQuery(driver));
         runQuery("INSERT INTO Config(realm) VALUES(?);", {realm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"@system", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"@nobody", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"@operators", "SYSTEM", "PILOT"});
-        runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {0, "@operators", "Operator"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"system", "SYSTEM", "LOCAL"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"nobody", "SYSTEM", "LOCAL"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"anonymous", "SYSTEM", "DISABLED"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"operators", "SYSTEM", "PILOT"});
+        runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {0, "operators", "Operator"});
     }
     else if(Util::dbIsFile(driver)) {
         runQuery("UPDATE Config SET realm=? WHERE id=1;", {realm});
