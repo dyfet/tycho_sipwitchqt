@@ -4,6 +4,9 @@
 	<file>logo.png</file>
 	<file>menu.png</file>
 	<file>blocked.png</file>
+	<file>checked.png</file>
+	<file>unchecked.png</file>
+	<file>downarrow.png</file>
 </qresource>
 <qresource prefix="/icons">
 	<file>clear.png</file>

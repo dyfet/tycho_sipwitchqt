@@ -29,6 +29,9 @@
 
 #define EVENT_TIMER 500l    // 500ms...
 
+#define AGENT_ALLOWS "INVITE,ACK,OPTIONS,BYE,CANCEL,SUBSCRIBE,NOTIFY,REFER,MESSAGE,INFO,PING"
+#define AGENT_EXPIRES 1800
+
 static const char *eid(eXosip_event_type ev);
 
 // internal lock class
@@ -114,11 +117,9 @@ void Listener::run()
     UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
     qDebug() << "Connecting to" << server;
 
-    rid = eXosip_register_build_initial_register(context, identity, server, NULL, 1800, &msg);
+    rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
     if(msg && rid > -1) {
-        osip_message_set_supported(msg, "100rel");
-        osip_message_set_header(msg, "Event", "Registration");
-        osip_message_set_header(msg, "Allow-Events", "presence");
+        osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
         osip_message_set_header(msg, "X-Label", serverLabel);
         eXosip_register_send_register(context, rid, msg);
     }

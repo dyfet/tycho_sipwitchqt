@@ -91,6 +91,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
     const osip_list_t& clist = msg->contacts;
     const osip_list_t& vlist = msg->vias;
     const osip_list_t& rlist = msg->record_routes;
+    const osip_list_t& alist = msg->allows;
     int pos;
     Contact nat;
 
@@ -144,9 +145,24 @@ void Event::Data::parseMessage(osip_message_t *msg)
         expires = Util::portNumber(header->hvalue);
 
     header = nullptr;
+    osip_message_header_get_byname(msg, "x-label", 0, &header);
+    if(header && header->hvalue)
+        label = UString(header->hvalue).toLower();
+    else
+        label = "NONE";
+
+    header = nullptr;
     osip_message_header_get_byname(msg, "subject", 0, &header);
     if(header && header->hvalue)
         subject = header->hvalue;
+
+
+    pos = 0;
+    while(osip_list_eol(&alist, pos) == 0) {
+        auto allow = static_cast<osip_allow_t *>(osip_list_get(&alist, pos++));
+        if(allow && allow->value)
+            allows << UString(allow->value).toLower();
+    }
 
     pos = 0;
     while(osip_list_eol(&clist, pos) == 0) {

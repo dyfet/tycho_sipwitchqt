@@ -26,7 +26,6 @@ maxext = 699
 user = nil
 password = nil
 mode = 'USER'
-prefix = ''
 create = false
 domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
@@ -46,7 +45,6 @@ OptionParser.new do |opts|
   end
 
   opts.on('-l', '--local', 'local device group') do
-    prefix = '@'
     mode = 'DEVICE'
     access = 'LOCAL'
   end
@@ -64,7 +62,6 @@ OptionParser.new do |opts|
   end
 
   opts.on('-t', '--team', 'team authorization') do
-    prefix = '#'
     mode = 'TEAM'
     access = 'TEAM'
   end
@@ -83,7 +80,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 abort(opts.banner) if(ARGV.size > 1)
-user = prefix + ARGV[0]
+user = ARGV[0]
 
 begin 
   db = SQLite3::Database.open dbname

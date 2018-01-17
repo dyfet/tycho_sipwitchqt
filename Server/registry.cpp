@@ -31,6 +31,7 @@ extension(db)
     number = db.value("number").toInt();
     label = db.value("label").toString();
     agent = event.agent();
+    allows = event.allows();
 
     QPair<int,UString> key(number, label);
     extensions.insert(number, this);
