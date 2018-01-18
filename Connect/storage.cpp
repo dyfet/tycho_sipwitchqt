@@ -227,8 +227,8 @@ void Storage::updateCredentials(const QHash<QString,QString> &update)
     auto cred = credentials();
     foreach(auto key, update.keys())
         cred[key] = update[key];
-    runQuery("UPDATE Credentials SET user=?, secret=?, type=?, realm=? WHERE id=1;",
-        {cred["user"], cred["secret"], cred["type"], cred["realm"]});
+    runQuery("UPDATE Credentials SET server=?, port=?, user=?, secret=?, type=?, realm=? WHERE id=1;",
+        {cred["server"], cred["port"], cred["user"], cred["secret"], cred["type"], cred["realm"]});
 }
 
 bool Storage::exists()
