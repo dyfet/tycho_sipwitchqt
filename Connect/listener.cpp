@@ -55,9 +55,9 @@ private:
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true), connected(false)
 {
+    serverId = cred["extension"].toString();
     serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
-    serverUser = cred["extension"].toString();
     serverLabel = cred["label"].toString();
     serverSchema = "sip:";
 
@@ -113,7 +113,7 @@ void Listener::run()
     emit starting();
 
     osip_message_t *msg = nullptr;
-    UString identity = serverSchema + serverUser + "@" + serverHost + ":" + UString::number(serverPort);
+    UString identity = serverSchema + serverId + "@" + serverHost + ":" + UString::number(serverPort);
     UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
     qDebug() << "Connecting to" << server;
     qDebug() << "Connecting as" << identity;

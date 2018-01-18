@@ -43,7 +43,7 @@ public:
 private:
     volatile bool active, connected;
 
-    UString serverUser;
+    UString serverId;
     UString serverHost;
     UString serverSchema;
     UString serverLabel;
