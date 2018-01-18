@@ -70,7 +70,8 @@ QVariantHash Login::credentials()
 
     cred["realm"] = cred["type"] = "unknown";
     cred["label"] = label = ui.labels->currentText().toLower();
-    cred["userid"] = ext;
+    cred["user"] = ext;
+    cred["extension"] = ext.toInt();
 
     qDebug() << "LOGIN CREDENTIALS" << cred;
 

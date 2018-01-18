@@ -77,6 +77,7 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
     runQuery({
         "CREATE TABLE Credentials ("
              "id INTEGER PRIMARY KEY,"              // rowid in sqlite
+             "extension INTEGER,"                  // extension #
              "user VARCHAR(64) NOT NULL,"           // auth userid
              "label VARCHAR(32) NOT NULL,"          // endpoint label
              "secret VARCHAR(64) NOT NULL,"         // auth secret
@@ -97,8 +98,8 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
         "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > 0;",
     });
 
-    runQuery("INSERT INTO Credentials(user, label, secret, server, port, type, realm) VALUES(?,?,?,?,?,?,?);",
-        {cred["user"], cred["label"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
+    runQuery("INSERT INTO Credentials(extension, user, label, secret, server, port, type, realm) VALUES(?,?,?,?,?,?,?,?);",
+        {cred["extension"], cred["user"], cred["label"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
 }
 
 Storage::~Storage()

@@ -57,7 +57,7 @@ QObject(), active(true), connected(false)
 {
     serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
-    serverUser = cred["user"].toString();
+    serverUser = cred["extension"].toString();
     serverLabel = cred["label"].toString();
     serverSchema = "sip:";
 
@@ -116,6 +116,7 @@ void Listener::run()
     UString identity = serverSchema + serverUser + "@" + serverHost + ":" + UString::number(serverPort);
     UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
     qDebug() << "Connecting to" << server;
+    qDebug() << "Connecting as" << identity;
 
     rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
     if(msg && rid > -1) {
