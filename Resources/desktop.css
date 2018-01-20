@@ -61,6 +61,10 @@ QComboBox::item:selected {
     font: bold;
 }
 
+QGroupBox {
+    font-weight: bold;
+}
+
 QCheckBox::indicator::unchecked {
     image: url(:/images/unchecked.png)
 }
