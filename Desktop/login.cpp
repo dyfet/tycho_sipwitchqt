@@ -52,6 +52,16 @@ void Login::enter()
     ui.identity->setFocus();
 }
 
+void Login::badIdentity()
+{
+    ui.identity->setFocus();
+}
+
+void Login::badPassword()
+{
+    ui.secret->setFocus();
+}
+
 QVariantHash Login::credentials()
 {
     QVariantHash cred;
@@ -71,6 +81,7 @@ QVariantHash Login::credentials()
     cred["realm"] = cred["type"] = "unknown";
     cred["label"] = label = ui.labels->currentText().toLower();
     cred["user"] = ext;
+    cred["display"] = "";
     cred["extension"] = ext.toInt();
 
     qDebug() << "LOGIN CREDENTIALS" << cred;

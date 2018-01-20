@@ -22,11 +22,31 @@
 
 #include <QTranslator>
 #include <QFile>
+#include <QCloseEvent>
+
+#ifdef Q_OS_MAC
+#include <objc/objc.h>
+#include <objc/message.h>
+
+void set_dock_icon(const QIcon& icon);
+void set_dock_label(const QString& text);
+
+static bool dock_click_handler(::id self, SEL _cmd, ...)
+{
+    Q_UNUSED(self)
+    Q_UNUSED(_cmd)
+
+    auto desktop = Desktop::instance();
+    QMetaObject::invokeMethod(desktop, "dock_clicked", Qt::QueuedConnection);
+    return false;
+}
+#endif
 
 static Ui::MainWindow ui;
 
 Desktop *Desktop::Instance = nullptr;
 Desktop::state_t Desktop::State = Desktop::INITIAL;
+QVariantHash Desktop::Credentials;
 
 Desktop::Desktop(bool tray, bool reset) :
 QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
@@ -54,7 +74,34 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
 
 #if defined(Q_OS_MAC)
     dockMenu = new QMenu();
+    dockMenu->addAction(ui.trayDnd);
+    dockMenu->addAction(ui.trayAway);
     qt_mac_set_dock_menu(dockMenu);
+
+    auto inst = objc_msgSend(reinterpret_cast<objc_object *>(objc_getClass("NSApplication")), sel_registerName("sharedApplication"));
+
+    if(inst) {
+        auto delegate = objc_msgSend(inst, sel_registerName("delegate"));
+        auto handler = reinterpret_cast<Class>(objc_msgSend(delegate, sel_registerName("class")));
+
+        SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
+        if (class_getInstanceMethod(handler, shouldHandle)) {
+            if (class_replaceMethod(handler, shouldHandle, reinterpret_cast<IMP>(dock_click_handler), "B@:")) {
+                set_dock_icon(QIcon(":/icons/offline.png"));
+                tray = false;
+            }
+        }
+        else {
+            if (class_addMethod(handler, shouldHandle, reinterpret_cast<IMP>(dock_click_handler), "B@:")) {
+                tray = false;
+                set_dock_icon(QIcon(":/icons/offline.png"));
+            }
+        }
+    }
+
+    if(tray)
+        set_dock_icon(QIcon(":/icons/idle.png"));
+
 #endif
 
     login = new Login(this);
@@ -67,32 +114,45 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     ui.pagerStack->addWidget(options);
     ui.console->setHidden(true);
 
-    connect(ui.actionSettings, &QAction::triggered, this, &Desktop::gotoOptions);
-    connect(ui.actionSessions, &QAction::triggered, this, &Desktop::gotoSessions);
-    connect(ui.actionContacts, &QAction::triggered, this, &Desktop::gotoPhonebook);
+    connect(ui.actionSettings, &QAction::triggered, this, &Desktop::showOptions);
+    connect(ui.actionSessions, &QAction::triggered, this, &Desktop::showSessions);
+    connect(ui.actionContacts, &QAction::triggered, this, &Desktop::showPhonebook);
     connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown);
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState);
 
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
 
     if(trayIcon) {
         trayMenu = new QMenu();
+        trayMenu->addAction(ui.trayDnd);
+        trayMenu->addAction(ui.trayAway);
+        trayMenu->addAction(ui.trayQuit);
+
         trayIcon->setContextMenu(trayMenu);
         trayIcon->setIcon(QIcon(":/icons/offline.png"));
         trayIcon->setVisible(true);
         trayIcon->show();
+
+        connect(trayIcon, &QSystemTrayIcon::activated, this, &Desktop::trayAction);
+        connect(ui.trayQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
     }
+
+    ui.trayDnd->setChecked(true);   // FIXME: testing...
+    // connect(ui.trayDnd, &QAction::triggered, this, &Desktop::trayDnd);
+    connect(ui.trayAway, &QAction::triggered, this, &Desktop::trayAway);
 
     login = new Login(this);
     ui.pagerStack->addWidget(login);
 
     if(Storage::exists()) {
-        storage = new Storage();
-        // hide();
-        // authorizing();
-        // attempt active login...
+        storage = new Storage("");
+        showSessions();
+        show();                             // FIXME: hide
+        listen(storage->credentials());
     }
     else {
+        ui.trayAway->setEnabled(false);
         setWindowTitle("Welcome");
         warning("No local database active");
         ui.toolBar->hide();
@@ -105,6 +165,15 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
 Desktop::~Desktop()
 {
     shutdown();
+}
+
+void Desktop::closeEvent(QCloseEvent *event)
+{
+    // close to tray, if we are active...
+    if(trayIcon && trayIcon->isVisible() && listener) {
+        hide();
+        event->ignore();
+    }
 }
 
 void Desktop::shutdown()
@@ -125,19 +194,31 @@ void Desktop::shutdown()
     }
 }
 
-void Desktop::gotoOptions()
+void Desktop::setTrayIcon(const QString& icon)
+{
+    if(trayIcon)
+        trayIcon->setIcon(QIcon(icon));
+    else
+#if defined(Q_OS_MAC)
+        set_dock_icon(QIcon(icon));
+#else
+        setWindowIcon(QIcon(icon));
+#endif
+}
+
+void Desktop::showOptions()
 {
     ui.pagerStack->setCurrentWidget(options);
     options->enter();
 }
 
-void Desktop::gotoSessions()
+void Desktop::showSessions()
 {
     ui.pagerStack->setCurrentWidget(sessions);
     sessions->enter();
 }
 
-void Desktop::gotoPhonebook()
+void Desktop::showPhonebook()
 {
     ui.pagerStack->setCurrentWidget(phonebook);
     phonebook->enter();
@@ -166,14 +247,59 @@ void Desktop::clear()
     ui.statusBar->showMessage("");
 }
 
+void Desktop::appState(Qt::ApplicationState state)
+{
+    // Actve, Inactive related to front/back...
+    qDebug() << "*** STATE " << state;
+}
+
+void Desktop::dock_clicked()
+{
+    trayAction(QSystemTrayIcon::MiddleClick);
+}
+
+void Desktop::trayAway()
+{
+    if(connected) {
+        status(tr("disconnect"));
+        offline();
+    }
+    else
+        authorizing();
+}
+
+void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
+{
+    switch(reason) {
+    case QSystemTrayIcon::MiddleClick:
+#ifndef Q_OS_MAC
+    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::DoubleClick:
+#endif
+        if(isMinimized())
+            break;
+        if(isHidden())
+            show();
+        else
+            hide();
+        break;
+    default:
+        break;
+    }
+}
+
 void Desktop::failed(int error_code)
 {
     switch(error_code) {
     case 666:
         error(tr("Cannot reach server"));
+        if(isLogin())
+            login->badIdentity();
         break;
     default:
         error(tr("Unknown server failure"));
+        if(isLogin())
+            login->badIdentity();
         break;
     }
     offline();
@@ -185,39 +311,59 @@ void Desktop::offline()
     if(!listener)
         return;
 
-    if(trayIcon)
-        trayIcon->setIcon(QIcon(":/icons/offline.png"));
-
+    setTrayIcon(":/icons/offline.png");
+    ui.trayAway->setText(tr("Connect"));
+    ui.trayAway->setEnabled(!isLogin());
     connected = false;
     listener = nullptr;
     State = OFFLINE;
 }
 
+bool Desktop::isCurrent(const QWidget *widget) const {
+    return ui.pagerStack->currentWidget() == widget;
+}
+
 void Desktop::initial()
 {
-    auto cred = login->credentials();
-    if(cred.isEmpty())
+    Credentials = login->credentials();
+    if(Credentials.isEmpty())
         return;
 
-    listen(cred);
+    listen(Credentials);
     ui.toolBar->show();
-    gotoSessions();
+    showSessions();         // FIXME: this is for early testing only....
     authorizing();
 }
 
 void Desktop::authorizing()
 {
-    // listen()...
-    if(trayIcon)
-        trayIcon->setIcon(QIcon(":/icons/activate.png"));
-    status("Connecting...");
+    ui.trayAway->setText(tr("..."));
+    ui.trayAway->setEnabled(false);
+    setTrayIcon(":/icons/activate.png");
+    status(tr("Authorizing..."));
     State = AUTHORIZING;
 }
 
-void Desktop::online()
+void Desktop::authorized(const QVariantHash& creds)
 {
-    if(trayIcon)
-        trayIcon->setIcon(QIcon(":/icons/online.png"));
+    Credentials = creds;
+
+    setTrayIcon(":/icons/online.png");
+
+    // apply or update credentials only after successfull authorization
+    if(storage)
+        storage->updateCredentials(creds);
+    else
+        storage = new Storage("", creds);
+
+    // this is how we should get out of first time login screen...
+    if(isLogin())
+        showSessions();
+
+    if(!connected) {
+        ui.trayAway->setText(tr("Away"));
+        ui.trayAway->setEnabled(true);
+    }
 
     connected = true;
     State = ONLINE;
@@ -228,6 +374,7 @@ void Desktop::listen(const QVariantHash& cred)
     Q_ASSERT(listener == nullptr);
 
     listener = new Listener(cred);
+    connect(listener, &Listener::authorize, this, &Desktop::authorized);
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);

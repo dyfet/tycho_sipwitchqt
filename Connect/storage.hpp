@@ -33,7 +33,7 @@ class Storage : public QObject
     Q_DISABLE_COPY(Storage)
 
 public:
-    Storage(const QString &key = QString(), QHash<QString, QString> cred = QHash<QString,QString>());
+    Storage(const QString &key = QString(), const QVariantHash& cred = QVariantHash());
     ~Storage();
 
     bool isActive() {
@@ -45,7 +45,7 @@ public:
         return getRecord("SELECT * FROM credentials");
     }
 
-    void updateCredentials(const QHash<QString, QString> &cred);
+    void updateCredentials(const QVariantHash &cred);
 
     static Storage *instance() {
         return Instance;

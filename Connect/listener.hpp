@@ -43,6 +43,7 @@ public:
 private:
     volatile bool active, connected;
 
+    QVariantHash serverCreds;
     UString serverId;
     UString serverHost;
     UString serverSchema;
@@ -53,6 +54,7 @@ private:
     int rid;
 
 signals:
+    void authorize(const QVariantHash& creds);
     void failure(int code);
     void starting();
 	void finished();

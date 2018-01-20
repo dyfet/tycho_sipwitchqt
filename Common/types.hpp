@@ -49,16 +49,26 @@ public:
         return *this;
     }
 
+    UString toLower() const {
+        return QByteArray::toLower();
+    }
+
+    UString toUpper() const {
+        return QByteArray::toUpper();
+    }
+
     bool isNumber() const;
     bool isLabel() const;
     UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
     bool isQuoted(const char *qc = "\"") const;
 
-
     static UString number(int num, int base = 10) {
         return QByteArray::number(num, base);
     }
+
+    static UString uri(const UString& schema, const UString& server, quint16 port);
+    static UString uri(const UString& schema, const UString& id, const UString& server, quint16 port);
 };
 
 inline UString operator+(const UString& str, char *add) {

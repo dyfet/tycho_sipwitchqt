@@ -29,6 +29,8 @@ public:
     Login(Desktop *main);
 
     void enter();
+    void badIdentity();
+    void badPassword();
 
     QVariantHash credentials();     // gathers local ones...
 

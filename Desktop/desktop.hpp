@@ -66,16 +66,32 @@ public:
     Desktop(bool tray, bool reset);
     virtual ~Desktop();
 
-    bool isConnected() {
+    bool isConnected() const {
         return connected;
     }
 
-    bool isActive() {
+    bool isActive() const {
         return listener != nullptr;
     }
 
-    bool isOpened() {
+    bool isOpened() const {
         return storage != nullptr;
+    }
+
+    bool isLogin() const {
+        return isCurrent(login);
+    }
+
+    bool isSession() const {
+        return isCurrent(sessions);
+    }
+
+    bool isProfile() const {
+        return isCurrent(phonebook);
+    }
+
+    bool isOptions() const {
+        return isCurrent(options);
     }
 
     // status bar functions...
@@ -96,6 +112,10 @@ public:
         return State;
     }
 
+    inline static const QVariantHash credentials() {
+        return Credentials;
+    }
+
 private:
     Login *login;
     Sessions *sessions;
@@ -110,25 +130,36 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag, connected;
+    QVariantHash currentCredentials;
 
+    void closeEvent(QCloseEvent *event) final;
+
+    bool isCurrent(const QWidget *widget) const;
     void listen(const QVariantHash &cred);
+    void setTrayIcon(const QString& icon);
 
+    static QVariantHash Credentials;   // current credentials...
     static Desktop *Instance;
     static state_t State;
 
 public slots:
     void initial(void);
+    void dock_clicked();
 
 private slots:
-    void online(void);              // server authorized
-    void offline(void);             // lost server connection
-    void authorizing(void);         // registering with sip server...
-    void failed(int error_code);    // sip session fatal error
-    void shutdown();                // application shutdown
+    void authorized(const QVariantHash& creds); // server authorized
+    void offline(void);                         // lost server connection
+    void authorizing(void);                     // registering with server...
+    void failed(int error_code);                // sip session fatal error
+    void shutdown();                            // application shutdown
 
-    void gotoOptions(void);
-    void gotoSessions(void);
-    void gotoPhonebook(void);
+    void appState(Qt::ApplicationState state);
+    void trayAction(QSystemTrayIcon::ActivationReason reason);
+    void trayAway();
+
+    void showOptions(void);
+    void showSessions(void);
+    void showPhonebook(void);
 };
 
 #endif

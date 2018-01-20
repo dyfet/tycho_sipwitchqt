@@ -233,6 +233,9 @@
          </property>
          <item>
           <widget class="QLineEdit" name="secret">
+           <property name="echoMode">
+            <enum>QLineEdit::Password</enum>
+           </property>
            <property name="placeholderText">
             <string>Password</string>
            </property>

@@ -60,6 +60,7 @@ QObject(), active(true), connected(false)
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverLabel = cred["label"].toString();
     serverSchema = "sip:";
+    serverCreds = cred;
 
     if(!serverPort)
         serverPort = 5060;
@@ -113,8 +114,8 @@ void Listener::run()
     emit starting();
 
     osip_message_t *msg = nullptr;
-    UString identity = serverSchema + serverId + "@" + serverHost + ":" + UString::number(serverPort);
-    UString server = serverSchema + serverHost + ":" + UString::number(serverPort);
+    auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    auto server = UString::uri(serverSchema, serverHost, serverPort);
     qDebug() << "Connecting to" << server;
     qDebug() << "Connecting as" << identity;
 

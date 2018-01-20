@@ -36,7 +36,9 @@ elseif(APPLE)
 
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
+    find_library(APPKIT_LIBRARY AppKit)
     set(system_libs ${IOKIT_LIBRARY} ${CORE_LIBRARY})
+    set(desktop_libs ${APPKIT_LIBRARY})
     include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include")
     link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib")
 else()
@@ -87,10 +89,14 @@ file(GLOB desktop_src Desktop/*.cpp)
 file(GLOB desktop_uic Desktop/*.ui)
 file(GLOB markdown *.md)
 
+if(APPLE)
+    set(desktop_mm Desktop/macos.mm)
+endif()
+
 set(voip_libs eXosip2 osip2 osipparser2)
 
-add_executable(antisipate ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} Resources/desktop.qrc)
-target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${system_libs})
+add_executable(antisipate ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${desktop_mm} Resources/desktop.qrc)
+target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
 
 add_executable(sipwitchqt ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
 target_link_libraries(sipwitchqt Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})

@@ -157,6 +157,36 @@
     <string>Login and menu actions</string>
    </property>
   </action>
+  <action name="trayQuit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="toolTip">
+    <string>Quit Application</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+Q</string>
+   </property>
+  </action>
+  <action name="trayAway">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+   <property name="toolTip">
+    <string>Server Connection</string>
+   </property>
+  </action>
+  <action name="trayDnd">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DND</string>
+   </property>
+   <property name="toolTip">
+    <string>Do Not Disturb</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../Resources/desktop.qrc"/>

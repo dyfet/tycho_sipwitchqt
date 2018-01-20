@@ -39,6 +39,9 @@ static QStringList sqliteTables = {
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
         "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
+        "fwd_busy INTEGER DEFAULT -1,"          // forward busy
+        "fwd_answer INTEGER DEFAULT -1,"        // forward no answer
         "PRIMARY KEY (name));",
 
     "CREATE TABLE Extensions ("
@@ -48,10 +51,6 @@ static QStringList sqliteTables = {
         "restrict INTEGER DEFAULT 0,"           // outgoing restrictions
         "describe VARCHAR(64),"                 // location info
         "display VARCHAR(64),"                  // can override group display
-        "offline INTEGER,"                      // forwarding offline
-        "away INTEGER,"                         // forwarding away
-        "busy INTEGER,"                         // forwarding busy
-        "noanswer INTEGER,"                     // forwarding no answer
         "PRIMARY KEY (number),"
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE);",

@@ -45,7 +45,7 @@ static QString storagePath()
 
 Storage *Storage::Instance = nullptr;
 
-Storage::Storage(const QString& key, QHash<QString, QString> cred)
+Storage::Storage(const QString& key, const QVariantHash &cred)
 {
     Q_UNUSED(key);
 
@@ -77,8 +77,9 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
     runQuery({
         "CREATE TABLE Credentials ("
              "id INTEGER PRIMARY KEY,"              // rowid in sqlite
-             "extension INTEGER,"                  // extension #
+             "extension INTEGER,"                   // extension #
              "user VARCHAR(64) NOT NULL,"           // auth userid
+             "display VARCHAR(64) NOT NULL,"        // display name
              "label VARCHAR(32) NOT NULL,"          // endpoint label
              "secret VARCHAR(64) NOT NULL,"         // auth secret
              "server VARCHAR(64) NOT NULL,"         // server we use
@@ -98,8 +99,8 @@ Storage::Storage(const QString& key, QHash<QString, QString> cred)
         "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > 0;",
     });
 
-    runQuery("INSERT INTO Credentials(extension, user, label, secret, server, port, type, realm) VALUES(?,?,?,?,?,?,?,?);",
-        {cred["extension"], cred["user"], cred["label"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
+    runQuery("INSERT INTO Credentials(extension, user, display, label, secret, server, port, type, realm) VALUES(?,?,?,?,?,?,?,?,?);",
+        {cred["extension"], cred["user"], cred["display"], cred["label"], cred["secret"], cred["server"], cred["port"], cred["type"], cred["realm"]});
 }
 
 Storage::~Storage()
@@ -219,7 +220,7 @@ bool Storage::runQuery(const QString &request, const QVariantList& parms)
     return true;
 }
 
-void Storage::updateCredentials(const QHash<QString,QString> &update)
+void Storage::updateCredentials(const QVariantHash &update)
 {
     if(!db.isOpen() || update.isEmpty())
         return;
