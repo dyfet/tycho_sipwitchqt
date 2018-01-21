@@ -1,12 +1,7 @@
-/* declare pure white first... */
-
-QWidget {
-    background: white;
-}
-
 /* declare common controls and behaviors */
 
 QToolButton {
+    background: white;
     border: 0px;
     margin: 0px;
     padding: 0px;
@@ -29,12 +24,14 @@ QPushButton:pressed {
 }
 
 QLineEdit {
+    background: white;
     border: 1px solid lightgray;
     border-radius: 4px;
     padding: 2px;
 }
 
 QComboBox {
+    background: white;
     border: 1px solid lightgray;
     border-radius: 4px;
     padding: 2px;
@@ -43,8 +40,7 @@ QComboBox {
 }
 
 QComboBox::drop-down {
-/*    subcontrol-origin: padding;
-    subcontrol-position: top right; */
+    background: white;
     border: 0px;
     margin: 2px;
 }
@@ -60,6 +56,7 @@ QComboBox::item:selected {
 }
 
 QGroupBox {
+    background: white;
     font-weight: bold;
 }
 
@@ -71,10 +68,9 @@ QCheckBox::indicator::checked {
     image: url(:/images/checked.png)
 }
 
-/* not used in default pure white...
-QMainWindow, QStatusBar, QListView, QGroupBox {
+QDialog, QMainWindow, QStatusBar, QListView, QStackedWidget {
     background: white;
-*/
+}
 
 /* special controls... */
 
