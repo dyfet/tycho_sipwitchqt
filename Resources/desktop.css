@@ -2,15 +2,14 @@
 
 QLineEdit {
     background: white;
-    border: 1px solid lightgray;
-    border-radius: 4px;
-    padding: 2px;
+    padding: 1px;
 }
 
 QGroupBox {
     background: white;
     font-weight: bold;
 }
+
 
 QDialog, QMainWindow, QStatusBar, QListView, QStackedWidget {
     background: white;
