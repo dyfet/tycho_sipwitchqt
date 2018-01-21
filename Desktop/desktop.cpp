@@ -30,7 +30,7 @@
 
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const QString& text);
-const char *get_desktop_theme();
+QString get_desktop_theme();
 
 static bool dock_click_handler(::id self, SEL _cmd, ...)
 {

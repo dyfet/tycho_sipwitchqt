@@ -22,14 +22,14 @@ void set_dock_icon(const QIcon& icon)
     [NSApp setApplicationIconImage: image];
 }
 
-const char *get_desktop_theme()
+QString get_desktop_theme()
 {
     long tint = [[NSUserDefaults standardUserDefaults] integerForKey:@"AppleAquaColorVariant"];
     switch(tint) {
     case 6:
-        return "graphite";
+        return ":/styles/light.css";
     default:
-        return "blue";
+        return ":/styles/ocean.css";
     }
 }
 
