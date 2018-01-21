@@ -30,6 +30,7 @@
 
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const QString& text);
+const char *get_desktop_theme();
 
 static bool dock_click_handler(::id self, SEL _cmd, ...)
 {
@@ -410,6 +411,10 @@ int main(int argc, char *argv[])
 #endif
     if(!localize.isEmpty())
         app.installTranslator(&localize);
+
+#ifdef Q_OS_MAC
+    qDebug() << "theme" << get_desktop_theme();
+#endif
 
     QFile style(":/styles/desktop.css");
     if(style.exists()) {
