@@ -15,6 +15,7 @@ Release/
 *.rpm
 *.key
 *.pem
+*.cfg
 
 *.tar.gz
 *.zip

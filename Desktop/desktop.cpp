@@ -148,6 +148,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     if(Storage::exists()) {
         storage = new Storage("");
         showSessions();
+        restoreGeometry(settings.value("geometry").toByteArray());
         show();                             // FIXME: hide
         listen(storage->credentials());
     }
@@ -159,6 +160,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
         ui.pagerStack->setCurrentWidget(login);
         login->enter();
         show();
+        settings.setValue("geometry", saveGeometry());
     }
 }
 
@@ -169,6 +171,9 @@ Desktop::~Desktop()
 
 void Desktop::closeEvent(QCloseEvent *event)
 {
+    if(isVisible())
+        settings.setValue("geometry", saveGeometry());
+
     // close to tray, if we are active...
     if(trayIcon && trayIcon->isVisible() && listener) {
         hide();
