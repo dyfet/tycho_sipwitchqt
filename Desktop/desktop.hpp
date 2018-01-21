@@ -142,6 +142,9 @@ private:
     static Desktop *Instance;
     static state_t State;
 
+signals:
+    void online(bool state);
+
 public slots:
     void initial(void);
     void dock_clicked();

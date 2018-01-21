@@ -311,10 +311,15 @@ void Desktop::offline()
     if(!listener)
         return;
 
+    // could return from authorizing to offline...
     setTrayIcon(":/icons/offline.png");
     ui.trayAway->setText(tr("Connect"));
     ui.trayAway->setEnabled(!isLogin());
-    connected = false;
+
+    if(connected) {
+        connected = false;
+        emit online(connected);
+    }
     listener = nullptr;
     State = OFFLINE;
 }
@@ -363,9 +368,9 @@ void Desktop::authorized(const QVariantHash& creds)
     if(!connected) {
         ui.trayAway->setText(tr("Away"));
         ui.trayAway->setEnabled(true);
+        connected = true;
+        emit online(connected);
     }
-
-    connected = true;
     State = ONLINE;
 }
 
