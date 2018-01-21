@@ -199,7 +199,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QToolButton" name="certificate">
+          <widget class="QPushButton" name="certificate">
            <property name="maximumSize">
             <size>
              <width>22</width>
@@ -215,6 +215,9 @@
            <property name="icon">
             <iconset resource="../Resources/desktop.qrc">
              <normaloff>:/icons/locked.png</normaloff>:/icons/locked.png</iconset>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -265,13 +268,13 @@
           <widget class="QPushButton" name="loginButton">
            <property name="minimumSize">
             <size>
-             <width>80</width>
+             <width>96</width>
              <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>80</width>
+             <width>96</width>
              <height>16777215</height>
             </size>
            </property>
