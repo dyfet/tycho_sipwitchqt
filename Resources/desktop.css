@@ -1,53 +1,50 @@
-QLabel#searchLabel {
-    border: 1px solid #c0c0c0;
-    border-right: 0px;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-    padding-left: 4px;
-    padding: 1px;
-    margin: 0px;
+/* declare pure white first... */
+
+QWidget {
     background: white;
 }
 
-QLineEdit#searchText {
-    border: 1px solid #c0c0c0;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-    border-left: 0px;
-    border-bottom-left-radius: 0px;
-    border-top-left-radius: 0px;
-    padding: 1px;
-    margin: 0px;
-    padding-left: 0px;
-    background: white;
-}
+/* declare common controls and behaviors */
 
-QToolBar#toolBar {
+QToolButton {
     border: 0px;
-    padding: 0px;
     margin: 0px;
-    background: white;
+    padding: 0px;
+}
+
+QToolButton:pressed {
+    background: lightgray;
+}
+
+QPushButton {
+    background: lightgray;
+    border: 1px solid lightgray;
+    padding: 3px;
+    border-radius: 6px;
+    width: 96px;
+}
+
+QPushButton:pressed {
+    background: gray;
 }
 
 QLineEdit {
-    background: white;
     border: 1px solid lightgray;
     border-radius: 4px;
     padding: 2px;
 }
 
 QComboBox {
-    background: white;
     border: 1px solid lightgray;
     border-radius: 4px;
     padding: 2px;
     padding-left: 6px;
+    width: 96px;
 }
 
 QComboBox::drop-down {
 /*    subcontrol-origin: padding;
     subcontrol-position: top right; */
-    background: white;
     border: 0px;
     margin: 2px;
 }
@@ -57,6 +54,7 @@ QComboBox::down-arrow {
 }
 
 QComboBox::item:selected {
+    background: lightgray;
     color: black;
     font: bold;
 }
@@ -73,6 +71,38 @@ QCheckBox::indicator::checked {
     image: url(:/images/checked.png)
 }
 
+/* not used in default pure white...
 QMainWindow, QStatusBar, QListView, QGroupBox {
     background: white;
+*/
+
+/* special controls... */
+
+QLabel#searchLabel {
+    border: 1px solid #c0c0c0;
+    border-right: 0px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding-left: 4px;
+    padding: 1px;
+    margin: 0px;
 }
+
+QLineEdit#searchText {
+    border: 1px solid #c0c0c0;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-left: 0px;
+    border-bottom-left-radius: 0px;
+    border-top-left-radius: 0px;
+    padding: 1px;
+    margin: 0px;
+    padding-left: 0px;
+}
+
+QToolBar#toolBar {
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+}
+
