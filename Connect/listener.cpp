@@ -113,20 +113,23 @@ void Listener::run()
 
     emit starting();
 
-    osip_message_t *msg = nullptr;
-    auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
-    auto server = UString::uri(serverSchema, serverHost, serverPort);
-    qDebug() << "Connecting to" << server;
-    qDebug() << "Connecting as" << identity;
+    if(active) {
+        Locker lock(context);
+        osip_message_t *msg = nullptr;
+        auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
+        auto server = UString::uri(serverSchema, serverHost, serverPort);
+        qDebug() << "Connecting to" << server;
+        qDebug() << "Connecting as" << identity;
 
-    rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
-    if(msg && rid > -1) {
-        osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
-        osip_message_set_header(msg, "X-Label", serverLabel);
-        eXosip_register_send_register(context, rid, msg);
+        rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
+        if(msg && rid > -1) {
+            osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
+            osip_message_set_header(msg, "X-Label", serverLabel);
+            eXosip_register_send_register(context, rid, msg);
+        }
+        else
+            active = false;
     }
-    else
-        active = false;
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
