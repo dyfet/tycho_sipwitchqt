@@ -11,18 +11,6 @@ QToolButton:pressed {
     background: lightgray;
 }
 
-QPushButton {
-    background: lightgray;
-    border: 1px solid lightgray;
-    padding: 3px;
-    border-radius: 6px;
-    width: 96px;
-}
-
-QPushButton:pressed {
-    background: gray;
-}
-
 QLineEdit {
     background: white;
     border: 1px solid lightgray;
@@ -30,42 +18,9 @@ QLineEdit {
     padding: 2px;
 }
 
-QComboBox {
-    background: white;
-    border: 1px solid lightgray;
-    border-radius: 4px;
-    padding: 2px;
-    padding-left: 6px;
-    width: 96px;
-}
-
-QComboBox::drop-down {
-    background: white;
-    border: 0px;
-    margin: 2px;
-}
-
-QComboBox::down-arrow {
-    image: url(:/images/downarrow.png)
-}
-
-QComboBox::item:selected {
-    background: lightgray;
-    color: black;
-    font: bold;
-}
-
 QGroupBox {
     background: white;
     font-weight: bold;
-}
-
-QCheckBox::indicator::unchecked {
-    image: url(:/images/unchecked.png)
-}
-
-QCheckBox::indicator::checked {
-    image: url(:/images/checked.png)
 }
 
 QDialog, QMainWindow, QStatusBar, QListView, QStackedWidget {

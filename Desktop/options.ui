@@ -716,12 +716,21 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="desktopNotify">
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
+           <widget class="QSlider" name="horizontalSlider_2">
+            <property name="maximumSize">
+             <size>
+              <width>28</width>
+              <height>22</height>
+             </size>
             </property>
-            <property name="text">
-             <string/>
+            <property name="maximum">
+             <number>1</number>
+            </property>
+            <property name="pageStep">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -743,12 +752,27 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="audioNotify">
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
+           <widget class="QSlider" name="horizontalSlider">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
-            <property name="text">
-             <string/>
+            <property name="maximumSize">
+             <size>
+              <width>28</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximum">
+             <number>1</number>
+            </property>
+            <property name="pageStep">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -869,12 +893,21 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_7">
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
+           <widget class="QSlider" name="horizontalSlider_3">
+            <property name="maximumSize">
+             <size>
+              <width>28</width>
+              <height>22</height>
+             </size>
             </property>
-            <property name="text">
-             <string/>
+            <property name="maximum">
+             <number>1</number>
+            </property>
+            <property name="pageStep">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -890,12 +923,21 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="autoUserStart">
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
+           <widget class="QSlider" name="horizontalSlider_4">
+            <property name="maximumSize">
+             <size>
+              <width>28</width>
+              <height>22</height>
+             </size>
             </property>
-            <property name="text">
-             <string/>
+            <property name="maximum">
+             <number>1</number>
+            </property>
+            <property name="pageStep">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -1148,12 +1190,12 @@
  <tabstops>
   <tabstop>comboBox_4</tabstop>
   <tabstop>comboBox</tabstop>
-  <tabstop>desktopNotify</tabstop>
-  <tabstop>audioNotify</tabstop>
+  <tabstop>horizontalSlider_2</tabstop>
+  <tabstop>horizontalSlider</tabstop>
   <tabstop>comboBox_3</tabstop>
   <tabstop>comboBox_2</tabstop>
-  <tabstop>checkBox_7</tabstop>
-  <tabstop>autoUserStart</tabstop>
+  <tabstop>horizontalSlider_3</tabstop>
+  <tabstop>horizontalSlider_4</tabstop>
   <tabstop>lineEdit</tabstop>
   <tabstop>secret</tabstop>
   <tabstop>server</tabstop>
@@ -1165,11 +1207,11 @@
   <tabstop>toolButton_3</tabstop>
   <tabstop>lineNoAnswer</tabstop>
   <tabstop>toolButton_4</tabstop>
-  <tabstop>speed2</tabstop>
   <tabstop>speed1</tabstop>
-  <tabstop>speed5</tabstop>
-  <tabstop>speed3</tabstop>
+  <tabstop>speed2</tabstop>
   <tabstop>speed4</tabstop>
+  <tabstop>speed3</tabstop>
+  <tabstop>speed5</tabstop>
   <tabstop>speed6</tabstop>
   <tabstop>speed7</tabstop>
   <tabstop>speed8</tabstop>
