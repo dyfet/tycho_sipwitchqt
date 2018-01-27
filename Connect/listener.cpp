@@ -266,10 +266,16 @@ void Listener::run()
     }
 
     // clean up exiting transactions...
-    for(;;) {
+    while(rid > -1) {
         auto event = eXosip_event_wait(context, s, ms);
         if(event == nullptr)
             break;
+        else {
+            if(event->type == EXOSIP_REGISTRATION_SUCCESS)
+                rid = -1;
+            Locker lock(context);
+            eXosip_default_action(context, event);
+        }
         eXosip_event_free(event);
     }
 
