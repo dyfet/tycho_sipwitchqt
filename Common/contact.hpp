@@ -26,6 +26,10 @@
 #include <QAbstractSocket>
 #include <eXosip2/eXosip.h>
 
+#ifndef SIP_CONFLICT
+#define SIP_CONFLICT    409         // we bring it back for duplicate labels!
+#endif
+
 class Contact final
 {
 public:

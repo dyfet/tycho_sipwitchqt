@@ -62,6 +62,11 @@ void Login::badPassword()
     ui.secret->setFocus();
 }
 
+void Login::badLabel()
+{
+    ui.label->setFocus();
+}
+
 QVariantHash Login::credentials()
 {
     QVariantHash cred;

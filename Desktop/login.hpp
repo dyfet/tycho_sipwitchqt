@@ -31,6 +31,7 @@ public:
     void enter();
     void badIdentity();
     void badPassword();
+    void badLabel();
 
     QVariantHash credentials();     // gathers local ones...
 

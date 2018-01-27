@@ -314,6 +314,11 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
 void Desktop::failed(int error_code)
 {
     switch(error_code) {
+    case SIP_CONFLICT:
+        error(tr("Label already used"));
+        if(isLogin())
+            login->badLabel();
+        break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
         error(tr("Authorizartion denied"));
