@@ -190,7 +190,7 @@ void Listener::run()
             if(event->response)
                 error = event->response->status_code;
 
-            if(event->response->status_code != SIP_UNAUTHORIZED) {
+            if(error != SIP_UNAUTHORIZED) {
                 active = false;
                 emit failure(error);
                 break;

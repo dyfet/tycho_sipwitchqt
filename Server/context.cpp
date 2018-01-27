@@ -246,7 +246,11 @@ void Context::challenge(const Event &event, const QSqlRecord &auth)
     ContextLocker lock(context);
     eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);
     osip_message_set_header(msg, WWW_AUTHENTICATE, challenge);
-    osip_message_set_header(msg, "X-Authorize", user);
+
+    // part of sipwitchqt client first trust/initial contact setup
+    if(event.initialize() == "label")
+        osip_message_set_header(msg, "X-Authorize", user);
+
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
 }
 
