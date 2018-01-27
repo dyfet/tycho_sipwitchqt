@@ -109,6 +109,7 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "posted TIMESTAMP,"
             "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
             "callduration INTEGER DEFAULT 0,"       // call duration...
+            "expires INTEGER DEFAULT 0,"           // carried expires header
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"
             "FOREIGN KEY (msgfrom) REFERENCES Contacts(uid));",

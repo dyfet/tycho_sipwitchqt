@@ -265,7 +265,7 @@ bool Context::reply(const Event& event, int code)
     ContextLocker lock(context);
     switch(event.type()) {
     case EXOSIP_MESSAGE_NEW:
-//        if(MSG_IS_OPTIONS(event.message())) {
+        if(MSG_IS_OPTIONS(event.message())) {
             if(code == SIP_OK) {
                 eXosip_options_build_answer(context, tid, code, &msg);
                 if(!msg)
@@ -274,7 +274,15 @@ bool Context::reply(const Event& event, int code)
             }
             eXosip_options_send_answer(context, tid, code, msg);
             return true;
-//        }
+        }
+        if(MSG_IS_REGISTER(event.message())) {
+            if(code == SIP_OK) {
+                eXosip_message_build_answer(context, tid, code, &msg);
+                if(!msg)
+                    return false;
+            }
+            eXosip_message_send_answer(context, tid, code, msg);
+        }
         break;
     default:
         break;

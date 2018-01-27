@@ -112,6 +112,7 @@ static QStringList sqliteTables = {
         "display VARCHAR(64),"                  // origin display name
         "groupid VARCHAR(32) DEFAULT NULL,"     // if group/team was target
         "posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+        "expires INTEGER DEFAULT 0,"            // carried expires header
         "msgtype VARCHAR(8),"
         "msgtext TEXT,"
         "FOREIGN KEY(name) REFERENCES Authorize(name) "

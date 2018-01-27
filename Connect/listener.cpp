@@ -158,6 +158,7 @@ bool Listener::auth_registration(eXosip_event_t *event)
     Locker lock(context);
     eXosip_clear_authentication_info(context);  // cannot use any old creds...
     eXosip_add_authentication_info(context, user, serverId, secret, algo.toLower(), realm);
+    eXosip_default_action(context, event);
     return true;
 }
 
@@ -244,15 +245,17 @@ void Listener::run()
                 break;
             }
             break;
+        case EXOSIP_CALL_MESSAGE_NEW:
+            if(MSG_IS_REGISTER(event->request)) {
+                Locker lock(context);
+                eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);
+                break;
+            }
+            break;
         default:
             break;
         }
 
-        // event dispatch....
-        if(active) {
-            Locker lock(context);
-            eXosip_default_action(context, event);
-        }
         eXosip_event_free(event);
     }
 
