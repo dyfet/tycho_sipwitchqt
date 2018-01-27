@@ -127,6 +127,10 @@ public:
         return d->authorization;
     }
 
+    inline int number() const {
+        return d->number;
+    }
+
     inline const Contact from() const {
         return d->from;
     }
@@ -231,6 +235,7 @@ private:
         Data(eXosip_event_t *evt, Context *ctx);
         ~Data();
 
+        int number;                 // referencing extension # or -1
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops

@@ -314,6 +314,13 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
 void Desktop::failed(int error_code)
 {
     switch(error_code) {
+    case SIP_FORBIDDEN:
+    case SIP_UNAUTHORIZED:
+        error(tr("Authorizartion denied"));
+        if(isLogin())
+            login->badPassword();
+        break;
+    case SIP_INTERNAL_SERVER_ERROR:
     case 666:
         error(tr("Cannot reach server"));
         if(isLogin())

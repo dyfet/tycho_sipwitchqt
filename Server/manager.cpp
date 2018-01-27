@@ -136,20 +136,17 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
     }
 }
 
-void Manager::sipRegister(const Event &ev)
+void Manager::refreshRegistration(const Event &ev)
 {
-    if(ev.authorization()) {
-        // TODO: if authorized, should match record in registry, else new
-        // with db request or fail auth if secret doesn't match up
-        Registry::process(ev);
-    }
-    else {
-        // TODO: should search registry first, if not found, generate db auth
-        // request, else uses registry auth info...
-        Registry::authorize(ev);
-    }
+    // TODO: determine event eligibility to register...
 
-
+    auto *reg = Registry::find(ev);
+    if(reg && !ev.authorization())
+        Context::challenge(ev, reg->data());
+    else if(ev.authorization() && reg)
+        Context::reply(ev, reg->authorize(ev));
+    else
+        Context::reply(ev, SIP_FORBIDDEN);
 }
 
 

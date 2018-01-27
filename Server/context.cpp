@@ -158,7 +158,7 @@ void Context::run()
     // connect events to state handlers when we run...
     auto stack = Manager::instance();
     if(allow & Allow::REGISTRY)
-        connect(this, &Context::REQUEST_REGISTER, stack, &Manager::sipRegister);
+        connect(this, &Context::REQUEST_REGISTER, stack, &Manager::refreshRegistration);
 
     debug() << "Running " << objectName();
 
@@ -228,31 +228,26 @@ bool Context::process(const Event& ev)
     return true;
 }
 
-bool Context::authenticate(const Event &event, const QSqlRecord &auth)
+void Context::challenge(const Event &event, const QSqlRecord &auth)
 {
     osip_message_t *msg = nullptr;
     auto ctx = event.context();
     auto context = ctx->context;
     auto tid = event.tid();
 
-    if(ctx->allow & Allow::UNAUTHENTICATED)
-        return true;
-
-    if(event.authorization())
-        return true;
-
     //TODO: a real nounce generator and cache to verify
     time_t now;
     UString nounce = UString::number(static_cast<int>(time(&now) & 0xffffffff));
     UString realm = auth.value("realm").toString().toUtf8();
     UString digest = auth.value("digest").toString().toUtf8();
-    UString challenge = "Digest Realm=" + realm.quote() + ", nounce=" + nounce.quote() + ", algorithm=" + digest.quote();
+    UString user = auth.value("user").toString().toUtf8();
+    UString challenge = "Digest realm=" + realm.quote() + ", nounce=" + nounce.quote() + ", algorithm=" + digest.quote();
 
     ContextLocker lock(context);
     eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);
     osip_message_set_header(msg, WWW_AUTHENTICATE, challenge);
+    osip_message_set_header(msg, "X-Authorize", user);
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
-    return false;
 }
 
 bool Context::reply(const Event& event, int code)
@@ -266,7 +261,7 @@ bool Context::reply(const Event& event, int code)
     ContextLocker lock(context);
     switch(event.type()) {
     case EXOSIP_MESSAGE_NEW:
-        if(MSG_IS_OPTIONS(event.message())) {
+//        if(MSG_IS_OPTIONS(event.message())) {
             if(code == SIP_OK) {
                 eXosip_options_build_answer(context, tid, code, &msg);
                 if(!msg)
@@ -275,7 +270,7 @@ bool Context::reply(const Event& event, int code)
             }
             eXosip_options_send_answer(context, tid, code, msg);
             return true;
-        }
+//        }
         break;
     default:
         break;

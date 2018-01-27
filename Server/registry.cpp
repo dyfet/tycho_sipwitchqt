@@ -23,24 +23,35 @@ static QMultiHash<int, Registry*> extensions;
 static QMultiHash<UString, Registry*> aliases;
 static QHash<QPair<int,UString>, Registry *> registries;
 
-Registry::Registry(const QSqlRecord& db, const Event &event) :
-extension(db)
+// We create registration records based on the initial pre-authorize
+// request, and as inactive.  The registration becomes active only when
+// it is updated by an authorized request.
+Registry::Registry(const QSqlRecord& db) :
+expires(-1), context(nullptr), extension(db)
 {    
     text = db.value("display").toString();
     alias = db.value("name").toString();
     number = db.value("number").toInt();
     label = db.value("label").toString();
-    agent = event.agent();
-    allows = event.allows();
+    expires = 60000l;
+
+    updated.start();
 
     QPair<int,UString> key(number, label);
     extensions.insert(number, this);
     aliases.insert(alias, this);
     registries.insert(key, this);
+    qDebug() << "Initializing" << extension << label;
 }
 
 Registry::~Registry()
 {
+    if(!context)
+        qDebug() << "Abandoning" << extension << label;
+    else {
+        qDebug() << "Releasing" << extension << label;
+        // may later kill active calls, etc...
+    }
     QPair<int,UString> key(number, label);
     registries.remove(key);
     extensions.remove(number, this);
@@ -52,10 +63,16 @@ QList<Registry *> Registry::list()
     return extensions.values();
 }
 
-Registry *Registry::find(const QSqlRecord& db)
+// to find a registration record associated with a registration event
+Registry *Registry::find(const Event& event)
 {
-    QPair<int,UString> key(db.value("number").toInt(), db.value("label").toString());
-    return registries.value(key, nullptr);
+    QPair<int,UString> key(event.number(), event.label());
+    auto *reg = registries.value(key, nullptr);
+    if(reg && reg->hasExpired()) {
+        delete reg;
+        return nullptr;
+    }
+    return reg;
 }
 
 QList<Registry *> Registry::find(const UString& target)
@@ -81,9 +98,26 @@ void Registry::process(const Event& ev)
 }
 
 // authorize registration processing
-void Registry::authorize(const Event& ev)
+int Registry::authorize(const Event& ev)
 {
-    Q_UNUSED(ev);
+    // TODO: validate sip registration....
+
+    // de-registration
+    if(ev.expires() < 1) {
+        delete this;
+        return SIP_OK;
+    }
+
+    if(!context)
+        qDebug() << "Registering" << ev.number() << ev.label() << "for" << ev.expires();
+    else
+        qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << ev.expires();
+
+    expires = ev.expires() * 1000l;
+    context = ev.context();
+    address = ev.contact();
+    updated.restart();
+    return SIP_OK;
 }
 
 QDebug operator<<(QDebug dbg, const Registry& registry)

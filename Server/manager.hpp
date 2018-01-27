@@ -62,7 +62,7 @@ signals:
     void changeRealm(const QString& realm);
 
 public slots:
-    void sipRegister(const Event& ev);
+    void refreshRegistration(const Event& ev);
 
     void applyConfig(const QVariantHash& config);
 

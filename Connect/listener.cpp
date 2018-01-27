@@ -162,6 +162,7 @@ void Listener::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
+    int error;
 
     while(active) {
         auto event = eXosip_event_wait(context, s, ms);
@@ -184,10 +185,17 @@ void Listener::run()
         case EXOSIP_REGISTRATION_FAILURE:
             if(event->rid != rid)
                 break;
-            if(!event->response) {
+
+            error = 666;
+            if(event->response)
+                error = event->response->status_code;
+
+            if(event->response->status_code != SIP_UNAUTHORIZED) {
                 active = false;
-                emit failure(666);      // no connection failure...
+                emit failure(error);
+                break;
             }
+            // TODO: Create authorized response...
             break;
         default:
             break;

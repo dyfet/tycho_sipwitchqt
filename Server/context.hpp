@@ -98,7 +98,7 @@ public:
         return instanceCount > 0;
     }
 
-    static bool authenticate(const Event& event, const QSqlRecord& auth);
+    static void challenge(const Event& event, const QSqlRecord& auth);
     static bool reply(const Event& event, int code);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();

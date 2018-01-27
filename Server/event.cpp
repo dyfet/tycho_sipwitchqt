@@ -28,7 +28,7 @@ expires(-1), status(0), hops(0), natted(false), local(false), associated(false),
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
+number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
 {
     // start time of event creation
     elapsed.start();

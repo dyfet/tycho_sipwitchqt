@@ -33,7 +33,7 @@ class Registry final
     Q_DISABLE_COPY(Registry)
 
 public:
-    Registry(const QSqlRecord& db, const Event& event);
+    Registry(const QSqlRecord& db);
     ~Registry();
 
     inline const QSqlRecord data() const {
@@ -42,10 +42,6 @@ public:
 
     const UString display() const {
         return text;
-    }
-
-    inline bool hasExpired() const {
-        return address.hasExpired();
     }
 
     inline const UString host() const {
@@ -60,10 +56,6 @@ public:
         return context;
     }
 
-    inline time_t expires() const {
-        return address.expires();
-    }
-
     inline void refresh(int expires) {
         address.refresh(expires);
     }
@@ -72,21 +64,31 @@ public:
         return allows.indexOf(id.toLower()) > -1;
     }
 
-    static Registry *find(const QSqlRecord& db);
+    bool hasExpired() const {
+        return updated.hasExpired(expires * 1000l);
+    }
+
+    bool isActive() const {
+        return context != nullptr;
+    }
+
+    int authorize(const Event& event);
+
+    static Registry *find(const Event& event);      // to find registration
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
 
     static void process(const Event& event);
-    static void authorize(const Event& event);
 
 private:
     UString alias, label;
     UString text, agent;
     int number, rid;
+    qint64 expires;                     // time till expires
     Context *context;                   // context of endpoint
     Contact address;                    // contact record for endpoint
     Contact route;                      // our return route to endpoint
-    QElapsedTimer updated;              // last refershed registration
+    QElapsedTimer updated;              // when the record was updated
     QSqlRecord extension;               // extension + group union
     QList<LocalSegment *> calls;        // local calls on this endpoint
     QList<UString> allows;
