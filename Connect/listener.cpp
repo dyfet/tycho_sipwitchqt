@@ -156,9 +156,8 @@ bool Listener::auth_registration(eXosip_event_t *event)
     secret = serverCreds["secret"].toString();
 
     Locker lock(context);
-    eXosip_add_authentication_info(context, user, user, secret, nullptr, realm);
-    eXosip_default_action(context, event);
-    eXosip_automatic_action(context);
+    eXosip_clear_authentication_info(context);  // cannot use any old creds...
+    eXosip_add_authentication_info(context, user, serverId, secret, algo.toLower(), realm);
     return true;
 }
 
@@ -248,8 +247,12 @@ void Listener::run()
         default:
             break;
         }
-        // event dispatch....
 
+        // event dispatch....
+        if(active) {
+            Locker lock(context);
+            eXosip_default_action(context, event);
+        }
         eXosip_event_free(event);
     }
 
