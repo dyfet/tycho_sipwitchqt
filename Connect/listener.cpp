@@ -58,9 +58,11 @@ QObject(), active(true), connected(false)
     serverId = cred["extension"].toString();
     serverHost = cred["server"].toString();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
+    serverInit = cred["initialize"].toString();
     serverLabel = cred["label"].toString();
     serverSchema = "sip:";
     serverCreds = cred;
+    serverCreds["initialize"] = "";
 
     if(!serverPort)
         serverPort = 5060;
@@ -90,6 +92,36 @@ QObject(), active(true), connected(false)
     connect(this, &Listener::finished, thread, &QThread::quit);
     connect(this, &Listener::finished, this, &QObject::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+}
+
+void Listener::send_registration(osip_message_t *msg)
+{
+    if(!msg || rid < 0)
+        return;
+
+    // add our standard registration headers...
+    osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    if(!serverInit.isEmpty())
+        osip_message_set_header(msg, "X-Initialize", serverInit);
+    eXosip_register_send_register(context, rid, msg);
+}
+
+void Listener::reauthorize(const QVariantHash& update)
+{
+    Locker lock(context);
+    foreach(auto key, update.keys())
+        serverCreds[key] = update[key];
+
+    if(rid < 0 || !active)
+        return;
+
+    osip_message_t *msg = nullptr;
+    eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
+    if(msg)
+        send_registration(msg);
+    else
+        active = false;
 }
 
 void Listener::run()
@@ -122,11 +154,8 @@ void Listener::run()
         qDebug() << "Connecting as" << identity;
 
         rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
-        if(msg && rid > -1) {
-            osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
-            osip_message_set_header(msg, "X-Label", serverLabel);
-            eXosip_register_send_register(context, rid, msg);
-        }
+        if(msg && rid > -1)
+            send_registration(msg);
         else
             active = false;
     }
@@ -174,7 +203,7 @@ void Listener::run()
         Locker lock(context);
         eXosip_register_build_register(context, rid, 0, &msg);
         if(msg)
-            eXosip_register_send_register(context, rid, msg);
+            send_registration(msg);
     }
 
     // clean up exiting transactions...

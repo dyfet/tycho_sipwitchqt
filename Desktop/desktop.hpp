@@ -131,12 +131,13 @@ private:
     QMenu *trayMenu, *dockMenu, *appMenu;
     bool restart_flag, connected;
     QVariantHash currentCredentials;
+    QString appearance;
 
     void closeEvent(QCloseEvent *event) final;
 
     bool isCurrent(const QWidget *widget) const;
     void listen(const QVariantHash &cred);
-    void setTrayIcon(const QString& icon);
+    void setState(state_t state);
 
     static QVariantHash Credentials;   // current credentials...
     static Desktop *Instance;

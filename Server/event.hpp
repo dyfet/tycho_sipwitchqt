@@ -179,6 +179,10 @@ public:
         return d->subject;
     }
 
+    inline const UString initialize() const {
+        return d->initialize;
+    }
+
     inline int cid() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->cid;
@@ -236,7 +240,7 @@ private:
         osip_message_t *message;
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
-        UString agent, method, subject, text, content, realm, reason;
+        UString agent, method, subject, text, content, realm, reason, initialize;
         UString userid, nonce, digest, algorithm, label;
         Contact source;  // if nat, has first nat
         Contact from, to, request, target;

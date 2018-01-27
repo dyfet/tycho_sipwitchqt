@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>737</width>
-    <height>507</height>
+    <width>744</width>
+    <height>528</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -256,8 +256,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -426,9 +426,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
@@ -444,8 +447,8 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>20</width>
-         <height>40</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
@@ -458,94 +461,25 @@
        <property name="verticalSpacing">
         <number>6</number>
        </property>
-       <item row="0" column="0">
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="4" column="2">
-        <widget class="QPushButton" name="resetButton">
-         <property name="minimumSize">
-          <size>
-           <width>96</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>96</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Reset</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
-        <widget class="QPushButton" name="listButton">
-         <property name="minimumSize">
-          <size>
-           <width>96</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>96</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>List</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="1">
-        <widget class="QLabel" name="label_18">
+        <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>Associated endpoints</string>
+          <string>Test audio and web cam</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="5" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <property name="spacing">
-          <number>6</number>
-         </property>
+       <item row="3" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Return to initial state</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
-       <item row="3" column="2">
+       <item row="2" column="2">
         <widget class="QPushButton" name="testButton">
          <property name="minimumSize">
           <size>
@@ -568,34 +502,71 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <item>
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Return to initial state</string>
-           </property>
-          </widget>
-         </item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="spacing">
+          <number>6</number>
+         </property>
         </layout>
        </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_7">
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_18">
          <property name="text">
-          <string>Test audio and web cam</string>
+          <string>Associated endpoints</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="listButton">
+         <property name="minimumSize">
+          <size>
+           <width>96</width>
+           <height>0</height>
+          </size>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
+         <property name="maximumSize">
+          <size>
+           <width>96</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>List</string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QPushButton" name="resetButton">
+         <property name="minimumSize">
+          <size>
+           <width>96</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>96</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Reset</string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
+           <width>0</width>
            <height>0</height>
           </size>
          </property>
@@ -813,7 +784,7 @@
           <item>
            <widget class="QLabel" name="label_20">
             <property name="text">
-             <string>Basic Layout</string>
+             <string>Appearance</string>
             </property>
            </widget>
           </item>

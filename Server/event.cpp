@@ -147,9 +147,14 @@ void Event::Data::parseMessage(osip_message_t *msg)
     header = nullptr;
     osip_message_header_get_byname(msg, "x-label", 0, &header);
     if(header && header->hvalue)
-        label = UString(header->hvalue).toLower();
+        label = UString(header->hvalue).toLower();            
     else
         label = "NONE";
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, "x-initialize", 0, &header);
+    if(header && header->hvalue)
+        initialize = UString(header->hvalue).toLower();
 
     header = nullptr;
     osip_message_header_get_byname(msg, "subject", 0, &header);

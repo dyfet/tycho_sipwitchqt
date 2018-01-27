@@ -38,12 +38,17 @@ public:
         thread()->start(QThread::HighPriority);
     }
 
+    void reauthorize(const QVariantHash& update = QVariantHash());
+
     void stop();
 
 private:
     volatile bool active, connected;
 
+    void send_registration(osip_message_t *msg);
+
     QVariantHash serverCreds;
+    UString serverInit;
     UString serverId;
     UString serverHost;
     UString serverSchema;

@@ -83,6 +83,7 @@ QVariantHash Login::credentials()
     cred["user"] = ext;
     cred["display"] = "";
     cred["extension"] = ext.toInt();
+    cred["initialize"] = "label";
 
     qDebug() << "LOGIN CREDENTIALS" << cred;
 

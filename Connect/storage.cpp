@@ -89,14 +89,31 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
              "series INTEGER DEFAULT 9);",          // site db series
 
         "CREATE TABLE Contacts ("
+            "uid INTEGER PRIMARY KEY AUTOINCREMENT,"
             "extension INTEGER DEFAULT 0,"
+            "ordering INTEGER DEFAULT 5,"
             "uri VARCHAR(128),"
             "display VARCHAR(64),"
             "created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-            "last DATETIME DEFAULT 0,"
-            "PRIMARY KEY (uri));",
-        "CREATE UNIQUE INDEX Listing ON Contacts(last, display) WHERE last > 0;",
+            "last DATETIME DEFAULT 0);",
+        "CREATE UNIQUE INDEX People ON Contacts(uri);",
+        "CREATE UNIQUE INDEX Listing ON Contacts(ordering, last, display) WHERE last > 0;",
         "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > 0;",
+
+        "CREATE TABLE Messages ("
+            "msgfrom INTEGER,"                      // origin, team, group
+            "subject VARCHAR(80),"                  // msg subject
+            "display VARCHAR(64),"                  // who its from as shown
+            "reply VARCHAR(64) DEFAULT NULL,"       // reply uri if external
+            "mid INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "posted TIMESTAMP,"
+            "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
+            "callduration INTEGER DEFAULT 0,"       // call duration...
+            "msgtype VARCHAR(8),"
+            "msgtext TEXT,"
+            "FOREIGN KEY (msgfrom) REFERENCES Contacts(uid));",
+        "CREATE UNIQUE INDEX Inboxes ON Messages(msgfrom, posted, mid);",
+        "CREATE INDEX Incoming ON Messages(posted, mid);",
     });
 
     runQuery("INSERT INTO Credentials(extension, user, display, label, secret, server, port, type, realm) VALUES(?,?,?,?,?,?,?,?,?);",

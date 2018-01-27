@@ -63,6 +63,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
+    appearance = settings.value("appearance", "Default").toString();
     control = new Control(this);
 
     ui.setupUi(static_cast<QMainWindow *>(this));
@@ -199,8 +200,25 @@ void Desktop::shutdown()
     }
 }
 
-void Desktop::setTrayIcon(const QString& icon)
+void Desktop::setState(state_t state)
 {
+    // FIXME: Eventually adjusted by appearance
+    QString prefix = ":/icons/";
+    QString icon;
+
+    State = state;
+    switch(State) {
+    case AUTHORIZING:
+        icon = prefix + "activate.png";
+        break;
+    case ONLINE:
+        icon = prefix + "online.png";
+        break;
+    default:
+        icon = prefix + "offline.png";
+        break;
+    }
+
     if(trayIcon)
         trayIcon->setIcon(QIcon(icon));
     else
@@ -317,7 +335,6 @@ void Desktop::offline()
         return;
 
     // could return from authorizing to offline...
-    setTrayIcon(":/icons/offline.png");
     ui.trayAway->setText(tr("Connect"));
     ui.trayAway->setEnabled(!isLogin());
 
@@ -326,7 +343,7 @@ void Desktop::offline()
         emit online(connected);
     }
     listener = nullptr;
-    State = OFFLINE;
+    setState(OFFLINE);
 }
 
 bool Desktop::isCurrent(const QWidget *widget) const {
@@ -349,16 +366,14 @@ void Desktop::authorizing()
 {
     ui.trayAway->setText(tr("..."));
     ui.trayAway->setEnabled(false);
-    setTrayIcon(":/icons/activate.png");
     status(tr("Authorizing..."));
-    State = AUTHORIZING;
+    setState(AUTHORIZING);
 }
 
 void Desktop::authorized(const QVariantHash& creds)
 {
     Credentials = creds;
-
-    setTrayIcon(":/icons/online.png");
+    Credentials["initialize"] = ""; // only exists for signin...
 
     // apply or update credentials only after successfull authorization
     if(storage)
@@ -376,7 +391,7 @@ void Desktop::authorized(const QVariantHash& creds)
         connected = true;
         emit online(connected);
     }
-    State = ONLINE;
+    setState(ONLINE);
 }
 
 void Desktop::listen(const QVariantHash& cred)

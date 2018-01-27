@@ -103,6 +103,31 @@ static QStringList sqliteTables = {
         "passwd VARCHAR(128) NOT NULL,"         // password to hash from
         "display VARCHAR(64) NOT NULL,"         // provider short name
         "PRIMARY KEY (contact));",
+
+    "CREATE TABLE Messages ("
+        "mid INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "name VARCHAR(32),"                     // authorized delivery thru
+        "msgfrom VARCHAR(64),"                  // origin uri direct reply
+        "subject VARCHAR(80),"                  // subject header used
+        "display VARCHAR(64),"                  // origin display name
+        "groupid VARCHAR(32) DEFAULT NULL,"     // if group/team was target
+        "posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+        "msgtype VARCHAR(8),"
+        "msgtext TEXT,"
+        "FOREIGN KEY(name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE);",
+
+    "CREATE TABLE Outboxes ("
+        "ordering INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "mid INTEGER,"
+        "endpoint INTEGER,"
+        "delivered TIMESTAMP DEFAULT 0,"
+        "msgto VARCHAR(64),"                    // synthesized to header
+        "FOREIGN KEY (mid) REFERENCES Messages(mid) "
+            "ON DELETE CASCADE,"
+        "FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint) "
+            "ON DELETE CASCADE);",
+    "CREATE UNIQUE INDEX Pending ON Outboxes(ordering) WHERE delivered = 0;",
 };
 
 static QStringList sqlitePragmas = {
