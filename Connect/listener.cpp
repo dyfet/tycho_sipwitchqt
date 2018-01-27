@@ -124,6 +124,36 @@ void Listener::reauthorize(const QVariantHash& update)
         active = false;
 }
 
+bool Listener::auth_registration(eXosip_event_t *event)
+{
+    auto pauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->proxy_authenticates, 0);
+    auto wauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->www_authenticates,0);
+
+    osip_header_t *header = nullptr;
+    osip_message_header_get_byname(event->response, "x-authorize", 0, &header);
+    if(header && header->hvalue)
+        serverCreds["user"] = QString(header->hvalue);
+
+    if(!pauth && !wauth)
+        return false;
+
+    UString realm, algo, nounce;
+    if(pauth) {
+        realm = osip_proxy_authenticate_get_realm(pauth);
+        algo = osip_proxy_authenticate_get_algorithm(pauth);
+        nounce = osip_proxy_authenticate_get_nonce(pauth);
+    }
+    else {
+        realm = osip_www_authenticate_get_realm(wauth);
+        algo = osip_www_authenticate_get_algorithm(wauth);
+        nounce = osip_www_authenticate_get_nonce(wauth);
+    }
+    serverCreds["realm"] = realm.unquote();
+    algo.unquote();
+    nounce.unquote();
+    return true;
+}
+
 void Listener::run()
 {
     int ipv6 = 0, rport = 1, dns = 2;
@@ -195,7 +225,11 @@ void Listener::run()
                 emit failure(error);
                 break;
             }
-            // TODO: Create authorized response...
+            if(!auth_registration(event)) {
+                active = false;
+                emit failure(SIP_FORBIDDEN);
+                break;
+            }
             break;
         default:
             break;

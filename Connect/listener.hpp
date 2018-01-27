@@ -46,6 +46,7 @@ private:
     volatile bool active, connected;
 
     void send_registration(osip_message_t *msg);
+    bool auth_registration(eXosip_event_t *event);
 
     QVariantHash serverCreds;
     UString serverInit;
