@@ -137,7 +137,7 @@ bool Listener::auth_registration(eXosip_event_t *event)
     if(!pauth && !wauth)
         return false;
 
-    UString realm, algo, nounce;
+    UString realm, algo, nounce, user, secret;
     if(pauth) {
         realm = osip_proxy_authenticate_get_realm(pauth);
         algo = osip_proxy_authenticate_get_algorithm(pauth);
@@ -148,9 +148,17 @@ bool Listener::auth_registration(eXosip_event_t *event)
         algo = osip_www_authenticate_get_algorithm(wauth);
         nounce = osip_www_authenticate_get_nonce(wauth);
     }
-    serverCreds["realm"] = realm.unquote();
     algo.unquote();
     nounce.unquote();
+    realm.unquote();
+    serverCreds["realm"] = realm;
+    user = serverCreds["user"].toString();
+    secret = serverCreds["secret"].toString();
+
+    Locker lock(context);
+    eXosip_add_authentication_info(context, user, user, secret, nullptr, realm);
+    eXosip_default_action(context, event);
+    eXosip_automatic_action(context);
     return true;
 }
 
@@ -212,6 +220,12 @@ void Listener::run()
         }
 
         switch(event->type) {
+        case EXOSIP_REGISTRATION_SUCCESS:
+            if(!connected) {
+                connected = true;
+                emit authorize(serverCreds);
+            }
+            break;
         case EXOSIP_REGISTRATION_FAILURE:
             if(event->rid != rid)
                 break;
