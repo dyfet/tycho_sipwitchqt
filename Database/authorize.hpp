@@ -33,17 +33,24 @@ public:
         return Instance;
     }
 
-protected:
-    QTimer timer;
+    static void init(int order);
 
-    Authorize(unsigned order = 0);
+protected:
+    Authorize(unsigned order);
+
+    bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
+    int runQuery(const QStringList& list);
+    QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
 
 private:
+    Database *database;
+    QSqlDatabase *db;
+    QSqlDatabase local;
+
     static Authorize *Instance;
 
 protected slots:
-    virtual void applyConfig(const QVariantHash& config) = 0;
-    virtual void onTimeout();
+    virtual void activate(const QVariantHash& config, bool isOpen);
 };
 
 /*!

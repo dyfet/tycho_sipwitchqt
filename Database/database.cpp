@@ -56,7 +56,8 @@ static bool failed = false;
 
 Database *Database::Instance = nullptr;
 
-Database::Database(unsigned order)
+Database::Database(unsigned order) :
+QObject()
 {
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
@@ -175,6 +176,16 @@ bool Database::reopen()
         return false;
     }
     db.setDatabaseName(name);
+    if(!isFile()) {
+        if(!host.isEmpty())
+            db.setHostName(host);
+        if(port)
+            db.setPort(port);
+        if(!user.isEmpty())
+            db.setUserName(user);
+        if(!pass.isEmpty())
+            db.setPassword(pass);
+    }
     db.open();
     if(!db.isOpen()) {
         FOR_DEBUG(
@@ -292,7 +303,8 @@ bool Database::event(QEvent *evt)
 
 void Database::onTimeout()
 {
-    close();
+    if(isFile())
+        close();
 }
 
 void Database::applyConfig(const QVariantHash& config)
@@ -334,6 +346,7 @@ void Database::applyConfig(const QVariantHash& config)
         name = "REALM_" + realm.toUpper();
 
     create();
+    emit updateAuthorize(config, db.isOpen());
 }
 
 void Database::countExtensions()

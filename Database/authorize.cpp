@@ -20,34 +20,138 @@
 #include "../Server/output.hpp"
 #include "../Server/main.hpp"
 #include "authorize.hpp"
+#include <QSqlError>
 
 Authorize *Authorize::Instance = nullptr;
 
-Authorize::Authorize(unsigned order)
+Authorize::Authorize(unsigned order) :
+QObject(), db(nullptr)
 {
-	Q_ASSERT(Instance == nullptr);
-		Instance = this;
-
-	if(order)
-        moveToThread(Server::createThread("authorize", order));
-	else
+    database = Database::instance();
+    if(database->isFile())
         moveToThread(Server::findThread("database"));
+    else {
+        auto thread = Server::createThread("authorize", order);
+        thread->setPriority(QThread::HighPriority);
+        moveToThread(thread);
+    }
 
-    timer.moveToThread(thread());
-    timer.setSingleShot(true);
-    connect(&timer, &QTimer::timeout, this, &Authorize::onTimeout);
-
-	Server *server = Server::instance();
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
-    connect(server, &Server::changeConfig, this, &Authorize::applyConfig);
+    connect(database, &Database::updateAuthorize, this, &Authorize::activate);
 }
 
 Authorize::~Authorize()
 {
+    if(local.isValid() && local.isOpen()) {
+        local.close();
+        local = QSqlDatabase();
+        QSqlDatabase::removeDatabase("auth");
+    }
     Instance = nullptr;
 }
 
-void Authorize::onTimeout()
+void Authorize::init(int order)
 {
+    Q_ASSERT(Instance == nullptr);
+    Instance = new Authorize(order);
 }
 
+void Authorize::activate(const QVariantHash& config, bool opened)
+{
+    Q_UNUSED(config);
+    if(local.isValid() && local.isOpen()) {
+        local.close();
+        local = QSqlDatabase();
+        QSqlDatabase::removeDatabase("auth");
+    }
+    db = nullptr;
+    if(database->isFile() && opened)
+        db = &database->db;
+    else if(opened) {
+        local = QSqlDatabase::addDatabase(database->driver, "auth");
+        db = &local;
+        if(!db->isValid()) {
+            error() << "Invalid auth connection";
+            db = nullptr;
+        }
+        else {
+            db->setDatabaseName(database->name);
+            if(!database->host.isEmpty())
+                db->setHostName(database->host);
+            if(database->port)
+                db->setPort(database->port);
+            if(!database->user.isEmpty())
+                db->setUserName(database->user);
+            if(!database->pass.isEmpty())
+                db->setPassword(database->pass);
+            if(!db->open()) {
+                error() << "Failed auth connection";
+                local = QSqlDatabase();
+                QSqlDatabase::removeDatabase("auth");
+                db = nullptr;
+            }
+        }
+    }
+    if(db)
+        qDebug() << "Authorization activated";
+}
+
+int Authorize::runQuery(const QStringList& list)
+{
+    int count = 0;
+
+    if(list.count() < 1)
+        return 0;
+
+    foreach(auto request, list) {
+        if(!runQuery(request))
+            break;
+        ++count;
+    }
+    qDebug() << "Performed" << count << "of" << list.count() << "auth queries";
+    return count;
+}
+
+bool Authorize::runQuery(const QString &request, const QVariantList &parms)
+{
+    if(db == &local) {
+        QSqlQuery query(local);
+        query.prepare(request);
+
+        int count = -1;
+            qDebug() << "Query" << request << "LIST" << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(query.exec() != true) {
+            warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            return false;
+        }
+        return true;
+    }
+    else
+        return database->runQuery(request, parms);
+}
+
+QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parms)
+{
+
+    if(db == &local) {
+        QSqlQuery query(local);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "***** REQUEST " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(!query.exec())
+            return QSqlRecord();
+
+        if(!query.next())
+            return QSqlRecord();
+
+        return query.record();
+    }
+    else
+        return database->getRecord(request, parms);
+}

@@ -30,9 +30,14 @@ class Database final : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(Database)
+    friend class Authorize;
 
 public:
     ~Database();
+
+    bool isFile() const {
+        return Util::dbIsFile(driver);
+    }
 
     static Database *instance() {
         return Instance;
@@ -74,6 +79,7 @@ private:
 
 signals:
     void countResults(const QString& id, int count);
+    void updateAuthorize(const QVariantHash& config, bool active);
 
 private slots:
     void applyConfig(const QVariantHash& config);

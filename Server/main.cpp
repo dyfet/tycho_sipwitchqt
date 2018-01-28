@@ -131,6 +131,8 @@ int main(int argc, char **argv)
     // create managers and start server...
     Database::init(2);
     Manager::init(3);
+
+    Authorize::init(6);
     exitcode = server.start();
 
     //config.sync();
