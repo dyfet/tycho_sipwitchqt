@@ -228,20 +228,22 @@ bool Context::process(const Event& ev)
     return true;
 }
 
-void Context::challenge(const Event &event, const QSqlRecord &auth)
+QByteArray Context::challenge(const Event &event, const QSqlRecord &auth)
 {
+    char buf[8];
     osip_message_t *msg = nullptr;
     auto ctx = event.context();
     auto context = ctx->context;
     auto tid = event.tid();
 
-    //TODO: a real nounce generator and cache to verify
-    time_t now;
-    UString nounce = UString::number(static_cast<int>(time(&now) & 0xffffffff));
+    eXosip_generate_random(buf, sizeof(buf));
+    QByteArray random(buf, sizeof(buf));
+
+    UString nonce = random.toHex().toLower();
     UString realm = auth.value("realm").toString().toUtf8();
-    UString digest = auth.value("digest").toString().toUtf8();
+    UString digest = auth.value("digest").toString().toUtf8().toUpper();
     UString user = auth.value("user").toString().toUtf8();
-    UString challenge = "Digest realm=" + realm.quote() + ", nounce=" + nounce.quote() + ", algorithm=" + digest.quote();
+    UString challenge = "Digest realm=" + realm.quote() + ", nonce=" + nonce.quote() + ", algorithm=" + digest.quote();
 
     ContextLocker lock(context);
     eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);
@@ -252,6 +254,7 @@ void Context::challenge(const Event &event, const QSqlRecord &auth)
         osip_message_set_header(msg, "X-Authorize", user);
 
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
+    return random;
 }
 
 bool Context::reply(const Event& event, int code)

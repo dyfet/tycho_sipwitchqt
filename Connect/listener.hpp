@@ -26,6 +26,10 @@
 #include <QSslCertificate>
 #include <QTimer>
 
+#define EVENT_TIMER 500l    // 500ms...
+#define AGENT_ALLOWS "INVITE,ACK,OPTIONS,BYE,CANCEL,SUBSCRIBE,NOTIFY,REFER,MESSAGE,INFO,PING"
+#define AGENT_EXPIRES 1800
+
 class Listener final : public QObject
 {
 	Q_DISABLE_COPY(Listener)
@@ -45,8 +49,8 @@ public:
 private:
     volatile bool active, connected;
 
-    void send_registration(osip_message_t *msg);
-    bool auth_registration(eXosip_event_t *event);
+    void send_registration(osip_message_t *msg, bool auth = false);
+    bool auth_registration(eXosip_event_t *event, int expires = AGENT_EXPIRES);
 
     QVariantHash serverCreds;
     UString serverInit;

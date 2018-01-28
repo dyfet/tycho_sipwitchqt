@@ -68,13 +68,13 @@ number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associ
     if(authorization && authorization->username)
         userid = UString(authorization->username).unquote();
     if(authorization && authorization->response)
-        digest = UString(authorization->response).unquote();
+        digest = UString(authorization->response).unquote().toLower();
     if(authorization && authorization->nonce)
         nonce = UString(authorization->nonce).unquote();
     if(authorization && authorization->realm)
         realm = UString(authorization->realm).unquote();
     if(authorization && authorization->algorithm)
-        algorithm = UString(authorization->algorithm).unquote();
+        algorithm = UString(authorization->algorithm).unquote().toUpper();
 }
 
 Event::Data::~Data()
@@ -142,7 +142,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
     header = nullptr;
     osip_message_header_get_byname(msg, SESSION_EXPIRES, 0, &header);
     if(header && header->hvalue)
-        expires = Util::portNumber(header->hvalue);
+        expires = atoi(header->hvalue);
 
     header = nullptr;
     osip_message_header_get_byname(msg, "x-label", 0, &header);

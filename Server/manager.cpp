@@ -23,12 +23,6 @@
 
 #include <QUuid>
 
-static QHash<QCryptographicHash::Algorithm,QByteArray> digests = {
-    {QCryptographicHash::Md5,       "MD5"},
-    {QCryptographicHash::Sha256,    "SHA-256"},
-    {QCryptographicHash::Sha512,    "SHA-512"},
-};
-
 Manager *Manager::Instance = nullptr;
 UString Manager::ServerMode;
 UString Manager::ServerHostname;
@@ -142,7 +136,7 @@ void Manager::refreshRegistration(const Event &ev)
 
     auto *reg = Registry::find(ev);
     if(reg && !ev.authorization())
-        Context::challenge(ev, reg->data());
+        reg->setNounce(Context::challenge(ev, reg->data()));
     else if(ev.authorization() && reg)
         Context::reply(ev, reg->authorize(ev));
     else

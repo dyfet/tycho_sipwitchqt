@@ -27,12 +27,19 @@
 #include <unistd.h>
 #endif
 
-#define EVENT_TIMER 500l    // 500ms...
-
-#define AGENT_ALLOWS "INVITE,ACK,OPTIONS,BYE,CANCEL,SUBSCRIBE,NOTIFY,REFER,MESSAGE,INFO,PING"
-#define AGENT_EXPIRES 1800
-
 static const char *eid(eXosip_event_type ev);
+
+static QHash<UString, QCryptographicHash::Algorithm> digests = {
+    {"MD5",     QCryptographicHash::Md5},
+    {"SHA",     QCryptographicHash::Sha1},
+    {"SHA1",    QCryptographicHash::Sha1},
+    {"SHA2",    QCryptographicHash::Sha256},
+    {"SHA256",  QCryptographicHash::Sha256},
+    {"SHA512",  QCryptographicHash::Sha512},
+    {"SHA-1",   QCryptographicHash::Sha1},
+    {"SHA-256", QCryptographicHash::Sha256},
+    {"SHA-512", QCryptographicHash::Sha512},
+};
 
 // internal lock class
 class Locker final
@@ -94,16 +101,22 @@ QObject(), active(true), connected(false)
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 }
 
-void Listener::send_registration(osip_message_t *msg)
+void Listener::send_registration(osip_message_t *msg, bool auth)
 {
     if(!msg || rid < 0)
         return;
 
-    // add our standard registration headers...
+    // add generic headers...
     osip_message_set_header(msg, "Allow", AGENT_ALLOWS);
+
+    // add our special registration headers...
     osip_message_set_header(msg, "X-Label", serverLabel);
     if(!serverInit.isEmpty())
         osip_message_set_header(msg, "X-Initialize", serverInit);
+
+    if(auth)
+        serverInit = "";
+
     eXosip_register_send_register(context, rid, msg);
 }
 
@@ -124,7 +137,7 @@ void Listener::reauthorize(const QVariantHash& update)
         active = false;
 }
 
-bool Listener::auth_registration(eXosip_event_t *event)
+bool Listener::auth_registration(eXosip_event_t *event, int expires)
 {
     auto pauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->proxy_authenticates, 0);
     auto wauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->www_authenticates,0);
@@ -137,28 +150,47 @@ bool Listener::auth_registration(eXosip_event_t *event)
     if(!pauth && !wauth)
         return false;
 
-    UString realm, algo, nounce, user, secret;
+    UString realm, algo, nonce, user, secret, auth;
     if(pauth) {
         realm = osip_proxy_authenticate_get_realm(pauth);
         algo = osip_proxy_authenticate_get_algorithm(pauth);
-        nounce = osip_proxy_authenticate_get_nonce(pauth);
+        nonce = osip_proxy_authenticate_get_nonce(pauth);
     }
     else {
         realm = osip_www_authenticate_get_realm(wauth);
         algo = osip_www_authenticate_get_algorithm(wauth);
-        nounce = osip_www_authenticate_get_nonce(wauth);
+        nonce = osip_www_authenticate_get_nonce(wauth);
     }
-    algo.unquote();
-    nounce.unquote();
+    algo.unquote().toUpper();
+    nonce.unquote();
     realm.unquote();
     serverCreds["realm"] = realm;
     user = serverCreds["user"].toString();
     secret = serverCreds["secret"].toString();
+    osip_message_t *msg = nullptr;
+    char *uri = nullptr;
 
+    auto digest = digests[algo];
     Locker lock(context);
-    eXosip_clear_authentication_info(context);  // cannot use any old creds...
-    eXosip_add_authentication_info(context, user, serverId, secret, algo.toLower(), realm);
-    eXosip_default_action(context, event);
+    eXosip_register_build_register(context, rid, expires, &msg);
+    if(!msg)
+        return false;
+
+    osip_uri_to_str(msg->req_uri, &uri);
+    UString method = msg->sip_method;
+    UString ha1 = QCryptographicHash::hash(user + ":" + realm + ":" + secret, digest).toHex().toLower();
+    UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
+    UString response = QCryptographicHash::hash(ha1 + ":" + nonce + ":" + ha2, digest).toHex().toLower();
+
+    auth = "Digest username=\"" + user +
+        "\", realm=\"" + realm +
+        "\", uri=\"" + uri +
+        "\", response=\"" + response +
+        "\", nonce=\"" + nonce +
+        "\", algorithm=\"" + algo;
+
+    osip_message_set_header(msg, AUTHORIZATION, auth);
+    send_registration(msg, true);
     return true;
 }
 
@@ -274,10 +306,17 @@ void Listener::run()
         if(event == nullptr)
             break;
         else {
-            if(event->type == EXOSIP_REGISTRATION_SUCCESS)
+            switch(event->type) {
+            case EXOSIP_REGISTRATION_SUCCESS:
                 rid = -1;
-            Locker lock(context);
-            eXosip_default_action(context, event);
+                break;
+            case EXOSIP_REGISTRATION_FAILURE:
+                auth_registration(event, 0);
+                break;
+            default:
+                Locker lock(context);
+                eXosip_default_action(context, event);
+            }
         }
         eXosip_event_free(event);
     }

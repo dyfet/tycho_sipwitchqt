@@ -72,6 +72,14 @@ public:
         return context != nullptr;
     }
 
+    QByteArray nounce() const {
+        return random;
+    }
+
+    void setNounce(const QByteArray& value) {
+        random = value;
+    }
+
     int authorize(const Event& event);
 
     static Registry *find(const Event& event);      // to find registration
@@ -85,6 +93,7 @@ private:
     UString text, agent;
     int number, rid;
     qint64 expires;                     // time till expires
+    QByteArray random;                  // nounce value
     Context *context;                   // context of endpoint
     Contact address;                    // contact record for endpoint
     Contact route;                      // our return route to endpoint
