@@ -41,7 +41,7 @@ expires(-1), context(nullptr), endpoint(ep)
     extensions.insert(number, this);
     aliases.insert(alias, this);
     registries.insert(key, this);
-    qDebug() << "Initializing" << number << label;
+    qDebug() << "Initializing" << key;
 }
 
 Registry::~Registry()
@@ -68,6 +68,7 @@ Registry *Registry::find(const Event& event)
 {
     QPair<int,UString> key(event.number(), event.label());
     auto *reg = registries.value(key, nullptr);
+    qDebug() << "FINDING" << key << reg;
     if(reg && reg->hasExpired()) {
         delete reg;
         return nullptr;
@@ -103,7 +104,8 @@ int Registry::authorize(const Event& ev)
     // TODO: validate sip registration....
 
     // de-registration
-    if(ev.expires() < 1) {
+    expires = ev.expires() * 1000l;
+    if(expires < 1) {
         delete this;
         return SIP_OK;
     }
@@ -113,7 +115,6 @@ int Registry::authorize(const Event& ev)
     else
         qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << ev.expires();
 
-    expires = ev.expires() * 1000l;
     context = ev.context();
     address = ev.contact();
     updated.restart();

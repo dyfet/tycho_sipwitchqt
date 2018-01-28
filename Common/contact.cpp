@@ -120,7 +120,7 @@ hostPort(0), expiration(0)
     userName = uri->username;
     if(uri->port && uri->port[0])
         hostPort = Util::portNumber(uri->port);
- }
+}
 
 Contact::Contact(const Contact& from) noexcept :
 hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)

@@ -66,7 +66,16 @@ void Authorize::findEndpoint(const Event& event)
 {
     qDebug() << "Seeking endpoint";
     //emit createEndpoint(event, QVariantHash());
-    Context::reply(event, SIP_NOT_FOUND);
+    //Context::reply(event, SIP_NOT_FOUND);
+
+    QVariantHash dummy = {
+        {"realm", database->realm},
+        {"user", "test"},
+        {"digest", "MD5"},
+        {"number", event.number()},
+        {"label", event.label()},
+    };
+    emit createEndpoint(event, dummy);
 }
 
 void Authorize::activate(const QVariantHash& config, bool opened)

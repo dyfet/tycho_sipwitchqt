@@ -375,7 +375,6 @@ void Desktop::initial()
 
     listen(Credentials);
     ui.toolBar->show();
-    showSessions();         // FIXME: this is for early testing only....
     authorizing();
 }
 
@@ -407,6 +406,7 @@ void Desktop::authorized(const QVariantHash& creds)
         ui.trayAway->setEnabled(true);
         connected = true;
         emit online(connected);
+        status(tr("online"));
     }
     setState(ONLINE);
 }

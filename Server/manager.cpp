@@ -143,17 +143,17 @@ void Manager::refreshRegistration(const Event &ev)
         emit findEndpoint(ev);
 }
 
-void Manager::createRegistration(const Event& ev, const QVariantHash& endpoint)
+void Manager::createRegistration(const Event& event, const QVariantHash& endpoint)
 {
     if(endpoint.isEmpty()) {
-        Context::reply(ev, SIP_NOT_FOUND);
+        Context::reply(event, SIP_NOT_FOUND);
     }
     else {
         Registry *reg = new Registry(endpoint);
         if(!reg)
-            Context::reply(ev, SIP_INTERNAL_SERVER_ERROR);
+            Context::reply(event, SIP_INTERNAL_SERVER_ERROR);
         else
-            Context::challenge(ev, reg);
+            Context::challenge(event, reg);
     }
 }
 

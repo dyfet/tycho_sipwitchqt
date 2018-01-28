@@ -252,10 +252,7 @@ void Listener::run()
 
         switch(event->type) {
         case EXOSIP_REGISTRATION_SUCCESS:
-            if(!connected) {
-                connected = true;
-                emit authorize(serverCreds);
-            }
+            emit authorize(serverCreds);
             break;
         case EXOSIP_REGISTRATION_FAILURE:
             if(event->rid != rid)
@@ -308,7 +305,7 @@ void Listener::run()
 
     // clean up exiting transactions...
     while(rid > -1) {
-        auto event = eXosip_event_wait(context, s, ms);
+        auto event = eXosip_event_wait(context, 0, 60);
         if(event == nullptr)
             break;
         else {
@@ -324,14 +321,14 @@ void Listener::run()
                     if(msg) {
                         add_authentication(msg);
                         send_registration(msg);
+                        rid = -1;
                         break;
                     }
                 }
                 rid = -1;
                 break;
             default:
-                Locker lock(context);
-                eXosip_default_action(context, event);
+                break;
             }
         }
         eXosip_event_free(event);

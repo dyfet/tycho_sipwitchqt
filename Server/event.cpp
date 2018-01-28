@@ -23,7 +23,7 @@
 #endif
 
 Event::Data::Data() :
-expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
+number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
 {
 }
 
@@ -146,6 +146,12 @@ void Event::Data::parseMessage(osip_message_t *msg)
     osip_message_header_get_byname(msg, SESSION_EXPIRES, 0, &header);
     if(header && header->hvalue)
         expires = atoi(header->hvalue);
+    else {
+        header = nullptr;
+        osip_message_header_get_byname(msg, "expires", 0, &header);
+        if(header && header->hvalue)
+            expires = atoi(header->hvalue);
+    }
 
     header = nullptr;
     osip_message_header_get_byname(msg, "x-label", 0, &header);
