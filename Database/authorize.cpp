@@ -42,7 +42,8 @@ QObject(), db(nullptr)
 
     // future connections for quick aync between manager and auth
     Manager *manager = Manager::instance();
-    Q_UNUSED(manager);
+    connect(manager, &Manager::findEndpoint, this, &Authorize::findEndpoint);
+    connect(this, &Authorize::createEndpoint, manager, &Manager::createRegistration);
 }
 
 Authorize::~Authorize()
@@ -59,6 +60,13 @@ void Authorize::init(unsigned order)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = new Authorize(order);
+}
+
+void Authorize::findEndpoint(const Event& event)
+{
+    qDebug() << "Seeking endpoint";
+    //emit createEndpoint(event, QVariantHash());
+    Context::reply(event, SIP_NOT_FOUND);
 }
 
 void Authorize::activate(const QVariantHash& config, bool opened)

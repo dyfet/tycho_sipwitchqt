@@ -33,11 +33,11 @@ class Registry final
     Q_DISABLE_COPY(Registry)
 
 public:
-    Registry(const QSqlRecord& db);
+    Registry(const QVariantHash& ep);
     ~Registry();
 
-    inline const QSqlRecord data() const {
-        return extension;
+    inline const QVariantHash data() const {
+        return endpoint;
     }
 
     const UString display() const {
@@ -98,7 +98,7 @@ private:
     Contact address;                    // contact record for endpoint
     Contact route;                      // our return route to endpoint
     QElapsedTimer updated;              // when the record was updated
-    QSqlRecord extension;               // extension + group union
+    QVariantHash endpoint;              // extension + group union
     QList<LocalSegment *> calls;        // local calls on this endpoint
     QList<UString> allows;
 };

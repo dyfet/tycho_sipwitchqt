@@ -132,15 +132,28 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
 
 void Manager::refreshRegistration(const Event &ev)
 {
-    // TODO: determine event eligibility to register...
-
     auto *reg = Registry::find(ev);
-    if(reg && !ev.authorization())
-        reg->setNounce(Context::challenge(ev, reg->data()));
-    else if(ev.authorization() && reg)
-        Context::reply(ev, reg->authorize(ev));
+    if(reg) {
+        if(!ev.authorization())
+            Context::challenge(ev, reg);
+        else
+            Context::reply(ev, reg->authorize(ev));
+    }
     else
-        Context::reply(ev, SIP_FORBIDDEN);
+        emit findEndpoint(ev);
 }
 
+void Manager::createRegistration(const Event& ev, const QVariantHash& endpoint)
+{
+    if(endpoint.isEmpty()) {
+        Context::reply(ev, SIP_NOT_FOUND);
+    }
+    else {
+        Registry *reg = new Registry(endpoint);
+        if(!reg)
+            Context::reply(ev, SIP_INTERNAL_SERVER_ERROR);
+        else
+            Context::challenge(ev, reg);
+    }
+}
 

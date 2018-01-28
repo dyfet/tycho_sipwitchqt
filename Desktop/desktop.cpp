@@ -319,6 +319,11 @@ void Desktop::failed(int error_code)
         if(isLogin())
             login->badLabel();
         break;
+    case SIP_NOT_FOUND:
+        error(tr("Invalid extension number used"));
+        if(isLogin())
+            login->badIdentity();
+        break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
         error(tr("Authorizartion denied"));

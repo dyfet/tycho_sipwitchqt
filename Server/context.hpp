@@ -21,6 +21,8 @@
 #include "event.hpp"
 #include <QSqlRecord>
 
+class Registry;
+
 class Context final : public QObject
 {
     Q_DISABLE_COPY(Context)
@@ -98,7 +100,7 @@ public:
         return instanceCount > 0;
     }
 
-    static QByteArray challenge(const Event& event, const QSqlRecord& auth);
+    static void challenge(const Event& event, Registry *registry);
     static bool reply(const Event& event, int code);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();

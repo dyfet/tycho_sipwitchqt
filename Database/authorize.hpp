@@ -49,8 +49,12 @@ private:
 
     static Authorize *Instance;
 
+signals:
+    void createEndpoint(const Event& event, const QVariantHash endpoint);
+
 protected slots:
     virtual void activate(const QVariantHash& config, bool isOpen);
+    virtual void findEndpoint(const Event& event);
 };
 
 /*!

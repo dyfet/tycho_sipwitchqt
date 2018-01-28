@@ -60,9 +60,11 @@ private:
 
 signals:
     void changeRealm(const QString& realm);
+    void findEndpoint(const Event& ev);
 
 public slots:
     void refreshRegistration(const Event& ev);
+    void createRegistration(const Event& ev, const QVariantHash& endpoint);
 
     void applyConfig(const QVariantHash& config);
 

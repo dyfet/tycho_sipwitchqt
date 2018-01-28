@@ -75,6 +75,17 @@ Database::~Database()
     close();
 }
 
+QVariantHash Database::result(const QSqlRecord& record)
+{
+    QVariantHash hash;
+    int pos = 0;
+    while(pos < record.count()) {
+        hash[record.fieldName(pos)] = record.value(pos);
+        ++pos;
+    }
+    return hash;
+}
+
 int Database::runQuery(const QStringList& list)
 {
     int count = 0;

@@ -77,6 +77,8 @@ private:
 
     static Database *Instance;
 
+    static QVariantHash result(const QSqlRecord& record);
+
 signals:
     void countResults(const QString& id, int count);
     void updateAuthorize(const QVariantHash& config, bool active);

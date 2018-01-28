@@ -26,13 +26,13 @@ static QHash<QPair<int,UString>, Registry *> registries;
 // We create registration records based on the initial pre-authorize
 // request, and as inactive.  The registration becomes active only when
 // it is updated by an authorized request.
-Registry::Registry(const QSqlRecord& db) :
-expires(-1), context(nullptr), extension(db)
+Registry::Registry(const QVariantHash &ep) :
+expires(-1), context(nullptr), endpoint(ep)
 {    
-    text = db.value("display").toString();
-    alias = db.value("name").toString();
-    number = db.value("number").toInt();
-    label = db.value("label").toString();
+    text = ep.value("display").toString();
+    alias = ep.value("name").toString();
+    number = ep.value("number").toInt();
+    label = ep.value("label").toString();
     expires = 60000l;
 
     updated.start();
@@ -41,15 +41,15 @@ expires(-1), context(nullptr), extension(db)
     extensions.insert(number, this);
     aliases.insert(alias, this);
     registries.insert(key, this);
-    qDebug() << "Initializing" << extension << label;
+    qDebug() << "Initializing" << number << label;
 }
 
 Registry::~Registry()
 {
     if(!context)
-        qDebug() << "Abandoning" << extension << label;
+        qDebug() << "Abandoning" << number << label;
     else {
-        qDebug() << "Releasing" << extension << label;
+        qDebug() << "Releasing" << number << label;
         // may later kill active calls, etc...
     }
     QPair<int,UString> key(number, label);
