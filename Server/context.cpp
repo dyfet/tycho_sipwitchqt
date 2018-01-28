@@ -285,6 +285,7 @@ bool Context::reply(const Event& event, int code)
                     return false;
             }
             eXosip_message_send_answer(context, tid, code, msg);
+            return true;
         }
         break;
     default:

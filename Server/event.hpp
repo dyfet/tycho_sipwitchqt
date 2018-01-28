@@ -139,7 +139,7 @@ public:
         return d->to;
     }
 
-    inline const Contact request() const {
+    inline const UString request() const {
         return d->request;
     }
 
@@ -246,9 +246,9 @@ private:
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason, initialize;
-        UString userid, nonce, digest, algorithm, label;
+        UString userid, nonce, digest, algorithm, label, request;
         Contact source;  // if nat, has first nat
-        Contact from, to, request, target;
+        Contact from, to, target;
         QList<UString> allows;
         QByteArray body;
         QElapsedTimer elapsed;

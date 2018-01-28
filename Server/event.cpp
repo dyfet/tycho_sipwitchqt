@@ -50,14 +50,17 @@ number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associ
         break;
     case EXOSIP_MESSAGE_NEW:
     case EXOSIP_CALL_INVITE:
-        method = UString(evt->request->sip_method).toUpper();
+        method = evt->request->sip_method;
         if(osip_message_get_authorization(evt->request, 0, &authorization) != 0 || !authorization->username || !authorization->response)
             authorization = nullptr;
         parseMessage(evt->request);
         if(evt->request->req_uri && evt->request->req_uri->host) {
-            request = evt->request->req_uri;
-            target = Contact(ctx->hostname(), ctx->port(), request.user());
-            local = ctx->isLocal(request.host());
+            target = Contact(evt->request->req_uri);
+            char *uri = nullptr;
+            osip_uri_to_str(evt->request->req_uri, &uri);
+            if(uri)
+                request = uri;      // for consistent auth processing
+            local = ctx->isLocal(target.host());
         }
         break;
     default:
