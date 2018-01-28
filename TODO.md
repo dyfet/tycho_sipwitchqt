@@ -1,17 +1,26 @@
+For 0.0.1
+	Ability to run stubbed out functional authentication in server.  Ability for
+	client handle registration states and behavior in conjunction with server.
+	Ability to unit test sip ping.  Ability to create basic db with ruby support 
+    scripts.  Basic antisipate ui outline complete.
+
 For 0.1
-	Basic server functionality and packaging.
-	SIP Ping (options without userid).  Yes a LOT of code for it to just do that!
+	Functional registration with stubbed code removed and live database used.
+	Ability to form contact system.  Registry banner and extended receipt.
 
 For 0.2
-	Register devices.  Requires authorize database support to be integrated.
-	Add options for registered user id's (since the registry will now have them).
-	Remove testing count query.
-	Add swqadmin python script to at least allow add/remove of sqlite users.
+	Basic messaging support and contact support.  Can send and receive text 
+    messages between sip devices and antisipate user agents.  Basic messaging 
+    ui functional.  Initial deployment support for server.  Site 0 deployment.
 
 For 0.3
-	Basic connection/registration with provider.
-	Extend swqadmin to manipulate provider table.
-
+	Initial voice calling, invite support.
+ 
 For 0.4
-	Basic invite, connect, and call teardown between endpoints.
+	Basic video support in antisipate client.
 
+For 0.5
+	Secure modes of operation, stu mode, zrtp.
+
+For 0.6+
+	Everything else...
