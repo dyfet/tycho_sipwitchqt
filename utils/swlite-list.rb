@@ -12,8 +12,13 @@ dbname = '../testdata/local.db' if File.writable?('../testdata/local.db')
 dbname = '../userdata/local.db' if File.writable?('../userdata/local.db')
 abort("*** swlite-authorize: no database") unless File.writable?(dbname)
 
-db = SQLite3::Database.open dbname
-db.execute("SELECT name, type, access FROM Authorize ORDER BY name") do |row|
-  puts "%-32s %-8s %-8s" % row
+begin
+  db = SQLite3::Database.open dbname
+  db.execute("SELECT name, type, access FROM Authorize ORDER BY name") do |row|
+    puts "%-32s %-8s %-8s" % row
+  end
+rescue SQLite3::BusyException
+  abort("*** swlite-authorize: database busy; sipwitchqt active")
+rescue SQLite3::SQLException
+  abort("*** swlite-authorize: database error")
 end
-

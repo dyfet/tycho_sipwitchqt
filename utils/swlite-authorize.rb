@@ -111,9 +111,9 @@ begin
   end
   if type == 'NONE'
     abort("*** swlite-authorize: #{user}: no such authorization") if create != true or digest == 'DROP'
-    row = db.execute("INSERT INTO Authorize (name, type, realm, access) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
+    db.execute("INSERT INTO Authorize (name, type, realm, access) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
     type = mode
-    abort("*** swlite-authorize: #{user}: failed to create") if row.size < 1
+    print "Created #{user}\n"
   end
   case digest
   when 'NONE'
@@ -155,6 +155,8 @@ begin
       abort("*** swlite-authorize: #{user}: not able to authorize as #{access}")
     end
   end
+rescue SQLite3::BusyException
+  abort("*** swlite-authorize: database busy; sipwitchqt active")
 rescue SQLite3::SQLException
   abort("*** swlite-authorize: database error")
 rescue Interrupt
