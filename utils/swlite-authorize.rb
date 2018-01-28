@@ -19,14 +19,13 @@ else
 end
 
 access = 'LOCAL'
-digest = 'HASH'
+digest = 'MD5'
 number = -1
 minext = 100
 maxext = 699
 user = nil
 password = nil
 mode = 'USER'
-hash = 'SHA-256'
 create = false
 domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
@@ -48,11 +47,6 @@ OptionParser.new do |opts|
   opts.on('-l', '--local', 'local device group') do
     mode = 'DEVICE'
     access = 'LOCAL'
-    hash = 'MD5'
-  end
-
-  opts.on('-m', '--md5', 'md5 hashing') do
-    hash = 'MD5'
   end
 
   opts.on('-p', '--password [SECRET]', 'force password set') do |secret|
@@ -87,10 +81,6 @@ OptionParser.new do |opts|
 end.parse!
 abort(opts.banner) if(ARGV.size > 1)
 user = ARGV[0]
-
-if digest == 'HASH'
-  digest = hash
-end
 
 begin 
   db = SQLite3::Database.open dbname

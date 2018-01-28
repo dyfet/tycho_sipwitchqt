@@ -38,10 +38,10 @@ used to set digest mode, and whether to suspend or drop a user.
 .SH OPTIONS
 .TP
 .B \-\-sha256
-Use a SHA-256 digest when setting a password (default is MD5 for dev, sha-256 for others).
+Use a SHA-256 digest when setting a password (default is MD5).
 .TP
 .B \-\-sha512
-Use a SHA-512 digest when setting a password (default is MD5 for dev, sha-256 for others).
+Use a SHA-512 digest when setting a password (default is MD5).
 .TP
 .B \-\-create
 Create (add) the authorization if it does not exist.
@@ -52,9 +52,6 @@ registrations should also be terminated.
 .TP
 .B \-\-local
 Local device group authorization.
-.TP
-.BI \-\-md5
-Use MD5 digest when setting a password (default is MD5 for dev, sha-256 for others).
 .TP
 .BI \-\-password value
 Force setting of password.  Useful for script driven db setup.
