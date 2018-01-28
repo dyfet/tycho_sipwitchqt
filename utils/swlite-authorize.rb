@@ -19,13 +19,14 @@ else
 end
 
 access = 'LOCAL'
-digest = 'MD5'
+digest = 'HASH'
 number = -1
 minext = 100
 maxext = 699
 user = nil
 password = nil
 mode = 'USER'
+hash = 'SHA-256'
 create = false
 domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
@@ -47,6 +48,11 @@ OptionParser.new do |opts|
   opts.on('-l', '--local', 'local device group') do
     mode = 'DEVICE'
     access = 'LOCAL'
+    hash = 'MD5'
+  end
+
+  opts.on('-m', '--md5', 'md5 hashing') do
+    hash = 'MD5'
   end
 
   opts.on('-p', '--password [SECRET]', 'force password set') do |secret|
@@ -81,6 +87,10 @@ OptionParser.new do |opts|
 end.parse!
 abort(opts.banner) if(ARGV.size > 1)
 user = ARGV[0]
+
+if digest == 'HASH'
+  digest = hash
+end
 
 begin 
   db = SQLite3::Database.open dbname
@@ -118,7 +128,7 @@ begin
   case digest
   when 'NONE'
     print "Suspending authorization #{user}\n"
-    db.execute("UPDATE Authorize set digest='NONE', secret='', realm='#{domain}' WHERE userid='#{user}'")
+    db.execute("UPDATE Authorize set digest='NONE', secret='', realm='#{domain}' WHERE name='#{user}'")
   when 'DROP'
     case type
     when 'USER', 'DEVICE', 'TEAM'
@@ -150,7 +160,7 @@ begin
       else
         secret = Digest::MD5.hexdigest "#{user}:#{domain}:#{pass1}"
       end
-      db.execute("UPDATE Authorize set digest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE userid='#{user}'")
+      db.execute("UPDATE Authorize set digest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE name='#{user}'")
     else
       abort("*** swlite-authorize: #{user}: not able to authorize as #{access}")
     end
