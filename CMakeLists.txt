@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(SipWitchQt VERSION 0.1.0 LANGUAGES CXX)
+project(SipWitchQt VERSION 0.0.1 LANGUAGES CXX)
 string(TOLOWER "${PROJECT_NAME}" PROJECT_ARCHIVE)
 set(PROJECT_RELEASE "1")
 
