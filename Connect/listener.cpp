@@ -137,10 +137,10 @@ void Listener::reauthorize(const QVariantHash& update)
         active = false;
 }
 
-bool Listener::auth_registration(eXosip_event_t *event, int expires)
+bool Listener::get_authentication(eXosip_event_t *event)
 {
-    auto pauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->proxy_authenticates, 0);
-    auto wauth = (osip_proxy_authenticate_t*)osip_list_get(&event->response->www_authenticates,0);
+    auto pauth = static_cast<osip_proxy_authenticate_t*>(osip_list_get(&event->response->proxy_authenticates, 0));
+    auto wauth = static_cast<osip_proxy_authenticate_t*>(osip_list_get(&event->response->www_authenticates,0));
 
     osip_header_t *header = nullptr;
     osip_message_header_get_byname(event->response, "x-authorize", 0, &header);
@@ -161,28 +161,29 @@ bool Listener::auth_registration(eXosip_event_t *event, int expires)
         algo = osip_www_authenticate_get_algorithm(wauth);
         nonce = osip_www_authenticate_get_nonce(wauth);
     }
-    algo.unquote().toUpper();
-    nonce.unquote();
-    realm.unquote();
-    serverCreds["realm"] = realm;
-    user = serverCreds["user"].toString();
-    secret = serverCreds["secret"].toString();
-    osip_message_t *msg = nullptr;
-    char *uri = nullptr;
+    serverCreds["realm"] = realm.unquote();
+    serverCreds["nonce"] = nonce.unquote();
+    serverCreds["algorithm"] = algo.unquote().toUpper();
+    return true;
+}
+
+void Listener::add_authentication(osip_message_t *msg)
+{
+    UString user = serverCreds["user"].toString();
+    UString secret = serverCreds["secret"].toString();
+    UString realm = serverCreds["realm"].toString();
+    UString algo = serverCreds["algorithm"].toString();
+    UString nonce = serverCreds["nonce"].toString();
 
     auto digest = digests[algo];
-    Locker lock(context);
-    eXosip_register_build_register(context, rid, expires, &msg);
-    if(!msg)
-        return false;
-
+    char *uri = nullptr;
     osip_uri_to_str(msg->req_uri, &uri);
+
     UString method = msg->sip_method;
     UString ha1 = QCryptographicHash::hash(user + ":" + realm + ":" + secret, digest).toHex().toLower();
     UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
     UString response = QCryptographicHash::hash(ha1 + ":" + nonce + ":" + ha2, digest).toHex().toLower();
-
-    auth = "Digest username=\"" + user +
+    UString auth = "Digest username=\"" + user +
         "\", realm=\"" + realm +
         "\", uri=\"" + uri +
         "\", response=\"" + response +
@@ -190,8 +191,6 @@ bool Listener::auth_registration(eXosip_event_t *event, int expires)
         "\", algorithm=\"" + algo;
 
     osip_message_set_header(msg, AUTHORIZATION, auth);
-    send_registration(msg, true);
-    return true;
 }
 
 void Listener::run()
@@ -271,11 +270,18 @@ void Listener::run()
                 emit failure(error);
                 break;
             }
-            if(!auth_registration(event)) {
-                active = false;
-                emit failure(SIP_FORBIDDEN);
-                break;
+            if(get_authentication(event)) {
+                osip_message_t *msg = nullptr;
+                Locker lock(context);
+                eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
+                if(msg) {
+                    add_authentication(msg);
+                    send_registration(msg, true);
+                    break;
+                }
             }
+            active = false;
+            emit failure(SIP_FORBIDDEN);
             break;
         case EXOSIP_CALL_MESSAGE_NEW:
             if(MSG_IS_REGISTER(event->request)) {
@@ -311,7 +317,17 @@ void Listener::run()
                 rid = -1;
                 break;
             case EXOSIP_REGISTRATION_FAILURE:
-                auth_registration(event, 0);
+                if(get_authentication(event)) {
+                    osip_message_t *msg = nullptr;
+                    Locker lock(context);
+                    eXosip_register_build_register(context, rid, 0, &msg);
+                    if(msg) {
+                        add_authentication(msg);
+                        send_registration(msg);
+                        break;
+                    }
+                }
+                rid = -1;
                 break;
             default:
                 Locker lock(context);
