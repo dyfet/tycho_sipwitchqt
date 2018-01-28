@@ -50,7 +50,7 @@ Authorize::~Authorize()
     Instance = nullptr;
 }
 
-void Authorize::init(int order)
+void Authorize::init(unsigned order)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = new Authorize(order);

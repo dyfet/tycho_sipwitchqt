@@ -33,7 +33,7 @@ public:
         return Instance;
     }
 
-    static void init(int order);
+    static void init(unsigned order);
 
 protected:
     Authorize(unsigned order);
