@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Server/server.hpp"
 #include "../Server/output.hpp"
+#include "../Server/manager.hpp"
 #include "../Server/main.hpp"
 #include "authorize.hpp"
 #include <QSqlError>
@@ -38,6 +39,10 @@ QObject(), db(nullptr)
 
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(database, &Database::updateAuthorize, this, &Authorize::activate);
+
+    // future connections for quick aync between manager and auth
+    Manager *manager = Manager::instance();
+    Q_UNUSED(manager);
 }
 
 Authorize::~Authorize()
