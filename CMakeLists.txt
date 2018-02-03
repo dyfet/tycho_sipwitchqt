@@ -129,6 +129,7 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
+# these targets mostly used in makefiles only...
 if(CMAKE_MAINTAINER)
     add_custom_target(dist
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -138,6 +139,10 @@ if(CMAKE_MAINTAINER)
 
     add_custom_target(source
         DEPENDS dist
+    )
+
+    add_custom_target(docs
+        DEPENDS support-docs
     )
 
     add_custom_target(distclean

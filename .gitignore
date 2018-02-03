@@ -50,7 +50,6 @@ CMakeCache.txt
 install_manifest.txt
 Makefile
 
-antisipate
-sipwitchqt
+sipwitchqt-*
 Doxyfile
 config.hpp
