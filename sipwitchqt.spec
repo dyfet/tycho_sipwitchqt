@@ -86,7 +86,7 @@ exit 0
 %{_sbindir}/swcert-*
 %{_mandir}/man1/swcert-*
 
-%files sqlite
+%files sqlite3
 %defattr(-,root,root)
 %{_sbindir}/swlite-*
 %{_mandir}/man1/swlite-*
