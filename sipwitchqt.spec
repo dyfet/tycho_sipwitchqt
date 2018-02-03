@@ -1,6 +1,6 @@
 Name: sipwitchqt
 Epoch:   1
-Version: 0.1.0
+Version: 0.0.1
 Release: 1
 Summary: Sip server system daemon
 
@@ -29,6 +29,9 @@ Recommends: sipwitchqt
 Requires: ruby
 Summary: sipwitchqt utility scripts and commands
 
+%package desktop
+Summary: sipwitchqt desktop client 
+
 %description
 A pbx server for the sip protocol
 
@@ -41,6 +44,9 @@ Mysql backend support for SipWitchQt.
 %description sqlite3
 Sqlite3 local db administration support for SipWitchQt.  This includes ruby admin
 scripts used to manage the local sqlite3 database of the sipwitchqt server instance.
+
+%description desktop
+SipWitchQt desktop client.
 
 %prep
 %setup -q
@@ -85,6 +91,7 @@ exit 0
 %{_sbindir}/swlite-*
 %{_mandir}/man1/swlite-*
 
-
-
+%files desktop
+%defattr(-,root,root)
+%{_bindir}/antisipate
 
