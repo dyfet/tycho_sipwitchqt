@@ -95,13 +95,15 @@ endif()
 
 set(voip_libs eXosip2 osip2 osipparser2)
 
-add_executable(antisipate ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${desktop_mm} Resources/desktop.qrc)
-target_link_libraries(antisipate Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
+add_executable(desktop-app ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${desktop_mm} Resources/desktop.qrc)
+target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
+set_target_properties(desktop-app PROPERTIES OUTPUT_NAME "sipwitchqt-desktop")
 
-add_executable(sipwitchqt ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
-target_link_libraries(sipwitchqt Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
+add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr})
+target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
+set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 
-add_custom_target(support SOURCES sipwitchqt.spec config.hpp.in Doxyfile.in)
+add_custom_target(support-files SOURCES sipwitchqt.spec config.hpp.in Doxyfile.in)
 
 add_subdirectory(utils)
 
@@ -109,14 +111,15 @@ find_program(DOXYGEN doxygen)
 find_program(GRAPHVIZ dot)
 if(DOXYGEN AND GRAPHVIZ)
     configure_file(Doxyfile.in Doxyfile)
-    add_custom_target(docs SOURCES LICENSE ${markdown}
+    add_custom_target(support-docs SOURCES LICENSE ${markdown}
         COMMAND "${DOXYGEN}" Doxyfile
     )
 else()
-    add_custom_target(docs SOURCES LICENSE ${markdown})
+    add_custom_target(support-docs SOURCES LICENSE ${markdown})
 endif()
 
-install(TARGETS sipwitchqt DESTINATION "${CMAKE_INSTALL_SBINDIR}")
+install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
+install(TARGETS desktop-app DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES "{CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt.conf"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
@@ -155,7 +158,7 @@ if(CMAKE_MAINTAINER)
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc/latex"
         COMMAND make
         COMMAND mv refman.pdf "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}.pdf"
-        DEPENDS docs
+        DEPENDS support-docs
     )
 endif()
 

@@ -77,7 +77,7 @@ exit 0
 %files
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
-%{_sbindir}/sipwitchqt
+%{_sbindir}/sipwitchqt-server
 %{_sysconfdir}/sv/sipwitchqt/run
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 
@@ -93,5 +93,5 @@ exit 0
 
 %files desktop
 %defattr(-,root,root)
-%{_bindir}/antisipate
+%{_bindir}/sipwitchqt-desktop
 

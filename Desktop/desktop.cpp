@@ -146,6 +146,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     login = new Login(this);
     ui.pagerStack->addWidget(login);
 
+    setWindowTitle("Welcome");
     if(Storage::exists()) {
         storage = new Storage("");
         showSessions();
@@ -155,7 +156,6 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     }
     else {
         ui.trayAway->setEnabled(false);
-        setWindowTitle("Welcome");
         warning("No local database active");
         ui.toolBar->hide();
         ui.pagerStack->setCurrentWidget(login);
