@@ -62,10 +62,8 @@ bool UString::isQuoted(const char *qc) const
     if(qc[1])
         q2[0] = qc[1];
 
-    if(startsWith(q1) && endsWith(q2))
-        return true;
+    return startsWith(q1) && endsWith(q2);
 
-    return false;
 }
 
 UString UString::unquote(const char *qc) const

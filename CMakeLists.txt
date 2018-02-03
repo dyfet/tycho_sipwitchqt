@@ -126,43 +126,6 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
-if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # bundling support
-    find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
-    if(NOT STAGE_PREFIX)
-        set(STAGE_PREFIX "../Archive")
-    endif()
-    add_custom_target(stage_programs
-        DEPENDS sipwitchqt
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${STAGE_PREFIX}/Programs"
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:sipwitchqt> "${STAGE_PREFIX}/Programs"
-    )
-    add_custom_target(stage_data
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${STAGE_PREFIX}/Data/SipWitchQt"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt.conf" "${STAGE_PREFIX}/Data/SipWitchQt/service.conf"
-    )
-    add_custom_target(stage_archive SOURCES README.md
-        WORKING_DIRECTORY "${STAGE_PREFIX}/Programs"
-        DEPENDS stage_programs stage_data
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}" -verbose=0 sipwitchqt.exe
-    )
-elseif(CMAKE_CROSSCOMPILING AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # if cross-compiling, can also generate cross-build packages...
-    set(CPACK_SYSTEM_NAME "${PROJECT_RELEASE}.cross")
-    set(CPACK_PACKAGE_NAME "${PROJECT_ARCHIVE}")
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Sip server system daemon")
-    set(CPACK_PACKAGE_VENDOR "Tycho Softworks")
-    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-    set(CPACK_STRIP_FILES TRUE)
-    set(CPACK_RPM_PACKAGE_URL "https://gitlab.com/tychosoft/sipwitchqt")
-    set(CPACK_RPM_PACKAGE_RELEASE ${PROJECT_RELEASE})
-    set(CPACK_RPM_PACKAGE_REQUIRES "qt5-qtbase-mysql")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tycho Softworks")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5sql5-mysql")
-    include(CPack)
-endif()
-
 if(CMAKE_MAINTAINER)
     add_custom_target(dist
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

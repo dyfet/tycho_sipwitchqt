@@ -1,19 +1,19 @@
-/**
- ** Copyright 2017 Tycho Softworks.
- **
- ** This program is free software: you can redistribute it and/or modify
- ** it under the terms of the GNU General Public License as published by
- ** the Free Software Foundation, either version 3 of the License, or
- ** (at your option) any later version.
- **
- ** This program is distributed in the hope that it will be useful,
- ** but WITHOUT ANY WARRANTY; without even the implied warranty of
- ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ** GNU General Public License for more details.
- **
- ** You should have received a copy of the GNU General Public License
- ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+/*
+ * Copyright 2017 Tycho Softworks.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "server.hpp"
 #include "output.hpp"
@@ -46,7 +46,7 @@ QList<Context::Schema> Context::Schemas = {
 class ContextLocker final
 {
 public:
-    inline ContextLocker(eXosip_t *ctx) :
+    inline explicit ContextLocker(eXosip_t *ctx) :
     context(ctx) {
         Q_ASSERT(context != nullptr);
         eXosip_lock(context);
@@ -266,6 +266,9 @@ bool Context::reply(const Event& event, int code)
     auto did = event.did();
     auto cid = event.cid();
 
+    Q_UNUSED(did);
+    Q_UNUSED(cid);
+
     ContextLocker lock(context);
     switch(event.type()) {
     case EXOSIP_MESSAGE_NEW:
@@ -299,8 +302,7 @@ bool Context::reply(const Event& event, int code)
 void Context::start(QThread::Priority priority)
 {
     foreach(auto context, Contexts) {
-        QThread::msleep(20);
-        QThread *thread = new QThread;
+        auto thread = new QThread;
         thread->setObjectName(context->objectName());
         context->moveToThread(thread);
 
@@ -308,6 +310,8 @@ void Context::start(QThread::Priority priority)
         connect(context, &Context::finished, thread, &QThread::quit);
         connect(context, &Context::finished, context, &QObject::deleteLater);
         connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+        QThread::msleep(20);
         thread->start(priority);
     }
     QThread::msleep(100);

@@ -60,6 +60,7 @@ private:
     QString name;
     QString user;
     QString pass;
+    volatile int firstNumber, lastNumber;
     int port;
 
     Database(unsigned order);

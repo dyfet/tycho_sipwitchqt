@@ -71,7 +71,7 @@
           </font>
          </property>
          <property name="text">
-          <string>SipWitchQt</string>
+          <string>SipWitch Antisipate</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

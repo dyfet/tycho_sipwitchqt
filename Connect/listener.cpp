@@ -60,7 +60,7 @@ private:
 };
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
-QObject(), active(true), connected(false)
+QObject(), active(true), connected(false), registered(false)
 {
     serverId = cred["extension"].toString();
     serverHost = cred["server"].toString();
@@ -139,6 +139,9 @@ void Listener::reauthorize(const QVariantHash& update)
 
 bool Listener::get_authentication(eXosip_event_t *event)
 {
+    if(!event->response)
+        return false;
+
     auto pauth = static_cast<osip_proxy_authenticate_t*>(osip_list_get(&event->response->proxy_authenticates, 0));
     auto wauth = static_cast<osip_proxy_authenticate_t*>(osip_list_get(&event->response->www_authenticates,0));
 
@@ -252,6 +255,7 @@ void Listener::run()
 
         switch(event->type) {
         case EXOSIP_REGISTRATION_SUCCESS:
+            registered = true;
             emit authorize(serverCreds);
             break;
         case EXOSIP_REGISTRATION_FAILURE:
@@ -295,7 +299,7 @@ void Listener::run()
     }
 
     // de-register if we are ending the session while registered
-    if(rid > -1) {
+    if(registered) {
         osip_message_t *msg = nullptr;
         Locker lock(context);
         eXosip_register_build_register(context, rid, 0, &msg);
@@ -304,14 +308,14 @@ void Listener::run()
     }
 
     // clean up exiting transactions...
-    while(rid > -1) {
+    while(registered) {
         auto event = eXosip_event_wait(context, 0, 60);
         if(event == nullptr)
             break;
         else {
             switch(event->type) {
             case EXOSIP_REGISTRATION_SUCCESS:
-                rid = -1;
+                registered = false;
                 break;
             case EXOSIP_REGISTRATION_FAILURE:
                 if(get_authentication(event)) {
@@ -321,11 +325,11 @@ void Listener::run()
                     if(msg) {
                         add_authentication(msg);
                         send_registration(msg);
-                        rid = -1;
+                        registered = false;
                         break;
                     }
                 }
-                rid = -1;
+                registered = false;
                 break;
             default:
                 break;

@@ -62,6 +62,11 @@ number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associ
                 request = uri;      // for consistent auth processing
             local = ctx->isLocal(target.host());
         }
+        if(evt->request->to && evt->request->to->url && evt->request->to->url->username && ctx->isLocal(evt->request->to->url->host)) {
+            UString ext = evt->request->to->url->username;
+            if(ext.isNumber())
+                number = ext.toInt();
+        }
         break;
     default:
         break;
@@ -375,5 +380,9 @@ const UString Event::toString() const
         break;
     }
     return "unknown";
+}
+
+Event::operator bool() const {
+    return d->event != nullptr;
 }
 

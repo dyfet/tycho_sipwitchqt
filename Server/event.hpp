@@ -40,9 +40,7 @@ public:
     Event(const Event& copy);
     ~Event();
 
-    inline operator bool() const {
-        return d->event != nullptr;
-    }
+    inline operator bool() const;
 
     inline bool operator!() const {
         return d->event == nullptr;

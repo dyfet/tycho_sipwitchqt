@@ -26,14 +26,14 @@
 class UString : public QByteArray
 {
 public:
-    UString() : QByteArray("") {}
-    UString(const char *string) : QByteArray(string) {}
-    UString(const QByteArray& ref) : QByteArray(ref) {}
-    UString(const QString& ref) : QByteArray(ref.toUtf8()) {}
-    UString(const std::string& ref) : QByteArray(ref.c_str()) {}
-    UString(const UString& ref) : QByteArray(ref) {}
-    UString(UString&& from) : QByteArray(std::move(from)) {}
-    explicit UString(char ch) : QByteArray() { append(ch); }
+    UString() noexcept : QByteArray("") {}
+    UString(const char *string) noexcept : QByteArray(string) {}
+    UString(const QByteArray& ref) noexcept : QByteArray(ref) {}
+    UString(const QString& ref) noexcept : QByteArray(ref.toUtf8()) {}
+    UString(const std::string& ref) noexcept : QByteArray(ref.c_str()) {}
+    UString(const UString& ref) noexcept : QByteArray(ref) {}
+    UString(UString&& from) noexcept: QByteArray(std::move(from)) {}
+    explicit UString(char ch) noexcept : QByteArray() { append(ch); }
 
     operator std::string() const {
         return std::string(constData());

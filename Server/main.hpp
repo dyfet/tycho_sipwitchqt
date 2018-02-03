@@ -59,7 +59,7 @@ class Main final : public QObject
 
 public:
     Main(Server *server);
-    ~Main();
+    ~Main() final;
 
 private slots:
     void onStartup();

@@ -132,6 +132,10 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
 
 void Manager::refreshRegistration(const Event &ev)
 {
+    if(ev.number() < 1) {
+        Context::reply(ev, SIP_FORBIDDEN);
+        return;
+    }
     auto *reg = Registry::find(ev);
     if(reg) {
         if(!ev.authorization())

@@ -59,6 +59,8 @@ Database *Database::Instance = nullptr;
 Database::Database(unsigned order) :
 QObject()
 {
+    firstNumber = lastNumber = -1;
+
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
     timer.setSingleShot(true);
@@ -254,6 +256,13 @@ bool Database::create()
     }
     else if(query.next())
         config = query.record();
+
+    if(config.value("dialing").toString() == "STD3") {
+        firstNumber = 100;
+        lastNumber = 699;
+    }
+
+    qDebug() << "Extension range" << firstNumber << "to" << lastNumber;
 
     if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, uuid}))
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});

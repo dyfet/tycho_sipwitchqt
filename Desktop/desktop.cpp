@@ -319,8 +319,13 @@ void Desktop::failed(int error_code)
         if(isLogin())
             login->badLabel();
         break;
+    case SIP_DOES_NOT_EXIST_ANYWHERE:
+        error(tr("Extension number is invalid"));
+        if(isLogin())
+            login->badIdentity();
+        break;
     case SIP_NOT_FOUND:
-        error(tr("Invalid extension number used"));
+        error(tr("Extension not found"));
         if(isLogin())
             login->badIdentity();
         break;

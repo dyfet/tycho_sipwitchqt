@@ -56,7 +56,7 @@ private:
     void applyNames();
 
     Manager(unsigned order = 0);
-    ~Manager();
+    ~Manager() final;
 
 signals:
     void changeRealm(const QString& realm);

@@ -64,9 +64,19 @@ void Authorize::init(unsigned order)
 
 void Authorize::findEndpoint(const Event& event)
 {
-    qDebug() << "Seeking endpoint";
+    qDebug() << "Seeking endpoint" << event.number();
     //emit createEndpoint(event, QVariantHash());
     //Context::reply(event, SIP_NOT_FOUND);
+
+    if(database->firstNumber < 1) {
+        Context::reply(event, SIP_INTERNAL_SERVER_ERROR);
+        return;
+    }
+
+    if(event.number() < database->firstNumber || event.number() > database->lastNumber) {
+        Context::reply(event, SIP_DOES_NOT_EXIST_ANYWHERE);
+        return;
+    }
 
     QVariantHash dummy = {
         {"realm", database->realm},

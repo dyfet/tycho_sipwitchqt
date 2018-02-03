@@ -52,8 +52,6 @@ public:
 
     QAbstractSocket::NetworkLayerProtocol protocol();
 
-    static const unsigned max = 1<<4;
-
     Context(const QHostAddress& bind, quint16 port, const Schema& choice, unsigned mask, unsigned index = 1);
 
     const Contact contact(const UString& username = UString()) const {
@@ -123,7 +121,7 @@ private:
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
 
-    ~Context();
+    ~Context() final;
 
     bool process(const Event& ev);
 

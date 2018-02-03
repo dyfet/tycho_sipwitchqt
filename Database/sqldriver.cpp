@@ -39,6 +39,7 @@ static QStringList sqliteTables = {
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
         "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "fullname VARCHAR(64),"                 // display name
         "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
         "fwd_busy INTEGER DEFAULT -1,"          // forward busy
         "fwd_answer INTEGER DEFAULT -1,"        // forward no answer

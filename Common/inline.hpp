@@ -36,9 +36,7 @@ namespace Util {
     template<typename T>
     bool inRange(const T& value, const T& min, const T& max)
     {
-        if(value < min || value > max)
-            return false;
-        return true;
+        return !(value < min || value > max);
     }
 }
 

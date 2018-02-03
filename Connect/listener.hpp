@@ -47,7 +47,7 @@ public:
     void stop();
 
 private:
-    volatile bool active, connected;
+    volatile bool active, connected, registered;
 
     void send_registration(osip_message_t *msg, bool auth = false);
     bool get_authentication(eXosip_event_t *event);

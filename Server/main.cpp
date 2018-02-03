@@ -29,10 +29,6 @@
 #include <QHostInfo>
 #include <QUuid>
 
-static int port;
-static QList<QHostAddress> interfaces;
-static unsigned protocols = Context::UDP | Context::TCP;
-
 using namespace std;
 
 Main::Main(Server *server)
@@ -104,11 +100,11 @@ int main(int argc, char **argv)
     output() << "Config: " << server[SERVER_CONFIG];
 
     // validate global parsing results...
-    port = server[CURRENT_PORT].toShort();
+    quint16 port = server[CURRENT_PORT].toShort();
     if(port < 100 || port > 65534 || port % 2)
         crit(95) << port << ": invalid sip port value";
 
-    interfaces = Util::bindAddress(server[CURRENT_ADDRESS]);
+    auto interfaces = Util::bindAddress(server[CURRENT_ADDRESS]);
     if(interfaces.count() < 1)
         crit(95) << "no valid interfaces specified";
 
@@ -122,9 +118,7 @@ int main(int argc, char **argv)
 
     // setup our contexts...allow registration
 
-    unsigned mask = protocols;
-    mask |= Context::Allow::REGISTRY |\
-            Context::Allow::REMOTE;
+    unsigned mask = Context::UDP | Context::TCP | Context::Allow::REGISTRY | Context::Allow::REMOTE;
 
     Manager::create(interfaces, port, mask);
 
