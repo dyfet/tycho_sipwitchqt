@@ -18,7 +18,8 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 5.5.1 COMPONENTS Core Network Sql Gui Widgets LinguistTools REQUIRED)
+# LinguistTools may be needed in the future...
+find_package(Qt5 5.5.1 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
