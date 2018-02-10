@@ -94,25 +94,25 @@ QVariantHash Login::credentials()
 
     if(ext.isEmpty() || cred["server"].isNull()) {
         ui.identity->setFocus();
-        desktop->error(tr("No identity specified"));
+        desktop->errorMessage(tr("No identity specified"));
         return QVariantHash();
     }
 
     if(!ext.isNumber()) {
         ui.identity->setFocus();
-        desktop->error(tr("Invalid extension #"));
+        desktop->errorMessage(tr("Invalid extension #"));
         return QVariantHash();
     }
 
     if(ui.secret->text().isEmpty()) {
         ui.secret->setFocus();
-        desktop->error(tr("No password entered"));
+        desktop->errorMessage(tr("No password entered"));
         return QVariantHash();
     }
 
     if(!label.isLabel()) {
         ui.labels->setFocus();
-        desktop->error(tr("Invalid label used"));
+        desktop->errorMessage(tr("Invalid label used"));
         return QVariantHash();
     }
 

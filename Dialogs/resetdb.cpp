@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Tycho Softworks.
+ * Copyright (C) 2017 Tycho Softworks.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "desktop.hpp"
-#include "ui_options.h"
+#include "resetdb.hpp"
+#include "ui_resetdb.h"
 
-#ifdef  HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+static Ui::ResetDb ui;
 
-static Ui::OptionsWindow ui;
-
-Options::Options(Desktop *control) :
-QWidget(), desktop(control)
+ResetDb::ResetDb(Desktop *parent) :
+QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 {
-    ui.setupUi(static_cast<QWidget *>(this));
+    ui.setupUi(static_cast<QDialog*>(this));
 
-    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::openReset);
+    connect(ui.acceptButton, &QPushButton::clicked, parent, &Desktop::closeReset);
+    connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
+    show();
 }
 
-void Options::enter()
+void ResetDb::closeEvent(QCloseEvent *event)
 {
-    ui.listButton->setFocus();
+    Desktop::instance()->closeDialog();
 }

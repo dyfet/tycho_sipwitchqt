@@ -241,6 +241,7 @@ bool Database::create()
         runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"anonymous", "SYSTEM", "DISABLED"});
         runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"operators", "SYSTEM", "PILOT"});
         runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {0, "operators", "Operator"});
+        runQuery(Util::preloadConfig(driver));
     }
     else if(Util::dbIsFile(driver)) {
         runQuery("UPDATE Config SET realm=? WHERE id=1;", {realm});

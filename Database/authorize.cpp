@@ -125,7 +125,7 @@ void Authorize::activate(const QVariantHash& config, bool opened)
         }
     }
     if(db)
-        qDebug() << "Authorization activated";
+        qDebug() << "Authorization thread activated";
 }
 
 int Authorize::runQuery(const QStringList& list)

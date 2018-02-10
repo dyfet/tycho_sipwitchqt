@@ -94,11 +94,18 @@ public:
         return isCurrent(options);
     }
 
+    QVariantHash storageCredentials() const {
+        if(storage)
+            return storage->credentials();
+        else
+            return QVariantHash();
+    }
+
     // status bar functions...
-    void warning(const QString& msg);
-    void error(const QString& msg);
-    void status(const QString& msg);
-    void clear();
+    void warningMessage(const QString& msg, int timeout = 10000);
+    void errorMessage(const QString& msg, int timeout = 30000);
+    void statusMessage(const QString& msg, int timeout = 5000);
+    void clearMessage();
 
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
@@ -128,12 +135,15 @@ private:
     Statusbar *statusbar;
     QSettings settings;
     QSystemTrayIcon *trayIcon;
-    QMenu *trayMenu, *dockMenu, *appMenu;
+    QMenuBar *appBar;
+    QMenu *trayMenu, *dockMenu, *appMenu, *popup;
     bool restart_flag, connected;
     QVariantHash currentCredentials;
     QString appearance;
+    QDialog *dialog;
 
     void closeEvent(QCloseEvent *event) final;
+    QMenu *createPopupMenu() final;
 
     bool isCurrent(const QWidget *widget) const;
     void listen(const QVariantHash &cred);
@@ -148,7 +158,13 @@ signals:
 
 public slots:
     void initial(void);
-    void dock_clicked();
+    void dockClicked();
+    void menuClicked();
+
+    void closeDialog(void);
+    void closeReset(void);
+    void openAbout(void);
+    void openReset(void);
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Tycho Softworks.
+ * Copyright (C) 2017 Tycho Softworks.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "desktop.hpp"
-#include "ui_options.h"
+#ifndef RESETDB_HPP_
+#define RESETDB_HPP_
 
-#ifdef  HAVE_UNISTD_H
-#include <unistd.h>
+#include <QDialog>
+
+#include "../Desktop/desktop.hpp"
+
+class ResetDb final : public QDialog
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(ResetDb)
+
+public:
+    ResetDb(Desktop *parent = nullptr);
+
+private:
+    void closeEvent(QCloseEvent *event) final;
+};
+
+/*!
+ * Ui resetdb dialog.
+ * \file resetdb.hpp
+ */
+
+/*!
+ * \class ResetDb
+ * \brief implements reset database dialog.
+ * This is used to reset the sipwitchqt desktop application back to it's
+ * initial state and allow a new login to occur without past data.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
+
 #endif
-
-static Ui::OptionsWindow ui;
-
-Options::Options(Desktop *control) :
-QWidget(), desktop(control)
-{
-    ui.setupUi(static_cast<QWidget *>(this));
-
-    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::openReset);
-}
-
-void Options::enter()
-{
-    ui.listButton->setFocus();
-}

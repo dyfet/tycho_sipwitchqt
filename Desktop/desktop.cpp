@@ -17,6 +17,8 @@
 
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
+#include "../Dialogs/about.hpp"
+#include "../Dialogs/resetdb.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
@@ -37,7 +39,7 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
     Q_UNUSED(_cmd)
 
     auto desktop = Desktop::instance();
-    QMetaObject::invokeMethod(desktop, "dock_clicked", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(desktop, "dockClicked", Qt::QueuedConnection);
     return false;
 }
 #endif
@@ -49,7 +51,7 @@ Desktop::state_t Desktop::State = Desktop::INITIAL;
 QVariantHash Desktop::Credentials;
 
 Desktop::Desktop(bool tray, bool reset) :
-QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
+QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
@@ -70,10 +72,22 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     toolbar = new Toolbar(this, ui.toolBar);
     statusbar = new Statusbar(ui.centralwidget, ui.statusBar);
 
+    appBar = nullptr;
     trayIcon = nullptr;
-    trayMenu = dockMenu = appMenu = nullptr;
+    trayMenu = dockMenu = appMenu = popup = nullptr;
+
+    connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
+    connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
+    connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
 
 #if defined(Q_OS_MAC)
+    appBar = new QMenuBar(this);
+    appMenu = appBar->addMenu(tr("SipWitchQt Desktop"));
+    appMenu->addAction(ui.appAbout);
+    appMenu->addAction(ui.appPreferences);
+    appMenu->addAction(ui.appQuit);
+    appBar->show();
+
     dockMenu = new QMenu();
     dockMenu->addAction(ui.trayDnd);
     dockMenu->addAction(ui.trayAway);
@@ -104,7 +118,6 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
         set_dock_icon(QIcon(":/icons/idle.png"));
 
 #endif
-
     login = new Login(this);
     sessions = new Sessions(this);
     options = new Options(this);
@@ -115,6 +128,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     ui.pagerStack->addWidget(options);
     ui.console->setHidden(true);
 
+    connect(ui.actionMenu, &QAction::triggered, this, &Desktop::menuClicked);
     connect(ui.actionSettings, &QAction::triggered, this, &Desktop::showOptions);
     connect(ui.actionSessions, &QAction::triggered, this, &Desktop::showSessions);
     connect(ui.actionContacts, &QAction::triggered, this, &Desktop::showPhonebook);
@@ -146,7 +160,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     login = new Login(this);
     ui.pagerStack->addWidget(login);
 
-    setWindowTitle("Welcome");
+    setWindowTitle("Welcome to SipWitchQt " PROJECT_VERSION);
     if(Storage::exists()) {
         storage = new Storage("");
         showSessions();
@@ -156,12 +170,13 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM)
     }
     else {
         ui.trayAway->setEnabled(false);
-        warning("No local database active");
+        warningMessage(tr("No local database active"));
         ui.toolBar->hide();
         ui.pagerStack->setCurrentWidget(login);
         login->enter();
         show();
         settings.setValue("geometry", saveGeometry());
+        ui.appPreferences->setEnabled(false);
     }
 }
 
@@ -180,6 +195,12 @@ void Desktop::closeEvent(QCloseEvent *event)
         hide();
         event->ignore();
     }
+}
+
+QMenu *Desktop::createPopupMenu()
+{
+    clearMessage();
+    return nullptr;
 }
 
 void Desktop::shutdown()
@@ -229,6 +250,45 @@ void Desktop::setState(state_t state)
 #endif
 }
 
+void Desktop::openAbout()
+{
+    closeDialog();
+    setEnabled(false);
+    dialog = new About(this);
+}
+
+void Desktop::openReset()
+{
+    closeDialog();
+    setEnabled(false);
+    dialog = new ResetDb(this);
+}
+
+void Desktop::closeReset()
+{
+    Q_ASSERT(dialog != nullptr);
+    Q_ASSERT(storage != nullptr);
+
+    closeDialog();
+    warningMessage(tr("Resetting database..."));
+    offline();
+    delete storage;
+    storage = nullptr;
+    ui.toolBar->hide();
+    ui.pagerStack->setCurrentWidget(login);
+    login->enter();
+    ui.appPreferences->setEnabled(false);
+}
+
+void Desktop::closeDialog()
+{
+    if(dialog) {
+        delete dialog;
+        setEnabled(true);
+        dialog = nullptr;
+    }
+}
+
 void Desktop::showOptions()
 {
     ui.pagerStack->setCurrentWidget(options);
@@ -247,27 +307,27 @@ void Desktop::showPhonebook()
     phonebook->enter();
 }
 
-void Desktop::warning(const QString& text)
+void Desktop::warningMessage(const QString& text, int timeout)
 {
     ui.statusBar->setStyleSheet("color: orange;");
-    ui.statusBar->showMessage(text);
+    ui.statusBar->showMessage(text, timeout);
 }
 
-void Desktop::error(const QString& text)
+void Desktop::errorMessage(const QString& text, int timeout)
 {
     ui.statusBar->setStyleSheet("color: red;");
-    ui.statusBar->showMessage(text);
+    ui.statusBar->showMessage(text, timeout);
 }
 
-void Desktop::status(const QString& text)
+void Desktop::statusMessage(const QString& text, int timeout)
 {
     ui.statusBar->setStyleSheet("color: blue;");
-    ui.statusBar->showMessage(text);
+    ui.statusBar->showMessage(text, timeout);
 }
 
-void Desktop::clear()
+void Desktop::clearMessage()
 {
-    ui.statusBar->showMessage("");
+    ui.statusBar->clearMessage();
 }
 
 void Desktop::appState(Qt::ApplicationState state)
@@ -276,7 +336,31 @@ void Desktop::appState(Qt::ApplicationState state)
     qDebug() << "*** STATE " << state;
 }
 
-void Desktop::dock_clicked()
+void Desktop::menuClicked()
+{
+    if(popup) {
+        ui.actionMenu->setMenu(nullptr);
+        setEnabled(true);
+        popup->deleteLater();
+        popup = nullptr;
+        return;
+    }
+
+    setEnabled(false);
+    popup = new QMenu(this);
+    popup->addAction(ui.appAbout);
+    if(storage && (State == Desktop::OFFLINE || State == Desktop::ONLINE))
+        popup->addAction(ui.trayAway);
+    popup->addAction(ui.appQuit);
+    popup->popup(this->mapToGlobal(QPoint(4, 24)));
+    popup->show();
+    popup->setEnabled(true);
+
+    ui.actionMenu->setMenu(popup);
+    connect(popup, &QMenu::aboutToHide, this, &Desktop::menuClicked);
+}
+
+void Desktop::dockClicked()
 {
     trayAction(QSystemTrayIcon::MiddleClick);
 }
@@ -284,11 +368,11 @@ void Desktop::dock_clicked()
 void Desktop::trayAway()
 {
     if(connected) {
-        status(tr("disconnect"));
+        statusMessage(tr("disconnect"));
         offline();
     }
-    else
-        authorizing();
+    else if(storage)
+        listen(storage->credentials());
 }
 
 void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
@@ -315,34 +399,34 @@ void Desktop::failed(int error_code)
 {
     switch(error_code) {
     case SIP_CONFLICT:
-        error(tr("Label already used"));
+        errorMessage(tr("Label already used"));
         if(isLogin())
             login->badLabel();
         break;
     case SIP_DOES_NOT_EXIST_ANYWHERE:
-        error(tr("Extension number is invalid"));
+        errorMessage(tr("Extension number is invalid"));
         if(isLogin())
             login->badIdentity();
         break;
     case SIP_NOT_FOUND:
-        error(tr("Extension not found"));
+        errorMessage(tr("Extension not found"));
         if(isLogin())
             login->badIdentity();
         break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
-        error(tr("Authorizartion denied"));
+        errorMessage(tr("Authorizartion denied"));
         if(isLogin())
             login->badPassword();
         break;
     case SIP_INTERNAL_SERVER_ERROR:
     case 666:
-        error(tr("Cannot reach server"));
+        errorMessage(tr("Cannot reach server"));
         if(isLogin())
             login->badIdentity();
         break;
     default:
-        error(tr("Unknown server failure"));
+        errorMessage(tr("Unknown server failure"));
         if(isLogin())
             login->badIdentity();
         break;
@@ -378,16 +462,16 @@ void Desktop::initial()
     if(Credentials.isEmpty())
         return;
 
-    listen(Credentials);
+    Storage::remove();      // remove before trying an initial login...
     ui.toolBar->show();
-    authorizing();
+    listen(Credentials);
 }
 
 void Desktop::authorizing()
 {
     ui.trayAway->setText(tr("..."));
     ui.trayAway->setEnabled(false);
-    status(tr("Authorizing..."));
+    statusMessage(tr("Authorizing..."));
     setState(AUTHORIZING);
 }
 
@@ -409,9 +493,10 @@ void Desktop::authorized(const QVariantHash& creds)
     if(!connected) {
         ui.trayAway->setText(tr("Away"));
         ui.trayAway->setEnabled(true);
+        ui.appPreferences->setEnabled(true);
         connected = true;
         emit online(connected);
-        status(tr("online"));
+        statusMessage(tr("online"));
     }
     setState(ONLINE);
 }
@@ -426,6 +511,7 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
     listener->start();
+    authorizing();
 }
 
 int main(int argc, char *argv[])

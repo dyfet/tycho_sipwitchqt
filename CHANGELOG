@@ -1,2 +1,7 @@
-v0.1.0
+v0.0.1
 * Initial development testing release
+
+v0.0.2
+* More complete test harness debug config
+* Reset and dialogs for client
+* Release packaging for primary platforms

@@ -1,0 +1,37 @@
+[Setup]
+AppId={{c334c3e6-4160-4fc4-b956-6ec7722433bf}
+AppName=SipWitchQt Desktop
+AppVersion=${PROJECT_VERSION}
+AppVerName=SipWitchQt Desktop ${PROJECT_VERSION}
+AppPublisher=Tycho Softworks
+AppPublisherURL=https://github.com/tychosoft/sipwitchqt
+AppSupportURL=https://github.com/tychosoft/sipwitchqt
+AppUpdatesURL=https://github.com/tychosoft/sipwitchqt
+DefaultDirName={pf}\SipWitchQt
+DefaultGroupName=SipWitchQt
+LicenseFile=stage/COPYING.txt
+OutputDir=.
+OutputBaseFilename=Setup
+Compression=lzma
+SolidCompression=yes
+ArchitecturesInstallIn64BitMode=x64
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Files]
+Source: "stage\*"; DestDir: "{app}"; Flags: createallsubdirs recursesubdirs; Components: Desktop Server; Excludes: "sipwitchqt-desktop.exe"
+Source: "stage\sipwitchqt-desktop.exe"; DestDir: "{app}"; Components: Desktop;
+Source: "sipwitchqt-server.exe"; DestDir: "{app}"; Components: Server;
+
+[Icons]
+Name: "{group}\SipWitchQt"; Filename: "{app}\sipwitchqt-desktop.exe"; WorkingDir: "{app}"; IconFilename: "{app}\sipwitchqt-desktop.exe"; IconIndex: 0; Components: Desktop; Languages: english
+Name: "{group}\COPYING"; Filename: "{app}\COPYING.txt"; WorkingDir: "{app}"; IconFilename: "{app}\COPYING.txt"; Components: Desktop Server;
+
+[Run]
+Filename: "{app}\vcredist_x86.exe"; WorkingDir: "{app}"; Flags: postinstall skipifdoesntexist skipifsilent unchecked
+
+[Components]
+Name: "Desktop"; Description: "Desktop Client"; Types: compact full; Flags: checkablealone; Languages: english
+Name: "Server"; Description: "SipWitchQt Server"; Types: custom; Flags: checkablealone; MinVersion: 0,6.0; Languages: english
+

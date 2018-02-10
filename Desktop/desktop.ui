@@ -61,6 +61,9 @@
      <height>26</height>
     </size>
    </property>
+   <property name="contextMenuPolicy">
+    <enum>Qt::NoContextMenu</enum>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -91,7 +94,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionLogin"/>
+   <addaction name="actionMenu"/>
    <addaction name="actionSessions"/>
    <addaction name="actionContacts"/>
    <addaction name="actionDialpad"/>
@@ -145,16 +148,16 @@
     <string>Personal Contacts</string>
    </property>
   </action>
-  <action name="actionLogin">
+  <action name="actionMenu">
    <property name="icon">
     <iconset resource="../Resources/desktop.qrc">
      <normaloff>:/images/menu.png</normaloff>:/images/menu.png</iconset>
    </property>
    <property name="text">
-    <string>Login</string>
+    <string>Menu</string>
    </property>
    <property name="toolTip">
-    <string>Login and menu actions</string>
+    <string>Menu actions</string>
    </property>
   </action>
   <action name="trayQuit">
@@ -185,6 +188,45 @@
    </property>
    <property name="toolTip">
     <string>Do Not Disturb</string>
+   </property>
+  </action>
+  <action name="appQuit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="toolTip">
+    <string>Quit SipWitchQt Desktop</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+Q</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::QuitRole</enum>
+   </property>
+  </action>
+  <action name="appAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+   <property name="toolTip">
+    <string>About SipWitchQt Desktop</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+A</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::AboutRole</enum>
+   </property>
+  </action>
+  <action name="appPreferences">
+   <property name="text">
+    <string>&amp;Preferences</string>
+   </property>
+   <property name="toolTip">
+    <string>SipWitchQt Desktop Settings</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::PreferencesRole</enum>
    </property>
   </action>
  </widget>

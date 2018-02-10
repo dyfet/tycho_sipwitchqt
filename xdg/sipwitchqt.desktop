@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=SipWitchQt Desktop
+Terminal=false
+GenericName=Sip Connections
+Comment=Desktop client for SipWitchQt server
+Exec=sipwitchqt-desktop
+Categories=Network;
+Icon=sipwitchqt
+

@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.hpp"
 #include "sqldriver.hpp"
 
 #include <QStringList>
@@ -59,10 +60,10 @@ static QStringList sqliteTables = {
     "CREATE TABLE Endpoints ("
         "endpoint INTEGER PRIMARY KEY AUTOINCREMENT,"
         "number INTEGER NOT NULL,"              // extension of endpoint
-        "label VARCHAR(32) DEFAULT 'NONE',"  // label id
+        "label VARCHAR(32) DEFAULT 'NONE',"     // label id
         "agent VARCHAR(64),"                    // agent id
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
-        "last DATETIME,"
+        "last DATETIME DEFAULT 0,"
         "FOREIGN KEY (number) REFERENCES Extensions(number) "
             "ON DELETE CASCADE);",
     "CREATE UNIQUE INDEX Registry ON Endpoints(number, label);",
@@ -138,6 +139,23 @@ static QStringList sqlitePragmas = {
     "PRAGMA temp_store = MEMORY;",
 };
 
+#ifdef PRELOAD_DATABASE
+static QStringList sqlitePreload = {
+    // "test1" and "test2", for extensions 101 and 102, password is "testing"
+    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
+        "VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');",
+    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
+        "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','LOCAL');",
+    "INSERT INTO Extensions(number, name) VALUES(101, 'test1');",
+    "INSERT INTO Extensions(number, name) VALUES(102, 'test2');",
+    "INSERT INTO Endpoints(number) VALUES(101);",
+    "INSERT INTO Endpoints(number) VALUES(102);",
+};
+#else
+static QStringList sqlitePreload = {
+};
+#endif
+
 namespace Util {
     const QStringList pragmaQuery(const QString& name)
     {
@@ -161,5 +179,13 @@ namespace Util {
             return true;
         else
             return false;
+    }
+
+    const QStringList preloadConfig(const QString& name)
+    {
+        if(name == "QSQLITE")
+            return sqlitePreload;
+        else
+            return QStringList();
     }
 }

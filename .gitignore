@@ -22,10 +22,15 @@ Release/
 *.app
 *.out
 *.pdf
+*.spec
+*.iss
+*.rc
 *.dSYM
 cmake_*.cmake
 *_automoc.cpp
 moc_*.cpp
+qrc_*.cpp
+ui_*.h
 
 testdata/*.log
 testdata/*.pid
@@ -50,6 +55,7 @@ CMakeCache.txt
 install_manifest.txt
 Makefile
 
-sipwitchqt-*
+sipwitchqt-desktop
+sipwitchqt-server
 Doxyfile
 config.hpp

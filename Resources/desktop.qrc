@@ -4,6 +4,8 @@
 	<file>logo.png</file>
 	<file>menu.png</file>
 	<file>blocked.png</file>
+	<file>stop.png</file>
+	<file>caution.png</file>
 </qresource>
 <qresource prefix="/icons">
 	<file>clear.png</file>

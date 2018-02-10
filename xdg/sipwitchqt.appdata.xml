@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application>
+    <id type="desktop">sipwitchqt.desktop</id>
+    <name>SipWitchQt Desktop</name>
+    <license>GPL-3.0+</license>
+    <description>
+        <p>A desktop client for a sipwitchqt server</p>
+    </description>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://pub.cherokeesofidaho.org/screenshots/sipwitchqt-desktop.png</image>
+        </screenshot>
+    </screenshots>
+    <url type="homepage">https://www.github.com:tychosoft/sipwitchqt</url>
+    <updatecontact>tychosoft@gmail.com</updatecontact>
+</application>
+

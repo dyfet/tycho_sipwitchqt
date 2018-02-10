@@ -243,7 +243,6 @@ void Listener::run()
 
         // timeout...
         if(!event) {
-            qDebug() << "timeout";
             Locker lock(context);
             eXosip_automatic_action(context);
             continue;

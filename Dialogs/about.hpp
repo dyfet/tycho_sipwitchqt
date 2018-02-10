@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Tycho Softworks.
+ * Copyright (C) 2017 Tycho Softworks.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SQLDRIVER_HPP_
-#define SQLDRIVER_HPP_
+#ifndef ABOUT_HPP_
+#define ABOUT_HPP_
 
-#include <QString>
+#include <QDialog>
 
-namespace Util {
-    const QStringList createQuery(const QString& name);
-    const QStringList pragmaQuery(const QString& name);
-    const QStringList preloadConfig(const QString& name);
-    bool dbIsFile(const QString& name);
-}
+#include "../Desktop/desktop.hpp"
+
+class About final : public QDialog
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(About)
+
+public:
+    About(Desktop *parent = nullptr);
+
+private:
+    void closeEvent(QCloseEvent *event) final;
+
+private slots:
+    void aboutProject();
+    void aboutTribal();
+};
 
 /*!
- * Some database support utility classes and functions.
- * \file sqldriver.hpp
+ * Ui about dialog.
+ * \file about.hpp
+ */
+
+/*!
+ * \class About
+ * \brief implements about box ui.
+ * This is used to activate the toolbox buttons which connect to the browser
+ * to bring you to the link for the project on gitlab, and the tribal logo.
+ * \author David Sugar <tychosoft@gmail.com>
  */
 
 #endif
