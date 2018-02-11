@@ -68,7 +68,7 @@ void Authorize::findEndpoint(const Event& event)
     //emit createEndpoint(event, QVariantHash());
     //Context::reply(event, SIP_NOT_FOUND);
 
-    if(database->firstNumber < 1) {
+    if(database->firstNumber < 1 || db == nullptr) {
         Context::reply(event, SIP_INTERNAL_SERVER_ERROR);
         return;
     }
@@ -78,14 +78,47 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    QVariantHash dummy = {
-        {"realm", database->realm},
-        {"user", "test"},
-        {"digest", "MD5"},
+    auto endpoint = getRecord("SELECT * FROM FROM Endpoints WHERE number=? AND label=?",{event.number(), event.label()});
+    auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {event.number()});
+
+    if(extension.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+
+    // a sipwitch client specific registration feature...
+    if(event.initialize() == "label") {
+        if(endpoint.count() > 0) {
+            Context::reply(event, SIP_CONFLICT);
+            return;
+        }
+        //TODO: CREATE NEW ENDPOINT RECORD FOR LABEL
+    }
+    else {
+        // TODO: UPDATE ENDPOINT REGISTRATION DATE
+    }
+
+    QString user = extension.value("name").toString();
+    auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
+    if(authorize.count() < 1) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    QString type = authorize.value("type").toString();
+    if(type != "USER") {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    QVariantHash reply = {
+        {"realm", authorize.value("realm")},
+        {"user", user},
+        {"digest", authorize.value("digest")},
         {"number", event.number()},
         {"label", event.label()},
     };
-    emit createEndpoint(event, dummy);
+    emit createEndpoint(event, reply);
 }
 
 void Authorize::activate(const QVariantHash& config, bool opened)
