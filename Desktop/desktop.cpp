@@ -333,7 +333,7 @@ void Desktop::clearMessage()
 void Desktop::appState(Qt::ApplicationState state)
 {
     // Actve, Inactive related to front/back...
-    qDebug() << "*** STATE " << state;
+    qDebug() << "Application State" << state;
 }
 
 void Desktop::menuClicked()

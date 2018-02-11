@@ -136,7 +136,7 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
-    qDebug() << "***** REQUEST " << request << " LIST " << parms;
+    qDebug() << "Request " << request << " LIST " << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 

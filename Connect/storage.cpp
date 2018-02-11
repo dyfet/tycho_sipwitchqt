@@ -141,7 +141,7 @@ QSqlQuery Storage::getQuery(const QString& request, const QVariantList& parms)
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
-    qDebug() << "***** REQUEST " << request << " LIST " << parms;
+    qDebug() << "Request " << request << " LIST " << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
     if(!query.exec())
@@ -158,7 +158,7 @@ QVariantHash Storage::getRecord(const QString& request, const QVariantList& parm
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
-    qDebug() << "***** REQUEST " << request << " LIST " << parms;
+    qDebug() << "Request " << request << " LIST " << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
@@ -179,7 +179,7 @@ QList<QVariantHash> Storage::getRecords(const QString& request, const QVariantLi
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
-    qDebug() << "***** REQUEST " << request << " LIST " << parms;
+    qDebug() << "Request " << request << " LIST " << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 

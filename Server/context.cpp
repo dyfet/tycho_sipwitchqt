@@ -75,7 +75,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     eXosip_set_user_agent(context, UString("SipWitchQt-server/") + PROJECT_VERSION);
 
     auto proto = addr.protocol();
-    int ipv6 = 0, rport = 1, dns = 2;
+    int ipv6 = 0, rport = 1, dns = 2, live = 17000;
 #ifdef AF_INET6
     if(proto == QAbstractSocket::IPv6Protocol || addr == QHostAddress::AnyIPv6) {
         netFamily = AF_INET6;
@@ -85,6 +85,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
     eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
+    eXosip_set_option(context, EXOSIP_OPT_UDP_KEEP_ALIVE, &live);
 
     if(!addr.isNull())
         netAddress = addr.toString().toUtf8();

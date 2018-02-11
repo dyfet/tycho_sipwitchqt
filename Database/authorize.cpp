@@ -235,7 +235,7 @@ QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parm
         QSqlQuery query(local);
         query.prepare(request);
         int count = -1;
-        qDebug() << "***** REQUEST " << request << " LIST " << parms;
+        qDebug() << "Request " << request << " LIST " << parms;
         while(++count < parms.count())
             query.bindValue(count, parms.at(count));
 

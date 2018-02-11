@@ -202,7 +202,7 @@ void Listener::add_authentication(osip_message_t *msg)
 
 void Listener::run()
 {
-    int ipv6 = 0, rport = 1, dns = 2;
+    int ipv6 = 0, rport = 1, dns = 2, live = 17000;
 
 #ifdef AF_INET6
     if(family == AF_INET && serverHost.contains(':')) {
@@ -216,6 +216,7 @@ void Listener::run()
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
     eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
+    eXosip_set_option(context, EXOSIP_OPT_UDP_KEEP_ALIVE, &live);
     eXosip_set_user_agent(context, UString("SipWitchQt-client/") + PROJECT_VERSION);
     eXosip_listen_addr(context, IPPROTO_TCP, NULL, 0, family, tls);
 
@@ -254,7 +255,7 @@ void Listener::run()
                 osip_message_t *msg = nullptr;
                 auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
                 auto server = UString::uri(serverSchema, serverHost, serverPort);
-                qDebug() << "*** Connecting to" << server;
+                qDebug() << "Connecting to" << server;
                 qDebug() << "Connecting as" << identity;
 
                 rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
