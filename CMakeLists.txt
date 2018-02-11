@@ -210,6 +210,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND cd stage && zip -rq ../stage.zip * && cd ..
             COMMAND "${CMAKE_COMMAND}" -E rename stage.zip stage/sipwitchqt-desktop.zip
             COMMAND zip -q stage/symbols.zip *.pdb
+            COMMAND cd stage && zip Setup.zip Setup.exe && cd ..
         )
     endif()
 endif()
