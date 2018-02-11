@@ -79,6 +79,13 @@ void Authorize::findEndpoint(const Event& event)
 
     auto number = event.number();
     auto label = event.label();
+    auto expires = event.expires();
+
+    // if a registration release and we got here, we just ignore...
+    if(expires < 1) {
+        Context::reply(event, SIP_OK);
+        return;
+    }
 
     if(number < database->firstNumber || number > database->lastNumber) {
         warning() << "Invalid extension " << number << " for authorization";
@@ -125,6 +132,13 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
+    if(type == "DEVICE" && expires > database->expiresDevice)
+        expires = database->expiresDevice;
+    else if(label != "NONE" && expires > database->expiresLabeled)
+        expires = database->expiresLabeled;
+    else if(expires > database->expiresUser)
+        expires = database->expiresUser;
+
     QVariantHash reply = {
         {"realm", authorize.value("realm")},
         {"user", user},
@@ -132,6 +146,7 @@ void Authorize::findEndpoint(const Event& event)
         {"secret", authorize.value("secret")},
         {"number", number},
         {"label", label},
+        {"expires", expires},
     };
     emit createEndpoint(event, reply);
 }

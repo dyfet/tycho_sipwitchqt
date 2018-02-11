@@ -245,11 +245,13 @@ void Context::challenge(const Event &event, Registry *registry)
     UString digest = record.value("digest").toString().toUtf8().toUpper();
     UString user = record.value("user").toString().toUtf8();
     UString challenge = "Digest realm=" + realm.quote() + ", nonce=" + nonce.quote() + ", algorithm=" + digest.quote();
+    UString expires = record.value("expires").toString();
     registry->setNounce(random);
 
     ContextLocker lock(context);
     eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);
     osip_message_set_header(msg, WWW_AUTHENTICATE, challenge);
+    osip_message_set_header(msg, "Expires", expires);
 
     // part of sipwitchqt client first trust/initial contact setup
     if(event.initialize() == "label")

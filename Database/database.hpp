@@ -60,6 +60,11 @@ private:
     QString name;
     QString user;
     QString pass;
+
+    int expiresUser;
+    int expiresLabeled;
+    int expiresDevice;
+
     volatile int firstNumber, lastNumber;
     int port;
 

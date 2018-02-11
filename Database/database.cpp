@@ -61,6 +61,10 @@ QObject()
 {
     firstNumber = lastNumber = -1;
 
+    expiresUser = 600;
+    expiresLabeled = 60;
+    expiresDevice = 3600;
+
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
     timer.setSingleShot(true);

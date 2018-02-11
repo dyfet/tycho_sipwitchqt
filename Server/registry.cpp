@@ -33,7 +33,7 @@ expires(-1), context(nullptr), endpoint(ep)
     alias = ep.value("name").toString();
     number = ep.value("number").toInt();
     label = ep.value("label").toString();
-    expires = 60000l;
+    expires = ep.value("expires").toInt();
 
     updated.start();
 
