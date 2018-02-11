@@ -62,7 +62,7 @@ QObject()
     firstNumber = lastNumber = -1;
 
     expiresUser = 600;
-    expiresLabeled = 600;
+    expiresLabeled = 300;
     expiresDevice = 3600;
 
     moveToThread(Server::createThread("database", order));
