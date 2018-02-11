@@ -161,7 +161,7 @@ void Event::Data::parseMessage(osip_message_t *msg)
     header = nullptr;
     osip_message_header_get_byname(msg, "x-label", 0, &header);
     if(header && header->hvalue)
-        label = UString(header->hvalue).toLower();            
+        label = UString(header->hvalue).toLower().unquote();
     else
         label = "NONE";
 

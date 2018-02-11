@@ -86,7 +86,7 @@ public:
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
 
-    static void process(const Event& event);
+    static void cleanup();
 
 private:
     UString alias, label;

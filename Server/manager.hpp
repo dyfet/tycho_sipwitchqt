@@ -72,6 +72,10 @@ public slots:
 #ifndef QT_NO_DEBUG
     void reportCounts(const QString& id, int count);
 #endif
+
+private slots:
+    void startup();
+    void cleanup();
 };
 
 /*!

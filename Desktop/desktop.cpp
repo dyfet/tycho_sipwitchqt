@@ -56,6 +56,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     Q_ASSERT(Instance == nullptr);
     Instance = this;
     connected = false;
+    front = true;
 
     if(reset) {
         Storage::remove();
@@ -333,6 +334,18 @@ void Desktop::clearMessage()
 void Desktop::appState(Qt::ApplicationState state)
 {
     // Actve, Inactive related to front/back...
+    switch(state) {
+    case Qt::ApplicationActive:
+        front = true;
+        break;
+    case Qt::ApplicationHidden:
+    case Qt::ApplicationInactive:
+        front = false;
+        break;
+    default:
+        break;
+    }
+
     qDebug() << "Application State" << state;
 }
 
@@ -387,7 +400,7 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
             break;
         if(isHidden())
             show();
-        else
+        else if(front)
             hide();
         break;
     default:

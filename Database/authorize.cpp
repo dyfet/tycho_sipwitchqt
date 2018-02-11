@@ -78,7 +78,7 @@ void Authorize::findEndpoint(const Event& event)
     }
 
     auto number = event.number();
-    auto label = event.label();
+    QString label = event.label();
     auto expires = event.expires();
 
     // if a registration release and we got here, we just ignore...
@@ -93,7 +93,7 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    auto endpoint = getRecord("SELECT * FROM FROM Endpoints WHERE number=? AND label=?",{number, label});
+    auto endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
     auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {number});
 
     if(extension.count() < 1) {
@@ -109,12 +109,12 @@ void Authorize::findEndpoint(const Event& event)
             Context::reply(event, SIP_CONFLICT);
             return;
         }
-        //TODO: CREATE NEW ENDPOINT RECORD FOR LABEL
+        runQuery("INSERT INTO Endpoints(number, label) VALUES (?,?);", {number, label});
     }
     else if(endpoint.count() < 1) {
-        /* warning() << "Cannot authorize " << number << "; invalid label " << label;
+        warning() << "Cannot authorize " << number << "; invalid label " << label;
         Context::reply(event, SIP_FORBIDDEN);
-        return; */
+        return;
     }
 
     QString user = extension.value("name").toString();

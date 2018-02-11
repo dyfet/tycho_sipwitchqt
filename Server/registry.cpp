@@ -70,6 +70,15 @@ Registry::~Registry()
     aliases.remove(alias, this);
 }
 
+void Registry::cleanup(void)
+{
+    auto snapshot = registries;
+    foreach(auto reg, snapshot) {
+        if(reg->hasExpired())
+            delete reg;
+    }
+}
+
 QList<Registry *> Registry::list()
 {
     return extensions.values();
@@ -102,12 +111,6 @@ QList<Registry *> Registry::find(const UString& target)
     }
 
     return aliases.values(target);
-}
-
-// event handling for registration system as a whole...
-void Registry::process(const Event& ev)
-{
-    Q_UNUSED(ev);
 }
 
 // authorize registration processing

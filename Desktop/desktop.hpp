@@ -137,7 +137,7 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenuBar *appBar;
     QMenu *trayMenu, *dockMenu, *appMenu, *popup;
-    bool restart_flag, connected;
+    bool restart_flag, connected, front;
     QVariantHash currentCredentials;
     QString appearance;
     QDialog *dialog;

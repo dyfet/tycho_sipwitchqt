@@ -46,6 +46,7 @@ Manager::Manager(unsigned order)
     Server *server = Server::instance();
     Database *db = Database::instance();
 
+    connect(thread(), &QThread::started, this, &Manager::startup);
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(server, &Server::changeConfig, this, &Manager::applyConfig);
 
@@ -63,6 +64,18 @@ void Manager::init(unsigned order)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = new Manager(order);
+}
+
+void Manager::startup()
+{
+    auto cleanupTimer = new QTimer(this);
+    connect(cleanupTimer, &QTimer::timeout, this, &Manager::cleanup);
+    cleanupTimer->start(60000l);
+}
+
+void Manager::cleanup()
+{
+    Registry::cleanup();
 }
 
 #ifndef QT_NO_DEBUG
