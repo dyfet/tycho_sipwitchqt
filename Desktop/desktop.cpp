@@ -501,6 +501,11 @@ void Desktop::authorized(const QVariantHash& creds)
     setState(ONLINE);
 }
 
+void Desktop::setBanner(const QString& banner)
+{
+    setWindowTitle(banner);
+}
+
 void Desktop::listen(const QVariantHash& cred)
 {
     Q_ASSERT(listener == nullptr);
@@ -510,6 +515,7 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
+    connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
     listener->start();
     authorizing();
 }

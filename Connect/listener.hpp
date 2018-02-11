@@ -66,6 +66,7 @@ private:
     int rid;
 
 signals:
+    void changeBanner(const QString& banner);
     void authorize(const QVariantHash& creds);
     void failure(int code);
     void starting();

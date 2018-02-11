@@ -17,6 +17,8 @@
 
 #include "listener.hpp"
 
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTimer>
 
 #if defined(Q_OS_WIN)
@@ -58,6 +60,21 @@ public:
 private:
     eXosip_t *context;
 };
+
+static void dump(osip_message_t *msg)
+{
+    if(!msg)
+        return;
+
+    char *data = nullptr;
+    size_t len;
+    osip_message_to_str(msg, &data, &len);
+    if(data) {
+        data[len] = 0;
+        qDebug() << "MSG" << data;
+        osip_free(data);
+    }
+}
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true), connected(false), registered(false)
@@ -276,6 +293,7 @@ void Listener::run()
         }
 
         osip_header_t *header;
+        osip_body_t *body;
 
         switch(event->type) {
         case EXOSIP_REGISTRATION_SUCCESS:
@@ -293,6 +311,22 @@ void Listener::run()
                 expiresTimeout += AGENT_EXPIRES;
             refreshTimeout = expiresTimeout - 30;
             registered = true;
+
+            // here is start of where we become special..
+            osip_message_get_body(event->response, 0, &body);
+            if(body && body->body) {
+                QByteArray data(body->body, static_cast<int>(body->length));
+                QJsonDocument info = QJsonDocument::fromJson(data);
+                if(!info.isEmpty()) {
+                    auto json = info.object();
+                    if(!json.isEmpty()) {
+                        auto banner = json["banner"].toString();
+                        if(!banner.isEmpty())
+                            emit changeBanner(banner);
+                    }
+                }
+            }
+
             qDebug() << "Authorizing for" << expiresTimeout - now;
             emit authorize(serverCreds);
             break;

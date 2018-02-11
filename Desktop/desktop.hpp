@@ -177,6 +177,8 @@ private slots:
     void trayAction(QSystemTrayIcon::ActivationReason reason);
     void trayAway();
 
+    void setBanner(const QString& banner);
+
     void showOptions(void);
     void showSessions(void);
     void showPhonebook(void);

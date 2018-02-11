@@ -20,6 +20,7 @@
 
 #include "event.hpp"
 #include <QSqlRecord>
+#include <QJsonDocument>
 
 class Registry;
 
@@ -100,7 +101,7 @@ public:
 
     static void challenge(const Event& event, Registry *registry);
     static bool reply(const Event& event, int code);
-    static bool authorize(const Event& event, const Registry* registry);
+    static bool authorize(const Event& event, const Registry* registry, const QJsonDocument& attach);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
 

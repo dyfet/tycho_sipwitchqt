@@ -20,6 +20,7 @@
 #include "manager.hpp"
 
 #include <QNetworkInterface>
+#include <QJsonDocument>
 
 #if defined(Q_OS_WIN)
 #include <WinSock2.h>
@@ -60,6 +61,20 @@ private:
     eXosip_t *context;
 };
 
+static void dump(osip_message_t *msg)
+{
+    if(!msg)
+        return;
+
+    char *data = nullptr;
+    size_t len;
+    osip_message_to_str(msg, &data, &len);
+    if(data) {
+        data[len] = 0;
+        qDebug() << "MSG" << data;
+        osip_free(data);
+    }
+}
 
 Context::Context(const QHostAddress& addr, quint16 port, const Schema& choice, unsigned mask, unsigned index):
 schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
@@ -261,7 +276,7 @@ void Context::challenge(const Event &event, Registry* registry)
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
 }
 
-bool Context::authorize(const Event& event, const Registry* registry)
+bool Context::authorize(const Event& event, const Registry* registry, const QJsonDocument& attach)
 {
     osip_message_t *msg = nullptr;
     auto context = event.context()->context;
@@ -276,6 +291,12 @@ bool Context::authorize(const Event& event, const Registry* registry)
         return false;
 
     osip_message_set_header(msg, "Expires", expires);
+    if(!attach.isEmpty()) {
+        auto body = attach.toJson(QJsonDocument::Compact);
+        osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+        osip_message_set_content_type(msg, "application/json");
+    }
+
     eXosip_message_send_answer(context, tid, SIP_OK, msg);
     return true;
 }

@@ -22,6 +22,7 @@
 #include "main.hpp"
 
 #include <QUuid>
+#include <QJsonObject>
 
 Manager *Manager::Instance = nullptr;
 UString Manager::ServerMode;
@@ -145,8 +146,15 @@ void Manager::refreshRegistration(const Event &ev)
             Context::challenge(ev, reg);
         else {
             auto result = reg->authorize(ev);
-            if(result == SIP_OK)
-                Context::authorize(ev, reg);
+            if(result == SIP_OK) {
+                QJsonDocument body;
+                if(ev.label() != "NONE") {
+                    body.setObject({
+                        {"banner", QString(ServerBanner)},
+                    });
+                }
+                Context::authorize(ev, reg, body);
+            }
             else
                 Context::reply(ev, result);
             // releasing registration expires object

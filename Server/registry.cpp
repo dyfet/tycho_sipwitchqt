@@ -135,7 +135,8 @@ int Registry::authorize(const Event& ev)
     UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
     UString expected = QCryptographicHash::hash(secret + ":" + nonce + ":" + ha2, digest).toHex().toLower();
 
-    qDebug() << "*** COMPARE " << expected << " vs " << ev.authorizingDigest();
+    if(expected != ev.authorizingDigest())
+        return SIP_FORBIDDEN;
 
     // de-registration
     if(ev.expires() < 1) {
