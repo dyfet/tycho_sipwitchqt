@@ -195,7 +195,7 @@ void Listener::add_authentication(osip_message_t *msg)
         "\", uri=\"" + uri +
         "\", response=\"" + response +
         "\", nonce=\"" + nonce +
-        "\", algorithm=\"" + algo;
+        "\", algorithm=\"" + algo + "\"";
 
     osip_message_set_header(msg, AUTHORIZATION, auth);
 }

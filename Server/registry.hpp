@@ -91,6 +91,7 @@ public:
 private:
     UString alias, label;
     UString text, agent;
+    UString expected;
     int number, rid;
     qint64 expires;                     // time till expires
     QByteArray random;                  // nounce value

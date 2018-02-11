@@ -23,6 +23,18 @@ static QMultiHash<int, Registry*> extensions;
 static QMultiHash<UString, Registry*> aliases;
 static QHash<QPair<int,UString>, Registry *> registries;
 
+static QHash<UString, QCryptographicHash::Algorithm> digests = {
+    {"MD5",     QCryptographicHash::Md5},
+    {"SHA",     QCryptographicHash::Sha1},
+    {"SHA1",    QCryptographicHash::Sha1},
+    {"SHA2",    QCryptographicHash::Sha256},
+    {"SHA256",  QCryptographicHash::Sha256},
+    {"SHA512",  QCryptographicHash::Sha512},
+    {"SHA-1",   QCryptographicHash::Sha1},
+    {"SHA-256", QCryptographicHash::Sha256},
+    {"SHA-512", QCryptographicHash::Sha512},
+};
+
 // We create registration records based on the initial pre-authorize
 // request, and as inactive.  The registration becomes active only when
 // it is updated by an authorized request.
@@ -101,7 +113,29 @@ void Registry::process(const Event& ev)
 // authorize registration processing
 int Registry::authorize(const Event& ev)
 {
-    // TODO: validate sip registration....
+    UString algo = endpoint.value("digest").toString();
+    UString secret = endpoint.value("secret").toString();
+    UString nonce = random.toHex().toLower();
+    UString method = ev.method();
+    UString uri = ev.request();
+
+    if(ev.authorizingRealm() != endpoint.value("realm").toString())
+        return SIP_FORBIDDEN;
+
+    if(ev.authorizingId() != endpoint.value("user").toString())
+        return SIP_FORBIDDEN;
+
+    if(ev.authorizingAlgorithm() != algo)
+        return SIP_FORBIDDEN;
+
+    if(ev.authorizingOnce() != nonce)
+        return SIP_FORBIDDEN;
+
+    auto digest = digests[algo];
+    UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
+    UString expected = QCryptographicHash::hash(secret + ":" + nonce + ":" + ha2, digest).toHex().toLower();
+
+    qDebug() << "*** COMPARE " << expected << " vs " << ev.authorizingDigest();
 
     // de-registration
     if(ev.expires() < 1) {

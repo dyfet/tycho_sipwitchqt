@@ -283,7 +283,7 @@ void Desktop::closeReset()
 void Desktop::closeDialog()
 {
     if(dialog) {
-        delete dialog;
+        dialog->deleteLater();
         setEnabled(true);
         dialog = nullptr;
     }
