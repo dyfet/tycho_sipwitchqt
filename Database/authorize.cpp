@@ -78,7 +78,7 @@ void Authorize::findEndpoint(const Event& event)
     }
 
     auto number = event.number();
-    QString label = event.label();
+    auto label = event.label();
     auto expires = event.expires();
 
     // if a registration release and we got here, we just ignore...

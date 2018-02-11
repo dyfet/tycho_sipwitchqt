@@ -213,7 +213,7 @@ public:
         return d->allows;
     }
 
-    inline UString label() const {
+    inline QString label() const {
         return d->label;
     }
 
@@ -244,7 +244,8 @@ private:
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason, initialize;
-        UString userid, nonce, digest, algorithm, label, request;
+        UString userid, nonce, digest, algorithm, request;
+        QString label;
         Contact source;  // if nat, has first nat
         Contact from, to, target;
         QList<UString> allows;
