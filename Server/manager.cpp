@@ -140,8 +140,13 @@ void Manager::refreshRegistration(const Event &ev)
     if(reg) {
         if(!ev.authorization())
             Context::challenge(ev, reg);
-        else
-            Context::reply(ev, reg->authorize(ev));
+        else {
+            auto result = reg->authorize(ev);
+            if(result == SIP_OK)
+                Context::authorize(ev, reg);
+            else
+                Context::reply(ev, result);
+        }
     }
     else
         emit findEndpoint(ev);
