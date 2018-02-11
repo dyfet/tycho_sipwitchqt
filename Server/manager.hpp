@@ -49,6 +49,7 @@ private:
     static UString ServerHostname;
     static UString ServerMode;
     static UString ServerRealm;
+    static UString ServerBanner;
     static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;

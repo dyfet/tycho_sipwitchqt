@@ -27,6 +27,7 @@ Manager *Manager::Instance = nullptr;
 UString Manager::ServerMode;
 UString Manager::ServerHostname;
 UString Manager::ServerRealm;
+UString Manager::ServerBanner = "Welcome to SipWitchQt " PROJECT_VERSION;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
 unsigned Manager::Contexts = 0;
@@ -82,6 +83,8 @@ void Manager::applyNames()
 void Manager::applyConfig(const QVariantHash& config)
 {
     ServerNames = config["localnames"].toStringList();
+    if(!config["banner"].toString().isEmpty())
+        ServerBanner = config["banner"].toString();
     QString hostname = config["host"].toString();
     QString realm = config["realm"].toString();
 
