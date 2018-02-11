@@ -29,13 +29,13 @@ Authorize::Authorize(unsigned order) :
 QObject(), db(nullptr)
 {
     database = Database::instance();
-    if(database->isFile())
-        moveToThread(Server::findThread("database"));
-    else {
+    if(order) {
         auto thread = Server::createThread("authorize", order);
         thread->setPriority(QThread::HighPriority);
         moveToThread(thread);
     }
+    else
+        moveToThread(database->thread());
 
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(database, &Database::updateAuthorize, this, &Authorize::activate);
@@ -62,6 +62,10 @@ void Authorize::init(unsigned order)
     Instance = new Authorize(order);
 }
 
+// This finds an endpoint to be authorized.  It can do many db exclusions,
+// but does not validate the secret, as that happens in manager using the
+// registry object.  This is because the registry object caches db info and
+// we only query for initial authorization, not during existing refresh.
 void Authorize::findEndpoint(const Event& event)
 {
     qDebug() << "Seeking endpoint" << event.number();
@@ -73,15 +77,20 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    if(event.number() < database->firstNumber || event.number() > database->lastNumber) {
+    auto number = event.number();
+    auto label = event.label();
+
+    if(number < database->firstNumber || number > database->lastNumber) {
+        warning() << "Invalid extension " << number << " for authorization";
         Context::reply(event, SIP_DOES_NOT_EXIST_ANYWHERE);
         return;
     }
 
-    auto endpoint = getRecord("SELECT * FROM FROM Endpoints WHERE number=? AND label=?",{event.number(), event.label()});
-    auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {event.number()});
+    auto endpoint = getRecord("SELECT * FROM FROM Endpoints WHERE number=? AND label=?",{number, label});
+    auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {number});
 
     if(extension.count() < 1) {
+        warning() << "Cannot authorize " << number << "; not found";
         Context::reply(event, SIP_NOT_FOUND);
         return;
     }
@@ -89,24 +98,29 @@ void Authorize::findEndpoint(const Event& event)
     // a sipwitch client specific registration feature...
     if(event.initialize() == "label") {
         if(endpoint.count() > 0) {
+            warning() << "Cannot initially authorize " << number << "; label " << label << " already exists";
             Context::reply(event, SIP_CONFLICT);
             return;
         }
         //TODO: CREATE NEW ENDPOINT RECORD FOR LABEL
     }
-    else {
-        // TODO: UPDATE ENDPOINT REGISTRATION DATE
+    else if(endpoint.count() < 1) {
+        /* warning() << "Cannot authorize " << number << "; invalid label " << label;
+        Context::reply(event, SIP_FORBIDDEN);
+        return; */
     }
 
     QString user = extension.value("name").toString();
     auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
     if(authorize.count() < 1) {
+        error() << "Extension " << number << " has no authorization";
         Context::reply(event, SIP_FORBIDDEN);
         return;
     }
 
     QString type = authorize.value("type").toString();
-    if(type != "USER") {
+    if(type != "USER" && type != "DEVICE") {
+        warning() << "Cannot authorize " << number << " as a " << type.toLower();
         Context::reply(event, SIP_FORBIDDEN);
         return;
     }
@@ -115,8 +129,9 @@ void Authorize::findEndpoint(const Event& event)
         {"realm", authorize.value("realm")},
         {"user", user},
         {"digest", authorize.value("digest")},
-        {"number", event.number()},
-        {"label", event.label()},
+        {"secret", authorize.value("secret")},
+        {"number", number},
+        {"label", label},
     };
     emit createEndpoint(event, reply);
 }

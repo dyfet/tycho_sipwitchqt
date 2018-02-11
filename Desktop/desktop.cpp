@@ -233,7 +233,7 @@ void Desktop::setState(state_t state)
         icon = prefix + "activate.png";
         break;
     case ONLINE:
-        icon = prefix + "online.png";
+        icon = prefix + "idle.png";
         break;
     default:
         icon = prefix + "offline.png";

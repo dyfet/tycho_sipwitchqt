@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     Database::init(2);
     Manager::init(3);
 
-    Authorize::init(6);
+    Authorize::init(0);
     exitcode = server.start();
 
     //config.sync();
