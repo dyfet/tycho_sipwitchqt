@@ -5,3 +5,9 @@ v0.0.2
 * More complete test harness debug config
 * Reset and dialogs for client
 * Release packaging for primary platforms
+
+v0.1.0
+* Core authentication complete 
+* Core registration with expiration
+* Extended registration support for sipwitchqt clients
+
