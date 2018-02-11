@@ -149,6 +149,9 @@ void Manager::refreshRegistration(const Event &ev)
                 Context::authorize(ev, reg);
             else
                 Context::reply(ev, result);
+            // releasing registration expires object
+            if(reg->hasExpired())
+                delete reg;
         }
     }
     else

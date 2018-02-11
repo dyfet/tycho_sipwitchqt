@@ -77,6 +77,7 @@ QObject(), active(true), connected(false), registered(false)
     family = AF_INET;
     tls = 0;
     rid = -1;
+    expiresTimeout = refreshTimeout = 0;
 
     if(!cert.isNull()) {
         serverSchema = "sips:";
@@ -118,6 +119,7 @@ void Listener::send_registration(osip_message_t *msg, bool auth)
         serverInit = "";
 
     eXosip_register_send_register(context, rid, msg);
+    refreshTimeout = 0;
 }
 
 void Listener::reauthorize(const QVariantHash& update)
@@ -131,8 +133,10 @@ void Listener::reauthorize(const QVariantHash& update)
 
     osip_message_t *msg = nullptr;
     eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
-    if(msg)
+    if(msg) {
+        expiresTimeout = 0;
         send_registration(msg);
+    }
     else
         active = false;
 }
@@ -217,34 +221,52 @@ void Listener::run()
 
     emit starting();
 
-    if(active) {
-        Locker lock(context);
-        osip_message_t *msg = nullptr;
-        auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
-        auto server = UString::uri(serverSchema, serverHost, serverPort);
-        qDebug() << "Connecting to" << server;
-        qDebug() << "Connecting as" << identity;
-
-        rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
-        if(msg && rid > -1)
-            send_registration(msg);
-        else
-            active = false;
-    }
-
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
     int error;
+    time_t now;
 
     while(active) {
         auto event = eXosip_event_wait(context, s, ms);
         if(!active)
             break;
 
+        time(&now);
+        if(expiresTimeout && now > expiresTimeout) {
+            active = false;
+            break;
+        }
+
+        if(refreshTimeout && now > refreshTimeout) {
+            refreshTimeout = 0;
+            osip_message_t *msg = nullptr;
+            Locker lock(context);
+            qDebug() << "Refreshing registration...";
+            eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
+            if(msg)
+                send_registration(msg);
+        }
+
         // timeout...
         if(!event) {
             Locker lock(context);
-            eXosip_automatic_action(context);
+            if(rid < 0) {
+                osip_message_t *msg = nullptr;
+                auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
+                auto server = UString::uri(serverSchema, serverHost, serverPort);
+                qDebug() << "*** Connecting to" << server;
+                qDebug() << "Connecting as" << identity;
+
+                rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
+                if(msg && rid > -1)
+                    send_registration(msg);
+                else {
+                    active = false;
+                    break;
+                }
+            }
+            else
+                eXosip_automatic_action(context);
             continue;
         }
         else {
@@ -252,9 +274,25 @@ void Listener::run()
             qDebug().nospace() << "type=" << eid(event->type) << " cid=" << event->cid;
         }
 
+        osip_header_t *header;
+
         switch(event->type) {
         case EXOSIP_REGISTRATION_SUCCESS:
+            header = nullptr;
+            if(event->response)
+                osip_message_header_get_byname(event->response, "expires", 0, &header);
+            else {
+                active = false;
+                break;
+            }
+            time(&expiresTimeout);
+            if(header)
+                expiresTimeout += atoi(header->hvalue);
+            else
+                expiresTimeout += AGENT_EXPIRES;
+            refreshTimeout = expiresTimeout - 30;
             registered = true;
+            qDebug() << "Authorizing for" << expiresTimeout - now;
             emit authorize(serverCreds);
             break;
         case EXOSIP_REGISTRATION_FAILURE:

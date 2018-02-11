@@ -63,7 +63,7 @@ QObject()
 
     expiresUser = 600;
     expiresLabeled = 300;
-    expiresDevice = 3600;
+    expiresDevice = 1800;
 
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());

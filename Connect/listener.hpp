@@ -61,6 +61,7 @@ private:
     UString serverLabel;
     quint16 serverPort;
     eXosip_t *context;
+    time_t expiresTimeout, refreshTimeout;
     int family, tls;
     int rid;
 

@@ -33,7 +33,7 @@ expires(-1), context(nullptr), endpoint(ep)
     alias = ep.value("name").toString();
     number = ep.value("number").toInt();
     label = ep.value("label").toString();
-    expires = ep.value("expires").toInt();
+    expires = ep.value("expires").toInt() * 1000l;
 
     updated.start();
 
@@ -104,16 +104,16 @@ int Registry::authorize(const Event& ev)
     // TODO: validate sip registration....
 
     // de-registration
-    expires = ev.expires() * 1000l;
-    if(expires < 1) {
-        delete this;
+    if(ev.expires() < 1) {
+        expires = 0;
+        qDebug() << "De-registering" << ev.number() << ev.label();
         return SIP_OK;
     }
 
     if(!context)
-        qDebug() << "Registering" << ev.number() << ev.label() << "for" << ev.expires();
+        qDebug() << "Registering" << ev.number() << ev.label() << "for" << endpoint.value("expires");
     else
-        qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << ev.expires();
+        qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << endpoint.value("expires");
 
     context = ev.context();
     address = ev.contact();
