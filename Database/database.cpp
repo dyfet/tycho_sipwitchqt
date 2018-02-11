@@ -336,7 +336,7 @@ void Database::applyConfig(const QVariantHash& config)
     port = config["database/port"].toInt();
     user = config["database/username"].toString();
     pass = config["database/password"].toString();
-    driver = config["database/driver"].toString();
+    driver = config["database"].toString();
     uuid = Server::uuid();
     failed = false;
 

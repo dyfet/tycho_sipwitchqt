@@ -48,10 +48,12 @@
 #define CURRENT_NETWORK     "NETWORK"
 #define CURRENT_HOSTNAME    "HOST"
 #define CURRENT_PORT        "PORT"
+#define CURRENT_DATABASE    "DATABASE"
 #define DEFAULT_HOSTNAME    "host"
 #define DEFAULT_ADDRESS     "address"
 #define DEFAULT_NETWORK     "network"
 #define DEFAULT_PORT        "port"
+#define DEFAULT_DATABASE    "database"
 
 class Main final : public QObject
 {

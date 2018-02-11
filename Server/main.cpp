@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 
     Args::add(args, {
         {{"A", "address"}, "Specify network interface to bind", "address", "%%address"},
+        {{"D", "database"}, "Specify database driver", "database", "%%database"},
         {{"H", "host", "public"}, "Specify public host name", "host", "%%host"},
         {{"N", "network", "domain"}, "Specify network domain to serve", "name", "%%network"},
         {{"P", "port"}, "Specify network port to bind", "100-65534", "%%port"},
@@ -87,11 +88,13 @@ int main(int argc, char **argv)
     //TODO: set argv[1] to nullptr, argc to 1 if Util::controlOptions count()
     Server server(argc, argv, args, {
         {SERVER_CONFIG,     "--config"},
+        {CURRENT_DATABASE,  "--database"},
         {CURRENT_NETWORK,   "--network"},
         {CURRENT_HOSTNAME,  "--host"},
         {CURRENT_PORT,      "--port"},
         {CURRENT_ADDRESS,   "--address"},
         {DEFAULT_PORT,      5060},
+        {DEFAULT_DATABASE,  "sqlite"},
         {DEFAULT_HOSTNAME,  QHostInfo::localHostName()},
         {DEFAULT_ADDRESS,   "any"},
         {DEFAULT_NETWORK,   Util::localDomain()},
@@ -126,7 +129,12 @@ int main(int argc, char **argv)
     Database::init(2);
     Manager::init(3);
 
-    Authorize::init(0);
+    auto dbdriver = server[CURRENT_DATABASE].toLower();
+    if(dbdriver == "sqlite" || dbdriver == "qsqlite" || dbdriver == "sqlite3" || dbdriver == "qsqlite3")
+        Authorize::init(0);
+    else
+        Authorize::init(6);
+
     exitcode = server.start();
 
     //config.sync();
