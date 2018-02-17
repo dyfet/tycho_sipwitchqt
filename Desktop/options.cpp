@@ -34,5 +34,6 @@ QWidget(), desktop(control)
 
 void Options::enter()
 {
+    Toolbar::search()->setEnabled(false);
     ui.listButton->setFocus();
 }

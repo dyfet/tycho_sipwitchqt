@@ -11,3 +11,9 @@ v0.1.0
 * Core registration with expiration
 * Extended registration support for sipwitchqt clients
 
+v0.1.1
+* udp for eXosip2 messaging support
+* automatic authentication integrated
+* Start of core messaging code
+* Replacing json with xdp
+* Start of contacts (phonebook) page

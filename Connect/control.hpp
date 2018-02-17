@@ -34,16 +34,12 @@ class Control : public QObject
     Q_DISABLE_COPY(Control)
 
 public:
-    Control(QObject *parent);
-    ~Control();
+    explicit Control(QObject *parent);
+    ~Control() override;
 
     inline static Control *instance() {
 	return Instance;
     }
-
-    static int command(const QString& value, bool verbose = false, int timeout = 1000);
-
-    static int request(const QStringList& args, bool verbose = true, int timeout = 1000);
 
 private:
     QLockFile lockFile;

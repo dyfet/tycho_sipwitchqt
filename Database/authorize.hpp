@@ -41,6 +41,7 @@ protected:
     bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
     int runQuery(const QStringList& list);
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
+    QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
 
 private:
     Database *database;

@@ -26,7 +26,7 @@ class CrashHandler
     Q_DISABLE_COPY(CrashHandler)
 public:
     CrashHandler();
-    virtual ~CrashHandler();
+    virtual ~CrashHandler() = default;
 
     static bool corefiles();
     static bool installHandlers();

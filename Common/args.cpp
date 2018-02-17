@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "compiler.hpp"
 #include "args.hpp"
 
 bool Args::conflicting(const QCommandLineParser& args, const QStringList& options) {

@@ -80,7 +80,7 @@ hostPort(0), expiration(0)
         hostPort = 5060;
 }
 
-Contact::Contact(osip_uri_t *uri)  noexcept :
+Contact::Contact(const osip_uri_t *uri)  noexcept :
 hostPort(0), expiration(0)
 {
     if(!uri || !uri->host || uri->host[0] == 0)

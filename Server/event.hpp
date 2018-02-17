@@ -46,7 +46,7 @@ public:
         return d->event == nullptr;
     }
 
-    inline const eXosip_event_t *event() const {
+    inline eXosip_event_t *event() const {
         Q_ASSERT(d->event != nullptr);
 		return d->event;
 	}

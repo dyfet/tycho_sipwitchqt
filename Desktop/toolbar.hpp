@@ -22,6 +22,7 @@
 #include <QToolBar>
 #include <QMenu>
 #include <QMenuBar>
+#include <QLineEdit>
 
 #include "../Common/compiler.hpp"
 
@@ -39,7 +40,11 @@ public:
     QString searching();
 
     static inline Toolbar *instance() {
-	return Instance;
+        return Instance;
+    }
+
+    static inline QLineEdit *search() {
+        return Search;
     }
 
 private:
@@ -48,6 +53,7 @@ private:
     QMenuBar *menu;
 
     static Toolbar *Instance;
+    static QLineEdit *Search;
 
     bool eventFilter(QObject *obj, QEvent *evt) final;
 

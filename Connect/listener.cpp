@@ -19,35 +19,22 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QTimer>
 
 #if defined(Q_OS_WIN)
 #include <WinSock2.h>
 #else
 #include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #endif
 
-static const char *eid(eXosip_event_type ev);
+#define EVENT_TIMER 200l    // 200ms...
 
-static QHash<UString, QCryptographicHash::Algorithm> digests = {
-    {"MD5",     QCryptographicHash::Md5},
-    {"SHA",     QCryptographicHash::Sha1},
-    {"SHA1",    QCryptographicHash::Sha1},
-    {"SHA2",    QCryptographicHash::Sha256},
-    {"SHA256",  QCryptographicHash::Sha256},
-    {"SHA512",  QCryptographicHash::Sha512},
-    {"SHA-1",   QCryptographicHash::Sha1},
-    {"SHA-256", QCryptographicHash::Sha256},
-    {"SHA-512", QCryptographicHash::Sha512},
-};
+static const char *eid(eXosip_event_type ev);
 
 // internal lock class
 class Locker final
 {
 public:
-    inline Locker(eXosip_t *ctx) :
+    explicit inline Locker(eXosip_t *ctx) :
     context(ctx) {
         Q_ASSERT(context != nullptr);
         eXosip_lock(context);
@@ -77,16 +64,17 @@ static void dump(osip_message_t *msg)
 }
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
-QObject(), active(true), connected(false), registered(false)
+QObject(), active(true), connected(false), registered(false), authenticated(false)
 {
     serverId = cred["extension"].toString();
-    serverHost = cred["server"].toString();
+    serverHost = cred["server"].toString().toUtf8();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverInit = cred["initialize"].toString();
-    serverLabel = cred["label"].toString();
-    serverSchema = "sip:";
+    serverLabel = cred["label"].toString().toUtf8();
     serverCreds = cred;
     serverCreds["initialize"] = "";
+    serverCreds["schema"] = "sip:";
+    serverSchema = "sip:";
 
     if(!serverPort)
         serverPort = 5060;
@@ -98,6 +86,7 @@ QObject(), active(true), connected(false), registered(false)
 
     if(!cert.isNull()) {
         serverSchema = "sips:";
+        serverCreds["schema"] = "sips:";
         ++tls;
     }
 
@@ -110,7 +99,7 @@ QObject(), active(true), connected(false), registered(false)
     // timer has to be connected before we move listener to it's own thread...
     // this is required for udp
     QTimer::singleShot(5000, this, &Listener::timeout);
-    QThread *thread = new QThread;
+    auto thread = new QThread;
     this->moveToThread(thread);
 
     connect(thread, &QThread::started, this, &Listener::run);
@@ -191,7 +180,7 @@ bool Listener::get_authentication(eXosip_event_t *event)
     return true;
 }
 
-void Listener::add_authentication(osip_message_t *msg)
+void Listener::add_authentication()
 {
     UString user = serverCreds["user"].toString();
     UString secret = serverCreds["secret"].toString();
@@ -199,22 +188,9 @@ void Listener::add_authentication(osip_message_t *msg)
     UString algo = serverCreds["algorithm"].toString();
     UString nonce = serverCreds["nonce"].toString();
 
-    auto digest = digests[algo];
-    char *uri = nullptr;
-    osip_uri_to_str(msg->req_uri, &uri);
-
-    UString method = msg->sip_method;
-    UString ha1 = QCryptographicHash::hash(user + ":" + realm + ":" + secret, digest).toHex().toLower();
-    UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
-    UString response = QCryptographicHash::hash(ha1 + ":" + nonce + ":" + ha2, digest).toHex().toLower();
-    UString auth = "Digest username=\"" + user +
-        "\", realm=\"" + realm +
-        "\", uri=\"" + uri +
-        "\", response=\"" + response +
-        "\", nonce=\"" + nonce +
-        "\", algorithm=\"" + algo + "\"";
-
-    osip_message_set_header(msg, AUTHORIZATION, auth);
+    Locker lock(context);
+    eXosip_add_authentication_info(context, serverId, user, secret, algo, realm);
+    authenticated = true;
 }
 
 void Listener::run()
@@ -235,14 +211,14 @@ void Listener::run()
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
     eXosip_set_option(context, EXOSIP_OPT_UDP_KEEP_ALIVE, &live);
     eXosip_set_user_agent(context, UString("SipWitchQt-client/") + PROJECT_VERSION);
-    eXosip_listen_addr(context, IPPROTO_TCP, NULL, 0, family, tls);
+    eXosip_listen_addr(context, IPPROTO_UDP, nullptr, 0, family, tls);
 
     emit starting();
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
     int error;
-    time_t now;
+    time_t now, last = 0;
 
     while(active) {
         auto event = eXosip_event_wait(context, s, ms);
@@ -275,7 +251,7 @@ void Listener::run()
                 qDebug() << "Connecting to" << server;
                 qDebug() << "Connecting as" << identity;
 
-                rid = eXosip_register_build_initial_register(context, identity, server, NULL, AGENT_EXPIRES, &msg);
+                rid = eXosip_register_build_initial_register(context, identity, server, nullptr, AGENT_EXPIRES, &msg);
                 if(msg && rid > -1)
                     send_registration(msg);
                 else {
@@ -283,8 +259,10 @@ void Listener::run()
                     break;
                 }
             }
-            else
+            else {
+                last = now;
                 eXosip_automatic_action(context);
+            }
             continue;
         }
         else {
@@ -294,6 +272,7 @@ void Listener::run()
 
         osip_header_t *header;
         osip_body_t *body;
+        QVariantHash bitmaps;
 
         switch(event->type) {
         case EXOSIP_REGISTRATION_SUCCESS:
@@ -304,6 +283,14 @@ void Listener::run()
                 active = false;
                 break;
             }
+
+            // here is start of where we become special..
+            osip_message_get_body(event->response, 0, &body);
+            if(body && body->body && body->length > 0) {
+                body->body[body->length] = 0;
+                bitmaps = parseXdp(body->body);
+            }
+
             time(&expiresTimeout);
             if(header)
                 expiresTimeout += atoi(header->hvalue);
@@ -312,23 +299,12 @@ void Listener::run()
             refreshTimeout = expiresTimeout - 30;
             registered = true;
 
-            // here is start of where we become special..
-            osip_message_get_body(event->response, 0, &body);
-            if(body && body->body) {
-                QByteArray data(body->body, static_cast<int>(body->length));
-                QJsonDocument info = QJsonDocument::fromJson(data);
-                if(!info.isEmpty()) {
-                    auto json = info.object();
-                    if(!json.isEmpty()) {
-                        auto banner = json["banner"].toString();
-                        if(!banner.isEmpty())
-                            emit changeBanner(banner);
-                    }
-                }
-            }
-
             qDebug() << "Authorizing for" << expiresTimeout - now;
             emit authorize(serverCreds);
+            if(bitmaps.count() > 0) {
+                QThread::yieldCurrentThread();
+                emit changeStatus(bitmaps);
+            }
             break;
         case EXOSIP_REGISTRATION_FAILURE:
             if(event->rid != rid)
@@ -343,15 +319,11 @@ void Listener::run()
                 emit failure(error);
                 break;
             }
-            if(get_authentication(event)) {
-                osip_message_t *msg = nullptr;
-                Locker lock(context);
-                eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
-                if(msg) {
-                    add_authentication(msg);
-                    send_registration(msg, true);
-                    break;
-                }
+
+            if(get_authentication(event) && !authenticated) {
+                add_authentication();
+                eXosip_event_free(event);
+                continue;
             }
             active = false;
             emit failure(SIP_FORBIDDEN);
@@ -362,11 +334,24 @@ void Listener::run()
                 eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);
                 break;
             }
+            else
+                dump(event->request);
             break;
         default:
+            if(event->request)
+                dump(event->request);
             break;
         }
+        if(active) {
+            Locker lock(context);
+            eXosip_default_action(context, event);
 
+            // even on high load we get automatic operations in...
+            if(last != now) {
+                eXosip_automatic_action(context);
+                last = now;
+            }
+        }
         eXosip_event_free(event);
     }
 
@@ -387,20 +372,7 @@ void Listener::run()
         else {
             switch(event->type) {
             case EXOSIP_REGISTRATION_SUCCESS:
-                registered = false;
-                break;
             case EXOSIP_REGISTRATION_FAILURE:
-                if(get_authentication(event)) {
-                    osip_message_t *msg = nullptr;
-                    Locker lock(context);
-                    eXosip_register_build_register(context, rid, 0, &msg);
-                    if(msg) {
-                        add_authentication(msg);
-                        send_registration(msg);
-                        registered = false;
-                        break;
-                    }
-                }
                 registered = false;
                 break;
             default:
@@ -415,6 +387,35 @@ void Listener::run()
     context = nullptr;
 }
 
+QVariantHash Listener::parseXdp(const UString& xdp)
+{
+    QVariantHash result;
+    auto lines = xdp.split('\n');
+    foreach(auto line, lines) {
+        if(line.left(2) == "b=") {
+            auto banner = line.mid(2);
+            if(banner != priorBanner) {
+                emit changeBanner(line.mid(2));
+                priorBanner = banner;
+            }
+        }
+        else if(line.left(2) == "d=")
+            serverCreds["display"] = line.mid(2);
+        else if(line.left(2) == "f=")
+            serverCreds["first"] = line.mid(2).toInt();
+        else if(line.left(2) == "l=")
+            serverCreds["second"] = line.mid(2).toInt();
+        else if(line.left(2) == "a=") {
+            QByteArray online = QByteArray::fromBase64(line.mid(2));
+            if(online != priorOnline) {
+                result["a"] = online;
+                priorOnline = online;
+            }
+        }
+    }
+    return result;
+}
+
 void Listener::timeout()
 {
     if(connected)
@@ -427,7 +428,6 @@ void Listener::timeout()
 void Listener::stop()
 {
     active = false;
-    QThread::msleep(650);
 }
 
 static const char *eid(eXosip_event_type ev)

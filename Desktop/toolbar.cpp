@@ -23,6 +23,7 @@
 static Ui::Toolbar ui;
 
 Toolbar *Toolbar::Instance = nullptr;
+QLineEdit *Toolbar::Search = nullptr;
 
 Toolbar::Toolbar(QWidget *parent, QToolBar *bar, QMenuBar *mp) :
 QWidget(parent)
@@ -38,9 +39,7 @@ QWidget(parent)
 
     ui.setupUi(this);
     ui.searchText->setAttribute(Qt::WA_MacShowFocusRect, false);
-
-    Desktop *desktop = Desktop::instance();
-//    connect(ui.searchText, &QLineEdit::returnPressed, main, &Desktop::reloadMatches);
+    Search = ui.searchText;
 }
 
 void Toolbar::clearSearch()

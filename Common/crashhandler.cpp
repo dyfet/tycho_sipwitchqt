@@ -17,10 +17,10 @@
 
 #include "crashhandler.hpp"
 
-#include <QtDebug>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #else
+#if defined QT_NO_DEBUG
 #include <csignal>
 #include <execinfo.h>
 #include <cxxabi.h>
@@ -28,6 +28,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 #endif
 
 static bool installed = false;
@@ -41,10 +42,6 @@ CrashHandler::CrashHandler()
 
     nextHandler = HandlerList;
     HandlerList = this;
-}
-
-CrashHandler::~CrashHandler()
-{
 }
 
 void CrashHandler::processHandlers()

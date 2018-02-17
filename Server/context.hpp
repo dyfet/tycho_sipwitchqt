@@ -59,12 +59,6 @@ public:
         return Contact(uriHost, netPort, username);
     }
 
-    inline const UString uriFrom(const UString& id = UString()) const {
-        if(id.length() == 0)
-            return schema.uri + uriAddress;
-        return schema.uri + id + "@" + uriAddress;
-    }
-
     inline const UString type() const {
         return schema.name;
     }
@@ -83,10 +77,6 @@ public:
         return localnames().contains(host);
     }
 
-    const UString hostname() const;
-    void applyHostnames(const QStringList& names, const QString& host);
-    const UString uriTo(const Contact& address) const;
-
     inline static const QList<Context::Schema> schemas() {
         return Schemas;
     }
@@ -99,9 +89,16 @@ public:
         return instanceCount > 0;
     }
 
+    const UString uriTo(const UString& id, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>()) const;
+    const UString uriFrom(const UString& id = UString()) const;
+    const UString hostname() const;
+    void applyHostnames(const QStringList& names, const QString& host);
+    const UString uriTo(const Contact& address) const;
+    bool message(const UString& from, const UString& to, const UString& route, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>());
+
     static void challenge(const Event& event, Registry *registry);
     static bool reply(const Event& event, int code);
-    static bool authorize(const Event& event, const Registry* registry, const QJsonDocument& attach);
+    static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
 

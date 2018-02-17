@@ -27,17 +27,21 @@
 #include <QSqlRecord>
 #include <QSqlQuery>
 
-class Storage : public QObject
+class Storage final : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(Storage)
 
 public:
-    Storage(const QString &key = QString(), const QVariantHash& cred = QVariantHash());
-    ~Storage();
+    explicit Storage(const QString &key = QString(), const QVariantHash& cred = QVariantHash());
+    ~Storage() final;
 
     bool isActive() {
         return db.isValid() && db.isOpen();
+    }
+
+    QSqlDatabase database() {
+        return db;
     }
 
     // if there is more than one row, that is an error...
@@ -55,15 +59,14 @@ public:
     static void remove();
     static QVariantHash next(QSqlQuery& query);
 
-private:
-    QSqlDatabase db;
-
     bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
     int runQuery(const QStringList& list);
-    QList<QVariantHash> getRecords(const QString& request, const QVariantList &parms = QVariantList());
+    QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     QSqlQuery getQuery(const QString& request, const QVariantList& parms = QVariantList());
 
+private:
+    QSqlDatabase db;
     static Storage *Instance;
 };
 

@@ -47,6 +47,12 @@ public:
 
     static void countExtensions();
 
+    static QPair<int,int> range() {
+        if(!Instance)
+            return {0, 0};
+        return {(int)Instance->firstNumber, (int)Instance->lastNumber};
+    }
+
 private:
     static const int interval = 10000;
 
@@ -61,9 +67,7 @@ private:
     QString user;
     QString pass;
 
-    int expiresUser;
-    int expiresLabeled;
-    int expiresDevice;
+    int expiresNat, expiresUdp, expiresTcp;
 
     volatile int firstNumber, lastNumber;
     int port;
@@ -77,6 +81,7 @@ private:
     bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
     int runQuery(const QStringList& list);
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
+    QSqlQuery getRecords(const QString& request, const QVariantList& parms = QVariantList());
     bool reopen();
     bool create();
     void close();

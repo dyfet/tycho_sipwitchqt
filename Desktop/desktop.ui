@@ -145,7 +145,7 @@
     <string>Contacts</string>
    </property>
    <property name="toolTip">
-    <string>Personal Contacts</string>
+    <string>Local Contacts</string>
    </property>
   </action>
   <action name="actionMenu">

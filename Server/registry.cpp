@@ -22,6 +22,11 @@
 static QMultiHash<int, Registry*> extensions;
 static QMultiHash<UString, Registry*> aliases;
 static QHash<QPair<int,UString>, Registry *> registries;
+static unsigned count[1000];
+static unsigned char online[1000 / 8];
+static bool init = false;
+static QPair<int,int> range;
+static int size = 0;
 
 static QHash<UString, QCryptographicHash::Algorithm> digests = {
     {"MD5",     QCryptographicHash::Md5},
@@ -35,23 +40,53 @@ static QHash<UString, QCryptographicHash::Algorithm> digests = {
     {"SHA-512", QCryptographicHash::Sha512},
 };
 
+static void set(int number)
+{
+    number -= range.first;
+    auto offset = number / 8;
+    auto mask = static_cast<unsigned char>(1 << (number % 8));
+    online[offset] |= mask;
+}
+
+static void unset(int number)
+{
+    number -= range.first;
+    auto offset = number / 8;
+    auto mask = static_cast<unsigned char>(1 << (number % 8));
+    online[offset] &= ~mask;
+}
+
 // We create registration records based on the initial pre-authorize
 // request, and as inactive.  The registration becomes active only when
 // it is updated by an authorized request.
 Registry::Registry(const QVariantHash &ep) :
-expires(-1), context(nullptr), endpoint(ep)
+timeout(-1), context(nullptr)
 {    
-    text = ep.value("display").toString();
-    alias = ep.value("name").toString();
+    if(!init) {
+        range = Database::range();
+        size = ((range.second - range.first) / 8) + 1;
+        memset(count, 0, sizeof(count));
+        init = true;
+    }
+
+    userDisplay = ep.value("display").toString().toUtf8();
+    userId = ep.value("user").toString();
+    userSecret = ep.value("secret").toString().toUtf8();
     number = ep.value("number").toInt();
-    label = ep.value("label").toString();
-    expires = ep.value("expires").toInt() * 1000l;
+    userLabel = ep.value("label").toString().toUtf8();
+    timeout = ep.value("expires").toInt() * 1000l;
+    userMembership = ep.value("groups").toByteArray();
+    authRealm = ep.value("realm").toString().toUtf8();
+    authDigest = ep.value("digest").toString().toUpper();
 
     updated.start();
 
-    QPair<int,UString> key(number, label);
+    if(++count[number] == 1)
+        set(number);
+
+    QPair<int,UString> key(number, userLabel);
     extensions.insert(number, this);
-    aliases.insert(alias, this);
+    aliases.insert(userId, this);
     registries.insert(key, this);
     qDebug() << "Initializing" << key;
 }
@@ -59,15 +94,20 @@ expires(-1), context(nullptr), endpoint(ep)
 Registry::~Registry()
 {
     if(!context)
-        qDebug() << "Abandoning" << number << label;
+        qDebug() << "Abandoning" << number << userLabel;
     else {
-        qDebug() << "Releasing" << number << label;
+        qDebug() << "Releasing" << number << userLabel;
         // may later kill active calls, etc...
     }
-    QPair<int,UString> key(number, label);
+
+    if(--count[number] == 0) {
+        unset(number);
+    }
+
+    QPair<int,UString> key(number, userLabel);
     registries.remove(key);
     extensions.remove(number, this);
-    aliases.remove(alias, this);
+    aliases.remove(userId, this);
 }
 
 void Registry::cleanup(void)
@@ -77,6 +117,15 @@ void Registry::cleanup(void)
         if(reg->hasExpired())
             delete reg;
     }
+}
+
+UString Registry::bits()
+{
+    if(size < 1)
+        return UString();
+
+    QByteArray result(reinterpret_cast<const char *>(&online), size);
+    return result.toBase64();
 }
 
 QList<Registry *> Registry::list()
@@ -113,55 +162,85 @@ QList<Registry *> Registry::find(const UString& target)
     return aliases.values(target);
 }
 
+UString Registry::activity() const
+{
+    unsigned char bitmap[sizeof(online)];
+    memcpy(bitmap, online, sizeof(bitmap));
+
+    if(size < 1)
+        return UString();
+
+    auto cp = &bitmap[0];
+    auto mp = reinterpret_cast<const unsigned char *>(userMembership.constData());
+    auto count = userMembership.size();
+    while(mp && count--) {
+        *(cp++) |= (*mp++);
+    }
+
+    if(size < 1)
+        return UString();
+
+    QByteArray result(reinterpret_cast<const char *>(&bitmap), size);
+    return result.toBase64();
+}
+
 // authorize registration processing
 int Registry::authorize(const Event& ev)
 {
-    UString algo = endpoint.value("digest").toString();
-    UString secret = endpoint.value("secret").toString();
     UString nonce = random.toHex().toLower();
     UString method = ev.method();
     UString uri = ev.request();
 
-    if(ev.authorizingRealm() != endpoint.value("realm").toString())
+    if(ev.authorizingRealm() != authRealm)
         return SIP_FORBIDDEN;
 
-    if(ev.authorizingId() != endpoint.value("user").toString())
+    if(ev.authorizingId() != userId)
         return SIP_FORBIDDEN;
 
-    if(ev.authorizingAlgorithm() != algo)
+    if(ev.authorizingAlgorithm() != authDigest)
         return SIP_FORBIDDEN;
 
     if(ev.authorizingOnce() != nonce)
         return SIP_FORBIDDEN;
 
-    auto digest = digests[algo];
+    auto digest = digests[authDigest];
     UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
-    UString expected = QCryptographicHash::hash(secret + ":" + nonce + ":" + ha2, digest).toHex().toLower();
+    UString expected = QCryptographicHash::hash(userSecret + ":" + nonce + ":" + ha2, digest).toHex().toLower();
 
     if(expected != ev.authorizingDigest())
         return SIP_FORBIDDEN;
 
     // de-registration
     if(ev.expires() < 1) {
-        expires = 0;
+        timeout = 0;
         qDebug() << "De-registering" << ev.number() << ev.label();
         return SIP_OK;
     }
 
-    if(!context)
-        qDebug() << "Registering" << ev.number() << ev.label() << "for" << endpoint.value("expires");
-    else
-        qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << endpoint.value("expires");
+    qDebug() << "REGISTERING WITH " << ev.did() << ev.cid() << ev.tid();
 
+    if(!context)
+        qDebug() << "Registering" << ev.number() << ev.label() << "for" << timeout / 1000l;
+    else
+        qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << timeout / 1000l;
+
+    auto protocol = ev.protocol();
+    if(protocol == "udp")
+        address = ev.source();  // for nat, use appearing origin...
+    else
+        address = ev.contact();
     context = ev.context();
-    address = ev.contact();
     updated.restart();
+
+    //some testing for core message code...
+    //context->message("system", UString::number(number), address.toString(), {{"Subject", "Hello World"}});
+
     return SIP_OK;
 }
 
 QDebug operator<<(QDebug dbg, const Registry& registry)
 {
     
-    dbg.nospace() << "Registry(" << registry.data() << ")";
+    dbg.nospace() << "Registry(" << registry.user() << registry.expires() << ")";
     return dbg.maybeSpace();
 }

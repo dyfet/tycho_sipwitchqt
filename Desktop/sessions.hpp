@@ -32,6 +32,9 @@ public:
 
 private:
     Desktop *desktop;
+
+private slots:
+    void search();
 };
 
 #endif

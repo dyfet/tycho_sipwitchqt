@@ -88,14 +88,14 @@ static QStringList sqliteTables = {
         "FOREIGN KEY (number) REFERENCES Extensions(number) "
             "ON DELETE CASCADE);",
 
-    "CREATE TABLE Teams ("
-        "name VARCHAR(32),"                     // group tied to
-        "member VARCHAR(32),"                     // group member
+    "CREATE TABLE Groups ("
+        "pilot INTEGER,"                        // group tied to
+        "member INTEGER,"                       // group member extension
         "priority INTEGER DEFAULT -1,"          // coverage priority
-        "CONSTRAINT Grouping PRIMARY KEY (name, member),"
-        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+        "CONSTRAINT Grouping PRIMARY KEY (pilot, member),"
+        "FOREIGN KEY (pilot) REFERENCES Extension(number) "
             "ON DELETE CASCADE,"
-        "FOREIGN KEY (member) REFERENCES Authorize(name) "
+        "FOREIGN KEY (member) REFERENCES Extensions(number) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Providers ("
@@ -146,10 +146,14 @@ static QStringList sqlitePreload = {
         "VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');",
     "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
         "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','LOCAL');",
+    "INSERT INTO Authorize(name, fullname, type, access) "
+        "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
     "INSERT INTO Extensions(number, name) VALUES(101, 'test1');",
     "INSERT INTO Extensions(number, name) VALUES(102, 'test2');",
     "INSERT INTO Endpoints(number) VALUES(101);",
     "INSERT INTO Endpoints(number) VALUES(102);",
+    "INSERT INTO Groups(pilot, member) VALUES(100, 101);",
+    "INSERT INTO Groups(pilot, member) VALUES(100, 102);",
 };
 #else
 static QStringList sqlitePreload = {

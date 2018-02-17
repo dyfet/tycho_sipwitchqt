@@ -160,13 +160,17 @@ void Manager::refreshRegistration(const Event &ev)
         else {
             auto result = reg->authorize(ev);
             if(result == SIP_OK) {
-                QJsonDocument body;
+                UString xdp;
                 if(ev.label() != "NONE") {
-                    body.setObject({
-                        {"banner", QString(ServerBanner)},
-                    });
+                    auto range = Database::range();
+                    xdp += "v=0\n";
+                    xdp += "b=" + ServerBanner + "\n";
+                    xdp += "d=" + reg->display() + "\n";
+                    xdp += "f=" + UString::number(range.first) + "\n";
+                    xdp += "l=" + UString::number(range.second) + "\n";
+                    xdp += "a=" + reg->activity() + "\n";
                 }
-                Context::authorize(ev, reg, body);
+                Context::authorize(ev, reg, xdp);
             }
             else
                 Context::reply(ev, result);

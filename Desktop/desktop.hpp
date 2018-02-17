@@ -21,6 +21,7 @@
 #include "../Common/compiler.hpp"
 #include "../Connect/control.hpp"
 #include "../Connect/listener.hpp"
+#include "../Connect/connector.hpp"
 #include "../Connect/storage.hpp"
 #include "toolbar.hpp"
 #include "statusbar.hpp"
@@ -67,7 +68,7 @@ public:
     virtual ~Desktop();
 
     bool isConnected() const {
-        return connected;
+        return connector != nullptr;
     }
 
     bool isActive() const {
@@ -107,9 +108,8 @@ public:
     void statusMessage(const QString& msg, int timeout = 5000);
     void clearMessage();
 
+    bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
-
-    QWidget *extendToolbar(QToolBar *bar, QMenuBar *menu = nullptr);
 
     inline static Desktop *instance() {
         return Instance;
@@ -130,6 +130,7 @@ private:
     Options *options;
     Control *control;
     Listener *listener;
+    Connector *connector;
     Storage *storage;
     Toolbar *toolbar;
     Statusbar *statusbar;
@@ -137,7 +138,8 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenuBar *appBar;
     QMenu *trayMenu, *dockMenu, *appMenu, *popup;
-    bool restart_flag, connected, front;
+    bool restart_flag, front;
+    time_t fronted;
     QVariantHash currentCredentials;
     QString appearance;
     QDialog *dialog;
@@ -145,7 +147,6 @@ private:
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
 
-    bool isCurrent(const QWidget *widget) const;
     void listen(const QVariantHash &cred);
     void setState(state_t state);
 
@@ -154,7 +155,8 @@ private:
     static state_t State;
 
 signals:
-    void online(bool state);
+    void changeConnector(Connector *connector);
+    void changeStorage(Storage *state);
 
 public slots:
     void initial(void);

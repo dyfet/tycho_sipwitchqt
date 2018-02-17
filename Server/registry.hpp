@@ -36,12 +36,24 @@ public:
     Registry(const QVariantHash& ep);
     ~Registry();
 
-    inline const QVariantHash data() const {
-        return endpoint;
+    const UString display() const {
+        return userDisplay;
     }
 
-    const UString display() const {
-        return text;
+    const UString user() const {
+        return userId;
+    }
+
+    const UString realm() const {
+        return authRealm;
+    }
+
+    const UString digest() const {
+        return authDigest;
+    }
+
+    int expires() const {
+        return static_cast<int>(timeout / 1000l);
     }
 
     inline const UString host() const {
@@ -65,7 +77,7 @@ public:
     }
 
     bool hasExpired() const {
-        return updated.hasExpired(expires * 1000l);
+        return updated.hasExpired(timeout);
     }
 
     bool isActive() const {
@@ -77,29 +89,30 @@ public:
     }
 
     void setNounce(const QByteArray& value) {
+        prior = random;
         random = value;
     }
 
+    UString activity(void) const;
     int authorize(const Event& event);
 
     static Registry *find(const Event& event);      // to find registration
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
+    static UString bits();
 
     static void cleanup();
 
 private:
-    UString alias, label;
-    UString text, agent;
-    UString expected;
+    QByteArray userMembership;
+    UString userId, userLabel, userSecret, authRealm, authDigest;
+    UString userDisplay, userAgent;
     int number, rid;
-    qint64 expires;                     // time till expires
-    QByteArray random;                  // nounce value
+    qint64 timeout;                     // time till expires
+    QByteArray random, prior;           // nounce value
     Context *context;                   // context of endpoint
     Contact address;                    // contact record for endpoint
-    Contact route;                      // our return route to endpoint
     QElapsedTimer updated;              // when the record was updated
-    QVariantHash endpoint;              // extension + group union
     QList<LocalSegment *> calls;        // local calls on this endpoint
     QList<UString> allows;
 };

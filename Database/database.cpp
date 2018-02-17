@@ -61,9 +61,9 @@ QObject()
 {
     firstNumber = lastNumber = -1;
 
-    expiresUser = 600;
-    expiresLabeled = 300;
-    expiresDevice = 1800;
+    expiresNat = 80;
+    expiresUdp = 300;
+    expiresTcp = 600;
 
     moveToThread(Server::createThread("database", order));
     timer.moveToThread(thread());
@@ -147,6 +147,24 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
         return QSqlRecord();
 
     return query.record();
+}
+
+QSqlQuery Database::getRecords(const QString& request, const QVariantList &parms)
+{
+    if(!reopen())
+        return QSqlQuery();
+
+    QSqlQuery query(db);
+    query.prepare(request);
+    int count = -1;
+    qDebug() << "Query " << request << " LIST " << parms;
+    while(++count < parms.count())
+        query.bindValue(count, parms.at(count));
+
+    if(!query.exec())
+        return QSqlQuery();
+
+    return query;
 }
 
 void Database::init(unsigned order)

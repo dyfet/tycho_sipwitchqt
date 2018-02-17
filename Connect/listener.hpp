@@ -26,17 +26,15 @@
 #include <QSslCertificate>
 #include <QTimer>
 
-#define EVENT_TIMER 500l    // 500ms...
 #define AGENT_ALLOWS "INVITE,ACK,OPTIONS,BYE,CANCEL,SUBSCRIBE,NOTIFY,REFER,MESSAGE,INFO,PING"
 #define AGENT_EXPIRES 1800
 
 class Listener final : public QObject
 {
-	Q_DISABLE_COPY(Listener)
-	Q_OBJECT
-
+    Q_DISABLE_COPY(Listener)
+    Q_OBJECT
 public:
-    Listener(const QVariantHash& credentials, const QSslCertificate& cert = QSslCertificate());
+    explicit Listener(const QVariantHash& credentials, const QSslCertificate& cert = QSslCertificate());
 
     inline void start() {
         thread()->start(QThread::HighPriority);
@@ -47,11 +45,16 @@ public:
     void stop();
 
 private:
-    volatile bool active, connected, registered;
+    volatile bool active, connected, registered, authenticated;
 
     void send_registration(osip_message_t *msg, bool auth = false);
     bool get_authentication(eXosip_event_t *event);
-    void add_authentication(osip_message_t *msg);
+    void add_authentication();
+
+    QVariantHash parseXdp(const UString& text);
+
+    QByteArray priorBanner;
+    QByteArray priorOnline;
 
     QVariantHash serverCreds;
     UString serverInit;
@@ -60,12 +63,14 @@ private:
     UString serverSchema;
     UString serverLabel;
     quint16 serverPort;
+
     eXosip_t *context;
     time_t expiresTimeout, refreshTimeout;
     int family, tls;
     int rid;
 
 signals:
+    void changeStatus(const QVariantHash& status);
     void changeBanner(const QString& banner);
     void authorize(const QVariantHash& creds);
     void failure(int code);

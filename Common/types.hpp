@@ -31,11 +31,11 @@ public:
     UString(const QByteArray& ref) noexcept : QByteArray(ref) {}
     UString(const QString& ref) noexcept : QByteArray(ref.toUtf8()) {}
     UString(const std::string& ref) noexcept : QByteArray(ref.c_str()) {}
-    UString(const UString& ref) noexcept : QByteArray(ref) {}
+    UString(const char ch) noexcept : QByteArray() { append(ch); }
     UString(UString&& from) noexcept: QByteArray(std::move(from)) {}
-    explicit UString(char ch) noexcept : QByteArray() { append(ch); }
+    UString(const UString& ref) noexcept : QByteArray(ref) {}
 
-    operator std::string() const {
+    explicit operator std::string() const {
         return std::string(constData());
     }
 
@@ -61,6 +61,7 @@ public:
     bool isLabel() const;
     UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
+    UString escape() const;
     bool isQuoted(const char *qc = "\"") const;
 
     static UString number(int num, int base = 10) {

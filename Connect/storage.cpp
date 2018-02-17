@@ -16,10 +16,7 @@
  */
 
 #include "storage.hpp"
-#include <QStandardPaths>
 #include <QFileInfo>
-#include <QFile>
-#include <QSqlQuery>
 #include <QDebug>
 
 #ifdef DESKTOP_PREFIX
@@ -30,6 +27,8 @@ static QString storagePath()
 }
 
 #else
+
+#include <QStandardPaths>
 
 static QString storagePath()
 {
@@ -90,15 +89,15 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
 
         "CREATE TABLE Contacts ("
             "uid INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "extension INTEGER DEFAULT 0,"
-            "ordering INTEGER DEFAULT 5,"
+            "extension INTEGER DEFAULT -1,"
+            "ordering CHAR(1) DEFAULT '5',"         // ordering lead
+            "sequence INTEGER DEFAULT 0,"           // helps with timestamp ordering
+            "type VARCHAR(8) DEFAULT 'USER',"
             "uri VARCHAR(128),"
-            "display VARCHAR(64),"
-            "created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-            "last DATETIME DEFAULT 0);",
+            "display VARCHAR(64) DEFAULT NULL,"
+            "last DATETIME DEFAULT CURRENT_TIMESTAMP);",
         "CREATE UNIQUE INDEX People ON Contacts(uri);",
-        "CREATE UNIQUE INDEX Listing ON Contacts(ordering, last, display) WHERE last > 0;",
-        "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > 0;",
+        "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > -1;",
 
         "CREATE TABLE Messages ("
             "msgfrom INTEGER,"                      // origin, team, group
@@ -168,13 +167,12 @@ QVariantHash Storage::getRecord(const QString& request, const QVariantList& parm
     return next(query);
 }
 
-QList<QVariantHash> Storage::getRecords(const QString& request, const QVariantList& parms)
+QSqlQuery Storage::getRecords(const QString& request, const QVariantList& parms)
 {
-    QList<QVariantHash> list;
     QVariantHash item;
 
     if(!db.isOpen())
-        return list;
+        return QSqlQuery();
 
     QSqlQuery query(db);
     query.prepare(request);
@@ -184,19 +182,9 @@ QList<QVariantHash> Storage::getRecords(const QString& request, const QVariantLi
         query.bindValue(count, parms.at(count));
 
     if(!query.exec())
-        return list;
+        return QSqlQuery();
 
-    while(query.next()) {
-        auto current = query.record();
-        int pos = 0;
-        while(pos < current.count()) {
-            item[current.fieldName(pos)] = current.value(pos);
-            ++pos;
-        }
-        list << item;
-    }
-
-    return list;
+    return query;
 }
 
 int Storage::runQuery(const QStringList& list)
@@ -231,7 +219,7 @@ bool Storage::runQuery(const QString &request, const QVariantList& parms)
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
-    if(query.exec() != true) {
+    if(!query.exec()) {
         qWarning() << "Query failed; " << query.lastQuery();
         return false;
     }

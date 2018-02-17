@@ -90,7 +90,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     eXosip_set_user_agent(context, UString("SipWitchQt-server/") + PROJECT_VERSION);
 
     auto proto = addr.protocol();
-    int ipv6 = 0, rport = 1, dns = 2, live = 17000;
+    int ipv6 = 0, rport = 1, dns = 2;
 #ifdef AF_INET6
     if(proto == QAbstractSocket::IPv6Protocol || addr == QHostAddress::AnyIPv6) {
         netFamily = AF_INET6;
@@ -100,7 +100,6 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
     eXosip_set_option(context, EXOSIP_OPT_ENABLE_IPV6, &ipv6);
     eXosip_set_option(context, EXOSIP_OPT_USE_RPORT, &rport);
     eXosip_set_option(context, EXOSIP_OPT_DNS_CAPABILITIES, &dns);
-    eXosip_set_option(context, EXOSIP_OPT_UDP_KEEP_ALIVE, &live);
 
     if(!addr.isNull())
         netAddress = addr.toString().toUtf8();
@@ -198,21 +197,32 @@ void Context::run()
         int s = EVENT_TIMER / 1000l;
         int ms = EVENT_TIMER % 1000l;
         Event event(eXosip_event_wait(context, s, ms), this);
+
         time(&currentEvent);
+
+        if(!event) {
+            priorEvent = currentEvent;
+            ContextLocker lock(context);    // scope lock automatic block...
+            eXosip_automatic_action(context);
+            continue;
+        }
+
+        // make sure even on high load we call automatic ops once a second
         if(currentEvent != priorEvent) {
             priorEvent = currentEvent;
             ContextLocker lock(context);    // scope lock automatic block...
             eXosip_automatic_action(context);
         }
-        if(!event)
-            continue;
 
         // skip extra code in event loop if we don't need it...
         if(Server::verbose())
             qDebug() << event;
 
-        if(Server::state() == Server::UP && process(event))
+        if(Server::state() == Server::UP && process(event)) {
+            ContextLocker lock(context);
+            eXosip_default_action(context, event.event());
             continue;
+        }
     }
     debug() << "Exiting " << objectName();
     emit finished();
@@ -231,16 +241,55 @@ bool Context::process(const Event& ev)
         }
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
-                return false;
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_REGISTER(ev);
         }
-        else
-            return false;
         break;
     default:
-        return false;
+        break;
     }
 
+    return true;
+}
+
+const UString Context::uriFrom(const UString& id) const
+{
+    if(id.indexOf('@') > 0)
+        return id;
+    if(id.length() == 0)
+        return schema.uri + uriAddress;
+    return schema.uri + id + "@" + uriAddress;
+}
+
+const UString Context::uriTo(const UString& id, const QList<QPair<UString, UString>> args) const
+{
+    UString to = id;
+    UString sep = "?";
+    if(id.indexOf('@') < 0) {
+        if(id.length() == 0)
+            to = schema.uri + uriAddress;
+        else
+            to = schema.uri + id + "@" + uriAddress;
+    }
+    to = "<" + to;
+    foreach(auto arg, args) {
+        to += sep + arg.first + "=" + arg.second.escape();
+        sep = "&";
+    }
+    return to + ">";
+}
+
+bool Context::message(const UString& from, const UString& to, const UString& route, const QList<QPair<UString,UString>> args)
+{
+    osip_message_t *msg = nullptr;
+    ContextLocker lock(context);
+    eXosip_message_build_request (context, &msg,
+          "MESSAGE", uriTo(to, args), UString("\"Test User\" <") + uriFrom(from) + ">", schema.uri + route);
+    qDebug() << uriTo(to, args) << uriFrom(from);
+    //dump(msg);
+    if(!msg)
+        return false;
+    eXosip_message_send_request(context, msg);
     return true;
 }
 
@@ -251,17 +300,16 @@ void Context::challenge(const Event &event, Registry* registry)
     auto ctx = event.context();
     auto context = ctx->context;
     auto tid = event.tid();
-    auto data = registry->data();
 
     eXosip_generate_random(buf, sizeof(buf));
     QByteArray random(buf, sizeof(buf));
 
     UString nonce = random.toHex().toLower();
-    UString realm = data.value("realm").toString().toUtf8();
-    UString digest = data.value("digest").toString().toUtf8().toUpper();
-    UString user = data.value("user").toString().toUtf8();
+    UString realm = registry->realm();
+    UString digest = registry->digest();
+    UString user = registry->user();
     UString challenge = "Digest realm=" + realm.quote() + ", nonce=" + nonce.quote() + ", algorithm=" + digest.quote();
-    UString expires = data.value("expires").toString();
+    UString expires = UString::number(registry->expires());
     registry->setNounce(random);
 
     ContextLocker lock(context);
@@ -276,13 +324,12 @@ void Context::challenge(const Event &event, Registry* registry)
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
 }
 
-bool Context::authorize(const Event& event, const Registry* registry, const QJsonDocument& attach)
+bool Context::authorize(const Event& event, const Registry* registry, const UString& xdp)
 {
     osip_message_t *msg = nullptr;
     auto context = event.context()->context;
     auto tid = event.tid();
-    auto data = registry->data();
-    UString expires = data.value("expires").toString();
+    UString expires = UString::number(registry->expires());
 
     ContextLocker lock(context);
 
@@ -291,10 +338,9 @@ bool Context::authorize(const Event& event, const Registry* registry, const QJso
         return false;
 
     osip_message_set_header(msg, "Expires", expires);
-    if(!attach.isEmpty()) {
-        auto body = attach.toJson(QJsonDocument::Compact);
-        osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
-        osip_message_set_content_type(msg, "application/json");
+    if(!xdp.isEmpty()) {
+        osip_message_set_body(msg, xdp.constData(), static_cast<size_t>(xdp.length()));
+        osip_message_set_content_type(msg, "application/xdp");
     }
 
     eXosip_message_send_answer(context, tid, SIP_OK, msg);

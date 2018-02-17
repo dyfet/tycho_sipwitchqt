@@ -17,10 +17,12 @@
 
 #include "control.hpp"
 
-#include <QDebug>
 #include <QLocalSocket>
 #include <QDataStream>
+
+#ifndef DESKTOP_PREFIX
 #include <QStandardPaths>
+#endif
 
 Control *Control::Instance = nullptr;
 

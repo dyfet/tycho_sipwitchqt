@@ -30,9 +30,18 @@ QWidget(), desktop(control)
     ui.setupUi(static_cast<QWidget *>(this));
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.messages->setAttribute(Qt::WA_MacShowFocusRect, false);
+
+    connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Sessions::search);
 }
 
 void Sessions::enter()
 {
+    Toolbar::search()->setEnabled(true);
     ui.input->setFocus();
+}
+
+void Sessions::search()
+{
+    if(!desktop->isCurrent(this))
+        return;
 }

@@ -66,6 +66,31 @@ bool UString::isQuoted(const char *qc) const
 
 }
 
+UString UString::escape() const
+{
+    UString result;
+    for(int pos = 0; pos < length(); ++pos) {
+        auto ch = at(pos);
+        if(ch == ' ')
+            result += "%20";
+        else if(ch == '&')
+            result += "%26";
+        else if(ch == '<')
+            result += "%3c";
+        else if(ch == '>')
+            result += "%3e";
+        else if(ch == '@')
+            result += "%40";
+        else if(ch == '%')
+            result += "%25";
+        else if(ch == ':')
+            result += "%3a";
+        else
+            result += ch;
+    }
+    return result;
+}
+
 UString UString::unquote(const char *qc) const
 {
     char q1[2], q2[2];

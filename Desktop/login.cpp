@@ -47,6 +47,8 @@ QWidget(), desktop(control)
 
 void Login::enter()
 {
+    Toolbar::search()->setEnabled(false);
+
     ui.secret->setText("");
     ui.identity->setText("");
     ui.identity->setFocus();
@@ -74,21 +76,23 @@ QVariantHash Login::credentials()
     UString ext, label;
 
     if(!ui.secret->text().isEmpty())
-        cred["secret"] = ui.secret->text();
+        cred["secret"] = ui.secret->text().toUtf8();
 
     if(uri && uri.host().toLower() != "none") {
-        cred["server"] = uri.host();
+        cred["server"] = QString(uri.host());
         cred["port"] = uri.port();
         if(!uri.user().isEmpty())
             ext = uri.user();
     }
 
     cred["realm"] = cred["type"] = "unknown";
-    cred["label"] = label = ui.labels->currentText().toLower();
+    cred["label"] = ui.labels->currentText().toLower();
     cred["user"] = ext;
     cred["display"] = "";
     cred["extension"] = ext.toInt();
     cred["initialize"] = "label";
+
+    label = (ui.labels->currentText().toLower()).toUtf8();
 
     qDebug() << "LOGIN CREDENTIALS" << cred;
 

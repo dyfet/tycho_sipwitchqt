@@ -117,7 +117,7 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    QString user = extension.value("name").toString();
+    auto user = extension.value("name").toString();
     auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
     if(authorize.count() < 1) {
         error() << "Extension " << number << " has no authorization";
@@ -125,26 +125,51 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    QString type = authorize.value("type").toString();
+    auto type = authorize.value("type").toString();
     if(type != "USER" && type != "DEVICE") {
         warning() << "Cannot authorize " << number << " as a " << type.toLower();
         Context::reply(event, SIP_FORBIDDEN);
         return;
     }
 
-    if(type == "DEVICE" && expires > database->expiresDevice)
-        expires = database->expiresDevice;
-    else if(label != "NONE" && expires > database->expiresLabeled)
-        expires = database->expiresLabeled;
-    else if(expires > database->expiresUser)
-        expires = database->expiresUser;
+    auto protocol = event.protocol();
+    if(label != "NONE" && protocol == "udp" && expires > database->expiresNat)
+        expires = database->expiresNat;
+    else if(protocol == "udp" && expires > database->expiresUdp)
+        expires = database->expiresUdp;
+    else if(expires > database->expiresTcp)
+        expires = database->expiresTcp;
 
+    unsigned char members[1000 / 8];
+    memset(members, 0, sizeof(members));
+    auto groups = getRecords("SELECT pilot FROM Groups WHERE member=?", {number});
+    while(groups.next()) {
+        auto member = groups.record();
+        if(member.count() == 1) {
+            auto pilot = member.value("pilot").toInt();
+            if(pilot < database->firstNumber || pilot > database->lastNumber)
+                continue;
+            pilot -= database->firstNumber;
+            auto mask = static_cast<unsigned char>(1 << (pilot % 8));
+            members[pilot / 8] |= mask;
+        }
+    }
+
+    auto display = extension.value("display").toString();
+    if(display.isEmpty())
+        display = authorize.value("fullname").toString();
+    if(display.isEmpty())
+        display = user;
+
+    QByteArray membership(reinterpret_cast<char *>(&members), ((database->lastNumber - database->firstNumber) / 8) + 1);
     QVariantHash reply = {
         {"realm", authorize.value("realm")},
         {"user", user},
+        {"display", display},
         {"digest", authorize.value("digest")},
         {"secret", authorize.value("secret")},
         {"number", number},
+        {"groups", membership},
         {"label", label},
         {"expires", expires},
     };
@@ -226,6 +251,25 @@ bool Authorize::runQuery(const QString &request, const QVariantList &parms)
     }
     else
         return database->runQuery(request, parms);
+}
+
+QSqlQuery Authorize::getRecords(const QString& request, const QVariantList& parms)
+{
+    if(db == &local) {
+        QSqlQuery query(local);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Query " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(!query.exec())
+            return QSqlQuery();
+
+        return query;
+    }
+    else
+        return database->getRecords(request, parms);
 }
 
 QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parms)

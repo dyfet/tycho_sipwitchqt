@@ -18,20 +18,130 @@
 #ifndef PHONEBOOK_HPP_
 #define	PHONEBOOK_HPP_
 
+#include "../Common/types.hpp"
+#include "../Connect/connector.hpp"
+
 #include <QWidget>
 #include <QVariantHash>
+#include <QAbstractListModel>
+#include <QStyledItemDelegate>
+#include <QSqlRecord>
+#include <QDateTime>
+#include <QModelIndex>
 
 class Desktop;
+class Storage;
+class LocalContacts;
+class LocalDelegate;
 
-class Phonebook : public QWidget
+class ContactItem final
+{
+    friend LocalDelegate;
+
+public:
+    ContactItem(const QSqlRecord& record);
+
+public:
+    int number() const {
+        return extensionNumber;
+    }
+
+    UString display() const {
+        return displayName;
+    }
+
+    UString type() const {
+        return contactType;
+    }
+
+    UString order() const {
+        return contactOrder;
+    }
+
+    UString uri() const {
+        return contactUri;
+    }
+
+    UString timestamp() const {
+        return contactTimestamp;
+    }
+
+    QDateTime updated() const {
+        return contactUpdated;
+    }
+
+    bool isExtension() const {
+        return extensionNumber > -1;
+    }
+
+    QString filter() const {
+        return contactFilter;
+    }
+
+    bool setOnline(bool flag) {
+        std::swap(flag, online);
+        return flag;
+    }
+
+    static void purge();
+
+private:
+    ContactItem *prior;
+    UString displayName, contactOrder, contactUri, contactTimestamp, contactType;
+    QString contactFilter, textDisplay, textNumber;
+    QDateTime contactUpdated;
+    int extensionNumber;
+    int uid;
+    bool online;
+
+    static ContactItem *list;
+};
+
+class LocalContacts final : public QAbstractListModel
+{
+    friend class LocalDelegate;
+
+public:
+    LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
+    void setFilter(const UString& filter);
+    void setOffline();
+
+private:    
+    int rowCount(const QModelIndex& parent) const final;
+    QVariant data(const QModelIndex& index, int role) const final;
+};
+
+class LocalDelegate final : public QStyledItemDelegate
+{
+public:
+    LocalDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+
+private:
+    QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    void paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+};
+
+class Phonebook final : public QWidget
 {
 public:
     Phonebook(Desktop *main);
+    ~Phonebook() = default;
 
     void enter();
 
 private:
     Desktop *desktop;
+    LocalDelegate *localPainter;
+    LocalContacts *localModel;
+    Connector *connector;
+
+private slots:
+    void search();
+    void filter(const QString& selected);
+    void select(const QModelIndex& index);
+    
+    void changeConnector(Connector *connector);
+    void changeStorage(Storage *storage);
 };
 
 #endif

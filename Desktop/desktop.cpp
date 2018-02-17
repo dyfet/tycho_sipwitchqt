@@ -55,8 +55,9 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
-    connected = false;
+    connector = nullptr;
     front = true;
+    fronted = 0;
 
     if(reset) {
         Storage::remove();
@@ -164,6 +165,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setWindowTitle("Welcome to SipWitchQt " PROJECT_VERSION);
     if(Storage::exists()) {
         storage = new Storage("");
+        emit changeStorage(storage);
         showSessions();
         restoreGeometry(settings.value("geometry").toByteArray());
         show();                             // FIXME: hide
@@ -206,12 +208,18 @@ QMenu *Desktop::createPopupMenu()
 
 void Desktop::shutdown()
 {
+    if(connector) {
+        connector->stop();
+        connector = nullptr;
+    }
+
     if(listener) {
         listener->stop();
         listener = nullptr;
     }
 
     if(storage) {
+        emit changeStorage(nullptr);
         delete storage;
         storage = nullptr;
     }
@@ -270,6 +278,7 @@ void Desktop::closeReset()
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
+    emit changeStorage(nullptr);
     closeDialog();
     warningMessage(tr("Resetting database..."));
     offline();
@@ -337,6 +346,7 @@ void Desktop::appState(Qt::ApplicationState state)
     switch(state) {
     case Qt::ApplicationActive:
         front = true;
+        time(&fronted);
         break;
     case Qt::ApplicationHidden:
     case Qt::ApplicationInactive:
@@ -380,7 +390,7 @@ void Desktop::dockClicked()
 
 void Desktop::trayAway()
 {
-    if(connected) {
+    if(connector) {
         statusMessage(tr("disconnect"));
         offline();
     }
@@ -390,6 +400,8 @@ void Desktop::trayAway()
 
 void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
 {
+    time_t now;
+    time(&now);
     switch(reason) {
     case QSystemTrayIcon::MiddleClick:
 #ifndef Q_OS_MAC
@@ -400,7 +412,7 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
             break;
         if(isHidden())
             show();
-        else if(front)
+        else if(front && now > fronted + 1)
             hide();
         break;
     default:
@@ -432,6 +444,11 @@ void Desktop::failed(int error_code)
         if(isLogin())
             login->badPassword();
         break;
+    case SIP_METHOD_NOT_ALLOWED:
+        errorMessage(tr("Registration not allowed"));
+        if(isLogin())
+            login->badIdentity();
+        break;
     case SIP_INTERNAL_SERVER_ERROR:
     case 666:
         errorMessage(tr("Cannot reach server"));
@@ -457,10 +474,12 @@ void Desktop::offline()
     ui.trayAway->setText(tr("Connect"));
     ui.trayAway->setEnabled(!isLogin());
 
-    if(connected) {
-        connected = false;
-        emit online(connected);
+    if(connector) {
+        connector->stop();
+        connector = nullptr;
+        emit changeConnector(nullptr);
     }
+    listener->stop();
     listener = nullptr;
     setState(OFFLINE);
 }
@@ -496,19 +515,30 @@ void Desktop::authorized(const QVariantHash& creds)
     // apply or update credentials only after successfull authorization
     if(storage)
         storage->updateCredentials(creds);
-    else
+    else {
+        auto server = creds["server"].toString().toUtf8();
+        auto schema = creds["schema"].toString().toUtf8();
+        auto uri = QString(UString::uri(schema, creds["extension"].toString(), server, static_cast<quint16>(creds["port"].toInt())));
+        auto opr = QString(UString::uri(schema, "0", server, static_cast<quint16>(creds["port"].toInt())));
         storage = new Storage("", creds);
+        storage->runQuery("INSERT INTO Contacts(extension, display, uri, ordering) "
+                          "VALUES(?,?,?,'0');", {creds["extension"], creds["display"], uri});
+        storage->runQuery("INSERT INTO Contacts(extension, display, ordering, type, uri) "
+                          "VALUES(0,'Operators','6','GROUP',?);", {opr});
+        emit changeStorage(storage);
+    }
 
     // this is how we should get out of first time login screen...
     if(isLogin())
         showSessions();
 
-    if(!connected) {
+    if(!connector) {
         ui.trayAway->setText(tr("Away"));
         ui.trayAway->setEnabled(true);
         ui.appPreferences->setEnabled(true);
-        connected = true;
-        emit online(connected);
+        connector = new Connector(creds);
+        connector->start();
+        emit changeConnector(connector);
         statusMessage(tr("online"));
     }
     setState(ONLINE);

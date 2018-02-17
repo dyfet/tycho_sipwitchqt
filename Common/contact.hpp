@@ -35,8 +35,8 @@ class Contact final
 public:
     Contact(const UString& address, quint16 port, const UString& user = UString(), int duration = -1) noexcept;
     Contact(const QString& uri, QString server = QString()) noexcept;
-    Contact(osip_contact_t *contact) noexcept;
-    Contact(osip_uri_t *uri) noexcept;
+    explicit Contact(osip_contact_t *contact) noexcept;
+    Contact(const osip_uri_t *uri) noexcept;
     Contact() noexcept;
     Contact(const Contact& from) noexcept;
 
@@ -47,7 +47,7 @@ public:
 
     Contact& operator=(const Contact& from);
 
-    operator bool() const {
+    explicit operator bool() const {
         return hostPort != 0 && !hostName.isEmpty();
     }
 
