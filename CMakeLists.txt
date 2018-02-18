@@ -38,6 +38,12 @@ if(WIN32)
     set(system_libs ssleay32 libeay32 advapi32 user32 crypt32 gdi32 ws2_32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
+
+    if(BOOTSTRAP_PREFIX)
+        set(BOOTSTRAP_PATH "${BOOTSTRAP_PREFIX}/bin")
+        include_directories("${BOOTSTRAP_PREFIX}/include")
+        link_directories("${BOOTSTRAP_PREFIX}/lib")
+    endif()
 elseif(APPLE)
     if(NOT EXISTS "/usr/local/opt/libexosip")
         message(FATAL_ERROR "*** requires: brew install libexosip")
@@ -173,6 +179,25 @@ if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.png" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
+endif()
+
+# platform specific post link
+
+if(BOOTSTRAP_PATH AND WIN32)
+    add_custom_command(TARGET server-app
+        POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libeay32.dll" .
+    )
+    add_custom_command(TARGET desktop-app
+        POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libeay32.dll" .
+    )
 endif()
 
 # staging releases; we do not stage debug because it uses testdata...
