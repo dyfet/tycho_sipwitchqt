@@ -21,19 +21,17 @@
 #include <QPainter>
 
 static Ui::PhonebookWindow ui;
-static int highest = -1;
+static int highest = -1, me = -1;
 static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
 
 ContactItem *ContactItem::list = nullptr;
+QList<ContactItem *> ContactItem::users;
+QList<ContactItem *> ContactItem::groups;
 
-ContactItem::ContactItem(const QSqlRecord& record) :
-online(false)
+ContactItem::ContactItem(const QSqlRecord& record)
 {
-    auto ordMark = UString::number(record.value("order").toInt());
-    auto ordSequence = record.value("sequence").toInt();
-
     prior = list;
     list = this;
 
@@ -43,12 +41,24 @@ online(false)
     contactType = record.value("type").toString();
     contactUri = record.value("uri").toString().toUtf8();
     displayName = record.value("display").toString().toUtf8();
-    contactOrder = ordMark + contactTimestamp + UString::number(ordSequence);
-    textNumber = QString::number(extensionNumber);
+    textNumber = record.value("dialing").toString();
     textDisplay = record.value("display").toString();
     uid = record.value("uid").toInt();
 
-    qDebug() << "EXT" << extensionNumber << "NAME" << displayName << "URI" << contactUri << "TYPE" << contactType;
+    // the subset of contacts that have active sessions at load time...
+    if(record.value("last").toULongLong() > 0) {
+        if(contactType == "GROUP") {
+            groups << this;
+        }
+        else if(me != extensionNumber) {
+            users << this;
+        }
+    }
+
+    if(contactType == "SYSTEM" && extensionNumber == 0)
+        groups.insert(0, this);
+
+    qDebug() << "NUMBER" << textNumber << "NAME" << displayName << "URI" << contactUri << "TYPE" << contactType << "DATE" << record.value("last").toULongLong();
 
     if(!isExtension() || extensionNumber > 999) {
         contactType = "FOREIGN";
@@ -72,8 +82,11 @@ void ContactItem::purge()
         delete list;
         list = next;
     }
+    groups.clear();
+    users.clear();
     memset(local, 0, sizeof(local));
     highest = -1;
+    me = -1;
     list = nullptr;
 }
 
@@ -104,20 +117,6 @@ void LocalContacts::setFilter(const UString& filter)
     emit layoutAboutToBeChanged();
     searching = filter.toLower();
     emit layoutChanged();
-}
-
-void LocalContacts::setOffline(void)
-{
-    if(highest < 0)
-        return;
-
-    for(int row = 0; row <= highest; ++row) {
-        auto item = local[row];
-        if(!item)
-            continue;
-        if(item->setOnline(false))
-            emit dataChanged(index(row), index(row));
-    }
 }
 
 QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -220,11 +219,18 @@ void Phonebook::select(const QModelIndex& index)
     ui.contact->setVisible(true);
 }
 
+ContactItem *Phonebook::self()
+{
+    if(me < 1)
+        return nullptr;
+
+    return local[me];
+}
+
 void Phonebook::changeConnector(Connector *connected)
 {
     connector = connected;
-    if(!connected && localModel)
-        localModel->setOffline();
+    // connects to be added for contact events...
 }
 
 void Phonebook::changeStorage(Storage *storage)
@@ -239,9 +245,12 @@ void Phonebook::changeStorage(Storage *storage)
     if(storage) {
         memset(local, 0, sizeof(local));
         highest = -1;
-        auto query = storage->getRecords("SELECT * FROM Contacts");
+        auto creds = storage->credentials();
+        me = creds["extension"].toInt();
+        // load contacts in last update time order...
+        auto query = storage->getRecords("SELECT * FROM Contacts ORDER BY last, sequence DESC");
         if(query.isActive()) {
-            qDebug() << "***** LOADING CONTACTS";
+            qDebug() << "***** LOADING CONTACTS, SELF=" << me;
             while(query.next()) {
                 auto item = new ContactItem(query.record());
                 Q_UNUSED(item);
@@ -250,6 +259,7 @@ void Phonebook::changeStorage(Storage *storage)
         }
     }
     ui.contacts->setModel(localModel);
+    desktop->activateSessions(ContactItem::sessions());
 }
 
 

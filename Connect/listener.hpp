@@ -63,6 +63,7 @@ private:
     UString serverSchema;
     UString serverLabel;
     quint16 serverPort;
+    int serverFirst, serverLast;
 
     eXosip_t *context;
     time_t expiresTimeout, refreshTimeout;
@@ -70,7 +71,7 @@ private:
     int rid;
 
 signals:
-    void changeStatus(const QVariantHash& status);
+    void changeStatus(const QByteArray bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void authorize(const QVariantHash& creds);
     void failure(int code);

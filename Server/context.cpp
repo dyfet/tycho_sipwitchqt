@@ -293,16 +293,21 @@ bool Context::message(const UString& from, const UString& to, const UString& rou
     return true;
 }
 
-void Context::challenge(const Event &event, Registry* registry)
+void Context::challenge(const Event &event, Registry* registry, bool reuse)
 {
     char buf[8];
     osip_message_t *msg = nullptr;
     auto ctx = event.context();
     auto context = ctx->context;
     auto tid = event.tid();
+    QByteArray random;
 
-    eXosip_generate_random(buf, sizeof(buf));
-    QByteArray random(buf, sizeof(buf));
+    if(reuse)
+        random = registry->nounce();
+    else {
+        eXosip_generate_random(buf, sizeof(buf));
+        random = QByteArray(buf, sizeof(buf));
+    }
 
     UString nonce = random.toHex().toLower();
     UString realm = registry->realm();
@@ -310,7 +315,9 @@ void Context::challenge(const Event &event, Registry* registry)
     UString user = registry->user();
     UString challenge = "Digest realm=" + realm.quote() + ", nonce=" + nonce.quote() + ", algorithm=" + digest.quote();
     UString expires = UString::number(registry->expires());
-    registry->setNounce(random);
+
+    if(!reuse)
+        registry->setNounce(random);
 
     ContextLocker lock(context);
     eXosip_message_build_answer(context, tid, SIP_UNAUTHORIZED, &msg);

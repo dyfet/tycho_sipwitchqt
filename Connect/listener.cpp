@@ -302,8 +302,11 @@ void Listener::run()
             qDebug() << "Authorizing for" << expiresTimeout - now;
             emit authorize(serverCreds);
             if(bitmaps.count() > 0) {
-                QThread::yieldCurrentThread();
-                emit changeStatus(bitmaps);
+                auto bitmap = bitmaps["a"].toByteArray();
+                if(bitmap.count()) {
+                    QThread::yieldCurrentThread();
+                    emit changeStatus(bitmap, serverFirst, serverLast);
+                }
             }
             break;
         case EXOSIP_REGISTRATION_FAILURE:
@@ -402,9 +405,9 @@ QVariantHash Listener::parseXdp(const UString& xdp)
         else if(line.left(2) == "d=")
             serverCreds["display"] = line.mid(2);
         else if(line.left(2) == "f=")
-            serverCreds["first"] = line.mid(2).toInt();
+            serverFirst = line.mid(2).toInt();
         else if(line.left(2) == "l=")
-            serverCreds["second"] = line.mid(2).toInt();
+            serverLast = line.mid(2).toInt();
         else if(line.left(2) == "a=") {
             QByteArray online = QByteArray::fromBase64(line.mid(2));
             if(online != priorOnline) {

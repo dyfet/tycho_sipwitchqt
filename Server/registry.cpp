@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright 2017 Tycho Softworks.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -75,7 +75,6 @@ timeout(-1), context(nullptr)
     number = ep.value("number").toInt();
     userLabel = ep.value("label").toString().toUtf8();
     timeout = ep.value("expires").toInt() * 1000l;
-    userMembership = ep.value("groups").toByteArray();
     authRealm = ep.value("realm").toString().toUtf8();
     authDigest = ep.value("digest").toString().toUpper();
 
@@ -119,7 +118,7 @@ void Registry::cleanup(void)
     }
 }
 
-UString Registry::bits()
+UString Registry::bitmask()
 {
     if(size < 1)
         return UString();
@@ -162,26 +161,37 @@ QList<Registry *> Registry::find(const UString& target)
     return aliases.values(target);
 }
 
-UString Registry::activity() const
+// authenticating a challenge
+int Registry::authenticate(const Event& ev)
 {
-    unsigned char bitmap[sizeof(online)];
-    memcpy(bitmap, online, sizeof(bitmap));
+    UString nonce = random.toHex().toLower();
+    UString ponce = prior.toHex().toLower();
+    UString method = ev.method();
+    UString uri = ev.request();
 
-    if(size < 1)
-        return UString();
+    if(hasExpired() || !context)
+        return SIP_TEMPORARILY_UNAVAILABLE;
 
-    auto cp = &bitmap[0];
-    auto mp = reinterpret_cast<const unsigned char *>(userMembership.constData());
-    auto count = userMembership.size();
-    while(mp && count--) {
-        *(cp++) |= (*mp++);
-    }
+    if(ev.authorizingRealm() != authRealm)
+        return SIP_FORBIDDEN;
 
-    if(size < 1)
-        return UString();
+    if(ev.authorizingId() != userId)
+        return SIP_FORBIDDEN;
 
-    QByteArray result(reinterpret_cast<const char *>(&bitmap), size);
-    return result.toBase64();
+    if(ev.authorizingAlgorithm() != authDigest)
+        return SIP_FORBIDDEN;
+
+    if(ev.authorizingOnce() != nonce && ev.authorizingOnce() != ponce)
+        return SIP_FORBIDDEN;
+
+    auto digest = digests[authDigest];
+    UString ha2 = QCryptographicHash::hash(method + ":" + uri, digest).toHex().toLower();
+    UString expected = QCryptographicHash::hash(userSecret + ":" + ev.authorizingOnce() + ":" + ha2, digest).toHex().toLower();
+
+    if(expected != ev.authorizingDigest())
+        return SIP_FORBIDDEN;
+
+    return SIP_OK;
 }
 
 // authorize registration processing

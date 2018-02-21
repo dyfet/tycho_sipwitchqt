@@ -521,10 +521,10 @@ void Desktop::authorized(const QVariantHash& creds)
         auto uri = QString(UString::uri(schema, creds["extension"].toString(), server, static_cast<quint16>(creds["port"].toInt())));
         auto opr = QString(UString::uri(schema, "0", server, static_cast<quint16>(creds["port"].toInt())));
         storage = new Storage("", creds);
-        storage->runQuery("INSERT INTO Contacts(extension, display, uri, ordering) "
-                          "VALUES(?,?,?,'0');", {creds["extension"], creds["display"], uri});
-        storage->runQuery("INSERT INTO Contacts(extension, display, ordering, type, uri) "
-                          "VALUES(0,'Operators','6','GROUP',?);", {opr});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, uri) "
+                          "VALUES(?,?,?,?);", {creds["extension"], creds["extension"].toString(), creds["display"], uri});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, type, uri) "
+                          "VALUES(0,'0', 'Operators','SYSTEM',?);", {opr});
         emit changeStorage(storage);
     }
 

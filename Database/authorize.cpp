@@ -140,28 +140,12 @@ void Authorize::findEndpoint(const Event& event)
     else if(expires > database->expiresTcp)
         expires = database->expiresTcp;
 
-    unsigned char members[1000 / 8];
-    memset(members, 0, sizeof(members));
-    auto groups = getRecords("SELECT pilot FROM Groups WHERE member=?", {number});
-    while(groups.next()) {
-        auto member = groups.record();
-        if(member.count() == 1) {
-            auto pilot = member.value("pilot").toInt();
-            if(pilot < database->firstNumber || pilot > database->lastNumber)
-                continue;
-            pilot -= database->firstNumber;
-            auto mask = static_cast<unsigned char>(1 << (pilot % 8));
-            members[pilot / 8] |= mask;
-        }
-    }
-
     auto display = extension.value("display").toString();
     if(display.isEmpty())
         display = authorize.value("fullname").toString();
     if(display.isEmpty())
         display = user;
 
-    QByteArray membership(reinterpret_cast<char *>(&members), ((database->lastNumber - database->firstNumber) / 8) + 1);
     QVariantHash reply = {
         {"realm", authorize.value("realm")},
         {"user", user},
@@ -169,7 +153,6 @@ void Authorize::findEndpoint(const Event& event)
         {"digest", authorize.value("digest")},
         {"secret", authorize.value("secret")},
         {"number", number},
-        {"groups", membership},
         {"label", label},
         {"expires", expires},
     };

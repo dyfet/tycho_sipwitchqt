@@ -111,6 +111,11 @@ public:
     bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
+    inline void activateSessions(const QList<ContactItem *>& contacts) {
+        Q_ASSERT(storage != nullptr);
+        emit changeSessions(storage, contacts);
+    }
+
     inline static Desktop *instance() {
         return Instance;
     }
@@ -157,6 +162,7 @@ private:
 signals:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *state);
+    void changeSessions(Storage *state, const QList<ContactItem *>& contacts);
 
 public slots:
     void initial(void);

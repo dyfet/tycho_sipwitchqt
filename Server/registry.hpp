@@ -93,18 +93,17 @@ public:
         random = value;
     }
 
-    UString activity(void) const;
     int authorize(const Event& event);
+    int authenticate(const Event& event);
 
     static Registry *find(const Event& event);      // to find registration
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
-    static UString bits();
+    static UString bitmask();
 
     static void cleanup();
 
 private:
-    QByteArray userMembership;
     UString userId, userLabel, userSecret, authRealm, authDigest;
     UString userDisplay, userAgent;
     int number, rid;

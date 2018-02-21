@@ -90,14 +90,13 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
         "CREATE TABLE Contacts ("
             "uid INTEGER PRIMARY KEY AUTOINCREMENT,"
             "extension INTEGER DEFAULT -1,"
-            "ordering CHAR(1) DEFAULT '5',"         // ordering lead
             "sequence INTEGER DEFAULT 0,"           // helps with timestamp ordering
             "type VARCHAR(8) DEFAULT 'USER',"
             "uri VARCHAR(128),"
+            "dialing VARCHAR(64),"
             "display VARCHAR(64) DEFAULT NULL,"
-            "last DATETIME DEFAULT CURRENT_TIMESTAMP);",
-        "CREATE UNIQUE INDEX People ON Contacts(uri);",
-        "CREATE UNIQUE INDEX Extensions ON Contacts(extension) WHERE extension > -1;",
+            "last DATETIME DEFAULT 0);",
+        "CREATE INDEX ByContacted ON Contacts(last, sequence DESC);",
 
         "CREATE TABLE Messages ("
             "msgfrom INTEGER,"                      // origin, team, group

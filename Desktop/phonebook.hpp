@@ -28,20 +28,22 @@
 #include <QSqlRecord>
 #include <QDateTime>
 #include <QModelIndex>
+#include <QVector>
 
 class Desktop;
 class Storage;
 class LocalContacts;
 class LocalDelegate;
+class SessionItem;
 
 class ContactItem final
 {
     friend LocalDelegate;
+    friend SessionItem;
 
 public:
     ContactItem(const QSqlRecord& record);
 
-public:
     int number() const {
         return extensionNumber;
     }
@@ -52,10 +54,6 @@ public:
 
     UString type() const {
         return contactType;
-    }
-
-    UString order() const {
-        return contactOrder;
     }
 
     UString uri() const {
@@ -78,23 +76,22 @@ public:
         return contactFilter;
     }
 
-    bool setOnline(bool flag) {
-        std::swap(flag, online);
-        return flag;
+    static QList<ContactItem*> sessions() {
+        return groups + users;
     }
 
     static void purge();
 
 private:
     ContactItem *prior;
-    UString displayName, contactOrder, contactUri, contactTimestamp, contactType;
+    UString displayName, contactUri, contactTimestamp, contactType;
     QString contactFilter, textDisplay, textNumber;
     QDateTime contactUpdated;
     int extensionNumber;
     int uid;
-    bool online;
 
     static ContactItem *list;
+    static QList<ContactItem *> users, groups;
 };
 
 class LocalContacts final : public QAbstractListModel
@@ -104,7 +101,6 @@ class LocalContacts final : public QAbstractListModel
 public:
     LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
     void setFilter(const UString& filter);
-    void setOffline();
 
 private:    
     int rowCount(const QModelIndex& parent) const final;
@@ -128,6 +124,7 @@ public:
     ~Phonebook() = default;
 
     void enter();
+    ContactItem *self();
 
 private:
     Desktop *desktop;

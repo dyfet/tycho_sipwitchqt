@@ -17,3 +17,8 @@ v0.1.1
 * Start of core messaging code
 * Replacing json with xdp
 * Start of contacts (phonebook) page
+
+v0.1.2
+* Start of sessions page and status
+
+

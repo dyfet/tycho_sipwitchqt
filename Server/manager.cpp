@@ -168,7 +168,7 @@ void Manager::refreshRegistration(const Event &ev)
                     xdp += "d=" + reg->display() + "\n";
                     xdp += "f=" + UString::number(range.first) + "\n";
                     xdp += "l=" + UString::number(range.second) + "\n";
-                    xdp += "a=" + reg->activity() + "\n";
+                    xdp += "a=" + Registry::bitmask() + "\n";
                 }
                 Context::authorize(ev, reg, xdp);
             }

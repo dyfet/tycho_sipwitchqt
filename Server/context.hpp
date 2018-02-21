@@ -96,7 +96,7 @@ public:
     const UString uriTo(const Contact& address) const;
     bool message(const UString& from, const UString& to, const UString& route, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>());
 
-    static void challenge(const Event& event, Registry *registry);
+    static void challenge(const Event& event, Registry *registry, bool reuse = false);
     static bool reply(const Event& event, int code);
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
