@@ -32,7 +32,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
-      <number>4</number>
+      <number>6</number>
      </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -40,28 +40,58 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="status">
-         <property name="minimumSize">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>16</width>
+           <width>4</width>
            <height>0</height>
           </size>
          </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="status">
          <property name="maximumSize">
           <size>
            <width>16</width>
-           <height>16777215</height>
+           <height>16</height>
           </size>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+          </font>
+         </property>
          <property name="text">
-          <string>@</string>
+          <string>*</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="self">
+        <widget class="QPushButton" name="self">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">border: none; outline: none; padding: 0px; margin: 0px; padding: 0px; text-align: left;</string>
+         </property>
          <property name="text">
           <string>Self</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

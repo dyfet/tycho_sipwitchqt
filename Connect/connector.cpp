@@ -28,6 +28,12 @@
 
 #define EVENT_TIMER 400l    // 400ms...
 
+#define X_ROSTER    "X-ROSTER"
+#define X_PROFILE   "X-PROFILE"
+
+#define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_ROSTER))
+
 static const char *eid(eXosip_event_type ev);
 
 // internal lock class
@@ -112,6 +118,20 @@ void Connector::add_authentication()
     eXosip_add_authentication_info(context, serverId, user, secret, algo, realm);
 }
 
+void Connector::requestRoster()
+{
+    auto to = UString::uri(serverSchema, serverHost, serverPort);
+    auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    osip_message_t *msg = nullptr;
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_ROSTER, to, from, to);
+    if(!msg)
+        return;
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;
@@ -157,7 +177,24 @@ void Connector::run()
 
         qDebug().nospace() << "tcp=" << eid(event->type) << " cid=" << event->cid;
         switch(event->type) {
-        case EXOSIP_CALL_MESSAGE_NEW:
+        case EXOSIP_MESSAGE_REQUESTFAILURE:
+            if(event->response && event->response->status_code != SIP_UNAUTHORIZED)
+                qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
+            break;
+        case EXOSIP_MESSAGE_ANSWERED:
+            if(!event->response)
+                break;
+            switch(event->response->status_code) {
+            case SIP_OK:
+                if(MSG_IS_ROSTER(event->request))
+                    processRoster(event);
+                break;
+            default:
+                qDebug() << "*** ANSWER FAILURE" << event->response->status_code;
+                break;
+            }
+            break;
+        case EXOSIP_MESSAGE_NEW:
             if(MSG_IS_REGISTER(event->request)) {
                 Locker lock(context);
                 eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);
@@ -167,7 +204,9 @@ void Connector::run()
                 dump(event->request);
             break;
         default:
-            if(event->request)
+            if(event->response)
+                dump(event->response);
+            else if(event->request)
                 dump(event->request);
             break;
         }
@@ -188,6 +227,16 @@ void Connector::run()
     emit finished();
     eXosip_quit(context);
     context = nullptr;
+}
+
+void Connector::processRoster(eXosip_event_t *event)
+{
+    osip_body_t *body = nullptr;
+    osip_message_get_body(event->response, 0, &body);
+    if(body && body->body && body->length > 0) {
+        QByteArray json(body->body, static_cast<int>(body->length));
+        emit changeRoster(json);
+    }
 }
 
 void Connector::stop()

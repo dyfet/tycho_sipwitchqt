@@ -126,8 +126,8 @@ int main(int argc, char **argv)
     Manager::create(interfaces, port, mask);
 
     // create managers and start server...
-    Database::init(2);
-    Manager::init(3);
+    Manager::init(2);
+    Database::init(3);
 
     auto dbdriver = server[CURRENT_DATABASE].toLower();
     if(dbdriver == "sqlite" || dbdriver == "qsqlite" || dbdriver == "sqlite3" || dbdriver == "qsqlite3")

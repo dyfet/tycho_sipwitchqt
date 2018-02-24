@@ -32,6 +32,9 @@
 
 #define EVENT_TIMER 500l    // 500ms...
 
+#define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method,"X-ROSTER"))
+
 static bool active = true;
 
 volatile unsigned Context::instanceCount = 0;
@@ -175,6 +178,10 @@ void Context::run()
     if(allow & Allow::REGISTRY)
         connect(this, &Context::REQUEST_REGISTER, stack, &Manager::refreshRegistration);
 
+    if(netProto == IPPROTO_TCP) {
+        connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
+    }
+
     debug() << "Running " << objectName();
 
     const char *ap = nullptr;
@@ -243,6 +250,12 @@ bool Context::process(const Event& ev)
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_REGISTER(ev);
+        }
+        if(MSG_IS_ROSTER(ev.message())) {
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_ROSTER(ev);
+            return false;
         }
         break;
     default:
@@ -331,6 +344,27 @@ void Context::challenge(const Event &event, Registry* registry, bool reuse)
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
 }
 
+bool Context::roster(const Event& event, const QByteArray& json)
+{
+    osip_message_t *msg = nullptr;
+    auto context = event.context()->context;
+    auto tid = event.tid();
+
+    ContextLocker lock(context);
+
+    eXosip_message_build_answer(context, tid, SIP_OK, &msg);
+    if(!msg)
+        return false;
+
+    if(!json.isEmpty()) {
+        osip_message_set_body(msg, json.constData(), static_cast<size_t>(json.length()));
+        osip_message_set_content_type(msg, "application/json");
+    }
+
+    eXosip_message_send_answer(context, tid, SIP_OK, msg);
+    return true;
+}
+
 bool Context::authorize(const Event& event, const Registry* registry, const UString& xdp)
 {
     osip_message_t *msg = nullptr;
@@ -368,26 +402,8 @@ bool Context::reply(const Event& event, int code)
     ContextLocker lock(context);
     switch(event.type()) {
     case EXOSIP_MESSAGE_NEW:
-        if(MSG_IS_OPTIONS(event.message())) {
-            if(code == SIP_OK) {
-                eXosip_options_build_answer(context, tid, code, &msg);
-                if(!msg)
-                    return false;
-                //TODO: fill in more headers...
-            }
-            eXosip_options_send_answer(context, tid, code, msg);
-            return true;
-        }
-        if(MSG_IS_REGISTER(event.message())) {
-            if(code == SIP_OK) {
-                eXosip_message_build_answer(context, tid, code, &msg);
-                if(!msg)
-                    return false;
-            }
-            eXosip_message_send_answer(context, tid, code, msg);
-            return true;
-        }
-        break;
+        eXosip_options_send_answer(context, tid, code, msg);
+        return true;
     default:
         break;
     }

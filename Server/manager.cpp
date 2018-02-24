@@ -44,15 +44,9 @@ Manager::Manager(unsigned order)
 #endif
 
     Server *server = Server::instance();
-    Database *db = Database::instance();
-
     connect(thread(), &QThread::started, this, &Manager::startup);
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(server, &Server::changeConfig, this, &Manager::applyConfig);
-
-#ifndef QT_NO_DEBUG
-    connect(db, &Database::countResults, this, &Manager::reportCounts);
-#endif
 }
 
 Manager::~Manager()
@@ -77,13 +71,6 @@ void Manager::cleanup()
 {
     Registry::cleanup();
 }
-
-#ifndef QT_NO_DEBUG
-void Manager::reportCounts(const QString& id, int count)
-{
-    qDebug() << "DB Count" << id << count;
-}
-#endif
 
 void Manager::applyNames()
 {
@@ -147,6 +134,30 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
     }
 }
 
+void Manager::requestRoster(const Event& ev)
+{
+    qDebug() << "REQUESTING ROSTER FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND ROSTER REG";
+        Context::reply(ev, result);
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit sendRoster(ev);
+}
+
 void Manager::refreshRegistration(const Event &ev)
 {
     if(ev.number() < 1) {
@@ -168,6 +179,7 @@ void Manager::refreshRegistration(const Event &ev)
                     xdp += "d=" + reg->display() + "\n";
                     xdp += "f=" + UString::number(range.first) + "\n";
                     xdp += "l=" + UString::number(range.second) + "\n";
+                    xdp += "s=" + UString::number(Database::sequence());
                     xdp += "a=" + Registry::bitmask() + "\n";
                 }
                 Context::authorize(ev, reg, xdp);

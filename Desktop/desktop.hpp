@@ -39,15 +39,24 @@
 #include <QSystemTrayIcon>
 #include <QSettings>
 
+// config paths and names
+
 #if defined(DESKTOP_PREFIX)
 #define CONFIG_FROM DESKTOP_PREFIX "/settings.cfg", QSettings::IniFormat
 #elif defined(Q_OS_MAC)
-#define CONFIG_FROM "tychosoft.com", "Antisipate"
+#define CONFIG_FROM "tychosoft.com", "SipWitchQt"
 #elif defined(Q_OS_WIN)
-#define CONFIG_FROM "Tycho Softworks", "Antisipate"
+#define CONFIG_FROM "Tycho Softworks", "SipWitchQt"
 #else
-#define CONFIG_FROM "tychosoft.com", "antisipate"
+#define CONFIG_FROM "tychosoft.com", "sipwitchqt"
 #endif
+
+// magic ui related constants...
+
+#define CONST_CLICKTIME 120
+#define CONST_CLICKCOLOR "lightgray"
+#define CONST_CELLLIFT  3
+#define CONST_CELLHIGHT 18
 
 class Desktop final : public QMainWindow
 {
@@ -111,9 +120,8 @@ public:
     bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
-    inline void activateSessions(const QList<ContactItem *>& contacts) {
-        Q_ASSERT(storage != nullptr);
-        emit changeSessions(storage, contacts);
+    inline QString appearance() const {
+        return currentAppearance;
     }
 
     inline static Desktop *instance() {
@@ -144,9 +152,8 @@ private:
     QMenuBar *appBar;
     QMenu *trayMenu, *dockMenu, *appMenu, *popup;
     bool restart_flag, front;
-    time_t fronted;
     QVariantHash currentCredentials;
-    QString appearance;
+    QString currentAppearance;
     QDialog *dialog;
 
     void closeEvent(QCloseEvent *event) final;
@@ -162,7 +169,6 @@ private:
 signals:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *state);
-    void changeSessions(Storage *state, const QList<ContactItem *>& contacts);
 
 public slots:
     void initial(void);
@@ -173,6 +179,12 @@ public slots:
     void closeReset(void);
     void openAbout(void);
     void openReset(void);
+
+    void showOptions(void);
+    void showSessions(void);
+    void showPhonebook(void);
+
+    void changeAppearance(const QString& appearance);
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized
@@ -186,10 +198,6 @@ private slots:
     void trayAway();
 
     void setBanner(const QString& banner);
-
-    void showOptions(void);
-    void showSessions(void);
-    void showPhonebook(void);
 };
 
 #endif

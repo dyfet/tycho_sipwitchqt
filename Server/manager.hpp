@@ -62,16 +62,14 @@ private:
 signals:
     void changeRealm(const QString& realm);
     void findEndpoint(const Event& ev);
+    void sendRoster(const Event& ev);
 
 public slots:
+    void requestRoster(const Event& ev);
     void refreshRegistration(const Event& ev);
     void createRegistration(const Event& ev, const QVariantHash& endpoint);
 
     void applyConfig(const QVariantHash& config);
-
-#ifndef QT_NO_DEBUG
-    void reportCounts(const QString& id, int count);
-#endif
 
 private slots:
     void startup();

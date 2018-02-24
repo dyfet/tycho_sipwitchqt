@@ -62,10 +62,19 @@ number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associ
                 request = uri;      // for consistent auth processing
             local = ctx->isLocal(target.host());
         }
-        if(evt->request->to && evt->request->to->url && evt->request->to->url->username && ctx->isLocal(evt->request->to->url->host)) {
-            UString ext = evt->request->to->url->username;
-            if(ext.isNumber())
-                number = ext.toInt();
+        if(method == "REGISTER") {
+            if(evt->request->to && evt->request->to->url && evt->request->to->url->username && ctx->isLocal(evt->request->to->url->host)) {
+                UString ext = evt->request->to->url->username;
+                if(ext.isNumber())
+                    number = ext.toInt();
+            }
+        }
+        else {
+            if(evt->request->from && evt->request->from->url && evt->request->from->url->username && ctx->isLocal(evt->request->from->url->host)) {
+                UString ext = evt->request->from->url->username;
+                if(ext.isNumber())
+                    number = ext.toInt();
+            }
         }
         break;
     default:
@@ -264,6 +273,25 @@ const UString Event::text() const
         osip_free(data);
     }
     return result;
+}
+
+const UString Event::uriTo(const UString& id) const
+{
+    if(id.indexOf('@') > 0) {
+        return id;
+    }
+
+    UString req = request();
+    UString prefix = "sip:";
+
+    if(req.left(5) == "sips:") {
+        req = req.mid(5);
+        prefix = "sips:";
+    }
+    else
+        req = req.mid(4);
+
+    return prefix + id + "@" + req;
 }
 
 const UString Event::uriContext(const UString& username) const

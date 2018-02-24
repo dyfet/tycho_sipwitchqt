@@ -19,12 +19,17 @@
 #include "ui_phonebook.h"
 
 #include <QPainter>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 static Ui::PhonebookWindow ui;
 static int highest = -1, me = -1;
 static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
+static ContactItem *clickedItem = nullptr;
+static bool initialRoster = false;
 
 ContactItem *ContactItem::list = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -32,8 +37,10 @@ QList<ContactItem *> ContactItem::groups;
 
 ContactItem::ContactItem(const QSqlRecord& record)
 {
+    session = nullptr;
     prior = list;
     list = this;
+    group = false;
 
     extensionNumber = record.value("extension").toInt();
     contactUpdated = record.value("last").toDateTime();
@@ -43,11 +50,13 @@ ContactItem::ContactItem(const QSqlRecord& record)
     displayName = record.value("display").toString().toUtf8();
     textNumber = record.value("dialing").toString();
     textDisplay = record.value("display").toString();
+    authUserId = record.value("user").toString().toLower();
     uid = record.value("uid").toInt();
 
     // the subset of contacts that have active sessions at load time...
     if(record.value("last").toULongLong() > 0) {
         if(contactType == "GROUP") {
+            group = true;
             groups << this;
         }
         else if(me != extensionNumber) {
@@ -55,10 +64,15 @@ ContactItem::ContactItem(const QSqlRecord& record)
         }
     }
 
-    if(contactType == "SYSTEM" && extensionNumber == 0)
-        groups.insert(0, this);
+    if(contactType == "GROUP")
+        group = true;
 
-    qDebug() << "NUMBER" << textNumber << "NAME" << displayName << "URI" << contactUri << "TYPE" << contactType << "DATE" << record.value("last").toULongLong();
+    if(contactType == "SYSTEM" && extensionNumber == 0) {
+        group = true;
+        groups.insert(0, this);
+    }
+
+    qDebug() << "NUMBER" << textNumber << "NAME" << displayName << "URI" << contactUri << "TYPE" << contactType << "DATE" << record.value("last").toULongLong() << group;
 
     if(!isExtension() || extensionNumber > 999) {
         contactType = "FOREIGN";
@@ -90,6 +104,34 @@ void ContactItem::purge()
     list = nullptr;
 }
 
+ContactItem *ContactItem::findExtension(int number)
+{
+    if(number >= 0 && number < 1000)
+        return local[number];
+
+    return nullptr;
+}
+
+ContactItem *ContactItem::findText(const QString& text)
+{
+    auto item = list;
+    auto match = text.toLower();
+    unsigned matches = 0;
+    ContactItem *found = nullptr;
+
+    while(item != nullptr) {
+        if(item->contactFilter.indexOf(text) > -1 || item->authUserId == text) {
+            if(++matches > 1) {
+                found = nullptr;
+                break;
+            }
+            found = item;
+        }
+        item = item->prior;
+    }
+    return found;
+}
+
 int LocalContacts::rowCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent);
@@ -119,6 +161,68 @@ void LocalContacts::setFilter(const UString& filter)
     emit layoutChanged();
 }
 
+void LocalContacts::clickContact(int row)
+{
+    if(row < 0 || row > highest)
+        return;
+
+    dataChanged(index(row), index(row));
+}
+
+void LocalContacts::updateContact(const QJsonObject& json)
+{
+    auto number = json["n"].toInt();
+    if(number < 0 || number > 1000)
+        return;
+
+    auto storage = Storage::instance();
+    if(!storage)
+        return;
+
+    auto type = json["t"].toString();
+    auto display = json["d"].toString();
+    auto uri = json["u"].toString();
+    auto user = json["a"].toString();
+
+    auto insert = false;
+    auto item = local[number];
+
+    if(number > highest) {
+        insert = true;
+        beginInsertRows(QModelIndex(), highest, number);
+        highest = number;
+    }
+
+    if(!item) {
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri) VALUES(?,?,?,?,?,?);", {
+                              number, QString::number(number), type, display, user, uri});
+        auto query = storage->getRecords("SELECT * FROM Contacts WHERE extension=?;", {
+                                             number});
+        if(query.isActive() && query.next()) {
+            local[number] = new ContactItem(query.record());
+        }
+    }
+    else {
+        auto old = item->displayName;
+        item->contactFilter = (item->textNumber + "\n" + item->displayName).toLower();
+        item->textDisplay = display;
+        item->displayName = display.toUtf8();
+        item->contactUri = uri.toUtf8();
+        item->authUserId = user.toLower();
+        storage->runQuery("UPDATE Contacts SET display=?, user=?, uri=? WHERE extension=?;", {
+                              display, user, uri, number});
+        if(old == item->displayName)
+            return;
+        if(item->session)
+            SessionModel::update(item->session);
+    }
+
+    if(insert)
+        endInsertRows();
+    else
+        dataChanged(index(number), index(number));
+}
+
 QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     Q_UNUSED(style);
@@ -135,11 +239,11 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
 
     auto filter = item->filter();
     if(searching.length() > 0 && filter.length() > 0) {
-        if(filter.indexOf(searching) < 0)
+        if(filter.indexOf(searching) < 0 && searching != item->authUserId)
             return QSize(0, 0);
     }
 
-    return QSize(ui.contacts->width(), 16);
+    return QSize(ui.contacts->width(), CONST_CELLHIGHT);
 }
 
 void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -150,23 +254,47 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
     auto item = local[index.row()];
     auto pos = style.rect.bottomLeft();
 
+    if(item == clickedItem) {
+        painter->fillRect(style.rect, QColor(CONST_CLICKCOLOR));
+        clickedItem = nullptr;
+    }
+
+    pos.ry() -= CONST_CELLLIFT;  // off bottom
     painter->drawText(pos, item->textNumber);
     pos.rx() += 32;
     painter->drawText(pos, item->textDisplay);
 }
 
-Phonebook::Phonebook(Desktop *control) :
-QWidget(), desktop(control), localModel(nullptr), connector(nullptr)
+Phonebook::Phonebook(Desktop *control, Sessions *sessions) :
+QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRoster()
 {
     ui.setupUi(static_cast<QWidget *>(this));
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.contact->setVisible(false);
 
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Phonebook::search);
-    connect(Toolbar::search(), &QLineEdit::textEdited, this, &Phonebook::filter);
+    connect(Toolbar::search(), &QLineEdit::textEdited, this, &Phonebook::filterView);
     connect(desktop, &Desktop::changeStorage, this, &Phonebook::changeStorage);
     connect(desktop, &Desktop::changeConnector, this, &Phonebook::changeConnector);
-    connect(ui.contacts, &QListView::clicked, this, &Phonebook::select);
+    connect(ui.contacts, &QListView::clicked, this, &Phonebook::selectContact);
+    connect(this, &Phonebook::changeSessions, sessions, &Sessions::changeSessions);
+
+    connect(ui.contacts, &QListView::doubleClicked, this, [=](const QModelIndex& index){
+        auto row = index.row();
+        if(row < 0 || row > highest)
+            return;
+
+        auto item = local[row];
+        if(!item)
+            return;
+
+        sessions->activateContact(item);
+    });
+
+    connect(&refreshRoster, &QTimer::timeout, this, [this]{
+       if(connector)
+           connector->requestRoster();
+    });
 
     ContactItem::purge();
     localPainter = new LocalDelegate(this);
@@ -175,10 +303,12 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr)
 
 void Phonebook::enter()
 {
+    Toolbar::setTitle("");
     Toolbar::search()->setEnabled(true);
     Toolbar::search()->setText("");
+    Toolbar::search()->setPlaceholderText(tr("Filter by number or name"));
     Toolbar::search()->setFocus();
-    filter("");
+    filterView("");
     ui.contact->setVisible(false);
 }
 
@@ -188,7 +318,7 @@ void Phonebook::search()
         return;
 }
 
-void Phonebook::filter(const QString& selected)
+void Phonebook::filterView(const QString& selected)
 {
     if(!desktop->isCurrent(this) && !localModel)
         return;
@@ -202,7 +332,7 @@ void Phonebook::filter(const QString& selected)
     ui.contacts->scrollToTop();
 }
 
-void Phonebook::select(const QModelIndex& index)
+void Phonebook::selectContact(const QModelIndex& index)
 {
     auto row = index.row();
     if(row < 0 || row > highest)
@@ -212,11 +342,20 @@ void Phonebook::select(const QModelIndex& index)
     if(!item)
         return;
 
-    activeItem = item;
+    activeItem = clickedItem = item;
     ui.displayName->setText(item->display());
     ui.type->setText(item->type().toLower());
     ui.uri->setText(item->uri());
-    ui.contact->setVisible(true);
+    ui.authorizingUser->setText(item->user());
+    localModel->clickContact(row);
+
+    // delay to avoid false view if double-click activation
+    QTimer::singleShot(CONST_CLICKTIME, this, [=] {
+        if(highest > -1 && row <= highest) {
+            localModel->clickContact(row);
+            ui.contact->setVisible(true);
+        }
+    });
 }
 
 ContactItem *Phonebook::self()
@@ -230,7 +369,30 @@ ContactItem *Phonebook::self()
 void Phonebook::changeConnector(Connector *connected)
 {
     connector = connected;
-    // connects to be added for contact events...
+    if(!connector)
+        refreshRoster.stop();
+
+    if(connector && !initialRoster) {
+        connect(connector, &Connector::changeRoster, this, [=](const QByteArray& json) {
+            if(!connector)
+                return;
+
+            initialRoster = true;
+            refreshRoster.start(3600000);   // once an hour...
+
+            auto jdoc = QJsonDocument::fromJson(json);
+            auto list = jdoc.array();
+
+            foreach(auto profile, list) {
+                localModel->updateContact(profile.toObject());
+            }
+        });
+
+        QTimer::singleShot(300, this, [this]{
+            if(connector)
+                connector->requestRoster();
+        });
+    }
 }
 
 void Phonebook::changeStorage(Storage *storage)
@@ -257,9 +419,12 @@ void Phonebook::changeStorage(Storage *storage)
             }
             localModel = new LocalContacts(this);
         }
+        emit changeSessions(storage, ContactItem::sessions());
     }
+    else
+        initialRoster = false;
+
     ui.contacts->setModel(localModel);
-    desktop->activateSessions(ContactItem::sessions());
 }
 
 

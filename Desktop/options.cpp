@@ -34,6 +34,20 @@ QWidget(), desktop(control)
 
 void Options::enter()
 {
+    Toolbar::setTitle("");
+    Toolbar::search()->setText("");
+    Toolbar::search()->setPlaceholderText(tr("Disabled"));
     Toolbar::search()->setEnabled(false);
     ui.listButton->setFocus();
+
+    auto storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+
+    ui.appearance->setCurrentText(desktop->appearance());
+    connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
+
+    auto creds = storage->credentials();
+    ui.displayName->setText(creds["display"].toString());
+    ui.server->setText(creds["server"].toString());
+    ui.secret->setText("");
 }

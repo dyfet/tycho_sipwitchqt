@@ -47,6 +47,9 @@ QWidget(), desktop(control)
 
 void Login::enter()
 {
+    Toolbar::setTitle("");
+    Toolbar::search()->setText("");
+    Toolbar::search()->setPlaceholderText(tr("Disabled"));
     Toolbar::search()->setEnabled(false);
 
     ui.secret->setText("");

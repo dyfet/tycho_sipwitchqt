@@ -10,6 +10,12 @@
 <qresource prefix="/icons">
 	<file>clear.png</file>
 	<file>clear@2x.png</file>
+	<file>color_idle.png</file>
+	<file>color_idle@2x.png</file>
+	<file>color_offline.png</file>
+	<file>color_offline@2x.png</file>
+	<file>color_activate.png</file>
+	<file>color_activate@2x.png</file>
 	<file>idle.png</file>
 	<file>idle@2x.png</file>
 	<file>offline.png</file>

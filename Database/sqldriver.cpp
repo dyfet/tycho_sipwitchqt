@@ -148,6 +148,7 @@ static QStringList sqlitePreload = {
         "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','LOCAL');",
     "INSERT INTO Authorize(name, fullname, type, access) "
         "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
+    "INSERT INTO Extensions(number, name) VALUES(100, 'test');",
     "INSERT INTO Extensions(number, name) VALUES(101, 'test1');",
     "INSERT INTO Extensions(number, name) VALUES(102, 'test2');",
     "INSERT INTO Endpoints(number) VALUES(101);",

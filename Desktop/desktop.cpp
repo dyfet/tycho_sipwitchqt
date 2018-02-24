@@ -57,7 +57,6 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     Instance = this;
     connector = nullptr;
     front = true;
-    fronted = 0;
 
     if(reset) {
         Storage::remove();
@@ -67,8 +66,12 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
-    appearance = settings.value("appearance", "Default").toString();
+    currentAppearance = settings.value("appearance", "Vibrant").toString();
     control = new Control(this);
+
+    QString prefix = ":/icons/";
+    if(currentAppearance == "Vibrant")
+        prefix += "color_";
 
     ui.setupUi(static_cast<QMainWindow *>(this));
     toolbar = new Toolbar(this, ui.toolBar);
@@ -104,26 +107,26 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
         if (class_getInstanceMethod(handler, shouldHandle)) {
             if (class_replaceMethod(handler, shouldHandle, reinterpret_cast<IMP>(dock_click_handler), "B@:")) {
-                set_dock_icon(QIcon(":/icons/offline.png"));
+                set_dock_icon(QIcon(prefix + "offline.png"));
                 tray = false;
             }
         }
         else {
             if (class_addMethod(handler, shouldHandle, reinterpret_cast<IMP>(dock_click_handler), "B@:")) {
                 tray = false;
-                set_dock_icon(QIcon(":/icons/offline.png"));
+                set_dock_icon(QIcon(prefix + "offline.png"));
             }
         }
     }
 
     if(tray)
-        set_dock_icon(QIcon(":/icons/idle.png"));
+        set_dock_icon(QIcon(prefix + "idle.png"));
 
 #endif
     login = new Login(this);
     sessions = new Sessions(this);
     options = new Options(this);
-    phonebook = new Phonebook(this);
+    phonebook = new Phonebook(this, sessions);
     ui.pagerStack->addWidget(login);
     ui.pagerStack->addWidget(sessions);
     ui.pagerStack->addWidget(phonebook);
@@ -147,7 +150,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         trayMenu->addAction(ui.trayQuit);
 
         trayIcon->setContextMenu(trayMenu);
-        trayIcon->setIcon(QIcon(":/icons/offline.png"));
+        trayIcon->setIcon(QIcon(prefix + "offline.png"));
         trayIcon->setVisible(true);
         trayIcon->show();
 
@@ -237,6 +240,10 @@ void Desktop::setState(state_t state)
     QString icon;
 
     State = state;
+
+    if(currentAppearance == "Vibrant")
+        prefix += "color_";
+
     switch(State) {
     case AUTHORIZING:
         icon = prefix + "activate.png";
@@ -340,13 +347,21 @@ void Desktop::clearMessage()
     ui.statusBar->clearMessage();
 }
 
+void Desktop::changeAppearance(const QString& appearance)
+{
+    currentAppearance = appearance;
+    settings.setValue("appearance", appearance);
+    setState(State);
+}
+
 void Desktop::appState(Qt::ApplicationState state)
 {
     // Actve, Inactive related to front/back...
     switch(state) {
     case Qt::ApplicationActive:
-        front = true;
-        time(&fronted);
+        QTimer::singleShot(200, this, [=] {
+            front = true;
+        });
         break;
     case Qt::ApplicationHidden:
     case Qt::ApplicationInactive:
@@ -412,7 +427,7 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
             break;
         if(isHidden())
             show();
-        else if(front && now > fronted + 1)
+        else if(front)
             hide();
         break;
     default:
@@ -422,6 +437,7 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
 
 void Desktop::failed(int error_code)
 {
+    offline();
     switch(error_code) {
     case SIP_CONFLICT:
         errorMessage(tr("Label already used"));
@@ -461,7 +477,6 @@ void Desktop::failed(int error_code)
             login->badIdentity();
         break;
     }
-    offline();
 }
 
 void Desktop::offline()
@@ -521,10 +536,16 @@ void Desktop::authorized(const QVariantHash& creds)
         auto uri = QString(UString::uri(schema, creds["extension"].toString(), server, static_cast<quint16>(creds["port"].toInt())));
         auto opr = QString(UString::uri(schema, "0", server, static_cast<quint16>(creds["port"].toInt())));
         storage = new Storage("", creds);
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, uri) "
-                          "VALUES(?,?,?,?);", {creds["extension"], creds["extension"].toString(), creds["display"], uri});
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, type, uri) "
-                          "VALUES(0,'0', 'Operators','SYSTEM',?);", {opr});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, uri) "
+                          "VALUES(?,?,?,?,?);", {
+                              creds["extension"],
+                              creds["extension"].toString(),
+                              creds["display"],
+                              creds["user"],
+                              uri,
+                          });
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, type, uri) "
+                          "VALUES(0,'0', 'Operators', 'operators', 'SYSTEM',?);", {opr});
         emit changeStorage(storage);
     }
 

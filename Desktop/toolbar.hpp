@@ -47,6 +47,8 @@ public:
         return Search;
     }
 
+    static void setTitle(const QString& text);
+
 private:
     QPoint mpos;
     bool moving;

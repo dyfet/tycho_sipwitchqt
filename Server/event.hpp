@@ -217,6 +217,8 @@ public:
         return d->label;
     }
 
+
+    const UString uriTo(const UString& id) const;
     const UString protocol() const;
     const UString toString() const;
     const Contact contact() const;

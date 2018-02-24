@@ -63,6 +63,10 @@ public:
         return schema.name;
     }
 
+    inline const UString prefix() const {
+        return schema.uri;
+    }
+
     inline quint16 port() const {
         return netPort;
     }
@@ -97,6 +101,7 @@ public:
     bool message(const UString& from, const UString& to, const UString& route, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>());
 
     static void challenge(const Event& event, Registry *registry, bool reuse = false);
+    static bool roster(const Event& event, const QByteArray& json);
     static bool reply(const Event& event, int code);
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
@@ -127,6 +132,7 @@ private:
 signals:
     void REQUEST_REGISTER(const Event& ev);
     void REQUEST_OPTIONS(const Event& ev);
+    void REQUEST_ROSTER(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);
     void finished();

@@ -257,6 +257,13 @@
                 </property>
                </spacer>
               </item>
+              <item>
+               <widget class="QLabel" name="authorizingUser">
+                <property name="text">
+                 <string>User</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
             <item>
@@ -455,9 +462,12 @@
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>28</width>
+                 <width>42</width>
                  <height>22</height>
                 </size>
+               </property>
+               <property name="layoutDirection">
+                <enum>Qt::RightToLeft</enum>
                </property>
                <property name="maximum">
                 <number>1</number>

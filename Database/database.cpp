@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Server/server.hpp"
 #include "../Server/output.hpp"
+#include "../Server/manager.hpp"
 #include "../Server/main.hpp"
 #include "sqldriver.hpp"
 #include "database.hpp"
@@ -27,6 +28,9 @@
 #include <QTimer>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 enum {
     // database events...
@@ -60,6 +64,7 @@ Database::Database(unsigned order) :
 QObject()
 {
     firstNumber = lastNumber = -1;
+    dbSequence = 0;
 
     expiresNat = 80;
     expiresUdp = 300;
@@ -73,6 +78,9 @@ QObject()
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(server, &Server::changeConfig, this, &Database::applyConfig);
     connect(&timer, &QTimer::timeout, this, &Database::onTimeout);
+
+    Manager *manager = Manager::instance();
+    connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
 }
 
 Database::~Database()
@@ -256,13 +264,20 @@ bool Database::create()
 
     if(init) {
         runQuery(Util::createQuery(driver));
-        runQuery("INSERT INTO Config(realm) VALUES(?);", {realm});
-        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"system", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"nobody", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"anonymous", "SYSTEM", "DISABLED"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {"operators", "SYSTEM", "PILOT"});
-        runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {0, "operators", "Operator"});
+        runQuery("INSERT INTO Config(realm) VALUES(?);", {
+                     realm});
+        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
+                     uuid, PROJECT_VERSION});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+                     "system", "SYSTEM", "LOCAL"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+                     "nobody", "SYSTEM", "LOCAL"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+                     "anonymous", "SYSTEM", "DISABLED"});
+        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+                     "operators", "SYSTEM", "PILOT"});
+        runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {
+                     0, "operators", "Operators"});
         runQuery(Util::preloadConfig(driver));
     }
     else if(Util::dbIsFile(driver)) {
@@ -289,10 +304,6 @@ bool Database::create()
 
     if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, uuid}))
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
-
-    int count = getCount("Switches");
-    if(!failed)
-        emit countResults("swq", count);
 
     return true;
 }
@@ -335,13 +346,42 @@ bool Database::event(QEvent *evt)
 
     switch(id) {
     case COUNT_EXTENSIONS:
-        if(opened)
-            count = getCount("Extensions");
-        if(!failed)
-            emit countResults("ext", count);
         return true;
     }
     return true;
+}
+
+void Database::sendRoster(const Event& event)
+{
+    qDebug() << "Seeking roster for" << event.number();
+
+    auto query = getRecords("SELECT * FROM Extensions,Authorize WHERE Extensions.name = Authorize.name ORDER BY Extensions.number");
+
+    QJsonArray list;
+    qDebug() << "REQUEST" << event.request();
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto display = record.value("display").toString();
+        auto dialing = record.value("number").toString();
+        if(display.isEmpty())
+            display = record.value("fullname").toString();
+        if(display.isEmpty())
+            display = record.value("name").toString();
+
+        UString uri = event.uriTo(dialing);
+        QJsonObject profile {
+            {"a", record.value("name").toString()},
+            {"n", record.value("number").toInt()},
+            {"u", QString::fromUtf8(uri)},
+            {"d", display},
+            {"t", record.value("type").toString()},
+        };
+
+        list << profile;
+    }
+    QJsonDocument jdoc(list);
+    auto json = jdoc.toJson(QJsonDocument::Compact);
+    Context::roster(event, json);
 }
 
 void Database::onTimeout()

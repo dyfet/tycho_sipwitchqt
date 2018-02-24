@@ -331,7 +331,7 @@ void Listener::run()
             active = false;
             emit failure(SIP_FORBIDDEN);
             break;
-        case EXOSIP_CALL_MESSAGE_NEW:
+        case EXOSIP_MESSAGE_NEW:
             if(MSG_IS_REGISTER(event->request)) {
                 Locker lock(context);
                 eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);

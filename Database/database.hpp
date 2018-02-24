@@ -53,6 +53,17 @@ public:
         return {(int)Instance->firstNumber, (int)Instance->lastNumber};
     }
 
+    static int sequence() {
+        if(!Instance)
+            return 0;
+        return Instance->dbSequence;
+    }
+
+    static void updateSequence() {
+        if(Instance)
+           ++Instance->dbSequence;
+    }
+
 private:
     static const int interval = 10000;
 
@@ -69,7 +80,7 @@ private:
 
     int expiresNat, expiresUdp, expiresTcp;
 
-    volatile int firstNumber, lastNumber;
+    volatile int firstNumber, lastNumber, dbSequence;
     int port;
 
     Database(unsigned order);
@@ -91,10 +102,11 @@ private:
     static QVariantHash result(const QSqlRecord& record);
 
 signals:
-    void countResults(const QString& id, int count);
     void updateAuthorize(const QVariantHash& config, bool active);
 
 private slots:
+    void sendRoster(const Event& ev);
+
     void applyConfig(const QVariantHash& config);
     void onTimeout();
 };

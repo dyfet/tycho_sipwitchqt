@@ -29,16 +29,21 @@
 #include <QDateTime>
 #include <QModelIndex>
 #include <QVector>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 class Desktop;
 class Storage;
 class LocalContacts;
 class LocalDelegate;
 class SessionItem;
+class Sessions;
 
 class ContactItem final
 {
     friend LocalDelegate;
+    friend LocalContacts;
     friend SessionItem;
 
 public:
@@ -54,6 +59,10 @@ public:
 
     UString type() const {
         return contactType;
+    }
+
+    UString user() const {
+        return authUserId;
     }
 
     UString uri() const {
@@ -72,6 +81,14 @@ public:
         return extensionNumber > -1;
     }
 
+    bool isGroup() const {
+        return group;
+    }
+
+    SessionItem *getSession() const {
+        return session;
+    }
+
     QString filter() const {
         return contactFilter;
     }
@@ -80,13 +97,17 @@ public:
         return groups + users;
     }
 
+    static ContactItem *findText(const QString& text);
+    static ContactItem *findExtension(int number);
     static void purge();
 
 private:
     ContactItem *prior;
+    SessionItem *session;
     UString displayName, contactUri, contactTimestamp, contactType;
-    QString contactFilter, textDisplay, textNumber;
+    QString contactFilter, textDisplay, textNumber, authUserId;
     QDateTime contactUpdated;
+    bool group;
     int extensionNumber;
     int uid;
 
@@ -101,6 +122,9 @@ class LocalContacts final : public QAbstractListModel
 public:
     LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
     void setFilter(const UString& filter);
+
+    void updateContact(const QJsonObject& json);
+    void clickContact(int row);
 
 private:    
     int rowCount(const QModelIndex& parent) const final;
@@ -119,24 +143,29 @@ private:
 
 class Phonebook final : public QWidget
 {
+    Q_OBJECT
 public:
-    Phonebook(Desktop *main);
+    Phonebook(Desktop *main, Sessions* sessionsPage);
     ~Phonebook() = default;
 
     void enter();
-    ContactItem *self();
+
+    static ContactItem *self();
 
 private:
     Desktop *desktop;
     LocalDelegate *localPainter;
     LocalContacts *localModel;
     Connector *connector;
+    QTimer refreshRoster;
+
+signals:
+     void changeSessions(Storage *storage, const QList<ContactItem *>& contacts);
 
 private slots:
     void search();
-    void filter(const QString& selected);
-    void select(const QModelIndex& index);
-    
+    void filterView(const QString& selected);
+    void selectContact(const QModelIndex& index);
     void changeConnector(Connector *connector);
     void changeStorage(Storage *storage);
 };

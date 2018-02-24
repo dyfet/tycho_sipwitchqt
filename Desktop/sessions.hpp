@@ -22,34 +22,61 @@
 #include <QVariantHash>
 #include <QPen>
 #include "phonebook.hpp"
+#include "messages.hpp"
 
 class Desktop;
 class SessionDelegate;
-class MessageItem;
+class SessionModel;
 
 class SessionItem final
 {
-    friend SessionDelegate;
+    friend class SessionDelegate;
+    friend class SessionModel;
 
 public:
     SessionItem(ContactItem *contactItem, bool active = false);
+    ~SessionItem();
 
     QString display() const {
         if(!contact)
-            return "";
+            return callDisplay;
         return contact->display();
     }
 
     QString type() const {
         if(!contact)
-            return "NONE";
+            return "CALL";
         return contact->type();
     }
 
+    QString text() const {
+        return inputText;
+    }
+
+    MessageModel *model() const {
+        return messageModel;
+    }
+
+    bool isGroup() const {
+        if(!contact)
+            return false;
+        return contact->isGroup();
+    }
+
+    void setText(const QString& text) {
+        inputText = text;
+    }
+
+    QString title();
     bool setOnline(bool flag);
 
 private:
-    //QList<MessageItem> messages;
+    QList<MessageItem> messages;
+    MessageModel *messageModel;
+    QString inputText;                          // current input buffer
+    QString callDisplay;                        // transitory call name
+    int cid, did;                               // exosip call info
+
     ContactItem *contact;
     QString status;
     QPen color;
@@ -61,13 +88,29 @@ class SessionModel final : public QAbstractListModel
     friend class SessionDelegate;
 
 public:
-    SessionModel(QWidget *parent) : QAbstractListModel(parent) {}
+    SessionModel(QWidget *parent) : QAbstractListModel(parent) {
+        Instance = this;
+    }
+
+    ~SessionModel() final {
+        Instance = nullptr;
+    }
+
+    void add(SessionItem *item);
+    void clickSession(int row);
+
+    static SessionModel *instance() {
+        return Instance;
+    }
 
     static void purge();
+    static void update(SessionItem *session);
 
 private:
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
+
+    static SessionModel *Instance;
 };
 
 class SessionDelegate final : public QStyledItemDelegate
@@ -91,14 +134,20 @@ private:
     Desktop *desktop;
     Connector *connector;
     SessionModel *model;
-    SessionDelegate *sessions;
+
+public slots:
+    void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
+    void activateSession(SessionItem *item);
+    void activateContact(ContactItem *item);
+    void activateSelf();
 
 private slots:
     void search();
-
+    void selectSelf();
+    void selectSession(const QModelIndex& index);
+    void requestRoster();
     void changeActive(const QVariantHash& status);
     void changeStorage(Storage *storage);
-    void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
     void changeConnector(Connector *connector);
 };
 

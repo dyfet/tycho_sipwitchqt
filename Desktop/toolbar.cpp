@@ -42,6 +42,11 @@ QWidget(parent)
     Search = ui.searchText;
 }
 
+void Toolbar::setTitle(const QString& text)
+{
+    ui.title->setText(text);
+}
+
 void Toolbar::clearSearch()
 {
     ui.searchText->setText("");

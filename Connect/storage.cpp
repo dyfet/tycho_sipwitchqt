@@ -92,6 +92,7 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "extension INTEGER DEFAULT -1,"
             "sequence INTEGER DEFAULT 0,"           // helps with timestamp ordering
             "type VARCHAR(8) DEFAULT 'USER',"
+            "user VARCHAR(64),"                     // authorizing user
             "uri VARCHAR(128),"
             "dialing VARCHAR(64),"
             "display VARCHAR(64) DEFAULT NULL,"

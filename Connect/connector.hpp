@@ -39,6 +39,7 @@ public:
     }
 
     void stop();
+    void requestRoster();
 
 private:
     volatile bool active;
@@ -55,9 +56,13 @@ private:
 
     void add_authentication();
 
+    void processRoster(eXosip_event_t *event);
+
 signals:
     void starting();
 	void finished();
+
+    void changeRoster(const QByteArray& json);
 
 private slots:
 	void run();
