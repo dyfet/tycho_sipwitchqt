@@ -22,6 +22,7 @@
 #include <QAbstractListModel>
 #include <QDateTime>
 #include "../Common/types.hpp"
+#include "phonebook.hpp"
 
 class SessionItem;
 
@@ -45,11 +46,11 @@ public:
         return msgSubject;
     }
 
-    UString from() const {
+    ContactItem *from() const {
         return msgFrom;
     }
 
-    UString to() const {
+    ContactItem *to() const {
         return msgTo;
     }
 
@@ -68,7 +69,8 @@ private:
     SessionItem *session;           // session back pointer
     bool inbox;
     type_t msgType;
-    UString msgSubject, msgFrom, msgTo;
+    UString msgSubject;
+    ContactItem *msgTo, *msgFrom;
     QByteArray msgBody;
 };
 

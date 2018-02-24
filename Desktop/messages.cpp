@@ -30,7 +30,7 @@ session(sid)
     msgType = TEXT_MESSAGE;
     msgSubject = session->currentTopic();
     msgBody = text.toUtf8();
-    msgFrom = Storage::from();
-    msgTo = sid->uri();
+    msgFrom = Phonebook::self();
+    msgTo = session->contactItem();
     inbox = false;
 }
