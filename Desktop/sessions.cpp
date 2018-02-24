@@ -28,6 +28,7 @@ static Ui::SessionsWindow ui;
 static int activeCalls = 0;                 // active calls (temp sessions)...
 static QList<SessionItem*> sessions;
 static QMap<QString, SessionItem *> groups;
+static MessageItem *activeMessage = nullptr;
 static SessionItem *clickedItem = nullptr;
 static SessionItem *activeItem = nullptr, *local[1000];
 static QString userStatus = "@", groupStatus = "#";
@@ -78,6 +79,10 @@ SessionItem::~SessionItem()
     if(contact) {
         contact->session = nullptr;
         contact = nullptr;
+    }
+
+    foreach(auto msg, messages) {
+        delete msg;
     }
 }
 

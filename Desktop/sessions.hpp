@@ -34,6 +34,7 @@ class SessionItem final
     friend class SessionDelegate;
     friend class SessionModel;
 
+    Q_DISABLE_COPY(SessionItem);
 public:
     SessionItem(ContactItem *contactItem, bool active = false);
     ~SessionItem();
@@ -94,7 +95,7 @@ public:
 private:
     QMap<UString, unsigned> topics;
     UString topic;
-    QList<MessageItem> messages;
+    QList<MessageItem *> messages;
     MessageModel *messageModel;
     QString inputText;                          // current input buffer
     QString callDisplay;                        // transitory call name

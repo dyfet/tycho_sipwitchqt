@@ -31,6 +31,7 @@ class MessageItem final
     friend class MessageDelegate;
     friend class MessageModel;
 
+    Q_DISABLE_COPY(MessageItem);
 public:
     typedef enum {
         TEXT_MESSAGE,
