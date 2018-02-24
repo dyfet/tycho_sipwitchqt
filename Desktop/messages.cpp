@@ -15,24 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QWidget>
-#include <QVariantHash>
-#include <QPen>
-
 #include "phonebook.hpp"
 #include "sessions.hpp"
 #include "../Connect/storage.hpp"
 
 static int sequence = 0;
 
-MessageItem::MessageItem(SessionItem *sid, const QString& text, const QString& topic) :
+MessageItem::MessageItem(SessionItem *sid, const QString& text) :
 session(sid)
 {
     dateTime = QDateTime::currentDateTime();
     dayNumber = Util::currentDay(dateTime);
     dateSequence = ++sequence;
     msgType = TEXT_MESSAGE;
-    msgSubject = topic.toUtf8();
+    msgSubject = session->currentTopic();
     msgBody = text.toUtf8();
     msgFrom = Storage::from();
     msgTo = sid->uri();

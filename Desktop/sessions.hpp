@@ -21,6 +21,7 @@
 #include <QWidget>
 #include <QVariantHash>
 #include <QPen>
+#include <QMap>
 #include "phonebook.hpp"
 #include "messages.hpp"
 
@@ -67,6 +68,10 @@ public:
         return contact;
     }
 
+    UString currentTopic() const {
+        return topic;
+    }
+
     bool isGroup() const {
         if(!contact)
             return false;
@@ -81,6 +86,8 @@ public:
     bool setOnline(bool flag);
 
 private:
+    QMap<UString, unsigned> topics;
+    UString topic;
     QList<MessageItem> messages;
     MessageModel *messageModel;
     QString inputText;                          // current input buffer

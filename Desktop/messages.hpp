@@ -35,7 +35,7 @@ public:
         TEXT_MESSAGE,
     } type_t;
 
-    MessageItem(SessionItem *sid, const QString& text, const QString& topic); // local outbox text
+    MessageItem(SessionItem *sid, const QString& text); // local outbox text
 
     type_t type() const {
         return msgType;

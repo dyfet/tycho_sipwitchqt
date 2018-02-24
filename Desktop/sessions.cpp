@@ -64,6 +64,13 @@ messageModel(nullptr)
     auto number = contactItem->number();
     if(number > -1 && number < 1000)
         local[number] = this;
+
+    if(number == 0)
+        topic = "Help";
+    else
+        topic = "None";
+
+    topics[topic] = 0;
 }
 
 SessionItem::~SessionItem()
