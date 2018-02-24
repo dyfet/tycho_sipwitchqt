@@ -68,6 +68,7 @@ public:
         return QByteArray::number(num, base);
     }
 
+    static UString address(const UString& schema, const UString& server, quint16 port);
     static UString uri(const UString& schema, const UString& server, quint16 port);
     static UString uri(const UString& schema, const UString& id, const UString& server, quint16 port);
 };

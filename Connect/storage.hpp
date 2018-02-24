@@ -55,6 +55,14 @@ public:
         return Instance;
     }
 
+    static UString server() {
+        return ServerAddress;
+    }
+
+    static UString from() {
+        return FromAddress;
+    }
+
     static bool exists();
     static void remove();
     static QVariantHash next(QSqlQuery& query);
@@ -67,6 +75,8 @@ public:
 
 private:
     QSqlDatabase db;
+    static UString ServerAddress;
+    static UString FromAddress;
     static Storage *Instance;
 };
 

@@ -48,6 +48,6 @@ void Options::enter()
 
     auto creds = storage->credentials();
     ui.displayName->setText(creds["display"].toString());
-    ui.server->setText(creds["server"].toString());
+    ui.server->setText(creds["host"].toString());
     ui.secret->setText("");
 }

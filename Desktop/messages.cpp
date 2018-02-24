@@ -21,4 +21,20 @@
 
 #include "phonebook.hpp"
 #include "sessions.hpp"
+#include "../Connect/storage.hpp"
 
+static int sequence = 0;
+
+MessageItem::MessageItem(SessionItem *sid, const QString& text, const QString& topic) :
+session(sid)
+{
+    dateTime = QDateTime::currentDateTime();
+    dayNumber = Util::currentDay(dateTime);
+    dateSequence = ++sequence;
+    msgType = TEXT_MESSAGE;
+    msgSubject = topic.toUtf8();
+    msgBody = text.toUtf8();
+    msgFrom = Storage::from();
+    msgTo = sid->uri();
+    inbox = false;
+}

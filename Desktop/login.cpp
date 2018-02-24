@@ -82,7 +82,7 @@ QVariantHash Login::credentials()
         cred["secret"] = ui.secret->text().toUtf8();
 
     if(uri && uri.host().toLower() != "none") {
-        cred["server"] = QString(uri.host());
+        cred["host"] = QString(uri.host());
         cred["port"] = uri.port();
         if(!uri.user().isEmpty())
             ext = uri.user();
@@ -99,7 +99,7 @@ QVariantHash Login::credentials()
 
     qDebug() << "LOGIN CREDENTIALS" << cred;
 
-    if(ext.isEmpty() || cred["server"].isNull()) {
+    if(ext.isEmpty() || cred["host"].isNull()) {
         ui.identity->setFocus();
         desktop->errorMessage(tr("No identity specified"));
         return QVariantHash();

@@ -115,3 +115,10 @@ quint16 Util::portNumber(const char *cp)
 
     return static_cast<quint16>(atoi(cp));
 }
+
+unsigned Util::currentDay(const QDateTime& when = QDateTime::currentDateTime())
+{
+    auto secs = when.toSecsSinceEpoch();
+    secs -= when.offsetFromUtc();
+    return static_cast<unsigned>(secs / 86400l);
+}

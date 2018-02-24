@@ -531,7 +531,7 @@ void Desktop::authorized(const QVariantHash& creds)
     if(storage)
         storage->updateCredentials(creds);
     else {
-        auto server = creds["server"].toString().toUtf8();
+        auto server = creds["host"].toString().toUtf8();
         auto schema = creds["schema"].toString().toUtf8();
         auto uri = QString(UString::uri(schema, creds["extension"].toString(), server, static_cast<quint16>(creds["port"].toInt())));
         auto opr = QString(UString::uri(schema, "0", server, static_cast<quint16>(creds["port"].toInt())));

@@ -23,6 +23,7 @@
 #include <QDebug>
 #include <QHostAddress>
 #include <QCommandLineParser>
+#include <QDateTime>
 
 namespace Util {
     quint16 portNumber(const char *cp);
@@ -31,6 +32,7 @@ namespace Util {
     const QList<QHostAddress> hostAddress(const QString& hostId);
     int hostPort(const QString& hostId);
     const QStringList controlOptions(const char **argv);
+    unsigned currentDay(const QDateTime& when);
 }
 
 /*!

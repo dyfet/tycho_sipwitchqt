@@ -68,6 +68,9 @@
            <pointsize>13</pointsize>
           </font>
          </property>
+         <property name="styleSheet">
+          <string notr="true">border: none; outline: none; padding: 0px; margin: 0px; padding: 0px; text-align: left;</string>
+         </property>
          <property name="text">
           <string>*</string>
          </property>

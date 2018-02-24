@@ -67,7 +67,7 @@ Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true), connected(false), registered(false), authenticated(false)
 {
     serverId = cred["extension"].toString();
-    serverHost = cred["server"].toString().toUtf8();
+    serverHost = cred["host"].toString().toUtf8();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverInit = cred["initialize"].toString();
     serverLabel = cred["label"].toString().toUtf8();

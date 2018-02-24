@@ -19,8 +19,11 @@
 #define	MESSAGES_HPP_
 
 #include <QWidget>
-#include <QVariantHash>
-#include <QPen>
+#include <QAbstractListModel>
+#include <QDateTime>
+#include "../Common/types.hpp"
+
+class SessionItem;
 
 class MessageItem final
 {
@@ -28,6 +31,45 @@ class MessageItem final
     friend class MessageModel;
 
 public:
+    typedef enum {
+        TEXT_MESSAGE,
+    } type_t;
+
+    MessageItem(SessionItem *sid, const QString& text, const QString& topic); // local outbox text
+
+    type_t type() const {
+        return msgType;
+    }
+
+    UString subject() const {
+        return msgSubject;
+    }
+
+    UString from() const {
+        return msgFrom;
+    }
+
+    UString to() const {
+        return msgTo;
+    }
+
+    QByteArray body() const {
+        return msgBody;
+    }
+
+    bool isInbox() const {
+        return inbox;
+    }
+
+private:
+    int dateSequence;               // used to help unique sorting
+    unsigned dayNumber;             // used to determine day message is for
+    QDateTime dateTime;             // date and time message was created
+    SessionItem *session;           // session back pointer
+    bool inbox;
+    type_t msgType;
+    UString msgSubject, msgFrom, msgTo;
+    QByteArray msgBody;
 };
 
 class MessageModel final : public QAbstractListModel

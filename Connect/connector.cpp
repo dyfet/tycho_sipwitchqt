@@ -73,7 +73,7 @@ Connector::Connector(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true)
 {
     serverId = cred["extension"].toString();
-    serverHost = cred["server"].toString().toUtf8();
+    serverHost = cred["host"].toString().toUtf8();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverLabel = cred["label"].toString().toUtf8();
     serverCreds = cred;

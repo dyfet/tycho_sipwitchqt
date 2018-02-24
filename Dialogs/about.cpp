@@ -35,8 +35,8 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
 
     auto creds = parent->storageCredentials();
-    if(!creds["server"].isNull()) {
-        ui.authServer->setText(creds["server"].toString());
+    if(!creds["host"].isNull()) {
+        ui.authServer->setText(creds["host"].toString());
         ui.authId->setText(creds["user"].toString());
     }
 

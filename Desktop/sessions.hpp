@@ -53,8 +53,18 @@ public:
         return inputText;
     }
 
+    UString uri() const {
+        if(!contact)
+            return UString();
+        return contact->uri();
+    }
+
     MessageModel *model() const {
         return messageModel;
+    }
+
+    ContactItem *contactItem() const {
+        return contact;
     }
 
     bool isGroup() const {
