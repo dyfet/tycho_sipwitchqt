@@ -37,6 +37,7 @@ public:
     } type_t;
 
     MessageItem(SessionItem *sid, const QString& text); // local outbox text
+    MessageItem(const QSqlRecord& record);              // database load...
 
     type_t type() const {
         return msgType;
@@ -61,6 +62,8 @@ public:
     bool isInbox() const {
         return inbox;
     }
+
+    void save();                                        // save to database
 
 private:
     int dateSequence;               // used to help unique sorting

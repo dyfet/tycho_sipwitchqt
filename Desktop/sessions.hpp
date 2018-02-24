@@ -68,6 +68,12 @@ public:
         return contact;
     }
 
+    int contactUid() const {
+        if(contact)
+            return contact->uid;
+        return 0;
+    }
+
     UString currentTopic() const {
         return topic;
     }

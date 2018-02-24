@@ -97,6 +97,10 @@ public:
         return groups + users;
     }
 
+    static ContactItem *findContact(int uid) {
+        return index[uid];
+    }
+
     static ContactItem *findText(const QString& text);
     static ContactItem *findExtension(int number);
     static void purge();
@@ -113,6 +117,7 @@ private:
 
     static ContactItem *list;
     static QList<ContactItem *> users, groups;
+    static QMap<int,ContactItem *> index;
 };
 
 class LocalContacts final : public QAbstractListModel

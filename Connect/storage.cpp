@@ -76,6 +76,9 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
     }
 
     runQuery({
+
+        // This is a master config table.
+
         "CREATE TABLE Credentials ("
              "id INTEGER PRIMARY KEY,"              // rowid in sqlite
              "extension INTEGER,"                   // extension #
@@ -91,6 +94,10 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
              "type VARCHAR(16) NOT NULL,"           // algorithm used
              "series INTEGER DEFAULT 9);",          // site db series
 
+        // Contacts generally do not delete, but they are modified with
+        // roster updates.  we may add roster deleting in the future though.
+        // Contacts and "sessions" are somewhat synomonous in the database.
+
         "CREATE TABLE Contacts ("
             "uid INTEGER PRIMARY KEY AUTOINCREMENT,"
             "extension INTEGER DEFAULT -1,"
@@ -98,26 +105,31 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "type VARCHAR(8) DEFAULT 'USER',"
             "user VARCHAR(64),"                     // authorizing user
             "uri VARCHAR(128),"
-            "dialing VARCHAR(64),"
+            "dialing VARCHAR(64),"                  // used to tie together msgs
             "display VARCHAR(64) DEFAULT NULL,"
             "last DATETIME DEFAULT 0);",
-        "CREATE INDEX ByContacted ON Contacts(last, sequence DESC);",
+        "CREATE INDEX ByContact ON Contacts(last, sequence DESC);",
+
+        // Messages are stored in the database to be reloaded when the client
+        // restarts, and may be expired by date, but are not modified.  In
+        // storage inbox vs outbox determined by whether sid == from or to.
 
         "CREATE TABLE Messages ("
-            "msgfrom INTEGER,"                      // origin, team, group
+            "msgfrom INTEGER,"                      // origin contact uid
+            "msgto INTEGER,"                        // target contact uid
+            "sid INTEGER,"                          // uid of session
             "subject VARCHAR(80),"                  // msg subject
             "display VARCHAR(64),"                  // who its from as shown
             "reply VARCHAR(64) DEFAULT NULL,"       // reply uri if external
-            "mid INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "seqid INTEGER,"                        // used for unique timestamps
             "posted TIMESTAMP,"
             "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
             "callduration INTEGER DEFAULT 0,"       // call duration...
-            "expires INTEGER DEFAULT 0,"           // carried expires header
+            "expires INTEGER DEFAULT 0,"            // carried expires header
             "msgtype VARCHAR(8),"
-            "msgtext TEXT,"
-            "FOREIGN KEY (msgfrom) REFERENCES Contacts(uid));",
-        "CREATE UNIQUE INDEX Inboxes ON Messages(msgfrom, posted, mid);",
-        "CREATE INDEX Incoming ON Messages(posted, mid);",
+            "msgtext TEXT,"                         // depends on type...
+            "FOREIGN KEY (sid) REFERENCES Contacts(uid));",
+        "CREATE UNIQUE INDEX ByDate ON Messages(sid, posted, seqid);",
     });
 
     FromAddress = UString::uri(cred["schema"].toString(), cred["extension"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));

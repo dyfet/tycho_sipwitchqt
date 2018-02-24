@@ -34,6 +34,7 @@ static bool initialRoster = false;
 ContactItem *ContactItem::list = nullptr;
 QList<ContactItem *> ContactItem::users;
 QList<ContactItem *> ContactItem::groups;
+QMap<int,ContactItem *> ContactItem::index;
 
 ContactItem::ContactItem(const QSqlRecord& record)
 {
@@ -52,6 +53,7 @@ ContactItem::ContactItem(const QSqlRecord& record)
     textDisplay = record.value("display").toString();
     authUserId = record.value("user").toString().toLower();
     uid = record.value("uid").toInt();
+    index[uid] = this;
 
     // the subset of contacts that have active sessions at load time...
     if(record.value("last").toULongLong() > 0) {
