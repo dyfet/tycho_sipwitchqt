@@ -184,15 +184,8 @@ endif()
 # platform specific post link
 
 if(BOOTSTRAP_PATH AND WIN32)
-    add_custom_command(TARGET server-app
-        POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libeay32.dll" .
-    )
-    add_custom_command(TARGET desktop-app
-        POST_BUILD
+    Execute_Process(
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
         COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
         COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" .
