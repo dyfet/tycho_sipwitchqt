@@ -36,6 +36,8 @@
 
 static const char *eid(eXosip_event_type ev);
 
+static bool exiting = false;
+
 // internal lock class
 class Locker final
 {
@@ -224,7 +226,8 @@ void Connector::run()
     }
 
     qDebug() << "Connector ending";
-    emit finished();
+    if(!exiting)
+        emit finished();
     eXosip_quit(context);
     context = nullptr;
 }
@@ -239,8 +242,9 @@ void Connector::processRoster(eXosip_event_t *event)
     }
 }
 
-void Connector::stop()
+void Connector::stop(bool flag)
 {
+    exiting = flag;
     active = false;
 }
 

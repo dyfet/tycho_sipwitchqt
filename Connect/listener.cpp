@@ -30,6 +30,8 @@
 
 static const char *eid(eXosip_event_type ev);
 
+static bool exiting = false;
+
 // internal lock class
 class Locker final
 {
@@ -385,7 +387,8 @@ void Listener::run()
         eXosip_event_free(event);
     }
 
-    emit finished();
+    if(!exiting)
+        emit finished();
     eXosip_quit(context);
     context = nullptr;
 }
@@ -428,8 +431,9 @@ void Listener::timeout()
     emit failure(666);  // special code for unable to reach server...
 }
 
-void Listener::stop()
+void Listener::stop(bool shutdown)
 {
+    exiting = shutdown;
     active = false;
 }
 

@@ -25,6 +25,7 @@
 #include <QTranslator>
 #include <QFile>
 #include <QCloseEvent>
+#include <csignal>
 
 #ifdef Q_OS_MAC
 #include <objc/objc.h>
@@ -43,6 +44,18 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
     return false;
 }
 #endif
+
+static int result = 0;
+
+static void signal_handler(int signo)
+{
+    Desktop *desktop = Desktop::instance();
+    if(desktop) {
+        QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
+    }
+
+    result = signo;
+}
 
 static Ui::MainWindow ui;
 
@@ -186,11 +199,6 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     }
 }
 
-Desktop::~Desktop()
-{
-    shutdown();
-}
-
 void Desktop::closeEvent(QCloseEvent *event)
 {
     if(isVisible())
@@ -210,14 +218,18 @@ QMenu *Desktop::createPopupMenu()
 }
 
 void Desktop::shutdown()
-{
+{   
+    bool threads = false;
+
     if(connector) {
-        connector->stop();
+        threads = true;
+        connector->stop(true);
         connector = nullptr;
     }
 
     if(listener) {
-        listener->stop();
+        threads = true;
+        listener->stop(true);
         listener = nullptr;
     }
 
@@ -230,6 +242,11 @@ void Desktop::shutdown()
     if(control) {
         delete control;
         control = nullptr;
+    }
+
+    if(threads) {
+        qDebug() << "Shutting down threads...";
+        QThread::msleep(500);       // sleep long enough for stack to end...
     }
 }
 
@@ -625,7 +642,19 @@ int main(int argc, char *argv[])
         {{"notray"}, "Disable tray icon"},
     });
 
+#ifdef SIGHUP
+    ::signal(SIGHUP, signal_handler);
+#endif
+#ifdef SIGKILL
+    ::signal(SIGKILL, signal_handler);
+#endif
+    ::signal(SIGINT, signal_handler);
+    ::signal(SIGTERM, signal_handler);
+
     args.process(app);
     Desktop w(!args.isSet("notray"), args.isSet("reset"));
-    return app.exec();
+    int status = app.exec();
+    if(!result)
+        result = status;
+    return result;
 }

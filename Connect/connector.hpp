@@ -38,7 +38,7 @@ public:
         thread()->start();
     }
 
-    void stop();
+    void stop(bool shutdown = false);
     void requestRoster();
 
 private:

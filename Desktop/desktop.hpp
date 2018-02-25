@@ -74,7 +74,6 @@ public:
     } state_t;
 
     Desktop(bool tray, bool reset);
-    virtual ~Desktop();
 
     bool isConnected() const {
         return connector != nullptr;
@@ -191,13 +190,13 @@ private slots:
     void offline(void);                         // lost server connection
     void authorizing(void);                     // registering with server...
     void failed(int error_code);                // sip session fatal error
-    void shutdown();                            // application shutdown
 
     void appState(Qt::ApplicationState state);
     void trayAction(QSystemTrayIcon::ActivationReason reason);
     void trayAway();
 
     void setBanner(const QString& banner);
+    void shutdown();                            // application shutdown
 };
 
 #endif

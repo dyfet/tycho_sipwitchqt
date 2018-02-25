@@ -42,7 +42,7 @@ public:
 
     void reauthorize(const QVariantHash& update = QVariantHash());
 
-    void stop();
+    void stop(bool shutdown = false);
 
 private:
     volatile bool active, connected, registered, authenticated;

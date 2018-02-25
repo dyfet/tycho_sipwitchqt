@@ -153,6 +153,13 @@ QVariant SessionModel::data(const QModelIndex& index, int role) const
 
 void SessionModel::purge()
 {
+    activeItem = nullptr;
+
+    if(activeMessage) {
+        delete activeMessage;
+        activeMessage = nullptr;
+    }
+
     memset(local, 0, sizeof(local));
     foreach(auto session, sessions) {
         session->contact = nullptr;     // avoid dependency during takedown...
@@ -363,8 +370,8 @@ void Sessions::activateSession(SessionItem* item)
 
     activeItem = item;
     ui.messages->setModel(item->model());
+    ui.inputFrame->setVisible(true);
     ui.input->setText(item->text());
-    ui.input->setVisible(true);
     ui.input->setFocus();
     Toolbar::setTitle(item->title());
 }
@@ -392,7 +399,7 @@ void Sessions::activateSelf()
     Toolbar::setTitle("");
     Toolbar::search()->setFocus();
     ui.input->setText("");
-    ui.input->setVisible(false);
+    ui.inputFrame->setVisible(false);
     ui.messages->setModel(nullptr);
 }
 
