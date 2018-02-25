@@ -22,10 +22,27 @@
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <QAbstractNativeEventFilter>
+#endif
+
 #include <QTranslator>
 #include <QFile>
 #include <QCloseEvent>
 #include <csignal>
+
+static int result = 0;
+
+static void signal_handler(int signo)
+{
+    Desktop *desktop = Desktop::instance();
+    if(desktop) {
+        QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
+    }
+
+    result = signo;
+}
 
 #ifdef Q_OS_MAC
 #include <objc/objc.h>
@@ -45,17 +62,45 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
 }
 #endif
 
-static int result = 0;
+#ifdef Q_OS_WIN
 
-static void signal_handler(int signo)
+class NativeEvent final : public QAbstractNativeEventFilter
 {
-    Desktop *desktop = Desktop::instance();
-    if(desktop) {
-        QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
-    }
+private:
+    bool nativeEventFilter(const QByteArray &eventType, void *message, long *result) final;
+};
 
-    result = signo;
+bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, long *result)
+{
+    Q_UNUSED(eventType);
+    Q_UNUSED(result);
+
+    MSG *msg = static_cast<MSG*>(message);
+    Desktop *desktop = nullptr;
+
+    Q_UNUSED(desktop);
+
+    switch(msg->message) {
+    case WM_POWERBROADCAST:
+        switch(msg->wParam) {
+        case PBT_APMRESUMEAUTOMATIC:
+        case PBT_APMRESUMESUSPEND:
+//          resume...
+            break;
+        case PBT_APMSUSPEND:
+//          suspend..
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    return false;
 }
+
+#endif
 
 static Ui::MainWindow ui;
 
@@ -70,6 +115,11 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     Instance = this;
     connector = nullptr;
     front = true;
+
+#ifdef Q_OS_WIN
+    static NativeEvent nativeEvents;
+    qApp->installNativeEventFilter(&nativeEvents);
+#endif
 
     if(reset) {
         Storage::remove();
