@@ -31,16 +31,13 @@ static ContactItem *activeItem = nullptr;
 static ContactItem *clickedItem = nullptr;
 static bool initialRoster = false;
 
-ContactItem *ContactItem::list = nullptr;
 QList<ContactItem *> ContactItem::users;
 QList<ContactItem *> ContactItem::groups;
-QMap<int,ContactItem *> ContactItem::index;
+QHash<int,ContactItem *> ContactItem::index;
 
 ContactItem::ContactItem(const QSqlRecord& record)
 {
     session = nullptr;
-    prior = list;
-    list = this;
     group = false;
 
     extensionNumber = record.value("extension").toInt();
@@ -93,17 +90,15 @@ ContactItem::ContactItem(const QSqlRecord& record)
 
 void ContactItem::purge()
 {
-    while(list != nullptr) {
-        ContactItem *next = list->prior;
-        delete list;
-        list = next;
-    }
+    foreach(auto item, index.values())
+        delete item;
+
     groups.clear();
     users.clear();
+    index.clear();
     memset(local, 0, sizeof(local));
     highest = -1;
     me = -1;
-    list = nullptr;
 }
 
 ContactItem *ContactItem::findExtension(int number)
@@ -116,20 +111,20 @@ ContactItem *ContactItem::findExtension(int number)
 
 ContactItem *ContactItem::findText(const QString& text)
 {
-    auto item = list;
     auto match = text.toLower();
     unsigned matches = 0;
     ContactItem *found = nullptr;
 
-    while(item != nullptr) {
-        if(item->contactFilter.indexOf(text) > -1 || item->authUserId == text) {
+    auto item = index.begin();
+    while(item != index.end()) {
+        if((*item)->contactFilter.indexOf(text) > -1 || (*item)->authUserId == text) {
             if(++matches > 1) {
                 found = nullptr;
                 break;
             }
-            found = item;
+            found = *item;
         }
-        item = item->prior;
+        ++item;
     }
     return found;
 }

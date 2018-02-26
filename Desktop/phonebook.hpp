@@ -106,7 +106,6 @@ public:
     static void purge();
 
 private:
-    ContactItem *prior;
     SessionItem *session;
     UString displayName, contactUri, contactTimestamp, contactType;
     QString contactFilter, textDisplay, textNumber, authUserId;
@@ -115,9 +114,8 @@ private:
     int extensionNumber;
     int uid;
 
-    static ContactItem *list;
     static QList<ContactItem *> users, groups;
-    static QMap<int,ContactItem *> index;
+    static QHash<int,ContactItem *> index;
 };
 
 class LocalContacts final : public QAbstractListModel
