@@ -38,6 +38,8 @@
 	<file>phonebook@2x.png</file>
 	<file>person.png</file>
 	<file>person@2x.png</file>
+	<file>downscroll.png</file>
+	<file>downscroll@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>

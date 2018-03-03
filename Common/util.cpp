@@ -116,9 +116,17 @@ quint16 Util::portNumber(const char *cp)
     return static_cast<quint16>(atoi(cp));
 }
 
-unsigned Util::currentDay(const QDateTime& when = QDateTime::currentDateTime())
+unsigned Util::currentDay(const QDateTime& when)
 {
     auto secs = when.toMSecsSinceEpoch() / 1000l;
-    secs -= when.offsetFromUtc();
+    secs += when.offsetFromUtc();
     return static_cast<unsigned>(secs / 86400l);
 }
+
+unsigned Util::untilTomorrow(const QDateTime& when)
+{
+    auto secs = when.toMSecsSinceEpoch() / 1000l;
+    secs += when.offsetFromUtc();
+    return static_cast<unsigned>(86400 - (secs % 86400l));
+}
+

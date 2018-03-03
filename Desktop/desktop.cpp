@@ -30,6 +30,7 @@
 #include <QTranslator>
 #include <QFile>
 #include <QCloseEvent>
+#include <QResizeEvent>
 #include <csignal>
 
 static int result = 0;
@@ -129,7 +130,9 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
+    currentExpiration = 86400 * settings.value("expires", 7).toInt();
     currentAppearance = settings.value("appearance", "Vibrant").toString();
+
     control = new Control(this);
 
     QString prefix = ":/icons/";
@@ -412,6 +415,12 @@ void Desktop::statusMessage(const QString& text, int timeout)
 void Desktop::clearMessage()
 {
     ui.statusBar->clearMessage();
+}
+
+void Desktop::changeExpiration(const QString& expires)
+{
+    settings.setValue("expires", expires.toInt());
+    currentExpiration = (86400 * expires.toInt());
 }
 
 void Desktop::changeAppearance(const QString& appearance)

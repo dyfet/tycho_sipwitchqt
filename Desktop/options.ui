@@ -643,7 +643,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox">
+           <widget class="QComboBox" name="expires">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1184,7 +1184,7 @@
  </widget>
  <tabstops>
   <tabstop>fontSize</tabstop>
-  <tabstop>comboBox</tabstop>
+  <tabstop>expires</tabstop>
   <tabstop>horizontalSlider_2</tabstop>
   <tabstop>horizontalSlider</tabstop>
   <tabstop>appearance</tabstop>

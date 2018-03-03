@@ -361,8 +361,12 @@ void Database::sendRoster(const Event& event)
     qDebug() << "REQUEST" << event.request();
     while(query.isActive() && query.next()) {
         auto record = query.record();
+        auto name = record.value("name").toString();
         auto display = record.value("display").toString();
         auto dialing = record.value("number").toString();
+        auto email = record.value("email").toString();
+        auto access = record.value("access").toString();
+        qDebug() << "**** ACCESS" << access;
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
@@ -370,12 +374,18 @@ void Database::sendRoster(const Event& event)
 
         UString uri = event.uriTo(dialing);
         QJsonObject profile {
-            {"a", record.value("name").toString()},
+            {"a", name},
             {"n", record.value("number").toInt()},
             {"u", QString::fromUtf8(uri)},
             {"d", display},
             {"t", record.value("type").toString()},
         };
+
+        if(!email.isEmpty())
+            profile.insert("e", email);
+
+        if(record.value("access").toString() == "REMOTE")
+            profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
 
         list << profile;
     }

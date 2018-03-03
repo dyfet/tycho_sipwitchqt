@@ -19,6 +19,7 @@
 #include "ui_sessions.h"
 
 #include <QPainter>
+#include <QScrollBar>
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -30,6 +31,7 @@ static QList<SessionItem*> sessions;
 static QMap<QString, SessionItem *> groups;
 static MessageItem *activeMessage = nullptr;
 static SessionItem *clickedItem = nullptr;
+static SessionItem *inputItem = nullptr;
 static SessionItem *activeItem = nullptr, *local[1000];
 static QString userStatus = "@", groupStatus = "#";
 static QPen groupActive("blue"), groupDefault("black");
@@ -42,6 +44,8 @@ messageModel(nullptr)
 {
     contact = contactItem;
     contact->session = this;
+
+    messageModel = new MessageModel(this);
 
     if(contactItem->isGroup()) {
         status = groupStatus;
@@ -59,19 +63,12 @@ messageModel(nullptr)
     }
 
     online = active;
-    busy = false;
+    busy = loaded = false;
     cid = did = -1;
 
     auto number = contactItem->number();
     if(number > -1 && number < 1000)
         local[number] = this;
-
-    if(number == 0)
-        topic = "Help";
-    else
-        topic = "None";
-
-    topics[topic] = 0;
 }
 
 SessionItem::~SessionItem()
@@ -81,9 +78,78 @@ SessionItem::~SessionItem()
         contact = nullptr;
     }
 
+    // clear out messages...
+
+    if(messageModel) {
+        delete messageModel;
+        messageModel = nullptr;
+    }
+
     foreach(auto msg, messages) {
         delete msg;
     }
+}
+
+void SessionItem::addMessage(MessageItem *msg)
+{
+    Q_ASSERT(msg != nullptr);
+    Q_ASSERT(messageModel != nullptr);
+
+    if(messageModel->add(msg))
+        messageModel->fastUpdate();
+
+    // if fill-in, we can just post and finish...
+    if(contact->contactUpdated > msg->posted())
+        return;
+
+    auto storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+    storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;", {
+                          msg->posted(), msg->sequence(), contact->uid});
+
+    // TODO: re-sort model if user...tick new msg indicator if group...
+}
+
+unsigned SessionItem::loadMessages()
+{
+    unsigned count = 0;
+    auto fast = 0;
+
+    QDateTime latest = contact->contactUpdated;
+    int sequence = 0;
+
+    if(loaded || contact == nullptr)
+        return count;
+
+    auto storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+    Q_ASSERT(messageModel != nullptr);
+
+    auto query = storage->getRecords("SELECT * FROM Messages WHERE sid=? ORDER BY posted DESC, seqid DESC;", {contact->uid});
+
+    while(query.isActive() && query.next()) {
+        auto msg = new MessageItem(query.record());
+        if(!msg->isValid()) {
+            qDebug() << "FAILED MESSAGE";
+            delete msg;
+            continue;
+        }
+        if(msg->posted() > latest) {
+            latest = msg->posted();
+            sequence = msg->sequence();
+        }
+        if(messageModel->add(msg))
+            ++fast;
+        ++count;
+    }
+
+    messageModel->fastUpdate(fast);
+    loaded = true;
+    qDebug() << "Loaded" << fast << "/" << count << "message(s) for" << contact->displayName;
+    if(latest > contact->contactUpdated)
+        storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;", {latest, sequence, contact->uid});
+
+    return count;
 }
 
 QString SessionItem::title()
@@ -153,6 +219,7 @@ QVariant SessionModel::data(const QModelIndex& index, int role) const
 
 void SessionModel::purge()
 {
+    ui.messages->setModel(nullptr);
     activeItem = nullptr;
 
     if(activeMessage) {
@@ -290,21 +357,52 @@ QWidget(), desktop(control), model(nullptr)
     connect(ui.sessions, &QListView::clicked, this, &Sessions::selectSession);
     connect(ui.self, &QPushButton::pressed, this, &Sessions::selectSelf);
     connect(ui.status, &QPushButton::pressed, this, &Sessions::selectSelf);
+    connect(ui.input, &QLineEdit::returnPressed, this, &Sessions::createMessage);
+    connect(ui.input, &QLineEdit::textChanged, this, &Sessions::checkInput);
+
+    connect(ui.bottom, &QPushButton::pressed, this, [this]() {
+        scrollToBottom();
+    });
 
     SessionModel::purge();
     ui.sessions->setItemDelegate(new SessionDelegate(this));
+    ui.messages->setItemDelegate(new MessageDelegate(this));
+}
+
+void Sessions::resizeEvent(QResizeEvent *event)
+{
+    static bool active = false;
+
+    QWidget::resizeEvent(event);
+    if(!active && activeItem) {
+        active = true;
+        QTimer::singleShot(60, this, [this](){
+            active = false;
+            if(activeItem && activeItem->model())
+                activeItem->model()->changeLayout();
+        });
+    }
+}
+
+SessionItem *Sessions::active()
+{
+    return activeItem;
 }
 
 void Sessions::enter()
 {
-    if(activeItem)
-        Toolbar::setTitle(activeItem->title());
-    else
-        activateSelf();
     Toolbar::search()->setText("");
     Toolbar::search()->setPlaceholderText(tr("Enter number or name to reach"));
     Toolbar::search()->setEnabled(true);
-    ui.input->setFocus();
+
+    if(activeItem) {
+        Toolbar::setTitle(activeItem->title());
+        ui.input->setFocus();
+    }
+    else {
+        activateSelf();
+        Toolbar::search()->setFocus();
+    }
 }
 
 void Sessions::search()
@@ -315,8 +413,6 @@ void Sessions::search()
     UString text = Toolbar::search()->text().toUtf8();
     Toolbar::search()->setText("");
     if(text.isEmpty()) {
-        activateSession(nullptr);
-        desktop->statusMessage("");
         return;
     }
 
@@ -374,6 +470,8 @@ void Sessions::activateSession(SessionItem* item)
     ui.input->setText(item->text());
     ui.input->setFocus();
     Toolbar::setTitle(item->title());
+    item->loadMessages();
+    scrollToBottom();
 }
 
 void Sessions::selectSession(const QModelIndex& index)
@@ -476,4 +574,69 @@ void Sessions::changeConnector(Connector *connected)
         ui.status->setStyleSheet("color: green; border: 0px; margin: 0px; padding: 0px; text-align: left; background: white;");
     else
         ui.status->setStyleSheet("color: black; border: 0px; margin: 0px; padding: 0px; text-align:left; background: white;");
+}
+
+void Sessions::createMessage()
+{
+    if(ui.input->text().isEmpty())
+        return;
+
+    ui.input->setEnabled(false);
+    inputItem = activeItem;
+    inputItem->setText(ui.input->text());
+    ui.messages->setFocus();
+
+    // simulate sending processing...
+    QTimer::singleShot(200, this, [=]{
+        finishInput("");
+    });
+}
+
+void Sessions::checkInput(const QString& text)
+{
+    // Validate < 160 for utf8, since is how we send
+    // In future may also validate ucs2...
+
+    if(text.toUtf8().length() > 155) {
+        ui.input->setText(text.left(text.length() - 1));
+        desktop->warningMessage("Maximum input length reached", 500);
+    }
+}
+
+void Sessions::scrollToBottom()
+{
+    ui.bottom->setVisible(false);
+    if(!activeItem || activeItem->count() < 1)
+        return;
+    auto index = activeItem->lastMessage();
+    ui.messages->scrollTo(index, QAbstractItemView::PositionAtBottom);
+}
+
+void Sessions::finishInput(const QString& error)
+{
+    if(!error.isEmpty())
+        desktop->errorMessage(error);
+    else if(inputItem) {
+        Q_ASSERT(inputItem->messageModel != nullptr);
+        inputItem->addMessage(new MessageItem(inputItem, inputItem->text()));
+        inputItem->setText("");
+        if(inputItem == activeItem) {
+            bool bottom = true;
+            auto scroll = ui.messages->verticalScrollBar();
+            if(scroll && scroll->value() != scroll->maximum())
+                bottom = false;
+            ui.input->setText("");
+            if(bottom)
+                scrollToBottom();
+            else
+                ui.bottom->setVisible(true);
+        }
+    }
+
+    inputItem = nullptr;
+    ui.input->setEnabled(true);
+    if(activeItem)
+        ui.input->setFocus();
+    else
+        ui.messages->setFocus();
 }

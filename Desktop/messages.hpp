@@ -21,6 +21,9 @@
 #include <QWidget>
 #include <QAbstractListModel>
 #include <QDateTime>
+#include <QTextLayout>
+#include <QTextLine>
+#include <QStaticText>
 #include "../Common/types.hpp"
 #include "phonebook.hpp"
 
@@ -31,14 +34,14 @@ class MessageItem final
     friend class MessageDelegate;
     friend class MessageModel;
 
-    Q_DISABLE_COPY(MessageItem);
+    Q_DISABLE_COPY(MessageItem)
 public:
     typedef enum {
         TEXT_MESSAGE,
     } type_t;
 
-    MessageItem(SessionItem *sid, const QString& text); // local outbox text
-    MessageItem(const QSqlRecord& record);              // database load...
+    MessageItem(SessionItem *sid, const QString& text, bool save = true);
+    MessageItem(const QSqlRecord& record);      // database load...
 
     type_t type() const {
         return msgType;
@@ -64,18 +67,43 @@ public:
         return inbox;
     }
 
-    void save();                                        // save to database
+    bool isValid() const {
+        return session != nullptr;
+    }
+
+    QDateTime posted() const {
+        return dateTime;
+    }
+
+    int sequence() const {
+        return dateSequence;
+    }
+
+    QSize layout(const QStyleOptionViewItem& style, int row);
 
 private:
-    int dateSequence;               // used to help unique sorting
-    unsigned dayNumber;             // used to determine day message is for
-    QDateTime dateTime;             // date and time message was created
-    SessionItem *session;           // session back pointer
+    int dateSequence;                   // used to help unique sorting
+    unsigned dayNumber;                 // used to determine day message is for
+    QDateTime dateTime;                 // date and time message was created
+    SessionItem *session;               // session back pointer
     bool inbox;
     type_t msgType;
     UString msgSubject;
     ContactItem *msgTo, *msgFrom;
     QByteArray msgBody;
+
+    int lastLayout;                     // whether size hinting needs recomputing
+    QSize lastHint;                     // size hint of last layout
+    QSize textHint;                     // area of text...
+    bool dateHint, userHint, timeHint;  // hinting for time header & user change
+    double dateHeight, userHeight, textHeight, leadHeight;
+
+    QStaticText textStatus, textDisplay, textTimestamp, textDateline;
+    QString textString, userString;
+    QColor itemColor;
+    QTextLayout textLayout;
+    QList<QTextLayout::FormatRange> textFormats, userFormats;
+    QList<QTextLine> textLines;
 };
 
 class MessageModel final : public QAbstractListModel
@@ -83,11 +111,29 @@ class MessageModel final : public QAbstractListModel
     friend class MessageDelegate;
 
 public:
-    MessageModel(QWidget *parent) : QAbstractListModel(parent) {}
+    MessageModel(SessionItem *list) : QAbstractListModel(), session(list) {}
         
+    void fastUpdate(int count = 1);
+    bool add(MessageItem *item);
+    QModelIndex last();
+
+    void changeLayout();
+
 private:
+    SessionItem *session;
+
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
+};
+
+class MessageDelegate final : public QStyledItemDelegate
+{
+public:
+    MessageDelegate(QWidget *parent);
+
+private:
+    QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    void paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const final;
 };
 
 #endif

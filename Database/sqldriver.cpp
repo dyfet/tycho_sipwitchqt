@@ -40,6 +40,7 @@ static QStringList sqliteTables = {
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
         "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "email VARCHAR(128),"                   // email contact to use (avatar, etc)
         "fullname VARCHAR(64),"                 // display name
         "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
         "fwd_busy INTEGER DEFAULT -1,"          // forward busy
@@ -144,8 +145,8 @@ static QStringList sqlitePreload = {
     // "test1" and "test2", for extensions 101 and 102, password is "testing"
     "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
         "VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');",
-    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
-        "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','LOCAL');",
+    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access, email) "
+        "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','REMOTE','test2@localhost');",
     "INSERT INTO Authorize(name, fullname, type, access) "
         "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
     "INSERT INTO Extensions(number, name) VALUES(100, 'test');",

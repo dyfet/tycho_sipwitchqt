@@ -45,6 +45,8 @@ ContactItem::ContactItem(const QSqlRecord& record)
     contactTimestamp = contactUpdated.toString(Qt::ISODate);
     contactType = record.value("type").toString();
     contactUri = record.value("uri").toString().toUtf8();
+    contactPublic = record.value("puburi").toString().toUtf8();
+    contactEmail = record.value("mailto").toString().toUtf8();
     displayName = record.value("display").toString().toUtf8();
     textNumber = record.value("dialing").toString();
     textDisplay = record.value("display").toString();
@@ -53,7 +55,8 @@ ContactItem::ContactItem(const QSqlRecord& record)
     index[uid] = this;
 
     // the subset of contacts that have active sessions at load time...
-    if(record.value("last").toULongLong() > 0) {
+    qDebug() << "***** UPDATED" << contactUpdated << contactUpdated.isValid();
+    if(contactUpdated.isValid()) {
         if(contactType == "GROUP") {
             group = true;
             groups << this;
@@ -180,6 +183,8 @@ void LocalContacts::updateContact(const QJsonObject& json)
     auto display = json["d"].toString();
     auto uri = json["u"].toString();
     auto user = json["a"].toString();
+    auto puburi = json["p"].toString();
+    auto mailto = json["e"].toString();
 
     auto insert = false;
     auto item = local[number];
@@ -191,8 +196,8 @@ void LocalContacts::updateContact(const QJsonObject& json)
     }
 
     if(!item) {
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri) VALUES(?,?,?,?,?,?);", {
-                              number, QString::number(number), type, display, user, uri});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi) VALUES(?,?,?,?,?,?,?,?);", {
+                              number, QString::number(number), type, display, user, uri, mailto, puburi});
         auto query = storage->getRecords("SELECT * FROM Contacts WHERE extension=?;", {
                                              number});
         if(query.isActive() && query.next()) {
@@ -206,10 +211,11 @@ void LocalContacts::updateContact(const QJsonObject& json)
         item->displayName = display.toUtf8();
         item->contactUri = uri.toUtf8();
         item->authUserId = user.toLower();
-        storage->runQuery("UPDATE Contacts SET display=?, user=?, uri=? WHERE extension=?;", {
-                              display, user, uri, number});
+        storage->runQuery("UPDATE Contacts SET display=?, user=?, uri=?, mailto=?, puburi=? WHERE extension=?;", {
+                              display, user, uri, number, mailto, puburi});
         if(old == item->displayName)
             return;
+
         if(item->session)
             SessionModel::update(item->session);
     }
@@ -343,7 +349,10 @@ void Phonebook::selectContact(const QModelIndex& index)
     ui.displayName->setText(item->display());
     ui.type->setText(item->type().toLower());
     ui.uri->setText(item->uri());
-    ui.authorizingUser->setText(item->user());
+    if(item->publicUri().isEmpty())
+        ui.authorizingUser->setText(item->user());
+    else
+        ui.authorizingUser->setText(item->publicUri());
     localModel->clickContact(row);
 
     // delay to avoid false view if double-click activation
@@ -369,7 +378,7 @@ void Phonebook::changeConnector(Connector *connected)
     if(!connector)
         refreshRoster.stop();
 
-    if(connector && !initialRoster) {
+    if(connector) {
         connect(connector, &Connector::changeRoster, this, [=](const QByteArray& json) {
             if(!connector)
                 return;
@@ -385,10 +394,12 @@ void Phonebook::changeConnector(Connector *connected)
             }
         });
 
-        QTimer::singleShot(300, this, [this]{
-            if(connector)
-                connector->requestRoster();
-        });
+        if(!initialRoster) {
+            QTimer::singleShot(300, this, [this]{
+                if(connector)
+                    connector->requestRoster();
+            });
+        }
     }
 }
 
@@ -407,7 +418,7 @@ void Phonebook::changeStorage(Storage *storage)
         auto creds = storage->credentials();
         me = creds["extension"].toInt();
         // load contacts in last update time order...
-        auto query = storage->getRecords("SELECT * FROM Contacts ORDER BY last, sequence DESC");
+        auto query = storage->getRecords("SELECT * FROM Contacts ORDER BY last DESC, sequence DESC");
         if(query.isActive()) {
             qDebug() << "***** LOADING CONTACTS, SELF=" << me;
             while(query.next()) {

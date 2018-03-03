@@ -32,7 +32,8 @@ namespace Util {
     const QList<QHostAddress> hostAddress(const QString& hostId);
     int hostPort(const QString& hostId);
     const QStringList controlOptions(const char **argv);
-    unsigned currentDay(const QDateTime& when);
+    unsigned currentDay(const QDateTime& when = QDateTime::currentDateTime());
+    unsigned untilTomorrow(const QDateTime& when = QDateTime::currentDateTime());
 }
 
 /*!

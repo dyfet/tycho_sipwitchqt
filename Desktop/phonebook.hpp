@@ -35,16 +35,16 @@
 
 class Desktop;
 class Storage;
-class LocalContacts;
-class LocalDelegate;
 class SessionItem;
 class Sessions;
 
 class ContactItem final
 {
-    friend LocalDelegate;
-    friend LocalContacts;
-    friend SessionItem;
+    friend class LocalDelegate;
+    friend class LocalContacts;
+    friend class MessageDelegate;
+    friend class SessionItem;
+    friend class MessageItem;
 
 public:
     ContactItem(const QSqlRecord& record);
@@ -67,6 +67,14 @@ public:
 
     UString uri() const {
         return contactUri;
+    }
+
+    UString publicUri() const {
+        return contactPublic;
+    }
+
+    UString mailTo() const {
+        return contactEmail;
     }
 
     UString timestamp() const {
@@ -108,6 +116,7 @@ public:
 private:
     SessionItem *session;
     UString displayName, contactUri, contactTimestamp, contactType;
+    UString contactPublic, contactEmail;
     QString contactFilter, textDisplay, textNumber, authUserId;
     QDateTime contactUpdated;
     bool group;

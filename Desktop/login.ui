@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>406</width>
-    <height>416</height>
+    <height>421</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -107,7 +107,7 @@
         <string notr="true">color: blue;</string>
        </property>
        <property name="text">
-        <string>Don't Panic</string>
+        <string>Don't Panic!</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>

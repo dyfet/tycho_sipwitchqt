@@ -162,15 +162,30 @@
        <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
        <number>0</number>
       </property>
       <item>
        <widget class="QListView" name="messages">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
+        <property name="resizeMode">
+         <enum>QListView::Adjust</enum>
         </property>
        </widget>
       </item>
@@ -195,6 +210,35 @@
          <item>
           <widget class="QLineEdit" name="input"/>
          </item>
+         <item>
+          <widget class="QPushButton" name="bottom">
+           <property name="minimumSize">
+            <size>
+             <width>16</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background: white; outline: none; border: none; margin: 0px; padding: 0px;</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../Resources/desktop.qrc">
+             <normaloff>:/icons/downscroll.png</normaloff>:/icons/downscroll.png</iconset>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -206,6 +250,8 @@
  <tabstops>
   <tabstop>sessions</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../Resources/desktop.qrc"/>
+ </resources>
  <connections/>
 </ui>

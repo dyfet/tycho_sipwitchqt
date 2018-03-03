@@ -44,10 +44,28 @@ void Options::enter()
     Q_ASSERT(storage != nullptr);
 
     ui.appearance->setCurrentText(desktop->appearance());
-    connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
 
     auto creds = storage->credentials();
     ui.displayName->setText(creds["display"].toString());
     ui.server->setText(creds["host"].toString());
     ui.secret->setText("");
+
+    int expiresIndex = 0;
+    auto expires = desktop->expiration();
+    switch(expires /= 86400) {
+    case 30:
+        expiresIndex = 2;
+        break;
+    case 14:
+        expiresIndex = 1;
+        break;
+    default:
+        break;
+    }
+
+    ui.expires->setCurrentIndex(expiresIndex);
+
+    connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
+
+    connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }

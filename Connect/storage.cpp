@@ -107,8 +107,10 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "uri VARCHAR(128),"
             "dialing VARCHAR(64),"                  // used to tie together msgs
             "display VARCHAR(64) DEFAULT NULL,"
+            "mailto VARCHAR(128),"
+            "puburi VARCHAR(128),"
             "last DATETIME DEFAULT 0);",
-        "CREATE INDEX ByContact ON Contacts(last, sequence DESC);",
+        "CREATE INDEX ByContact ON Contacts(last DESC, sequence DESC);",
 
         // Messages are stored in the database to be reloaded when the client
         // restarts, and may be expired by date, but are not modified.  In
@@ -119,7 +121,6 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "msgto INTEGER,"                        // target contact uid
             "sid INTEGER,"                          // uid of session
             "subject VARCHAR(80),"                  // msg subject
-            "display VARCHAR(64),"                  // who its from as shown
             "reply VARCHAR(64) DEFAULT NULL,"       // reply uri if external
             "seqid INTEGER,"                        // used for unique timestamps
             "posted TIMESTAMP,"
@@ -128,8 +129,8 @@ Storage::Storage(const QString& key, const QVariantHash &cred)
             "expires INTEGER DEFAULT 0,"            // carried expires header
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"                         // depends on type...
+            "CONSTRAINT byDate PRIMARY KEY (sid, posted DESC, seqid DESC),"
             "FOREIGN KEY (sid) REFERENCES Contacts(uid));",
-        "CREATE UNIQUE INDEX ByDate ON Messages(sid, posted, seqid);",
     });
 
     FromAddress = UString::uri(cred["schema"].toString(), cred["extension"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));

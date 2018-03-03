@@ -123,6 +123,14 @@ public:
         return currentAppearance;
     }
 
+    inline int expiration() const {
+        return currentExpiration;
+    }
+
+    inline QDateTime expiresBefore() const {
+        return QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch() - (currentExpiration * 1000l));
+    }
+
     inline static Desktop *instance() {
         return Instance;
     }
@@ -153,6 +161,7 @@ private:
     bool restart_flag, front;
     QVariantHash currentCredentials;
     QString currentAppearance;
+    int currentExpiration;
     QDialog *dialog;
 
     void closeEvent(QCloseEvent *event) final;
@@ -161,7 +170,7 @@ private:
     void listen(const QVariantHash &cred);
     void setState(state_t state);
 
-    static QVariantHash Credentials;   // current credentials...
+    static QVariantHash Credentials;            // current credentials...
     static Desktop *Instance;
     static state_t State;
 
@@ -184,6 +193,7 @@ public slots:
     void showPhonebook(void);
 
     void changeAppearance(const QString& appearance);
+    void changeExpiration(const QString& expiration);
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized

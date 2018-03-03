@@ -33,8 +33,12 @@ class SessionItem final
 {
     friend class SessionDelegate;
     friend class SessionModel;
+    friend class MessageDelegate;
+    friend class MessageModel;
+    friend class MessageItem;
+    friend class Sessions;
 
-    Q_DISABLE_COPY(SessionItem);
+    Q_DISABLE_COPY(SessionItem)
 public:
     SessionItem(ContactItem *contactItem, bool active = false);
     ~SessionItem();
@@ -65,6 +69,10 @@ public:
         return messageModel;
     }
 
+    int count() const {
+        return filtered.count();
+    }
+
     ContactItem *contactItem() const {
         return contact;
     }
@@ -75,8 +83,12 @@ public:
         return 0;
     }
 
-    UString currentTopic() const {
-        return topic;
+    UString topic() const {
+        return currentTopic;
+    }
+
+    QModelIndex lastMessage() const {
+        return messageModel->last();
     }
 
     bool isGroup() const {
@@ -89,22 +101,24 @@ public:
         inputText = text;
     }
 
+    void addMessage(MessageItem *item);
+    unsigned loadMessages();
     QString title();
     bool setOnline(bool flag);
 
 private:
-    QMap<UString, unsigned> topics;
-    UString topic;
     QList<MessageItem *> messages;
+    QList<MessageItem *> filtered;
     MessageModel *messageModel;
     QString inputText;                          // current input buffer
     QString callDisplay;                        // transitory call name
+    QString currentTopic;                       // can be set...
     int cid, did;                               // exosip call info
 
     ContactItem *contact;
     QString status;
     QPen color;
-    bool online, busy;
+    bool online, busy, loaded;
 };
 
 class SessionModel final : public QAbstractListModel
@@ -154,10 +168,17 @@ public:
 
     void enter(void);
 
+    static SessionItem *active();
+
 private:
     Desktop *desktop;
     Connector *connector;
     SessionModel *model;
+
+    void resizeEvent(QResizeEvent *event) final;
+
+    void finishInput(const QString &error);
+    void scrollToBottom();
 
 public slots:
     void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
@@ -173,6 +194,8 @@ private slots:
     void changeActive(const QVariantHash& status);
     void changeStorage(Storage *storage);
     void changeConnector(Connector *connector);
+    void createMessage();
+    void checkInput(const QString& text);
 };
 
 #endif
