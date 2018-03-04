@@ -586,7 +586,6 @@ void Desktop::initial()
         return;
 
     Storage::remove();      // remove before trying an initial login...
-    ui.toolBar->show();
     listen(Credentials);
 }
 
@@ -603,6 +602,7 @@ void Desktop::authorized(const QVariantHash& creds)
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
 
+    ui.toolBar->show();
     // apply or update credentials only after successfull authorization
     if(storage)
         storage->updateCredentials(creds);
