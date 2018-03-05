@@ -602,6 +602,7 @@ void Desktop::authorized(const QVariantHash& creds)
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
 
+    ui.toolBar->show();
     // apply or update credentials only after successfull authorization
     if(storage)
         storage->updateCredentials(creds);
