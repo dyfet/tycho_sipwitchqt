@@ -603,9 +603,8 @@ void Desktop::authorized(const QVariantHash& creds)
     Credentials["initialize"] = ""; // only exists for signin...
 
     // apply or update credentials only after successfull authorization
-    if(storage){
+    if(storage)
         storage->updateCredentials(creds);
-    }
     else {
         auto server = creds["host"].toString().toUtf8();
         auto schema = creds["schema"].toString().toUtf8();
@@ -623,7 +622,6 @@ void Desktop::authorized(const QVariantHash& creds)
         storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, type, uri) "
                           "VALUES(0,'0', 'Operators', 'operators', 'SYSTEM',?);", {opr});
         emit changeStorage(storage);
-
     }
 
     // this is how we should get out of first time login screen...
