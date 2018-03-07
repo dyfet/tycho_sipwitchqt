@@ -229,6 +229,14 @@
     <enum>QAction::PreferencesRole</enum>
    </property>
   </action>
+  <action name="appLogout">
+   <property name="text">
+    <string>&amp;Logout</string>
+   </property>
+   <property name="toolTip">
+    <string>Logout from app</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../Resources/desktop.qrc"/>

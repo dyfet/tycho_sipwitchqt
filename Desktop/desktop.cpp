@@ -149,6 +149,8 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
     connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
+
+    connect(ui.appLogout, &QAction::triggered, this, &Desktop::openLogout);
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
 
 #if defined(Q_OS_MAC)
@@ -468,6 +470,7 @@ void Desktop::menuClicked()
     popup->addAction(ui.appAbout);
     if(storage && (State == Desktop::OFFLINE || State == Desktop::ONLINE))
         popup->addAction(ui.trayAway);
+    popup->addAction(ui.appLogout);
     popup->addAction(ui.appQuit);
     popup->popup(this->mapToGlobal(QPoint(4, 24)));
     popup->show();
