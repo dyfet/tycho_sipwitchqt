@@ -184,9 +184,9 @@ public slots:
     void menuClicked();
 
     void closeDialog(void);
-    void closeReset(void);
+    void closeLogout(void);
     void openAbout(void);
-    void openReset(void);
+    void openLogout(void);
 
     void showOptions(void);
     void showSessions(void);

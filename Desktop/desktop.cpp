@@ -18,7 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Dialogs/about.hpp"
-#include "../Dialogs/resetdb.hpp"
+#include "../Dialogs/logout.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
@@ -149,6 +149,8 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
     connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
+
+    connect(ui.appLogout, &QAction::triggered, this, &Desktop::openLogout);
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
 
 #if defined(Q_OS_MAC)
@@ -343,21 +345,21 @@ void Desktop::openAbout()
     dialog = new About(this);
 }
 
-void Desktop::openReset()
+void Desktop::openLogout()
 {
     closeDialog();
     setEnabled(false);
-    dialog = new ResetDb(this);
+    dialog = new Logout(this);
 }
 
-void Desktop::closeReset()
+void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
     emit changeStorage(nullptr);
     closeDialog();
-    warningMessage(tr("Resetting database..."));
+    warningMessage(tr("logging out..."));
     offline();
     delete storage;
     storage = nullptr;
@@ -365,6 +367,9 @@ void Desktop::closeReset()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
+//    serverLabel = nullptr
+    // TODO add a releasing of serverLabel so
+    // user can login in same session again to the extension from which have logged out
 }
 
 void Desktop::closeDialog()
@@ -465,6 +470,7 @@ void Desktop::menuClicked()
     popup->addAction(ui.appAbout);
     if(storage && (State == Desktop::OFFLINE || State == Desktop::ONLINE))
         popup->addAction(ui.trayAway);
+    popup->addAction(ui.appLogout);
     popup->addAction(ui.appQuit);
     popup->popup(this->mapToGlobal(QPoint(4, 24)));
     popup->show();
@@ -516,34 +522,70 @@ void Desktop::failed(int error_code)
     offline();
     switch(error_code) {
     case SIP_CONFLICT:
-        errorMessage(tr("Label already used"));
+        FOR_DEBUG(
+            qDebug() << "Label already used: SIP_CONFLICT" << endl;
+            errorMessage(tr("Label already used ") + "SIP_CONFLICT");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Label already used"));
+        )
         if(isLogin())
             login->badLabel();
         break;
     case SIP_DOES_NOT_EXIST_ANYWHERE:
-        errorMessage(tr("Extension number is invalid"));
+        FOR_DEBUG(
+            qDebug() << "Extension number is invalid: SIP_DOES_NOT_EXIST_ANYWHERE" << endl;
+            errorMessage(tr("Extension number is invalid ") + "SIP_DOES_NOT_EXIST_ANYWHERE");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Extension number is invalid"));
+        )
         if(isLogin())
             login->badIdentity();
         break;
     case SIP_NOT_FOUND:
-        errorMessage(tr("Extension not found"));
+        FOR_DEBUG(
+            qDebug() << "Extension not found: SIP_NOT_FOUND" << endl;
+            errorMessage(tr("Extension not found ") + "SIP_NOT_FOUND");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Extension not found"));
+        )
         if(isLogin())
             login->badIdentity();
         break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
-        errorMessage(tr("Authorizartion denied"));
+        FOR_DEBUG(
+            qDebug() << "Authorizartion denied: SIP_UNAUTHORIZED" << endl;
+            errorMessage(tr("Authorizartion denied ") + "SIP_UNAUTHORIZED");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Authorizartion denied"));
+        )
         if(isLogin())
             login->badPassword();
         break;
     case SIP_METHOD_NOT_ALLOWED:
-        errorMessage(tr("Registration not allowed"));
+        FOR_DEBUG(
+            qDebug() << "Registration not allowed: SIP_METHOD_NOT_ALLOWED" << endl;
+            errorMessage(tr("Registration not allowed ") + "SIP_METHOD_NOT_ALLOWED");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Registration not allowed"));
+        )
         if(isLogin())
             login->badIdentity();
         break;
     case SIP_INTERNAL_SERVER_ERROR:
     case 666:
-        errorMessage(tr("Cannot reach server"));
+        FOR_DEBUG(
+            qDebug() << "Cannot reach server: SIP_INTERNAL_SERVER_ERROR" << endl;
+            errorMessage(tr("Cannot reach server ") + "SIP_INTERNAL_SERVER_ERROR");
+        )
+        FOR_RELEASE(
+            errorMessage(tr("Label already used"));
+        )
         if(isLogin())
             login->badIdentity();
         break;

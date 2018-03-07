@@ -58,7 +58,7 @@
          </property>
          <property name="icon">
           <iconset resource="../Resources/desktop.qrc">
-           <normaloff>:/images/stop.png</normaloff>:/images/stop.png</iconset>
+           <normaloff>:/images/caution.png</normaloff>:/images/caution.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -79,7 +79,7 @@
           <string notr="true">color: red;</string>
          </property>
          <property name="text">
-          <string>Reset Client Database</string>
+          <string>Logout from server</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -120,7 +120,7 @@
      <item>
       <widget class="QLabel" name="labelAbout">
        <property name="text">
-        <string>This will irreversably delete all your data and messages.  You will need to create a new login and start over.</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will log you out of the server. You will need to login again. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
