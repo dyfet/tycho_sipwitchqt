@@ -476,7 +476,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Return to initial state</string>
+            <string>Logout from server</string>
            </property>
           </widget>
          </item>
@@ -555,7 +555,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Reset</string>
+          <string>Logout</string>
          </property>
          <property name="default">
           <bool>true</bool>
