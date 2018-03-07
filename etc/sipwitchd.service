@@ -1,0 +1,27 @@
+[Unit]
+Description=sipwitch server
+After=network.target
+#After=network.target mysqld. service     # For installations where database is on the same machine as server
+
+
+[Install]
+WantedBy=multi-user.target
+Alias=mysql.service
+Alias=mysqld.service
+
+
+[Service]
+EnvironmentFile=-/etc/sipwitchqt.conf
+#ExecStartPre=/usr/local/sbin/sipwitchqt-server -t        # NOT IMPLEMENTED YET Testing of correctness of .conf file
+ExecStart=/usr/local/sbin/sipwitchqt-server
+
+#ExecStart=/usr/sbin/sipwitchqt-server              # When we do proper install scripts make install will install in /usr/sbin
+
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=1s
+RestartPreventExitStatus=255
+Type=notify
+RuntimeDirectory=sipwitch
+RuntimeDirectoryMode=0755
