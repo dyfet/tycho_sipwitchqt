@@ -6,16 +6,14 @@ After=network.target
 
 [Install]
 WantedBy=multi-user.target
-Alias=mysql.service
-Alias=mysqld.service
+Alias=sipwitchd.service
 
 
 [Service]
 EnvironmentFile=-/etc/sipwitchqt.conf
-#ExecStartPre=/usr/local/sbin/sipwitchqt-server -t        # NOT IMPLEMENTED YET Testing of correctness of .conf file
-ExecStart=/usr/local/sbin/sipwitchqt-server
+#ExecStartPre=/usr/sbin/sipwitchqt-server -t        # NOT IMPLEMENTED YET Testing of correctness of .conf file
 
-#ExecStart=/usr/sbin/sipwitchqt-server              # When we do proper install scripts make install will install in /usr/sbin
+ExecStart=/usr/sbin/sipwitchqt-server
 
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
