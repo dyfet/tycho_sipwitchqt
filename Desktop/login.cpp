@@ -107,7 +107,7 @@ QVariantHash Login::credentials()
 
     if(!ext.isNumber()) {
         ui.identity->setFocus();
-        desktop->errorMessage(tr("extension beginning with # need to be 3 digit number"));
+        desktop->errorMessage(tr("extension need to be 3 digit number"));
         return QVariantHash();
     }
 
