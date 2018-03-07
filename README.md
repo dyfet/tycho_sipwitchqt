@@ -46,3 +46,12 @@ At the moment I do not have infrastructure to offer support.  I have published t
 ## Testing
 
 The debug config (qmake CONFIG+=debug) builds a test server that uses the source "testdata/" directory to store databases and running files.  This is used to provide a stable and repeatable test environment.  An alternate CONFIG+=userdata option also exists to create a private per-developer test environment.  Currently the server binds for ipv4, so you have to use 127.0.0.1:4060 for localhost if localhost is set to ::1.  I am also adding SIPp test cases for the sipwitch server in the testdata directory.
+
+
+
+
+## Release installation
+
+To install the server properly in usual directories on Linux and use provided systemd sipwitchd.service fike need to run
+cmake  -DCMAKE_INSTALL_SYSCONFDIR=/etc -DCMAKE_INSTALL_LOCALSTATEDIR=/var/lib -DCMAKE_INSTALL_PREFIX=/usr .
+Or if you change directories you will need to change the service file in /usr/lib/systemd/system/sipwitchd.service

@@ -179,6 +179,8 @@ if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.png" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
+
 endif()
 
 # platform specific post link
