@@ -18,7 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Dialogs/about.hpp"
-#include "../Dialogs/resetdb.hpp"
+#include "../Dialogs/logout.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
@@ -343,21 +343,21 @@ void Desktop::openAbout()
     dialog = new About(this);
 }
 
-void Desktop::openReset()
+void Desktop::openLogout()
 {
     closeDialog();
     setEnabled(false);
-    dialog = new ResetDb(this);
+    dialog = new Logout(this);
 }
 
-void Desktop::closeReset()
+void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
     emit changeStorage(nullptr);
     closeDialog();
-    warningMessage(tr("Resetting database..."));
+    warningMessage(tr("logging out..."));
     offline();
     delete storage;
     storage = nullptr;
@@ -365,6 +365,9 @@ void Desktop::closeReset()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
+//    serverLabel = nullptr
+    // TODO add a releasing of serverLabel so
+    // user can login in same session again to the extension from which have logged out
 }
 
 void Desktop::closeDialog()

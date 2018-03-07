@@ -15,22 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "resetdb.hpp"
-#include "ui_resetdb.h"
+#ifndef RESETDB_HPP_
+#define RESETDB_HPP_
 
-static Ui::ResetDb ui;
+#include <QDialog>
 
-ResetDb::ResetDb(Desktop *parent) :
-QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
+#include "../Desktop/desktop.hpp"
+
+class Logout final : public QDialog
 {
-    ui.setupUi(static_cast<QDialog*>(this));
+    Q_OBJECT
+    Q_DISABLE_COPY(Logout)
 
-    connect(ui.acceptButton, &QPushButton::clicked, parent, &Desktop::closeReset);
-    connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
-    show();
-}
+public:
+    Logout(Desktop *parent = nullptr);
 
-void ResetDb::closeEvent(QCloseEvent *event)
-{
-    Desktop::instance()->closeDialog();
-}
+private:
+    void closeEvent(QCloseEvent *event) final;
+};
+
+/*!
+ * Ui resetdb dialog.
+ * \file resetdb.hpp
+ */
+
+/*!
+ * \class ResetDb
+ * \brief implements reset database dialog.
+ * This is used to reset the sipwitchqt desktop application back to it's
+ * initial state and allow a new login to occur without past data.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
+
+#endif
