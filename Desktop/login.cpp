@@ -101,13 +101,19 @@ QVariantHash Login::credentials()
 
     if(ext.isEmpty() || cred["host"].isNull()) {
         ui.identity->setFocus();
-        desktop->errorMessage(tr("No identity specified"));
+        desktop->errorMessage(tr("No ext or sip uri entered"));
         return QVariantHash();
     }
 
     if(!ext.isNumber()) {
         ui.identity->setFocus();
-        desktop->errorMessage(tr("Invalid extension #"));
+        desktop->errorMessage(tr("extension need to be 3 digit number"));
+        return QVariantHash();
+    }
+
+    if(ext.toInt() < 100 || ext.toInt() > 699){
+        ui.identity->setFocus();
+        desktop->errorMessage(tr("Extension out of range choose in between 100-699"));
         return QVariantHash();
     }
 

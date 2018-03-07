@@ -228,7 +228,7 @@
             <string/>
            </property>
            <property name="placeholderText">
-            <string>Ext # or sip uri (sip:ext@server)</string>
+            <string>Ext # in range 100-699 or sip uri (sip:ext@server)</string>
            </property>
           </widget>
          </item>
