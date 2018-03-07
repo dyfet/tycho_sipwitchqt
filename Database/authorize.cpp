@@ -107,6 +107,7 @@ void Authorize::findEndpoint(const Event& event)
         if(endpoint.count() < 1) {
             warning() << "Initializing database for" << number << " with label " << label << endl;
             runQuery("INSERT INTO Endpoints(number, label) VALUES (?,?);", {number, label});
+        }
     }
     else if(endpoint.count() < 1) {
         warning() << "Cannot authorize " << number << "; invalid label " << label;
