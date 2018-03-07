@@ -50,6 +50,9 @@ void Options::enter()
     ui.server->setText(creds["host"].toString());
     ui.secret->setText("");
 
+    /* Need explanation I think we are removing this not functional
+    // part of code later as we will have different expiration options
+    // that will work*/
     int expiresIndex = 0;
     auto expires = desktop->expiration();
     switch(expires /= 86400) {
