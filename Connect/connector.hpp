@@ -40,6 +40,8 @@ public:
 
     void stop(bool shutdown = false);
     void requestRoster();
+    void requestDeviceList();
+
 
 private:
     volatile bool active;

@@ -134,6 +134,20 @@ void Connector::requestRoster()
     eXosip_message_send_request(context, msg);
 }
 
+void Connector::requestDeviceList()
+{
+    auto to = UString::uri(serverSchema, serverHost, serverPort);
+    auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    osip_message_t *msg = nullptr;
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_ROSTER, to, from, to);
+    if(!msg)
+        return;
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;
