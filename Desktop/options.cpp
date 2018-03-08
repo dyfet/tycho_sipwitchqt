@@ -29,7 +29,7 @@ QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
 
-    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::openLogout);
+//    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
 }
 
 void Options::enter()
