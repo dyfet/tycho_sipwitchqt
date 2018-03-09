@@ -23,12 +23,12 @@
 #endif
 
 Event::Data::Data() :
-number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
 {
     // start time of event creation
     elapsed.start();
@@ -60,8 +60,10 @@ number(-1), expires(-1), status(0), hops(0), natted(false), local(false), associ
             osip_uri_to_str(evt->request->req_uri, &uri);
             if(uri)
                 request = uri;      // for consistent auth processing
-            local = ctx->isLocal(target.host());
+            isLocal = ctx->isLocal(target.host());
         }
+        if(evt->request && evt->request->to && event->request->to->url && evt->request->to->url->username)
+            toLocal = ctx->isLocal(evt->request->to->url->host);
         if(method == "REGISTER") {
             if(evt->request->to && evt->request->to->url && evt->request->to->url->username && ctx->isLocal(evt->request->to->url->host)) {
                 UString ext = evt->request->to->url->username;
@@ -234,8 +236,14 @@ void Event::Data::parseMessage(osip_message_t *msg)
 
     osip_body_t *data = nullptr;
     osip_message_get_body(msg, 0, &data);
-    if(data && data->length)
+    if(data && data->length) {
         body = QByteArray(data->body, static_cast<int>(data->length));
+        auto type = osip_message_get_content_type(msg);
+        if(type && type->subtype)
+            contentType = UString(type->type) + "/" + type->subtype;
+        else if(type && type->type)
+            contentType = UString(type->type);
+    }
 }
 
 Event::Event()

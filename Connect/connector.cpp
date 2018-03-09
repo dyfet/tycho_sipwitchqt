@@ -78,6 +78,7 @@ QObject(), active(true)
     serverHost = cred["host"].toString().toUtf8();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverLabel = cred["label"].toString().toUtf8();
+    serverDisplay = cred["display"].toString().toUtf8();
     serverCreds = cred;
     serverCreds["schema"] = "sip:";
     serverSchema = "sip:";
@@ -99,6 +100,10 @@ QObject(), active(true)
         if(tls)
             ++serverPort;
     }
+
+    uriFrom = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    uriRoute = UString::uri(serverSchema, serverHost, serverPort);
+    sipFrom = UString("\"") + serverDisplay + "\" <" + uriFrom + ">";
 
     auto thread = new QThread;
     this->moveToThread(thread);
@@ -134,6 +139,36 @@ void Connector::requestRoster()
     eXosip_message_send_request(context, msg);
 }
 
+const UString Connector::sipTo(const UString& id, const QList<QPair<UString, UString>> args) const
+{
+    UString sep = "?";
+    UString to = "<" + id;
+    foreach(auto arg, args) {
+        to += sep + arg.first + "=" + arg.second.escape();
+        sep = "&";
+    }
+    return to + ">";
+}
+
+bool Connector::sendText(const UString& to, const UString& body, const UString subject)
+{
+    osip_message_t *msg = nullptr;
+    Locker lock(context);
+    QList<QPair<UString,UString>> args = {
+        {"Subject", subject},
+        // TODO: any other special X-Headers we may use here...
+    };
+    eXosip_message_build_request(context, &msg, "MESSAGE", sipTo(to, args), sipFrom, uriRoute);
+    if(!msg)
+        return false;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+    osip_message_set_content_type(msg, "text/plain");
+    eXosip_message_send_request(context, msg);
+    return true;
+}
+
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;
@@ -158,6 +193,7 @@ void Connector::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
+    int error;
     time_t now, last = 0;
 
     qDebug() << "Connector started";
@@ -178,10 +214,20 @@ void Connector::run()
         }
 
         qDebug().nospace() << "tcp=" << eid(event->type) << " cid=" << event->cid;
+
         switch(event->type) {
         case EXOSIP_MESSAGE_REQUESTFAILURE:
+            error = 666;
+            if(event->response)
+                error = event->response->status_code;
             if(event->response && event->response->status_code != SIP_UNAUTHORIZED)
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
+            qDebug() << event->request;
+            if(MSG_IS_MESSAGE(event->request))
+                emit messageResult(error);
+            qDebug() << "*** FAILED" << error;
+            if(error == 666)
+                emit failure(666);
             break;
         case EXOSIP_MESSAGE_ANSWERED:
             if(!event->response)
@@ -190,6 +236,8 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
+                else if(MSG_IS_MESSAGE(event->request))
+                    messageResult(SIP_OK);
                 break;
             default:
                 qDebug() << "*** ANSWER FAILURE" << event->response->status_code;

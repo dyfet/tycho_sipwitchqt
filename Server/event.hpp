@@ -158,7 +158,11 @@ public:
     }
 
     inline bool isLocal() const {
-        return d->local;
+        return d->isLocal;
+    }
+
+    inline bool toLocal() const {
+        return d->toLocal;
     }
 
     inline bool isAssociated() const {
@@ -183,6 +187,10 @@ public:
 
     inline const UString initialize() const {
         return d->initialize;
+    }
+
+    inline const UString contentType() const {
+        return d->contentType;
     }
 
     inline int cid() const {
@@ -239,14 +247,14 @@ private:
         int expires;                // longest expiration
         int status;
         int hops;                   // via hops
-        bool natted, local, associated, record;
+        bool natted, isLocal, toLocal, associated, record;
         Context *context;
         eXosip_event_t *event;
         osip_message_t *message;
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason, initialize;
-        UString userid, nonce, digest, algorithm, request;
+        UString userid, nonce, digest, algorithm, request, contentType;
         QString label;
         Contact source;  // if nat, has first nat
         Contact from, to, target;

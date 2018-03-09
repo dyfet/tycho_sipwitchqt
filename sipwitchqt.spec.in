@@ -72,6 +72,7 @@ exit 0
 %{_sbindir}/sipwitchqt-server
 %{_sysconfdir}/sv/sipwitchqt/run
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
+%attr(0664,root,root) %{_libdir}/systemd/system/sipwitchd.service
 
 %files utils
 %defattr(-,root,root)

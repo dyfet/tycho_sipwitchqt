@@ -135,6 +135,10 @@ signals:
     void REQUEST_ROSTER(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);
+
+    void LOCAL_MESSAGE(const Event& ev);
+    void OUTBOX_MESSAGE(const Event& ev);
+    void OUTBOUND_MESSAGE(const Event& ev);
     void finished();
 
 private slots:

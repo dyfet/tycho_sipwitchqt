@@ -85,12 +85,13 @@ else()
 endif()
 
 # Debug builds always run in repeatable pre-set configurations for testing
-# and userdata allows one to create a private testing configuration.
+# and userdata allows one to create a private server testing configuration.
 # Release builds operate as normal applications without console debug, and
 # with a preference for poduction as RelWithDebInfo.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(EXISTS "userdata/")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/userdata/")
         set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/userdata")
+        set(PRELOAD_DATABASE true)
     else()
         # Assumes server will re-generate db as schema will change.  This
         # and preloading makes debug testing repeatable.  If you need
@@ -100,7 +101,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(PRELOAD_DATABASE true)
         set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
     endif()
-    set(DESKTOP_PREFIX "${PROJECT_PREFIX}")
+    set(DESKTOP_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 else()
     set(QT_NO_DEBUG_OUTPUT TRUE)
 endif()

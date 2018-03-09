@@ -33,8 +33,8 @@ QWidget(), desktop(control)
     connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
     connect(ui.secret, &QLineEdit::returnPressed, desktop, &Desktop::initial);
 
-#ifndef NDEBUG
-    ui.server->setText("sip:127.0.0.1:4060");
+#ifndef QT_NO_DEBUG_OUTPUT
+    ui.server->setText(desktop->config("login/server", QString("sip:127.0.0.1:4060")).toString());
 #endif
 
     UString hostname = QHostInfo::localHostName();
@@ -52,9 +52,17 @@ void Login::enter()
     Toolbar::search()->setPlaceholderText(tr("Disabled"));
     Toolbar::search()->setEnabled(false);
 
+// can pre-stuff default testing extension in testdata/settings.cfg this way...
+
     ui.secret->setText("");
-    ui.identity->setText("");
-    ui.identity->setFocus();
+    ui.identity->setText(desktop->config("login/extension", QString("")).toString());
+
+    if(ui.identity->text().length() > 0)
+        ui.secret->setFocus();
+    else
+        ui.identity->setFocus();
+
+
 }
 
 void Login::badIdentity()
