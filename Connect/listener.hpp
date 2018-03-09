@@ -41,7 +41,6 @@ public:
     }
 
     void reauthorize(const QVariantHash& update = QVariantHash());
-
     void stop(bool shutdown = false);
 
 private:
@@ -51,12 +50,14 @@ private:
     bool get_authentication(eXosip_event_t *event);
     void add_authentication();
 
+    const UString sipTo(const UString& to, const QList<QPair<UString,UString>>args) const;
     QVariantHash parseXdp(const UString& text);
 
     QByteArray priorBanner;
     QByteArray priorOnline;
 
     QVariantHash serverCreds;
+    UString uriFrom, uriRoute, sipFrom;
     UString serverInit;
     UString serverId;
     UString serverHost;
@@ -73,6 +74,7 @@ private:
 signals:
     void changeStatus(const QByteArray bitmap, int first, int last);
     void changeBanner(const QString& banner);
+    void messageResult(int status);
     void authorize(const QVariantHash& creds);
     void failure(int code);
     void starting();

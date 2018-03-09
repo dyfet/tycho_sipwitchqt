@@ -160,10 +160,6 @@ void Manager::requestRoster(const Event& ev)
 
 void Manager::refreshRegistration(const Event &ev)
 {
-    if(ev.number() < 1) {
-        Context::reply(ev, SIP_FORBIDDEN);
-        return;
-    }
     auto *reg = Registry::find(ev);
     if(reg) {
         if(!ev.authorization())

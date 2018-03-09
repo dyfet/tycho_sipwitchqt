@@ -104,6 +104,9 @@ private:
 signals:
     void updateAuthorize(const QVariantHash& config, bool active);
 
+public slots:
+    void localMessage(const Event& ev);
+
 private slots:
     void sendRoster(const Event& ev);
 

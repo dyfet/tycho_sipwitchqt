@@ -110,6 +110,17 @@ QObject(), active(true), connected(false), registered(false), authenticated(fals
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 }
 
+const UString Listener::sipTo(const UString& id, const QList<QPair<UString, UString>> args) const
+{
+    UString sep = "?";
+    UString to = "<" + id;
+    foreach(auto arg, args) {
+        to += sep + arg.first + "=" + arg.second.escape();
+        sep = "&";
+    }
+    return to + ">";
+}
+
 void Listener::send_registration(osip_message_t *msg, bool auth)
 {
     if(!msg || rid < 0)
@@ -248,12 +259,13 @@ void Listener::run()
             Locker lock(context);
             if(rid < 0) {
                 osip_message_t *msg = nullptr;
-                auto identity = UString::uri(serverSchema, serverId, serverHost, serverPort);
-                auto server = UString::uri(serverSchema, serverHost, serverPort);
-                qDebug() << "Connecting to" << server;
-                qDebug() << "Connecting as" << identity;
+                uriFrom = UString::uri(serverSchema, serverId, serverHost, serverPort);
+                uriRoute = UString::uri(serverSchema, serverHost, serverPort);
+                sipFrom = "<" + uriFrom + ">";
+                qDebug() << "Connecting to" << uriRoute;
+                qDebug() << "Connecting as" << uriFrom;
 
-                rid = eXosip_register_build_initial_register(context, identity, server, nullptr, AGENT_EXPIRES, &msg);
+                rid = eXosip_register_build_initial_register(context, uriFrom, uriRoute, nullptr, AGENT_EXPIRES, &msg);
                 if(msg && rid > -1)
                     send_registration(msg);
                 else {
@@ -333,6 +345,16 @@ void Listener::run()
             active = false;
             emit failure(SIP_FORBIDDEN);
             break;
+        case EXOSIP_MESSAGE_REQUESTFAILURE:
+            error = 666;
+            if(event->response)
+                error = event->response->status_code;
+            if(MSG_IS_MESSAGE(event->request))
+                emit messageResult(error);
+            else
+                dump(event->request);
+            qDebug() << "*** REQUEST FAILED" << error;
+            break;
         case EXOSIP_MESSAGE_NEW:
             if(MSG_IS_REGISTER(event->request)) {
                 Locker lock(context);
@@ -405,8 +427,10 @@ QVariantHash Listener::parseXdp(const UString& xdp)
                 priorBanner = banner;
             }
         }
-        else if(line.left(2) == "d=")
+        else if(line.left(2) == "d=") {
+            sipFrom = UString("\"") + UString(line.mid(2)) + "\" <" + uriFrom + ">";
             serverCreds["display"] = line.mid(2);
+        }
         else if(line.left(2) == "f=")
             serverFirst = line.mid(2).toInt();
         else if(line.left(2) == "l=")

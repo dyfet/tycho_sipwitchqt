@@ -570,10 +570,29 @@ void Sessions::changeSessions(Storage* storage, const QList<ContactItem *>& cont
 void Sessions::changeConnector(Connector *connected)
 {
     connector = connected;
-    if(connector)
+    if(connector) {
+        // if we connect/reconnect, input editing is enabled.
+        ui.input->setEnabled(true);
+        if(ui.inputFrame->isVisible())
+            ui.input->setFocus();
         ui.status->setStyleSheet("color: green; border: 0px; margin: 0px; padding: 0px; text-align: left; background: white;");
-    else
+
+        connect(connector, &Connector::messageResult, this, [this](int error) {
+            if(!inputItem)
+                return;
+
+            if(error == SIP_OK)
+                finishInput("");
+            else
+                finishInput(tr("Failed to send"));
+        }, Qt::QueuedConnection);
+    }
+    else {
+        // if we loose connection, we clear any pending send, and disable further input.
+        activeMessage = nullptr;
+        ui.input->setEnabled(false);
         ui.status->setStyleSheet("color: black; border: 0px; margin: 0px; padding: 0px; text-align:left; background: white;");
+    }
 }
 
 void Sessions::createMessage()
@@ -581,15 +600,19 @@ void Sessions::createMessage()
     if(ui.input->text().isEmpty())
         return;
 
+    // get what we need to send message...
+    auto target = activeItem->contact->uri();
+
+    if(!connector->sendText(target, ui.input->text().toUtf8())) {
+        desktop->errorMessage("Send failed");
+        return;
+    }
+
+    // pending send confirmation state...
     ui.input->setEnabled(false);
     inputItem = activeItem;
     inputItem->setText(ui.input->text());
     ui.messages->setFocus();
-
-    // simulate sending processing...
-    QTimer::singleShot(200, this, [=]{
-        finishInput("");
-    });
 }
 
 void Sessions::checkInput(const QString& text)

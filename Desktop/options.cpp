@@ -28,8 +28,6 @@ Options::Options(Desktop *control) :
 QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
-
-    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::openLogout);
 }
 
 void Options::enter()
