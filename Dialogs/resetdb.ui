@@ -18,7 +18,7 @@
  <class>ResetDb</class>
  <widget class="QDialog" name="ResetDb">
   <property name="windowModality">
-   <enum>Qt::NonModal</enum>
+   <enum>Qt::ApplicationModal</enum>
   </property>
   <property name="geometry">
    <rect>

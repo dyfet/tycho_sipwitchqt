@@ -27,7 +27,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 {
     ui.setupUi(static_cast<QDialog*>(this));
 
-//    connect(ui.acceptButton, &QPushButton::clicked, parent, &Desktop::closeLogout);
+    connect(ui.acceptButton, &QPushButton::clicked, parent, &Desktop::closeLogout);
     connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
     show();
 }

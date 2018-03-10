@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Dialogs/about.hpp"
+#include "../Dialogs/devicelist.hpp"
 #include "../Dialogs/logout.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
@@ -397,6 +398,24 @@ void Desktop::closeDialog()
     }
 }
 
+void Desktop::openDeviceList()
+{
+    closeDialog();
+    setEnabled(false);
+    dialog = new DeviceList(this);
+}
+
+void Desktop::closeDeviceList()
+{
+    Q_ASSERT(dialog != nullptr);
+
+
+    if(dialog) {
+        dialog->deleteLater();
+        setEnabled(true);
+        dialog = nullptr;
+    }
+}
 void Desktop::showOptions()
 {
     ui.pagerStack->setCurrentWidget(options);

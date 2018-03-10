@@ -106,6 +106,7 @@ signals:
 
 private slots:
     void sendRoster(const Event& ev);
+    void sendDeviceList(const Event& ev);
 
     void applyConfig(const QVariantHash& config);
     void onTimeout();

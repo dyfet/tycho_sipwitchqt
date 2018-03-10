@@ -519,7 +519,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="listButton">
+        <widget class="QPushButton" name="listDevices">
          <property name="minimumSize">
           <size>
            <width>96</width>
@@ -1217,7 +1217,7 @@
   <tabstop>speed7</tabstop>
   <tabstop>speed8</tabstop>
   <tabstop>speed9</tabstop>
-  <tabstop>listButton</tabstop>
+  <tabstop>listDevices</tabstop>
   <tabstop>testButton</tabstop>
   <tabstop>resetButton</tabstop>
  </tabstops>

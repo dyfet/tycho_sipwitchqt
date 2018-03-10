@@ -179,6 +179,10 @@ signals:
     void changeStorage(Storage *state);
 
 public slots:
+    void closeDeviceList(void);
+    void openDeviceList(void);
+
+
     void initial(void);
     void dockClicked();
     void menuClicked();

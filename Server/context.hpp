@@ -102,6 +102,7 @@ public:
 
     static void challenge(const Event& event, Registry *registry, bool reuse = false);
     static bool roster(const Event& event, const QByteArray& json);
+    static bool devicelist(const Event& event, const QByteArray& json);
     static bool reply(const Event& event, int code);
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);

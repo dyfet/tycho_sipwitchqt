@@ -20,6 +20,7 @@
 
 #include <QWidget>
 #include <QVariantHash>
+#include <QButtonGroup>
 
 class Desktop;
 
@@ -32,6 +33,10 @@ public:
 
 private:
     Desktop *desktop;
+    QDialog *dialog;
+
+public slots:
+
 };
 
 #endif
