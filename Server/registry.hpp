@@ -52,6 +52,14 @@ public:
         return authDigest;
     }
 
+    const UString label() const {
+        return userLabel;
+    }
+
+    int extension() const {
+        return number;
+    }
+
     int expires() const {
         return static_cast<int>(timeout / 1000l);
     }
@@ -60,12 +68,20 @@ public:
         return address.host();
     }
 
+    inline const UString origin() const {
+        return userOrigin;
+    }
+
     inline quint16 port() const {
         return address.port();
     }
 
-    inline Context *sip() const {
-        return context;
+    inline const UString route() const {
+        return address.toString();
+    }
+
+    inline Context *context() const {
+        return serverContext;
     }
 
     inline void refresh(int expires) {
@@ -81,7 +97,11 @@ public:
     }
 
     bool isActive() const {
-        return context != nullptr;
+        return serverContext != nullptr;
+    }
+
+    bool isLabeled() const {
+        return !userLabel.isEmpty() && userLabel != "NONE";
     }
 
     QByteArray nounce() const {
@@ -97,6 +117,7 @@ public:
     int authenticate(const Event& event);
 
     static Registry *find(const Event& event);      // to find registration
+    static Registry *find(qlonglong);
     static QList<Registry *> find(const UString& target);
     static QList<Registry *> list();
     static UString bitmask();
@@ -105,11 +126,12 @@ public:
 
 private:
     UString userId, userLabel, userSecret, authRealm, authDigest;
-    UString userDisplay, userAgent;
+    UString userDisplay, userAgent, userOrigin;
     int number, rid;
+    qlonglong endpointId;               // endpoint id from database
     qint64 timeout;                     // time till expires
     QByteArray random, prior;           // nounce value
-    Context *context;                   // context of endpoint
+    Context *serverContext;             // context of endpoint
     Contact address;                    // contact record for endpoint
     QElapsedTimer updated;              // when the record was updated
     QList<LocalSegment *> calls;        // local calls on this endpoint

@@ -28,6 +28,7 @@
 class Desktop;
 class SessionDelegate;
 class SessionModel;
+class Listener;
 
 class SessionItem final
 {
@@ -167,6 +168,7 @@ public:
     Sessions(Desktop *main);
 
     void enter(void);
+    void listen(Listener *listener);
 
     static SessionItem *active();
 
@@ -177,7 +179,7 @@ private:
 
     void resizeEvent(QResizeEvent *event) final;
 
-    void finishInput(const QString &error);
+    void finishInput(const QString &error, const QDateTime &timestamp = QDateTime(), int sequence = 0);
     void scrollToBottom();
 
 public slots:

@@ -10,7 +10,7 @@ class DeviceList final : public QDialog
     Q_OBJECT
     Q_DISABLE_COPY(DeviceList)
 public:
-    DeviceList(Desktop *parent = nullptr);
+    DeviceList(Desktop *parent, Connector *connector);
 private:
     void closeEvent(QCloseEvent *event) final;
 };

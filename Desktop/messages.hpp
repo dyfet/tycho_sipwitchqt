@@ -40,7 +40,7 @@ public:
         TEXT_MESSAGE,
     } type_t;
 
-    MessageItem(SessionItem *sid, const QString& text, bool save = true);
+    MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence, bool save = true);
     MessageItem(const QSqlRecord& record);      // database load...
 
     type_t type() const {

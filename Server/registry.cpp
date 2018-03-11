@@ -22,6 +22,7 @@
 static QMultiHash<int, Registry*> extensions;
 static QMultiHash<UString, Registry*> aliases;
 static QHash<QPair<int,UString>, Registry *> registries;
+static QHash<qlonglong, Registry *> endpoints;
 static unsigned count[1000];
 static unsigned char online[1000 / 8];
 static bool init = false;
@@ -60,7 +61,7 @@ static void unset(int number)
 // request, and as inactive.  The registration becomes active only when
 // it is updated by an authorized request.
 Registry::Registry(const QVariantHash &ep) :
-timeout(-1), context(nullptr)
+timeout(-1), serverContext(nullptr)
 {    
     if(!init) {
         range = Database::range();
@@ -72,11 +73,13 @@ timeout(-1), context(nullptr)
     userDisplay = ep.value("display").toString().toUtf8();
     userId = ep.value("user").toString();
     userSecret = ep.value("secret").toString().toUtf8();
+    userOrigin = ep.value("origin").toByteArray();
     number = ep.value("number").toInt();
     userLabel = ep.value("label").toString().toUtf8();
     timeout = ep.value("expires").toInt() * 1000l;
     authRealm = ep.value("realm").toString().toUtf8();
     authDigest = ep.value("digest").toString().toUpper();
+    endpointId = ep.value("endpoint").toLongLong();
 
     updated.start();
 
@@ -87,12 +90,13 @@ timeout(-1), context(nullptr)
     extensions.insert(number, this);
     aliases.insert(userId, this);
     registries.insert(key, this);
+    endpoints.insert(endpointId, this);
     qDebug() << "Initializing" << key;
 }
 
 Registry::~Registry()
 {
-    if(!context)
+    if(!serverContext)
         qDebug() << "Abandoning" << number << userLabel;
     else {
         qDebug() << "Releasing" << number << userLabel;
@@ -104,6 +108,7 @@ Registry::~Registry()
     }
 
     QPair<int,UString> key(number, userLabel);
+    endpoints.remove(endpointId);
     registries.remove(key);
     extensions.remove(number, this);
     aliases.remove(userId, this);
@@ -130,6 +135,17 @@ UString Registry::bitmask()
 QList<Registry *> Registry::list()
 {
     return extensions.values();
+}
+
+// find registry by db id
+Registry *Registry::find(qlonglong key)
+{
+    auto *reg = endpoints.value(key, nullptr);
+    if(reg && reg->hasExpired()) {
+        delete reg;
+        return nullptr;
+    }
+    return reg;
 }
 
 // to find a registration record associated with a registration event
@@ -169,7 +185,7 @@ int Registry::authenticate(const Event& ev)
     UString method = ev.method();
     UString uri = ev.request();
 
-    if(hasExpired() || !context)
+    if(hasExpired() || !serverContext)
         return SIP_TEMPORARILY_UNAVAILABLE;
 
     if(ev.authorizingRealm() != authRealm)
@@ -229,7 +245,7 @@ int Registry::authorize(const Event& ev)
 
     qDebug() << "REGISTERING WITH " << ev.did() << ev.cid() << ev.tid();
 
-    if(!context)
+    if(!serverContext)
         qDebug() << "Registering" << ev.number() << ev.label() << "for" << timeout / 1000l;
     else
         qDebug() << "Refreshing" << ev.number() << ev.label() << "for" << timeout / 1000l;
@@ -239,7 +255,7 @@ int Registry::authorize(const Event& ev)
         address = ev.source();  // for nat, use appearing origin...
     else
         address = ev.contact();
-    context = ev.context();
+    serverContext = ev.context();
     updated.restart();
 
     //some testing for core message code...

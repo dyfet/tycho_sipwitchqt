@@ -76,7 +76,7 @@ static QStringList sqliteTables = {
         "name VARCHAR(32),"                     // speed dial for...
         "target VARCHAR(128),"                  // local or external uri
         "number INTEGER,"                       // speed dial #
-        "CONSTRAINT Dialing PRIMARY KEY (name, number),"
+        "CONSTRAINT dialing PRIMARY KEY (name, number),"
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE);",
 
@@ -109,29 +109,25 @@ static QStringList sqliteTables = {
 
     "CREATE TABLE Messages ("
         "mid INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "name VARCHAR(32),"                     // authorized delivery thru
+        "msgseq INTEGER,"                       // helps exclude dups on devices
         "msgfrom VARCHAR(64),"                  // origin uri direct reply
+        "msgto VARCHAR(64),"                    // to for creating uri
         "subject VARCHAR(80),"                  // subject header used
         "display VARCHAR(64),"                  // origin display name
-        "groupid VARCHAR(32) DEFAULT NULL,"     // if group/team was target
         "posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-        "expires INTEGER DEFAULT 0,"            // carried expires header
+        "expires TIMESTAMP,"                    // estimated expiration
         "msgtype VARCHAR(8),"
-        "msgtext TEXT,"
-        "FOREIGN KEY(name) REFERENCES Authorize(name) "
-            "ON DELETE CASCADE);",
+        "msgtext TEXT);",
 
     "CREATE TABLE Outboxes ("
-        "ordering INTEGER PRIMARY KEY AUTOINCREMENT,"
         "mid INTEGER,"
         "endpoint INTEGER,"
-        "delivered TIMESTAMP DEFAULT 0,"
-        "msgto VARCHAR(64),"                    // synthesized to header
+        "msgstatus INTEGER DEFAULT 0,"          // status code from stack
+        "CONSTRAINT outbox PRIMARY KEY (endpoint, mid),"
         "FOREIGN KEY (mid) REFERENCES Messages(mid) "
             "ON DELETE CASCADE,"
         "FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint) "
             "ON DELETE CASCADE);",
-    "CREATE UNIQUE INDEX Pending ON Outboxes(ordering) WHERE delivered = 0;",
 };
 
 static QStringList sqlitePragmas = {

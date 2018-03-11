@@ -67,7 +67,7 @@ signals:
 	void finished();
     void failure(int code);
 
-    void messageResult(int status);
+    void messageResult(int status, const QDateTime& timestamp, int sequence);
     void changeRoster(const QByteArray& json);
 
 private slots:

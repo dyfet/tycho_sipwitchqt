@@ -405,6 +405,11 @@ void Sessions::enter()
     }
 }
 
+void Sessions::listen(Listener *listener)
+{
+    // TODO: CONNECTIONS
+}
+
 void Sessions::search()
 {
     if(!desktop->isCurrent(this))
@@ -577,12 +582,12 @@ void Sessions::changeConnector(Connector *connected)
             ui.input->setFocus();
         ui.status->setStyleSheet("color: green; border: 0px; margin: 0px; padding: 0px; text-align: left; background: white;");
 
-        connect(connector, &Connector::messageResult, this, [this](int error) {
+        connect(connector, &Connector::messageResult, this, [this](int error, const QDateTime &timestamp, int sequence) {
             if(!inputItem)
                 return;
 
             if(error == SIP_OK)
-                finishInput("");
+                finishInput("", timestamp, sequence);
             else
                 finishInput(tr("Failed to send"));
         }, Qt::QueuedConnection);
@@ -635,13 +640,13 @@ void Sessions::scrollToBottom()
     ui.messages->scrollTo(index, QAbstractItemView::PositionAtBottom);
 }
 
-void Sessions::finishInput(const QString& error)
+void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int sequence)
 {
     if(!error.isEmpty())
         desktop->errorMessage(error);
     else if(inputItem) {
         Q_ASSERT(inputItem->messageModel != nullptr);
-        inputItem->addMessage(new MessageItem(inputItem, inputItem->text()));
+        inputItem->addMessage(new MessageItem(inputItem, inputItem->text(), timestamp, sequence));
         inputItem->setText("");
         if(inputItem == activeItem) {
             bool bottom = true;

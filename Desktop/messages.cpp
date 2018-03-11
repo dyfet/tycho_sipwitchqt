@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "phonebook.hpp"
-#include "sessions.hpp"
+#include "desktop.hpp"
 #include "../Connect/storage.hpp"
 
 #include <QPainter>
 #include <QString>
 #include <QFont>
-#include <QGuiApplication>
 #include <QTextLayout>
 #include <QTextOption>
 
 static int currentSequence = 0;
 static QFont textFont;                      // default message text font
+static QFont timeFont;
+static QFont userFont;
 static QFont monoFont;                      // default mono font
 static QFont boldFont;
 static int textHeight, monoHeight;
@@ -40,12 +40,16 @@ static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
 static QColor groupColor(0, 96, 120);
 
-MessageItem::MessageItem(SessionItem *sid, const QString& text, bool save) :
+MessageItem::MessageItem(SessionItem *sid, const QString& text, const QDateTime &timestamp, int sequence, bool save) :
 session(sid)
 {
-    dateTime = QDateTime::currentDateTime();
+    if(timestamp.isValid())
+        dateTime = timestamp;
+    else
+        dateTime = QDateTime::currentDateTime();
+
     dayNumber = Util::currentDay(dateTime);
-    dateSequence = ++currentSequence;
+    dateSequence = sequence;
     msgType = TEXT_MESSAGE;
     msgSubject = session->topic();
     msgBody = text.toUtf8();
@@ -188,7 +192,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row)
         textStatus.setText(status + msgFrom->textNumber);
         textDisplay.setText(msgFrom->textDisplay);
         textDisplay.setTextFormat(Qt::RichText);
-        userHeight = QFontInfo(style.font).pixelSize() + 4;
+        userHeight = QFontInfo(userFont).pixelSize() + 4;
         height += userHeight;
     }
     else if(timeHint)
@@ -328,10 +332,13 @@ QModelIndex MessageModel::last()
 MessageDelegate::MessageDelegate(QWidget *parent) :
 QStyledItemDelegate(parent)
 {
-    textFont = QGuiApplication::font();
+    auto desktop = Desktop::instance();
+    textFont = userFont = timeFont = boldFont = desktop->font();
 
+    userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
-    boldFont = textFont;
+    timeFont.setWeight(10);
+    timeFont.setPixelSize(9);
     boldFont.setBold(true);
 
     monoFont = QFont("monospace");
@@ -434,26 +441,20 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     if(item->userHint) {
         auto userpos = position;
         auto pen = painter->pen();
-        painter->setFont(style.font);
+        painter->setFont(userFont);
         painter->setPen(item->itemColor);
         painter->drawStaticText(userpos, item->textStatus);
         userpos.rx() += 40;
         painter->drawStaticText(userpos, item->textDisplay);
         userpos.setX(style.rect.right() - 72);
-        auto font = style.font;
-        font.setWeight(10);
-        font.setPixelSize(9);
-        painter->setFont(font);
+        painter->setFont(timeFont);
         painter->setPen(pen);
         painter->drawStaticText(userpos, item->textTimestamp);
         position.ry() += item->userHeight;
     }
     else if(item->timeHint) {
         position.setX(style.rect.right() - 72);
-        auto font = style.font;
-        font.setWeight(10);
-        font.setPixelSize(9);
-        painter->setFont(font);
+        painter->setFont(timeFont);
         painter->drawStaticText(position, item->textTimestamp);
     }
 

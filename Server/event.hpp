@@ -69,6 +69,10 @@ public:
         return d->routes;
     }
 
+    inline int sequence() const {
+        return d->sequenceOrder;
+    }
+
     inline int expires() const {
         return d->expires;
     }
@@ -225,6 +229,9 @@ public:
         return d->label;
     }
 
+    inline QDateTime timestamp() const {
+        return d->timestamp;
+    }
 
     const UString uriTo(const UString& id) const;
     const UString protocol() const;
@@ -240,7 +247,7 @@ private:
         Q_DISABLE_COPY(Data)        // can never deep copy...
 	public:
         Data();
-        Data(eXosip_event_t *evt, Context *ctx);
+        Data(eXosip_event_t *evt, Context *ctx, int sequence);
         ~Data();
 
         int number;                 // referencing extension # or -1
@@ -261,6 +268,8 @@ private:
         QList<UString> allows;
         QByteArray body;
         QElapsedTimer elapsed;
+        QDateTime timestamp;
+        int sequenceOrder;
 
         void parseMessage(osip_message_t *msg);
     };
