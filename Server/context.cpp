@@ -183,7 +183,6 @@ void Context::run()
     if(netProto == IPPROTO_TCP) {
         connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
     }
-
     connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
 
     debug() << "Running " << objectName();
@@ -240,13 +239,15 @@ void Context::run()
     --instanceCount;
 }
 
+
 bool Context::process(const Event& ev)
 {
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_OPTIONS(ev.message())) {
-            if(ev.isLocal() && !ev.target().hasUser())
+            if(ev.isLocal() && !ev.target().hasUser()) {
                 return reply(ev, SIP_OK);
+            }
             emit REQUEST_OPTIONS(ev);
         }
         if(MSG_IS_REGISTER(ev.message())) {
@@ -255,6 +256,7 @@ bool Context::process(const Event& ev)
             // if not our registration, deny
             if(ev.number() < 1)
                 return reply(ev, SIP_FORBIDDEN);
+
             emit REQUEST_REGISTER(ev);
         }
         if(MSG_IS_ROSTER(ev.message())) {
@@ -263,6 +265,9 @@ bool Context::process(const Event& ev)
             emit REQUEST_ROSTER(ev);
             return false;
         }
+
+
+
         if(MSG_IS_MESSAGE(ev.message())) {
             qDebug() << "*** MESSAGE " << ev.number() << ev.contentType();
             // if relaying messages between remotes, no!
@@ -287,6 +292,7 @@ bool Context::process(const Event& ev)
                 }
             }
         }
+
         break;
     default:
         break;
@@ -375,6 +381,27 @@ void Context::challenge(const Event &event, Registry* registry, bool reuse)
 }
 
 bool Context::roster(const Event& event, const QByteArray& json)
+{
+    osip_message_t *msg = nullptr;
+    auto context = event.context()->context;
+    auto tid = event.tid();
+
+    ContextLocker lock(context);
+
+    eXosip_message_build_answer(context, tid, SIP_OK, &msg);
+    if(!msg)
+        return false;
+
+    if(!json.isEmpty()) {
+        osip_message_set_body(msg, json.constData(), static_cast<size_t>(json.length()));
+        osip_message_set_content_type(msg, "application/json");
+    }
+
+    eXosip_message_send_answer(context, tid, SIP_OK, msg);
+    return true;
+}
+
+bool Context::devicelist(const Event& event, const QByteArray& json)
 {
     osip_message_t *msg = nullptr;
     auto context = event.context()->context;

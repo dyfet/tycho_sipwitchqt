@@ -18,6 +18,7 @@
 #include "../Common/compiler.hpp"
 #include "../Common/args.hpp"
 #include "../Dialogs/about.hpp"
+#include "../Dialogs/devicelist.hpp"
 #include "../Dialogs/logout.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
@@ -352,6 +353,7 @@ void Desktop::openLogout()
     dialog = new Logout(this);
 }
 
+
 void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
@@ -367,7 +369,6 @@ void Desktop::closeLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-//    serverLabel = nullptr
     // TODO add a releasing of serverLabel so
     // user can login in same session again to the extension from which have logged out
 }
@@ -381,6 +382,25 @@ void Desktop::closeDialog()
     }
 }
 
+
+void Desktop::openDeviceList()
+{
+    closeDialog();
+    setEnabled(false);
+    dialog = new DeviceList(this);
+}
+
+void Desktop::closeDeviceList()
+{
+    Q_ASSERT(dialog != nullptr);
+
+
+    if(dialog) {
+        dialog->deleteLater();
+        setEnabled(true);
+        dialog = nullptr;
+    }
+}
 void Desktop::showOptions()
 {
     ui.pagerStack->setCurrentWidget(options);
@@ -680,6 +700,7 @@ void Desktop::authorized(const QVariantHash& creds)
         emit changeConnector(connector);
         statusMessage(tr("online"));
         connect(connector, &Connector::failure, this, &Desktop::failed);
+
     }
     setState(ONLINE);
 }

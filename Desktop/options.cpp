@@ -17,6 +17,8 @@
 
 #include "desktop.hpp"
 #include "ui_options.h"
+#include "options.hpp"
+#include "../Dialogs/devicelist.hpp"
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -28,6 +30,11 @@ Options::Options(Desktop *control) :
 QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
+
+//    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
+
+    connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
+
 }
 
 void Options::enter()
@@ -36,7 +43,7 @@ void Options::enter()
     Toolbar::search()->setText("");
     Toolbar::search()->setPlaceholderText(tr("Disabled"));
     Toolbar::search()->setEnabled(false);
-    ui.listButton->setFocus();
+    ui.listDevices->setFocus();
 
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
@@ -70,3 +77,6 @@ void Options::enter()
 
     connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
+
+
+

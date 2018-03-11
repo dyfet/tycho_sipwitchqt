@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESETDB_HPP_
-#define RESETDB_HPP_
+#ifndef LOGOUT_HPP_
+#define LOGOUT_HPP_
 
 #include <QDialog>
 
@@ -35,12 +35,12 @@ private:
 };
 
 /*!
- * Ui resetdb dialog.
- * \file resetdb.hpp
+ * Ui Logout dialog.
+ * \file logout.hpp
  */
 
 /*!
- * \class ResetDb
+ * \class Logout
  * \brief implements reset database dialog.
  * This is used to reset the sipwitchqt desktop application back to it's
  * initial state and allow a new login to occur without past data.

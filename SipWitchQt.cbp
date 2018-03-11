@@ -1,0 +1,764 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="SipWitchQt"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\usr\;CMake Files\..\..\..\..\usr\lib\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Sql\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\;CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\;CMake Files\Resources\;CMake Files\utils\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/strip">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 install/strip"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="list_install_components">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 list_install_components"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="pdf">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 pdf"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="srpm">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 srpm"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="distclean">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 distclean"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="server-app">
+				<Option output="/home/in1t3r/git/sipwitchqt/sipwitchqt-server" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add option="-DQT_SQL_LIB"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt/server-app_autogen/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtSql"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 server-app"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="server-app/fast">
+				<Option output="/home/in1t3r/git/sipwitchqt/sipwitchqt-server" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add option="-DQT_SQL_LIB"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt/server-app_autogen/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtSql"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 server-app/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="dist">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 dist"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install/local">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 install/local"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="source">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 source"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="desktop-app">
+				<Option output="/home/in1t3r/git/sipwitchqt/sipwitchqt-desktop" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option object_output="./"/>
+				<Option type="0"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add option="-DQT_GUI_LIB"/>
+					<Add option="-DQT_WIDGETS_LIB"/>
+					<Add option="-DQT_SQL_LIB"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt/desktop-app_autogen/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtGui"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtWidgets"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtSql"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 desktop-app"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="desktop-app/fast">
+				<Option output="/home/in1t3r/git/sipwitchqt/sipwitchqt-desktop" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option object_output="./"/>
+				<Option type="0"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DQT_CORE_LIB"/>
+					<Add option="-DQT_NETWORK_LIB"/>
+					<Add option="-DQT_GUI_LIB"/>
+					<Add option="-DQT_WIDGETS_LIB"/>
+					<Add option="-DQT_SQL_LIB"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt"/>
+					<Add directory="/home/in1t3r/git/sipwitchqt/desktop-app_autogen/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtCore"/>
+					<Add directory="/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtNetwork"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtGui"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtWidgets"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/qt5/QtSql"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 desktop-app/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="support-files">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 support-files"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="install">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 install"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="docs">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 docs"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="server-app_autogen">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 server-app_autogen"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="desktop-app_autogen">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 desktop-app_autogen"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="scripts">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt/utils"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 scripts"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="manpages">
+				<Option working_dir="/home/in1t3r/git/sipwitchqt/utils"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 manpages"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/in1t3r/git/sipwitchqt/utils/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/CONTRIBUTING.md">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/args.cpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/args.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/compiler.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/contact.cpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/contact.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/crashhandler.cpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/crashhandler.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/inline.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/types.cpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/types.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/util.cpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Common/util.hpp">
+			<Option target="server-app"/>
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/connector.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/connector.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/control.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/control.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/listener.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/listener.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/storage.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Connect/storage.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/DOCKER.md">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/authorize.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/authorize.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/database.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/database.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/request.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/request.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/sqldriver.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Database/sqldriver.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/desktop.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/desktop.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/desktop.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/login.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/login.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/login.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/messages.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/messages.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/options.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/options.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/options.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/phonebook.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/phonebook.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/phonebook.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/sessions.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/sessions.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/sessions.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/statusbar.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/statusbar.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/statusbar.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/toolbar.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/toolbar.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Desktop/toolbar.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/about.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/about.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/about.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/devicelist.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/devicelist.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/devicelist.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/logout.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/logout.hpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/logout.ui">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Doxyfile.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/LICENSE">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/README.md">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Resources/desktop.qrc">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/context.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/context.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/event.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/event.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/invite.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/invite.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/main.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/main.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/manager.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/manager.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/output.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/output.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/provider.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/provider.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/registry.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/registry.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/server.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Server/server.hpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/TODO.md">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/config.hpp.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/desktop-app_autogen/S5YYZ2ZCNV/qrc_desktop.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/desktop-app_autogen/mocs_compilation.cpp">
+			<Option target="desktop-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/desktop.rc.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/etc/run">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/etc/sipwitchqt.conf">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/server-app_autogen/mocs_compilation.cpp">
+			<Option target="server-app"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/server.rc.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/setup.iss.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/sipwitchqt.spec.in">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/testdata/ping.xml">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/testdata/service.conf">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/testdata/siptest.sh">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swcert-create.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swcert-create.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swcert-read.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swcert-read.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-authorize.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-authorize.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-endpoints.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-endpoints.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-extensions.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-extensions.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-list.1">
+			<Option target="manpages"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/swlite-list.rb">
+			<Option target="scripts"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/xdg/sipwitchqt.appdata.xml">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/xdg/sipwitchqt.desktop">
+			<Option target="support-files"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Doxyfile.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/config.hpp.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/desktop.rc.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/server.rc.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/setup.iss.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/sipwitchqt.spec.in">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5Config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5ConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5/Qt5ModuleLocation.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Core/Qt5CoreMacros.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Core\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5NetworkConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Network/Qt5NetworkConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Network\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Sql/Qt5SqlConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Sql\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Sql/Qt5SqlConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Sql\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Gui\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfigExtras.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/../../../../usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets/Qt5WidgetsMacros.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Qt5Widgets\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Resources/desktop.qrc">
+			<Option virtualFolder="CMake Files\Resources\"/>
+		</Unit>
+		<Unit filename="/home/in1t3r/git/sipwitchqt/utils/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

@@ -16,11 +16,11 @@
  */
 
 #include "logout.hpp"
-#include "ui_resetdb.h"
+#include "ui_logout.h"
 
 #include <Desktop/desktop.hpp>
 
-static Ui::ResetDb ui;
+static Ui::Logout ui;
 
 Logout::Logout(Desktop *parent) :
 QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)

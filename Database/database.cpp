@@ -99,7 +99,6 @@ QVariantHash Database::result(const QSqlRecord& record)
     }
     return hash;
 }
-
 int Database::runQuery(const QStringList& list)
 {
     int count = 0;
@@ -128,7 +127,7 @@ bool Database::runQuery(const QString &request, const QVariantList &parms)
         qDebug() << "Query" << request << "LIST" << parms;
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
-        
+
     if(query.exec() != true) {
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return false;
@@ -140,7 +139,7 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
 {
     if(!reopen())
         return QSqlRecord();
-    
+
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
@@ -351,6 +350,53 @@ bool Database::event(QEvent *evt)
     return true;
 }
 
+void Database::sendDeviceList(const Event& event)
+{
+    qDebug() << "Seeking device list" << endl;
+
+    auto query = getRecords("SELECT * FROM Endpoints WHERE number=?;", {event.number()});
+
+
+    QJsonArray list;
+    qDebug() << "REQUEST" << event.request();
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto endpoint = record.value("endpoint").toInt();
+        auto extension = record.value("number").toInt();
+        auto label = record.value("label").toString();
+        auto agent = record.value("agent").toString();
+        auto resgistrated = record.value("created").toString();
+        auto lastOnline = record.value("last").toString();
+
+//        qDebug() << "**** ACCESS" << access;
+//        if(display.isEmpty())
+//            display = record.value("fullname").toString();
+//        if(display.isEmpty())
+//            display = record.value("name").toString();
+
+//        UString uri = event.uriTo(dialing);
+        QJsonObject profile {
+            {"e", endpoint},
+            {"n", extension},
+            {"u", label},
+            {"a", agent},
+            {"r", resgistrated},
+            {"o", lastOnline},
+        };
+
+//        if(!agent.isEmpty())
+//            profile.insert("a", "NoAgent");
+
+//        if(record.value("access").toString() == "REMOTE")
+//            profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
+
+        list << profile;
+    }
+    QJsonDocument jdoc(list);
+    auto json = jdoc.toJson(QJsonDocument::Compact);
+    Context::roster(event, json);
+}
+
 void Database::localMessage(const Event& ev)
 {
     // TODO: Gather query of what to send, either by ext or userid lookup
@@ -359,11 +405,13 @@ void Database::localMessage(const Event& ev)
     // TODO: emit delivery to manager to kick off for live endpoints
 }
 
+
 void Database::sendRoster(const Event& event)
 {
     qDebug() << "Seeking roster for" << event.number();
 
     auto query = getRecords("SELECT * FROM Extensions,Authorize WHERE Extensions.name = Authorize.name ORDER BY Extensions.number");
+
 
     QJsonArray list;
     qDebug() << "REQUEST" << event.request();
@@ -456,4 +504,3 @@ void Database::countExtensions()
     QCoreApplication::postEvent(Instance,
         new DatabaseEvent(COUNT_EXTENSIONS));
 }
-

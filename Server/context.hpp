@@ -102,6 +102,7 @@ public:
 
     static void challenge(const Event& event, Registry *registry, bool reuse = false);
     static bool roster(const Event& event, const QByteArray& json);
+    static bool devicelist(const Event& event, const QByteArray& json);
     static bool reply(const Event& event, int code);
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
@@ -124,7 +125,6 @@ private:
     static volatile unsigned instanceCount;
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
-
     ~Context() final;
 
     bool process(const Event& ev);
@@ -135,7 +135,6 @@ signals:
     void REQUEST_ROSTER(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);
-
     void LOCAL_MESSAGE(const Event& ev);
     void OUTBOX_MESSAGE(const Event& ev);
     void OUTBOUND_MESSAGE(const Event& ev);

@@ -79,6 +79,7 @@ QObject(), active(true)
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverLabel = cred["label"].toString().toUtf8();
     serverDisplay = cred["display"].toString().toUtf8();
+
     serverCreds = cred;
     serverCreds["schema"] = "sip:";
     serverSchema = "sip:";
@@ -108,6 +109,7 @@ QObject(), active(true)
     auto thread = new QThread;
     this->moveToThread(thread);
 
+
     connect(thread, &QThread::started, this, &Connector::run);
     connect(this, &Connector::finished, thread, &QThread::quit);
     connect(this, &Connector::finished, this, &QObject::deleteLater);
@@ -126,6 +128,20 @@ void Connector::add_authentication()
 }
 
 void Connector::requestRoster()
+{
+    auto to = UString::uri(serverSchema, serverHost, serverPort);
+    auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    osip_message_t *msg = nullptr;
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_ROSTER, to, from, to);
+    if(!msg)
+        return;
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::requestDeviceList()
 {
     auto to = UString::uri(serverSchema, serverHost, serverPort);
     auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
@@ -167,8 +183,8 @@ bool Connector::sendText(const UString& to, const UString& body, const UString s
     osip_message_set_content_type(msg, "text/plain");
     eXosip_message_send_request(context, msg);
     return true;
-}
 
+}
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;
@@ -193,6 +209,7 @@ void Connector::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
+
     int error;
     time_t now, last = 0;
 

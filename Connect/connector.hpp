@@ -40,8 +40,8 @@ public:
 
     void stop(bool shutdown = false);
     void requestRoster();
+    void requestDeviceList();
     bool sendText(const UString& to, const UString& body, const UString subject = "None");
-
 private:
     volatile bool active;
 
