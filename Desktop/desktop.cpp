@@ -699,6 +699,8 @@ void Desktop::authorized(const QVariantHash& creds)
         connector->start();
         emit changeConnector(connector);
         statusMessage(tr("online"));
+        connect(connector, &Connector::failure, this, &Desktop::failed);
+
     }
     setState(ONLINE);
 }

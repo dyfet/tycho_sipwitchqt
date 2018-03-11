@@ -78,6 +78,8 @@ QObject(), active(true)
     serverHost = cred["host"].toString().toUtf8();
     serverPort = static_cast<quint16>(cred["port"].toUInt());
     serverLabel = cred["label"].toString().toUtf8();
+    serverDisplay = cred["display"].toString().toUtf8();
+
     serverCreds = cred;
     serverCreds["schema"] = "sip:";
     serverSchema = "sip:";
@@ -100,8 +102,13 @@ QObject(), active(true)
             ++serverPort;
     }
 
+    uriFrom = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    uriRoute = UString::uri(serverSchema, serverHost, serverPort);
+    sipFrom = UString("\"") + serverDisplay + "\" <" + uriFrom + ">";
+
     auto thread = new QThread;
     this->moveToThread(thread);
+
 
     connect(thread, &QThread::started, this, &Connector::run);
     connect(this, &Connector::finished, thread, &QThread::quit);
@@ -202,6 +209,8 @@ void Connector::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
+
+    int error;
     time_t now, last = 0;
 
     qDebug() << "Connector started";
@@ -222,10 +231,20 @@ void Connector::run()
         }
 
         qDebug().nospace() << "tcp=" << eid(event->type) << " cid=" << event->cid;
+
         switch(event->type) {
         case EXOSIP_MESSAGE_REQUESTFAILURE:
+            error = 666;
+            if(event->response)
+                error = event->response->status_code;
             if(event->response && event->response->status_code != SIP_UNAUTHORIZED)
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
+            qDebug() << event->request;
+            if(MSG_IS_MESSAGE(event->request))
+                emit messageResult(error);
+            qDebug() << "*** FAILED" << error;
+            if(error == 666)
+                emit failure(666);
             break;
         case EXOSIP_MESSAGE_ANSWERED:
             if(!event->response)
@@ -234,6 +253,8 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
+                else if(MSG_IS_MESSAGE(event->request))
+                    messageResult(SIP_OK);
                 break;
             default:
                 qDebug() << "*** ANSWER FAILURE" << event->response->status_code;
