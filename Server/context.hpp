@@ -125,7 +125,6 @@ private:
     static volatile unsigned instanceCount;
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
-
     ~Context() final;
 
     bool process(const Event& ev);

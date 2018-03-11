@@ -523,7 +523,7 @@
 		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/logout.hpp">
 			<Option target="desktop-app"/>
 		</Unit>
-		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/resetdb.ui">
+		<Unit filename="/home/in1t3r/git/sipwitchqt/Dialogs/logout.ui">
 			<Option target="desktop-app"/>
 		</Unit>
 		<Unit filename="/home/in1t3r/git/sipwitchqt/Doxyfile.in">

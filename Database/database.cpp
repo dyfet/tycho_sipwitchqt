@@ -397,6 +397,22 @@ void Database::sendDeviceList(const Event& event)
     Context::roster(event, json);
 }
 
+void Database::localMessage(const Event& ev)
+{
+    // TODO: Gather query of what to send, either by ext or userid lookup
+    // error SIP_NOT_FOUND if target is not found...
+    Context::reply(ev, SIP_OK);
+    // TODO: emit delivery to manager to kick off for live endpoints
+}
+
+
+void Database::localMessage(const Event& ev)
+{
+    // TODO: Gather query of what to send, either by ext or userid lookup
+    // error SIP_NOT_FOUND if target is not found...
+    Context::reply(ev, SIP_OK);
+    // TODO: emit delivery to manager to kick off for live endpoints
+}
 
 void Database::sendRoster(const Event& event)
 {

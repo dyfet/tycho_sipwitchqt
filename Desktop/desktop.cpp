@@ -382,6 +382,7 @@ void Desktop::closeDialog()
     }
 }
 
+
 void Desktop::openDeviceList()
 {
     closeDialog();

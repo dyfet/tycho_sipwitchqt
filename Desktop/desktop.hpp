@@ -131,6 +131,14 @@ public:
         return QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch() - (currentExpiration * 1000l));
     }
 
+    inline QVariant config(const QString& path, const QVariant& value = QVariant()) {
+        return settings.value(path, value);
+    }
+
+    inline Listener *getListener() const {
+        return listener;
+    }
+
     inline static Desktop *instance() {
         return Instance;
     }

@@ -148,6 +148,36 @@ void Connector::requestDeviceList()
     eXosip_message_send_request(context, msg);
 }
 
+const UString Connector::sipTo(const UString& id, const QList<QPair<UString, UString>> args) const
+{
+    UString sep = "?";
+    UString to = "<" + id;
+    foreach(auto arg, args) {
+        to += sep + arg.first + "=" + arg.second.escape();
+        sep = "&";
+    }
+    return to + ">";
+}
+
+bool Connector::sendText(const UString& to, const UString& body, const UString subject)
+{
+    osip_message_t *msg = nullptr;
+    Locker lock(context);
+    QList<QPair<UString,UString>> args = {
+        {"Subject", subject},
+        // TODO: any other special X-Headers we may use here...
+    };
+    eXosip_message_build_request(context, &msg, "MESSAGE", sipTo(to, args), sipFrom, uriRoute);
+    if(!msg)
+        return false;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+    osip_message_set_content_type(msg, "text/plain");
+    eXosip_message_send_request(context, msg);
+    return true;
+
+}
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;

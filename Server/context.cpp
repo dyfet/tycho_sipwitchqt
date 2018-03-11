@@ -175,12 +175,16 @@ void Context::run()
 
     // connect events to state handlers when we run...
     auto stack = Manager::instance();
+    auto database = Database::instance();
+
     if(allow & Allow::REGISTRY)
         connect(this, &Context::REQUEST_REGISTER, stack, &Manager::refreshRegistration);
 
     if(netProto == IPPROTO_TCP) {
         connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
     }
+
+    connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
 
     debug() << "Running " << objectName();
 
@@ -241,14 +245,16 @@ bool Context::process(const Event& ev)
     switch(ev.type()) {
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_OPTIONS(ev.message())) {
-            if(ev.isLocal() && !ev.target().hasUser()) {
+            if(ev.isLocal() && !ev.target().hasUser())
                 return reply(ev, SIP_OK);
-            }
             emit REQUEST_OPTIONS(ev);
         }
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            // if not our registration, deny
+            if(ev.number() < 1)
+                return reply(ev, SIP_FORBIDDEN);
             emit REQUEST_REGISTER(ev);
         }
         if(MSG_IS_ROSTER(ev.message())) {
@@ -256,6 +262,30 @@ bool Context::process(const Event& ev)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_ROSTER(ev);
             return false;
+        }
+        if(MSG_IS_MESSAGE(ev.message())) {
+            qDebug() << "*** MESSAGE " << ev.number() << ev.contentType();
+            // if relaying messages between remotes, no!
+            if(ev.number() < 1 && !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            // local and outbound messages can have outbox sync
+            if(ev.toLocal() && ev.number() < 0) {
+                emit LOCAL_MESSAGE(ev);
+                if(ev.label() != "NONE")
+                    emit OUTBOX_MESSAGE(ev);
+            }
+            else {
+                // local to remote or remote to local have sms text limit
+                if(ev.contentType() != "text/plain" || ev.body().length() > 160)
+                    return reply(ev, SIP_FORBIDDEN);
+                if(ev.toLocal())
+                    emit LOCAL_MESSAGE(ev);
+                else {
+                    emit OUTBOUND_MESSAGE(ev);
+                    if(ev.label() != "NONE")
+                        emit OUTBOX_MESSAGE(ev);
+                }
+            }
         }
         break;
     default:

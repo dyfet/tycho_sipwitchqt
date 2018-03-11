@@ -42,15 +42,17 @@ public:
     void requestRoster();
     void requestDeviceList();
 
-
+    bool sendText(const UString& to, const UString& body, const UString subject = "None");
 private:
     volatile bool active;
 
     QVariantHash serverCreds;
+    UString uriFrom, uriRoute, sipFrom;
     UString serverId;
     UString serverHost;
     UString serverSchema;
     UString serverLabel;
+    UString serverDisplay;
     quint16 serverPort;
 
     eXosip_t *context;
@@ -58,12 +60,15 @@ private:
 
     void add_authentication();
 
+    const UString sipTo(const UString& to, const QList<QPair<UString,UString>>args) const;
     void processRoster(eXosip_event_t *event);
 
 signals:
     void starting();
 	void finished();
+    void failure(int code);
 
+    void messageResult(int status);
     void changeRoster(const QByteArray& json);
 
 private slots:
