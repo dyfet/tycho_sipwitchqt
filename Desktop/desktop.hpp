@@ -73,7 +73,7 @@ public:
         ONLINE,
     } state_t;
 
-    Desktop(bool tray, bool reset);
+    Desktop(const QCommandLineParser& args);
 
     bool isConnected() const {
         return connector != nullptr;
@@ -101,6 +101,10 @@ public:
 
     bool isOptions() const {
         return isCurrent(options);
+    }
+
+    inline QFont font() const {
+        return baseFont;
     }
 
     QVariantHash storageCredentials() const {
@@ -171,6 +175,7 @@ private:
     QString currentAppearance;
     int currentExpiration;
     QDialog *dialog;
+    QFont baseFont;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;

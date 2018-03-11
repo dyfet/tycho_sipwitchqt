@@ -104,6 +104,7 @@ public:
     static bool roster(const Event& event, const QByteArray& json);
     static bool devicelist(const Event& event, const QByteArray& json);
     static bool reply(const Event& event, int code);
+    static bool answerWithTimestamp(const Event& event, int code = SIP_OK);
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
@@ -133,6 +134,7 @@ signals:
     void REQUEST_REGISTER(const Event& ev);
     void REQUEST_OPTIONS(const Event& ev);
     void REQUEST_ROSTER(const Event& ev);
+    void REQUEST_DEVLIST(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);
     void LOCAL_MESSAGE(const Event& ev);

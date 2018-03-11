@@ -115,6 +115,7 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
+    auto eid = endpoint.value("endpoint").toLongLong();
     auto user = extension.value("name").toString();
     auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
     if(authorize.count() < 1) {
@@ -138,6 +139,13 @@ void Authorize::findEndpoint(const Event& event)
     else if(expires > database->expiresTcp)
         expires = database->expiresTcp;
 
+    auto request = event.request();
+    auto roffset = request.indexOf('@');
+    if(roffset < 1)
+        roffset = request.indexOf(':');
+    if(roffset > 0)
+        request = request.mid(++roffset);
+
     auto display = extension.value("display").toString();
     if(display.isEmpty())
         display = authorize.value("fullname").toString();
@@ -152,6 +160,8 @@ void Authorize::findEndpoint(const Event& event)
         {"secret", authorize.value("secret")},
         {"number", number},
         {"label", label},
+        {"endpoint", eid},
+        {"origin", request},
         {"expires", expires},
     };
     emit createEndpoint(event, reply);

@@ -134,6 +134,59 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
     }
 }
 
+void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
+{
+    auto *reg = Registry::find(endpoint);
+    if(!reg || !reg->isActive()) {
+        // will be queued in db only for now...
+        qDebug() << "endpoint inactive" << endpoint;
+        return;
+    }
+    auto context = reg->context();
+    UString from = data["f"].toByteArray();
+    UString to = data["t"].toByteArray();
+    UString route = context->prefix() + reg->route();
+
+    // adjusts message from and to based on registering entity delivery
+    // context-> message(registry, data)...
+
+    if(from.toInt() == reg->extension() || from == reg->user())
+        from = context->prefix() + UString::number(reg->extension()) + "@" + reg->origin();
+    else if(from.indexOf('@') < 1)
+        from = context->prefix() + from + "@" + reg->origin();
+
+    if(to.toInt() == reg->extension() || to == reg->user())
+        to = context->prefix() + UString::number(reg->extension()) + "@" + reg->origin();
+    else if(to.indexOf('@') < 1)
+        to = context->prefix() + to + "@" + reg->origin();
+
+    qDebug() << "Sending Message FROM" << from << "TO" << to << "VIA" << route;
+}
+
+void Manager::requestDevlist(const Event& ev)
+{
+    qDebug() << "REQUESTING DEVLIST FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND DEVLIST REG";
+        Context::reply(ev, result);
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit sendDevlist(ev);
+}
+
 void Manager::requestRoster(const Event& ev)
 {
     qDebug() << "REQUESTING ROSTER FROM" << ev.number();

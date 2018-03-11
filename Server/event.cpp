@@ -23,15 +23,19 @@
 #endif
 
 Event::Data::Data() :
-number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr)
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), sequenceOrder(0)
 {
 }
 
-Event::Data::Data(eXosip_event_t *evt, Context *ctx) :
-number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr)
+Event::Data::Data(eXosip_event_t *evt, Context *ctx, int seq) :
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), sequenceOrder(seq)
 {
     // start time of event creation
     elapsed.start();
+    timestamp = QDateTime::currentDateTime();
+    QDateTime utc = timestamp.toUTC();
+    utc.setTimeSpec(Qt::LocalTime);
+    timestamp.setUtcOffset(static_cast<int>(utc.secsTo(timestamp)));
 
     // ignore constructor parser if empty event;
     if(!evt) {
@@ -253,7 +257,13 @@ Event::Event()
 
 Event::Event(eXosip_event_t *evt, Context *ctx)
 {
-    d = new Event::Data(evt, ctx);
+    static std::atomic<unsigned> sequence;
+
+    auto next = 0;
+    if(evt)
+        next = sequence.fetch_add(1, std::memory_order_relaxed) % 10000;
+
+    d = new Event::Data(evt, ctx, next);
 }
 
 Event::Event(const Event& copy) :

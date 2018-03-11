@@ -81,6 +81,8 @@ QObject()
 
     Manager *manager = Manager::instance();
     connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
+    connect(manager, &Manager::sendDevlist, this, &Database::sendDeviceList);
+    connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
 }
 
 Database::~Database()
@@ -89,16 +91,6 @@ Database::~Database()
     close();
 }
 
-QVariantHash Database::result(const QSqlRecord& record)
-{
-    QVariantHash hash;
-    int pos = 0;
-    while(pos < record.count()) {
-        hash[record.fieldName(pos)] = record.value(pos);
-        ++pos;
-    }
-    return hash;
-}
 int Database::runQuery(const QStringList& list)
 {
     int count = 0;
@@ -135,6 +127,26 @@ bool Database::runQuery(const QString &request, const QVariantList &parms)
     return true;
 }
 
+QVariant Database::insert(const QString& request, const QVariantList &parms)
+{
+    if(!reopen())
+        return QVariant();
+
+    QSqlQuery query(db);
+    query.prepare(request);
+    int count = -1;
+    qDebug() << "Request " << request << " LIST " << parms;
+    while(++count < parms.count())
+        query.bindValue(count, parms.at(count));
+
+    if(!query.exec()) {
+        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+        return QVariant();
+    }
+
+    return query.lastInsertId();
+}
+
 QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms)
 {
     if(!reopen())
@@ -147,8 +159,10 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
-    if(!query.exec())
+    if(!query.exec()) {
+        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return QSqlRecord();
+    }
 
     if(!query.next())
         return QSqlRecord();
@@ -399,10 +413,168 @@ void Database::sendDeviceList(const Event& event)
 
 void Database::localMessage(const Event& ev)
 {
-    // TODO: Gather query of what to send, either by ext or userid lookup
-    // error SIP_NOT_FOUND if target is not found...
-    Context::reply(ev, SIP_OK);
-    // TODO: emit delivery to manager to kick off for live endpoints
+    Q_ASSERT(ev.message() != nullptr);
+    Q_ASSERT(ev.message()->to != nullptr);
+    Q_ASSERT(ev.message()->to->url != nullptr);
+    Q_ASSERT(ev.message()->to->url->username != nullptr);
+
+    auto number = ev.number();
+    auto msg = ev.message();
+    bool isLabeled = (ev.number() > 0 && ev.label() != "NONE");
+    qlonglong self = -1, none = -1;
+
+    UString to = msg->to->url->username;
+    QList<qlonglong> sendList;  // local endpoints to send to
+    QList<int> targets;         // target extension #'s
+
+    // if from local extenion, validate it has endpoints, find outbox sync
+    if(number > 0) {
+        auto count = 0;
+        auto query = getRecords("SELECT endpoint, label FROM Endpoints WHERE number=?;", {number});
+        while(query.isActive() && query.next()) {
+            auto record = query.record();
+            auto label = record.value("label").toString().toUtf8();
+            auto endpoint = record.value("endpoint").toLongLong();
+            ++count;
+            // do not sync outbox to self...
+            if(isLabeled && label == ev.label())
+                    self = endpoint;
+            else if(!isLabeled)
+                continue;
+            else if(label == "NONE")
+                none = endpoint;
+            sendList << endpoint;
+        }
+        // if no endpoints for sender, must be invalid
+        if(!count) {
+            Context::reply(ev, SIP_FORBIDDEN);
+            return;
+        }
+    }
+
+    if(to.isNumber()) {
+        // see if group...
+        auto count = 0;
+        auto query = getRecords("SELECT member FROM Groups WHERE pilot=?;", {to.toInt()});
+        while(query.isActive() && query.next()) {
+            auto member = query.record().value("member").toInt();
+            // dont send to self in group...
+            if(member != number)
+                targets << member;
+            ++count;
+        }
+        if(!count)
+            targets << to.toInt();
+    }
+    else {
+        // gather extensions by auth record for named public access
+        QString name = QString::fromUtf8(to);
+        auto query = getRecords("SELECT number FROM Extensions WHERE name=?;", {name});
+        while(query.isActive() && query.next()) {
+            targets << query.record().value("number").toInt();
+        }
+    }
+
+    // if no targets, we definately go no further...but if qt client, we must
+    // continue on to do outbox sync.
+    if(targets.count() < 1 && !isLabeled) {
+        Context::reply(ev, SIP_NOT_FOUND);
+        return;
+    }
+
+    // now convert targets to an endpoint send list...
+    foreach(auto target, targets) {
+        auto query = getRecords("SELECT endpoint FROM Endpoints WHERE number=?;", {target});
+        while(query.isActive() && query.next())
+            sendList << query.record().value("endpoint").toLongLong();
+    }
+
+    qDebug() << "*** ENDPOINTS TO PROCESS" << sendList;
+
+    if(sendList.count() < 1) {
+        if(!isLabeled)
+            Context::reply(ev, SIP_NOT_FOUND);
+        return;
+    }
+
+    // create datatypes for msg table insertion...
+    auto msgFrom = QString(msg->from->url->username);
+    auto msgTo = QString::fromUtf8(to);
+    auto msgSubject = QString::fromUtf8(ev.subject());
+    auto msgDisplay = QString(msg->from->displayname);
+    auto msgType = "text";
+    auto msgPosted = ev.timestamp();
+    auto msgExpires = ev.timestamp();
+    auto msgSequence = ev.sequence();
+
+    if(ev.expires() > 0)
+        msgExpires = msgPosted.addSecs(ev.expires());
+    else
+        msgExpires = msgPosted.addDays(30);
+
+    QString msgText = "";
+    if(ev.contentType() == "text/plain") {
+        msgText = QString::fromUtf8(ev.body());
+    }
+
+    if(number < 1)
+        msgFrom = QString::fromUtf8(ev.from().toString());
+
+    auto mid = insert("INSERT INTO Messages(msgseq, msgfrom, msgto, subject, display, posted, msgtype, msgtext, expires) "
+                            "VALUES(?,?,?,?,?,?,?,?,?);", {
+                                msgSequence,
+                                msgFrom,
+                                msgTo,
+                                msgSubject,
+                                msgDisplay,
+                                msgPosted,
+                                msgType,
+                                msgText,
+                                msgExpires
+                            });
+
+    if(!mid.isValid()) {
+        qDebug() << "MESSAGE INSERT BAD";
+        if(!isLabeled)
+            Context::reply(ev, SIP_INTERNAL_SERVER_ERROR);
+        return;
+    }
+
+    // later reply for other devices...
+    qDebug() << "MESSAGE OK";
+    if(!isLabeled)
+        Context::reply(ev, SIP_OK);
+
+    if(sendList.count() == 0)
+        return;
+
+    QVariantHash data;          // to be sent to manager for each send/sync
+    data["f"] = msgFrom.toUtf8();
+    data["t"] = msgTo.toInt();
+    data["c"] = ev.contentType();
+    data["b"] = ev.body();
+    data["s"] = ev.subject();
+    data["p"] = ev.timestamp();
+    data["u"] = ev.sequence();
+    data["e"] = ev.expires();
+    data["r"] = mid.toString().toUtf8();
+
+    // by tracking our messages sent we can also make sure to sync new
+    // extensions or even recover old messages from the server.
+    foreach(auto endpoint, sendList) {
+        auto msgstatus = 0;
+        if(endpoint == self || endpoint == none)
+            msgstatus = SIP_OK;
+        auto outbox = insert("INSERT INTO Outboxes(mid, endpoint, msgstatus) "
+                             "VALUES(?,?,?);", {mid, endpoint, msgstatus});
+        if(!outbox.isValid()) {
+            qDebug() << "OUTBOX FAILED FOR" << endpoint;
+            continue;
+        }
+        if(msgstatus == SIP_OK)     // dont send if we marked them ok...
+            continue;
+        emit sendMessage(endpoint, data);
+    }
 }
 
 

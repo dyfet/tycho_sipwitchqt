@@ -28,6 +28,7 @@
 #include <QAbstractNativeEventFilter>
 #endif
 
+#include <QGuiApplication>
 #include <QTranslator>
 #include <QFile>
 #include <QCloseEvent>
@@ -110,7 +111,7 @@ Desktop *Desktop::Instance = nullptr;
 Desktop::state_t Desktop::State = Desktop::INITIAL;
 QVariantHash Desktop::Credentials;
 
-Desktop::Desktop(bool tray, bool reset) :
+Desktop::Desktop(const QCommandLineParser& args) :
 QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
 {
     Q_ASSERT(Instance == nullptr);
@@ -118,12 +119,16 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connector = nullptr;
     front = true;
 
+    // for now, just this...
+    baseFont = QGuiApplication::font();
+
 #ifdef Q_OS_WIN
     static NativeEvent nativeEvents;
     qApp->installNativeEventFilter(&nativeEvents);
 #endif
 
-    if(reset) {
+    bool tray = !args.isSet("notray");
+    if(args.isSet("reset")) {
         Storage::remove();
         settings.clear();
     }
@@ -239,8 +244,16 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         storage = new Storage("");
         emit changeStorage(storage);
         showSessions();
-        restoreGeometry(settings.value("geometry").toByteArray());
-        show();                             // FIXME: hide
+
+        if(args.isSet("minimize")) {
+            hide();
+        }
+        else {
+            show();
+            resize(settings.value("size", size()).toSize());
+            move(settings.value("position", pos()).toPoint());
+        }
+
         listen(storage->credentials());
     }
     else {
@@ -250,15 +263,18 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         ui.pagerStack->setCurrentWidget(login);
         login->enter();
         show();
-        settings.setValue("geometry", saveGeometry());
+        settings.setValue("size", size());
+        settings.setValue("position", pos());
         ui.appPreferences->setEnabled(false);
     }
 }
 
 void Desktop::closeEvent(QCloseEvent *event)
 {
-    if(isVisible())
-        settings.setValue("geometry", saveGeometry());
+    if(isVisible()) {
+        settings.setValue("size", size());
+        settings.setValue("position", pos());
+    }
 
     // close to tray, if we are active...
     if(trayIcon && trayIcon->isVisible() && listener) {
@@ -276,6 +292,11 @@ QMenu *Desktop::createPopupMenu()
 void Desktop::shutdown()
 {   
     bool threads = false;
+
+    if(isVisible()) {
+        settings.setValue("size", size());
+        settings.setValue("position", pos());
+    }
 
     if(connector) {
         threads = true;
@@ -387,7 +408,7 @@ void Desktop::openDeviceList()
 {
     closeDialog();
     setEnabled(false);
-    dialog = new DeviceList(this);
+    dialog = new DeviceList(this, connector);
 }
 
 void Desktop::closeDeviceList()
@@ -720,6 +741,7 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
     connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
+    sessions->listen(listener);
     listener->start();
     authorizing();
 }
@@ -761,8 +783,9 @@ int main(int argc, char *argv[])
     Args::add(args, {
         {Args::HelpArgument},
         {Args::VersionArgument},
-        {{"reset"}, "Reset Config"},
+        {{"minimize"}, "Minimize if logged in"},
         {{"notray"}, "Disable tray icon"},
+        {{"reset"}, "Reset client config"},
     });
 
 #ifdef SIGHUP
@@ -775,7 +798,7 @@ int main(int argc, char *argv[])
     ::signal(SIGTERM, signal_handler);
 
     args.process(app);
-    Desktop w(!args.isSet("notray"), args.isSet("reset"));
+    Desktop w(args);
     int status = app.exec();
     if(!result)
         result = status;

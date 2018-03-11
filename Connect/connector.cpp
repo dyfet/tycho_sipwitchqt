@@ -30,9 +30,13 @@
 
 #define X_ROSTER    "X-ROSTER"
 #define X_PROFILE   "X-PROFILE"
+#define X_DEVLIST   "X-DEVLIST"
 
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_ROSTER))
+
+#define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_DEVLIST))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -148,7 +152,7 @@ void Connector::requestDeviceList()
     osip_message_t *msg = nullptr;
 
     Locker lock(context);
-    eXosip_message_build_request(context, &msg, X_ROSTER, to, from, to);
+    eXosip_message_build_request(context, &msg, X_DEVLIST, to, from, to);
     if(!msg)
         return;
     osip_message_set_header(msg, "X-Label", serverLabel);
@@ -209,9 +213,9 @@ void Connector::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
-
-    int error;
+    int error, sequence;
     time_t now, last = 0;
+    osip_header_t *header;
 
     qDebug() << "Connector started";
     add_authentication();
@@ -241,7 +245,7 @@ void Connector::run()
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
             qDebug() << event->request;
             if(MSG_IS_MESSAGE(event->request))
-                emit messageResult(error);
+                emit messageResult(error, QDateTime(), 0);
             qDebug() << "*** FAILED" << error;
             if(error == 666)
                 emit failure(666);
@@ -253,8 +257,22 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
-                else if(MSG_IS_MESSAGE(event->request))
-                    messageResult(SIP_OK);
+                else if(MSG_IS_DEVLIST(event->request))
+                    qDebug() << "*** NEED TO PROCESS...";
+                else if(MSG_IS_MESSAGE(event->request)) {
+                    sequence = 0;
+                    header = nullptr;
+                    osip_message_header_get_byname(event->response, "x-sc", 0, &header);
+                    if(header && header->hvalue)
+                        sequence = atoi(header->hvalue);
+                    qDebug() << "*** SEQUENCE" << sequence;
+                    header = nullptr;
+                    osip_message_header_get_byname(event->response, "x-ts", 0, &header);
+                    if(header && header->hvalue)
+                        emit messageResult(SIP_OK, QDateTime::fromString(QString(header->hvalue), Qt::ISODate), sequence);
+                    else
+                        emit messageResult(SIP_OK, QDateTime(), 0);
+                }
                 break;
             default:
                 qDebug() << "*** ANSWER FAILURE" << event->response->status_code;

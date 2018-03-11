@@ -68,7 +68,7 @@ QList <RemoteSegment *> Segment::peers()
 }        
 
 LocalSegment::LocalSegment(int cid, Invite *ip, Registry *rp) :
-Segment(cid, ip, rp->sip()), registry(rp)
+Segment(cid, ip, rp->context()), registry(rp)
 {
 }
 

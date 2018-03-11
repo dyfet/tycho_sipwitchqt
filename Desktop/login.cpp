@@ -33,7 +33,9 @@ QWidget(), desktop(control)
     connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);
     connect(ui.secret, &QLineEdit::returnPressed, desktop, &Desktop::initial);
 
-#ifndef QT_NO_DEBUG_OUTPUT
+#ifdef QT_NO_DEBUG_OUTPUT
+    ui.server->setText(desktop->config("login/server", QString("")).toString());
+#else
     ui.server->setText(desktop->config("login/server", QString("sip:127.0.0.1:4060")).toString());
 #endif
 
@@ -57,12 +59,14 @@ void Login::enter()
     ui.secret->setText("");
     ui.identity->setText(desktop->config("login/extension", QString("")).toString());
 
+    auto label = desktop->config("login/label").toString();
+    if(label.length() > 0)
+        ui.labels->setCurrentText(label);
+
     if(ui.identity->text().length() > 0)
         ui.secret->setFocus();
     else
         ui.identity->setFocus();
-
-
 }
 
 void Login::badIdentity()

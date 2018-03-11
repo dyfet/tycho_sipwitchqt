@@ -34,5 +34,6 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
 void Logout::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event);
     Desktop::instance()->closeDialog();
 }

@@ -91,6 +91,7 @@ private:
 
     bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
     int runQuery(const QStringList& list);
+    QVariant insert(const QString& request, const QVariantList &parms = QVariantList());
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
     QSqlQuery getRecords(const QString& request, const QVariantList& parms = QVariantList());
     bool reopen();
@@ -99,10 +100,9 @@ private:
 
     static Database *Instance;
 
-    static QVariantHash result(const QSqlRecord& record);
-
 signals:
     void updateAuthorize(const QVariantHash& config, bool active);
+    void sendMessage(qlonglong endpoint, const QVariantHash& data);
 
 public slots:
     void localMessage(const Event& ev);

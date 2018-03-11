@@ -35,6 +35,9 @@
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-ROSTER"))
 
+#define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method,"X-DEVLIST"))
+
 static bool active = true;
 
 volatile unsigned Context::instanceCount = 0;
@@ -128,7 +131,7 @@ schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
         if(host.error() == QHostInfo::NoError)
             localHosts << host.hostName();
         localHosts << netAddress;
-    }
+    } 
     localHosts << QHostInfo::localHostName() << Util::localDomain();
 
     uriHost = uriAddress;
@@ -182,7 +185,9 @@ void Context::run()
 
     if(netProto == IPPROTO_TCP) {
         connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
+        connect(this, &Context::REQUEST_DEVLIST, stack, &Manager::requestDevlist);
     }
+
     connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
 
     debug() << "Running " << objectName();
@@ -250,15 +255,18 @@ bool Context::process(const Event& ev)
             }
             emit REQUEST_OPTIONS(ev);
         }
+
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             // if not our registration, deny
-            if(ev.number() < 1)
+            if(ev.number() < 1) {
+                qDebug() << "Non local registration attempt";
                 return reply(ev, SIP_FORBIDDEN);
-
+            }
             emit REQUEST_REGISTER(ev);
         }
+
         if(MSG_IS_ROSTER(ev.message())) {
             if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
@@ -266,29 +274,42 @@ bool Context::process(const Event& ev)
             return false;
         }
 
-
+        if(MSG_IS_DEVLIST(ev.message())) {
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_DEVLIST(ev);
+            return false;
+        }
 
         if(MSG_IS_MESSAGE(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
             qDebug() << "*** MESSAGE " << ev.number() << ev.contentType();
             // if relaying messages between remotes, no!
             if(ev.number() < 1 && !ev.toLocal())
                 return reply(ev, SIP_FORBIDDEN);
-            // local and outbound messages can have outbox sync
+
             if(ev.toLocal() && ev.number() < 0) {
                 emit LOCAL_MESSAGE(ev);
-                if(ev.label() != "NONE")
-                    emit OUTBOX_MESSAGE(ev);
             }
             else {
+                auto from = ev.message()->from;
+                if(!from || !from->url || !from->url->username || !from->url->host)
+                    return reply(ev, SIP_ADDRESS_INCOMPLETE);
                 // local to remote or remote to local have sms text limit
                 if(ev.contentType() != "text/plain" || ev.body().length() > 160)
                     return reply(ev, SIP_FORBIDDEN);
-                if(ev.toLocal())
+
+                if(ev.toLocal()) {
+                    // Early feedback to qt client since probably already is correct
+                    // otherwise ui may really slow down sending with db queries...
+                    if(ev.number() > 0 && ev.label() != "NONE")
+                        Context::answerWithTimestamp(ev, SIP_OK);
                     emit LOCAL_MESSAGE(ev);
+                }
                 else {
                     emit OUTBOUND_MESSAGE(ev);
-                    if(ev.label() != "NONE")
-                        emit OUTBOX_MESSAGE(ev);
                 }
             }
         }
@@ -398,6 +419,24 @@ bool Context::roster(const Event& event, const QByteArray& json)
     }
 
     eXosip_message_send_answer(context, tid, SIP_OK, msg);
+    return true;
+}
+
+bool Context::answerWithTimestamp(const Event& event, int result)
+{                   
+    osip_message_t *msg = nullptr;
+    auto context = event.context()->context;
+    auto tid = event.tid();
+                
+    ContextLocker lock(context);
+    eXosip_message_build_answer(context, tid, SIP_OK, &msg);
+    if(!msg)
+        return false;
+        
+    UString timestamp = event.timestamp().toString(Qt::ISODate).toUtf8();
+    osip_message_set_header(msg, "X-TS", timestamp);
+    osip_message_set_header(msg, "X-SC", UString::number(event.sequence()));
+    eXosip_message_send_answer(context, tid, result, msg);
     return true;
 }
 
