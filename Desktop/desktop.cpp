@@ -353,22 +353,6 @@ void Desktop::openLogout()
     dialog = new Logout(this);
 }
 
-//void Desktop::doTheLogout()
-//{
-//    Q_ASSERT(storage != nullptr);
-
-//    emit changeStorage(nullptr);
-//    warningMessage(tr("logging out..."));
-//    offline();
-//    delete storage;
-//    storage = nullptr;
-//    ui.toolBar->hide();
-//    ui.pagerStack->setCurrentWidget(login);
-//    login->enter();
-//    ui.appPreferences->setEnabled(false);
-//    // TODO add a releasing of serverLabel so
-//    // user can login in same session again to the extension from which have logged out
-//}
 
 void Desktop::closeLogout()
 {
