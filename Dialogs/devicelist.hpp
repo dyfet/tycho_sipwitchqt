@@ -11,7 +11,12 @@ class DeviceList final : public QDialog
     Q_DISABLE_COPY(DeviceList)
 public:
     DeviceList(Desktop *parent, Connector *connector);
+//    QTableWidget table(this);
+
+
+//    void DeviceList::updateTable(const QJsonObject& json);
 private:
+
     void closeEvent(QCloseEvent *event) final;
     QTableWidget tableWidget;
 };
