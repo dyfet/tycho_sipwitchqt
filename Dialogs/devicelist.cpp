@@ -5,6 +5,7 @@
 
 #include <QWidget>
 
+#include <iostream>
 static Ui::DeviceList ui;
 
 DeviceList::DeviceList(Desktop *parent, Connector *connector) :
@@ -23,8 +24,33 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
                     foreach(auto profile, list) {
                         auto json = profile.toObject();
-                        foreach (value, json) {
-                             table;
+                        auto endpoint = json.value("e");
+                        auto number = json.value("n");
+                        auto label = json.value("u");
+                        auto lastOnline = json.value("o");
+                        auto registered = json.value("r");
+                        auto agent = json.value("a");
+
+                        table.setRowCount(table.currentRow() + 1);
+                        table.setSizeAdjustPolicy(QTableWidget::AdjustToContents);
+                        table.setItem(0, 0, new QTableWidgetItem("Item"));
+                        table.setItem(1, 0, new QTableWidgetItem("Item"));
+
+
+                        foreach (auto value, json) {
+                             auto endpoint = value.toInt();
+//                             QTableWidgetItem item = endpoint;
+//                             table.setItem(2,1,endpoint);
+                             qDebug() << "Endpoint: "<< endpoint << endl;
+                             auto extension = value.toInt();
+                             auto label = value.toString();
+                             qDebug() << "Label current" << label << endl;
+
+                             auto agent = value.toString();
+                             auto registrated = value.toString();
+                             auto lastOnline = value.toString();
+
+//                             table.setItem(2,1,value);
                         }
 
                     }
