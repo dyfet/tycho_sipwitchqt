@@ -15,18 +15,18 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     if(connector != nullptr) {
         //TODO: connect to receive server reply...
         connector->requestDeviceList();
-//        connect(ui.table,);
         connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
                     auto jdoc = QJsonDocument::fromJson(json);
                     auto list = jdoc.array();
             ui.table->setColumnCount(6);
+            int totalCol = ui.table->columnCount();
             ui.table->setRowCount(1);
-
+            int column = 0;
+            int row = 0;
 
 
             foreach(auto profile, list) {
-                        int rows = 1;
-                        int ind = 0;
+
                         auto json = profile.toObject();
                         auto endpoint = json.value("e").toString();
                         auto number = json.value("n").toString();
@@ -34,21 +34,15 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
                         auto lastOnline = json.value("o").toString();
                         auto registered = json.value("r").toString();
                         auto agent = json.value("a").toString();
+                        QStringList strArr = {endpoint, number,label,agent, registered, lastOnline};
                         ui.table->setSizeAdjustPolicy(QTableWidget::AdjustToContents);
-                        for (ind ; ind < rows; ind++){
-                            ui.table->setItem(ind, 0, new QTableWidgetItem(endpoint));
-                            ui.table->setItem(ind, 1, new QTableWidgetItem(number));
-                            ui.table->setItem(ind, 2, new QTableWidgetItem(label));
-                            ui.table->setItem(ind, 3, new QTableWidgetItem(agent));
-                            ui.table->setItem(ind, 4, new QTableWidgetItem(registered));
-                            ui.table->setItem(ind, 5, new QTableWidgetItem(lastOnline));
+                        for (column = 0; column < totalCol; column++){
+                            ui.table->setItem(row,column, new QTableWidgetItem(strArr[column]));
                         }
                         ui.table->setRowCount(ui.table->rowCount() + 1);
-                        rows++;
-
-//                        ui.table->currentRow();
-
+                        row++;
                     }
+            ui.table->removeRow(ui.table->rowCount());
                 });
 }
     connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
