@@ -39,48 +39,12 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
                         ui.table->setItem(1, 4, new QTableWidgetItem(agent));
                         ui.table->setItem(1, 5, new QTableWidgetItem(registered));
                         ui.table->setItem(1, 6, new QTableWidgetItem(lastOnline));
-
-
-                        foreach (auto value, json) {
-                             auto endpoint = value.toInt();
-//                             QTableWidgetItem item = endpoint;
-//                             table.setItem(2,1,endpoint);
-                             qDebug() << "Endpoint: "<< endpoint << endl;
-                             auto extension = value.toInt();
-                             auto label = value.toString();
-                             qDebug() << "Label current" << label << endl;
-
-                             auto agent = value.toString();
-                             auto registrated = value.toString();
-                             auto lastOnline = value.toString();
-
-//                             table.setItem(2,1,value);
-                        }
-
                     }
-
                 });
-    }
-
-//    tableWidget.setColumnCount(6);
-//    tableWidget.setRowCount(1);
-
+}
     connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
     show();
 }
-
-
-
-//void DeviceList::updateTable(const QJsonObject& json)
-//{
-//            auto jdoc = QJsonDocument::fromJson(json);
-//            auto list = jdoc.array();
-
-//            foreach(auto profile, list) {
-//                localModel->updateContact(profile.toObject());
-//            }
-
-//}
 
 
 void DeviceList::closeEvent(QCloseEvent *event)
