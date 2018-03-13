@@ -43,8 +43,13 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
                         row++;
                     }
             ui.table->removeRow(ui.table->rowCount());
+//            auto count = ui.table->rowCount();
+            auto count = row;
+
+            ui.connectedDevices->setText(QString(count));
                 });
 }
+
     connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
     show();
 }
