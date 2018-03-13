@@ -1,6 +1,6 @@
 #ifndef DEVICELIST_HPP
 #define DEVICELIST_HPP
-
+#include <QTableWidget>
 #include <QDialog>
 
 #include "../Desktop/desktop.hpp"
@@ -13,6 +13,7 @@ public:
     DeviceList(Desktop *parent, Connector *connector);
 private:
     void closeEvent(QCloseEvent *event) final;
+    QTableWidget tableWidget;
 };
 
 /*!

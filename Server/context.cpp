@@ -401,7 +401,7 @@ void Context::challenge(const Event &event, Registry* registry, bool reuse)
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
 }
 
-bool Context::roster(const Event& event, const QByteArray& json)
+bool Context::answerWithJson(const Event& event, const QByteArray& json)
 {
     osip_message_t *msg = nullptr;
     auto context = event.context()->context;
@@ -437,27 +437,6 @@ bool Context::answerWithTimestamp(const Event& event, int result)
     osip_message_set_header(msg, "X-TS", timestamp);
     osip_message_set_header(msg, "X-SC", UString::number(event.sequence()));
     eXosip_message_send_answer(context, tid, result, msg);
-    return true;
-}
-
-bool Context::devicelist(const Event& event, const QByteArray& json)
-{
-    osip_message_t *msg = nullptr;
-    auto context = event.context()->context;
-    auto tid = event.tid();
-
-    ContextLocker lock(context);
-
-    eXosip_message_build_answer(context, tid, SIP_OK, &msg);
-    if(!msg)
-        return false;
-
-    if(!json.isEmpty()) {
-        osip_message_set_body(msg, json.constData(), static_cast<size_t>(json.length()));
-        osip_message_set_content_type(msg, "application/json");
-    }
-
-    eXosip_message_send_answer(context, tid, SIP_OK, msg);
     return true;
 }
 

@@ -408,7 +408,7 @@ void Database::sendDeviceList(const Event& event)
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
-    Context::roster(event, json);
+    Context::answerWithJson(event, json);
 }
 
 void Database::localMessage(const Event& ev)
@@ -619,7 +619,7 @@ void Database::sendRoster(const Event& event)
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
-    Context::roster(event, json);
+    Context::answerWithJson(event, json);
 }
 
 void Database::onTimeout()

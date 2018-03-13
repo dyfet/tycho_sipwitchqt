@@ -15,8 +15,16 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
         connector->requestDeviceList();
     }
 
-    connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
-//    connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
+    tableWidget.setColumnCount(6);
+    tableWidget.setRowCount(1);
+
+            connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
+    connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
+            if(!connector)
+                return;
+            auto jdoc = QJsonDocument::fromJson(json);
+            auto list = jdoc.array();
+        });
     show();
 }
 
