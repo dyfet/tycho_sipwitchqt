@@ -18,23 +18,27 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
         connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
                     auto jdoc = QJsonDocument::fromJson(json);
                     auto list = jdoc.array();
-        QTableWidget table(this);
-        table.setColumnCount(6);
-        table.setRowCount(1);
+        ui.table->setColumnCount(6);
+        ui.table->setRowCount(1);
 
                     foreach(auto profile, list) {
                         auto json = profile.toObject();
-                        auto endpoint = json.value("e");
-                        auto number = json.value("n");
-                        auto label = json.value("u");
-                        auto lastOnline = json.value("o");
-                        auto registered = json.value("r");
-                        auto agent = json.value("a");
+                        auto endpoint = json.value("e").toString();
+                        auto number = json.value("n").toString();
+                        auto label = json.value("u").toString();
+                        auto lastOnline = json.value("o").toString();
+                        auto registered = json.value("r").toString();
+                        auto agent = json.value("a").toString();
 
-                        table.setRowCount(table.currentRow() + 1);
-                        table.setSizeAdjustPolicy(QTableWidget::AdjustToContents);
-                        table.setItem(0, 0, new QTableWidgetItem("Item"));
-                        table.setItem(1, 0, new QTableWidgetItem("Item"));
+
+                        ui.table->setRowCount(ui.table->currentRow() + 1);
+                        ui.table->setSizeAdjustPolicy(QTableWidget::AdjustToContents);
+                        ui.table->setItem(1, 1, new QTableWidgetItem(endpoint));
+                        ui.table->setItem(1, 2, new QTableWidgetItem(number));
+                        ui.table->setItem(1, 3, new QTableWidgetItem(label));
+                        ui.table->setItem(1, 4, new QTableWidgetItem(agent));
+                        ui.table->setItem(1, 5, new QTableWidgetItem(registered));
+                        ui.table->setItem(1, 6, new QTableWidgetItem(lastOnline));
 
 
                         foreach (auto value, json) {
