@@ -375,8 +375,8 @@ void Database::sendDeviceList(const Event& event)
     qDebug() << "REQUEST" << event.request();
     while(query.isActive() && query.next()) {
         auto record = query.record();
-        auto endpoint = record.value("endpoint").toInt();
-        auto extension = record.value("number").toInt();
+        auto endpoint = record.value("endpoint").toString();
+        auto extension = record.value("number").toString();
         auto label = record.value("label").toString();
         auto agent = record.value("agent").toString();
         auto resgistrated = record.value("created").toString();

@@ -18,8 +18,8 @@ public:
 
 //    void DeviceList::updateTable(const QJsonObject& json);
 private:
-    int rows = 1;
-    int column = 6;
+//    int rows = 1;
+//    int column = 6;
     void closeEvent(QCloseEvent *event) final;
 //    QTableWidget tableWidget;
 };
