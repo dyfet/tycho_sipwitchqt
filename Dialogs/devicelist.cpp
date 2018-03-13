@@ -15,6 +15,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     if(connector != nullptr) {
         //TODO: connect to receive server reply...
         connector->requestDeviceList();
+//        connect(ui.table,);
         connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
                     auto jdoc = QJsonDocument::fromJson(json);
                     auto list = jdoc.array();
@@ -31,20 +32,25 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
                         auto agent = json.value("a").toString();
 
 
-                        ui.table->setRowCount(ui.table->currentRow() + 1);
+//                        ui.table->setRowCount(ui.table->currentRow() + 1);
                         ui.table->setSizeAdjustPolicy(QTableWidget::AdjustToContents);
-                        ui.table->setItem(1, 1, new QTableWidgetItem(endpoint));
-                        ui.table->setItem(1, 2, new QTableWidgetItem(number));
-                        ui.table->setItem(1, 3, new QTableWidgetItem(label));
-                        ui.table->setItem(1, 4, new QTableWidgetItem(agent));
-                        ui.table->setItem(1, 5, new QTableWidgetItem(registered));
-                        ui.table->setItem(1, 6, new QTableWidgetItem(lastOnline));
+                        ui.table->setItem(0, 0, new QTableWidgetItem(endpoint));
+                        ui.table->setItem(0, 1, new QTableWidgetItem(number));
+                        ui.table->setItem(0, 2, new QTableWidgetItem(label));
+                        ui.table->setItem(0, 3, new QTableWidgetItem(agent));
+                        ui.table->setItem(0, 4, new QTableWidgetItem(registered));
+                        ui.table->setItem(0, 5, new QTableWidgetItem(lastOnline));
                     }
                 });
 }
     connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
     show();
 }
+
+//QTableWidget tableWidget (int rows, int column, DeviceList *parent = 0)
+//{
+
+//}
 
 
 void DeviceList::closeEvent(QCloseEvent *event)

@@ -17,46 +17,6 @@
    <string>DeviceList</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QTableWidget" name="table">
-     <property name="minimumSize">
-      <size>
-       <width>382</width>
-       <height>0</height>
-      </size>
-     </property>
-     <column>
-      <property name="text">
-       <string notr="true">Endpoint</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">Extension</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">Label</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">Agent</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">Registrated</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">Last online</string>
-      </property>
-     </column>
-    </widget>
-   </item>
    <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -137,6 +97,66 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="0" column="0">
+    <widget class="QTableWidget" name="table">
+     <property name="minimumSize">
+      <size>
+       <width>382</width>
+       <height>0</height>
+      </size>
+     </property>
+     <row>
+      <property name="text">
+       <string>1</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>2</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>3</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string notr="true">Endpoint</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">Extension</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">Label</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">Agent</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">Registrated</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">Last online</string>
+      </property>
+     </column>
+     <item row="0" column="0">
+      <property name="text">
+       <string>test</string>
+      </property>
+     </item>
+    </widget>
    </item>
   </layout>
  </widget>
