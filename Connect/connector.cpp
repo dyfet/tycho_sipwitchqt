@@ -258,7 +258,7 @@ void Connector::run()
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
                 else if(MSG_IS_DEVLIST(event->request))
-                    qDebug() << "*** NEED TO PROCESS...";
+                    processDeviceList(event);
                 else if(MSG_IS_MESSAGE(event->request)) {
                     sequence = 0;
                     header = nullptr;
