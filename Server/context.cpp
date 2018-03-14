@@ -189,6 +189,7 @@ void Context::run()
     }
 
     connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
+    connect(this, &Context::MESSAGE_RESPONSE, database, &Database::messageResponse);
 
     debug() << "Running " << objectName();
 
@@ -244,10 +245,35 @@ void Context::run()
     --instanceCount;
 }
 
+void Context::messageResponse(const Event& event)
+{
+    osip_header_t *header = nullptr, *endpoint = nullptr;
+    auto msg = event.sent();
+
+    if(msg)
+        osip_message_header_get_byname(msg, "x-mid", 0, &header);
+    if(header)
+        osip_message_header_get_byname(msg, "x-ep", 0, &endpoint);
+
+    if(!header || !header->hvalue || !endpoint || !endpoint->hvalue) {
+        qDebug() << "Unidentified message response";
+        return;
+    }
+    if(event.status() > 0)
+        emit MESSAGE_RESPONSE(UString(header->hvalue), UString(endpoint->hvalue), event.status());
+}
 
 bool Context::process(const Event& ev)
 {
     switch(ev.type()) {
+    case EXOSIP_MESSAGE_REQUESTFAILURE:
+        if(MSG_IS_MESSAGE(ev.sent()))
+            messageResponse(ev);
+        break;
+    case EXOSIP_MESSAGE_ANSWERED:
+        if(MSG_IS_MESSAGE(ev.sent()))
+            messageResponse(ev);
+        break;
     case EXOSIP_MESSAGE_NEW:
         if(MSG_IS_OPTIONS(ev.message())) {
             if(ev.isLocal() && !ev.target().hasUser()) {
@@ -349,13 +375,22 @@ const UString Context::uriTo(const UString& id, const QList<QPair<UString, UStri
     return to + ">";
 }
 
-bool Context::message(const UString& from, const UString& to, const UString& route, const QList<QPair<UString,UString>> args)
+bool Context::message(const UString& from, const UString& to, const UString& route, QList<QPair<UString,UString>>& headers, const UString& type, const QByteArray& body)
 {
     osip_message_t *msg = nullptr;
     ContextLocker lock(context);
-    eXosip_message_build_request (context, &msg,
-          "MESSAGE", uriTo(to, args), UString("\"Test User\" <") + uriFrom(from) + ">", schema.uri + route);
-    qDebug() << uriTo(to, args) << uriFrom(from);
+    eXosip_message_build_request (context, &msg, "MESSAGE", to, from, route);
+
+    if(!msg)
+        return false;
+
+    foreach(auto header, headers) {
+        osip_message_set_header(msg, header.first, header.second);
+    }
+
+    osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+    osip_message_set_content_type(msg, type);
+
     //dump(msg);
     if(!msg)
         return false;
@@ -435,7 +470,7 @@ bool Context::answerWithTimestamp(const Event& event, int result)
         
     UString timestamp = event.timestamp().toString(Qt::ISODate).toUtf8();
     osip_message_set_header(msg, "X-TS", timestamp);
-    osip_message_set_header(msg, "X-SC", UString::number(event.sequence()));
+    osip_message_set_header(msg, "X-MS", UString::number(event.sequence()));
     eXosip_message_send_answer(context, tid, result, msg);
     return true;
 }

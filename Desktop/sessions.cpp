@@ -65,6 +65,7 @@ messageModel(nullptr)
     online = active;
     busy = loaded = false;
     cid = did = -1;
+    saved = true;
 
     auto number = contactItem->number();
     if(number > -1 && number < 1000)
@@ -407,7 +408,7 @@ void Sessions::enter()
 
 void Sessions::listen(Listener *listener)
 {
-    // TODO: CONNECTIONS
+    connect(listener, &Listener::receiveText, this, &Sessions::receiveText);
 }
 
 void Sessions::search()
@@ -620,6 +621,56 @@ void Sessions::createMessage()
     ui.messages->setFocus();
 }
 
+void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject)
+{
+    qDebug() << "*** MESSAGE FROM" << sipFrom << "TO" << sipTo << "TEXT" << text << "SYNC" << timestamp << sequence;
+
+    auto from = ContactItem::find(sipFrom);
+    auto to = ContactItem::find(sipTo);
+    auto self = Phonebook::self();
+    ContactItem *sid = nullptr;
+
+    if(!from || !to) {
+        qDebug() << "Message cannot be connected; lost";
+        return;
+    }
+
+    // inbox vs outbox
+    if(to == self || from->isGroup())
+        sid = from;
+    else
+        sid = to;
+
+    // make sure we have a session slot for this...
+    auto session = sid->getSession();
+    if(!session) {
+        session = new SessionItem(sid);
+        model->add(session);
+    }
+
+    auto msg = new MessageItem(session, from, to, text, timestamp, sequence, subject);
+    if(!msg->isValid()) {
+        qDebug() << "Probably duplicate message";
+        delete msg;
+        return;
+    }
+
+    session->addMessage(msg);
+    if(activeItem == session) {
+        bool bottom = true;
+        auto scroll = ui.messages->verticalScrollBar();
+        if(scroll && scroll->value() != scroll->maximum())
+            bottom = false;
+        if(bottom)
+            scrollToBottom();
+        else
+            ui.bottom->setVisible(true);
+    }
+    else {
+        updateIndicators(session);
+    }
+}
+
 void Sessions::checkInput(const QString& text)
 {
     // Validate < 160 for utf8, since is how we send
@@ -640,6 +691,11 @@ void Sessions::scrollToBottom()
     ui.messages->scrollTo(index, QAbstractItemView::PositionAtBottom);
 }
 
+void Sessions::updateIndicators(SessionItem *item)
+{
+    // TODO: sorting, marking unread, etc...
+}
+
 void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int sequence)
 {
     if(!error.isEmpty())
@@ -658,6 +714,9 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
                 scrollToBottom();
             else
                 ui.bottom->setVisible(true);
+        }
+        else {
+            updateIndicators(inputItem);
         }
     }
 

@@ -374,7 +374,6 @@ void Desktop::openLogout()
     dialog = new Logout(this);
 }
 
-
 void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
@@ -402,7 +401,6 @@ void Desktop::closeDialog()
         dialog = nullptr;
     }
 }
-
 
 void Desktop::openDeviceList()
 {

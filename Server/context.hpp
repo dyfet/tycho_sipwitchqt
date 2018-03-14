@@ -98,7 +98,7 @@ public:
     const UString hostname() const;
     void applyHostnames(const QStringList& names, const QString& host);
     const UString uriTo(const Contact& address) const;
-    bool message(const UString& from, const UString& to, const UString& route, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>());
+    bool message(const UString& from, const UString& to, const UString& route, QList<QPair<UString, UString> > &headers, const UString &type, const QByteArray &body);
 
     static void challenge(const Event& event, Registry *registry, bool reuse = false);
     static bool answerWithJson(const Event& event, const QByteArray& json);
@@ -109,6 +109,8 @@ public:
     static void shutdown();
 
 private:
+    ~Context() final;
+
     const Schema schema;
     unsigned allow;
     eXosip_t *context;
@@ -121,13 +123,12 @@ private:
     bool multiInterface;
 
     const QStringList localnames() const;
+    bool process(const Event& ev);
+    void messageResponse(const Event& ev);
 
     static volatile unsigned instanceCount;
     static QList<Context::Schema> Schemas;
     static QList<Context *> Contexts;
-    ~Context() final;
-
-    bool process(const Event& ev);
 
 signals:
     void REQUEST_REGISTER(const Event& ev);
@@ -139,6 +140,7 @@ signals:
     void LOCAL_MESSAGE(const Event& ev);
     void OUTBOX_MESSAGE(const Event& ev);
     void OUTBOUND_MESSAGE(const Event& ev);
+    void MESSAGE_RESPONSE(const QByteArray& mid, const QByteArray& endpoint, int status);
     void finished();
 
 private slots:

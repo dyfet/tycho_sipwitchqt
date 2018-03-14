@@ -40,7 +40,8 @@ public:
         TEXT_MESSAGE,
     } type_t;
 
-    MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence, bool save = true);
+    MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence);
+    MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString &text, const QDateTime& timestamp, int sequence, const UString &subject);
     MessageItem(const QSqlRecord& record);      // database load...
 
     type_t type() const {
@@ -68,7 +69,7 @@ public:
     }
 
     bool isValid() const {
-        return session != nullptr;
+        return session != nullptr && saved;
     }
 
     QDateTime posted() const {
@@ -79,7 +80,7 @@ public:
         return dateSequence;
     }
 
-    QSize layout(const QStyleOptionViewItem& style, int row);
+    QSize layout(const QStyleOptionViewItem& style, int row, bool scrollHint = false);
 
 private:
     int dateSequence;                   // used to help unique sorting
@@ -96,6 +97,7 @@ private:
     QSize lastHint;                     // size hint of last layout
     QSize textHint;                     // area of text...
     bool dateHint, userHint, timeHint;  // hinting for time header & user change
+    bool saved;                         // for dup/failed save killing
     double dateHeight, userHeight, textHeight, leadHeight;
 
     QStaticText textStatus, textDisplay, textTimestamp, textDateline;
@@ -104,6 +106,8 @@ private:
     QTextLayout textLayout;
     QList<QTextLayout::FormatRange> textFormats, userFormats;
     QList<QTextLine> textLines;
+
+    void save();
 };
 
 class MessageModel final : public QAbstractListModel

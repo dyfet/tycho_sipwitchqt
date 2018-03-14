@@ -49,21 +49,23 @@ private:
     void send_registration(osip_message_t *msg, bool auth = false);
     bool get_authentication(eXosip_event_t *event);
     void add_authentication();
-
-    const UString sipTo(const UString& to, const QList<QPair<UString,UString>>args) const;
+    bool isLocal(osip_uri_t *uri);
+    void receiveMessage(eXosip_event_t *event);
     QVariantHash parseXdp(const UString& text);
 
     QByteArray priorBanner;
     QByteArray priorOnline;
 
     QVariantHash serverCreds;
-    UString uriFrom, uriRoute, sipFrom;
+    UString uriFrom, uriRoute, sipLocal, sipFrom;
     UString serverInit;
     UString serverId;
     UString serverHost;
     UString serverSchema;
     UString serverLabel;
+    UString serverUser;
     quint16 serverPort;
+
     int serverFirst, serverLast;
 
     eXosip_t *context;
@@ -75,6 +77,7 @@ signals:
     void changeStatus(const QByteArray bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void messageResult(int status);
+    void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject);
     void authorize(const QVariantHash& creds);
     void failure(int code);
     void starting();

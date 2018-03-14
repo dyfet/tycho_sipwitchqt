@@ -159,36 +159,30 @@ void Connector::requestDeviceList()
     eXosip_message_send_request(context, msg);
 }
 
-const UString Connector::sipTo(const UString& id, const QList<QPair<UString, UString>> args) const
-{
-    UString sep = "?";
-    UString to = "<" + id;
-    foreach(auto arg, args) {
-        to += sep + arg.first + "=" + arg.second.escape();
-        sep = "&";
-    }
-    return to + ">";
-}
-
 bool Connector::sendText(const UString& to, const UString& body, const UString subject)
 {
     osip_message_t *msg = nullptr;
-    Locker lock(context);
-    QList<QPair<UString,UString>> args = {
+    UString sipTo = "<" + to + ">";
+    QList<QPair<UString,UString>> hdrs = {
         {"Subject", subject},
-        // TODO: any other special X-Headers we may use here...
+        {"X-Label", serverLabel},
     };
-    eXosip_message_build_request(context, &msg, "MESSAGE", sipTo(to, args), sipFrom, uriRoute);
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, "MESSAGE", sipTo, sipFrom, uriRoute);
     if(!msg)
         return false;
 
-    osip_message_set_header(msg, "X-Label", serverLabel);
+    foreach(auto hdr, hdrs) {
+        osip_message_set_header(msg, hdr.first, hdr.second);
+    }
+
     osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
     osip_message_set_content_type(msg, "text/plain");
     eXosip_message_send_request(context, msg);
     return true;
-
 }
+
 void Connector::run()
 {
     int ipv6 = 0, rport = 1, dns = 2, live = 17000;
@@ -246,7 +240,8 @@ void Connector::run()
             qDebug() << event->request;
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error, QDateTime(), 0);
-            qDebug() << "*** FAILED" << error;
+            if(error != SIP_UNAUTHORIZED)
+                qDebug() << "*** FAILED" << error;
             if(error == 666)
                 emit failure(666);
             break;
@@ -262,7 +257,7 @@ void Connector::run()
                 else if(MSG_IS_MESSAGE(event->request)) {
                     sequence = 0;
                     header = nullptr;
-                    osip_message_header_get_byname(event->response, "x-sc", 0, &header);
+                    osip_message_header_get_byname(event->response, "x-ms", 0, &header);
                     if(header && header->hvalue)
                         sequence = atoi(header->hvalue);
                     qDebug() << "*** SEQUENCE" << sequence;

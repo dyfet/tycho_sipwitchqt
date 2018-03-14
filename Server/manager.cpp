@@ -146,7 +146,8 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
     UString from = data["f"].toByteArray();
     UString to = data["t"].toByteArray();
     UString route = context->prefix() + reg->route();
-
+    UString display = data["d"].toByteArray();
+    UString label = reg->label();
     // adjusts message from and to based on registering entity delivery
     // context-> message(registry, data)...
 
@@ -160,7 +161,19 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
     else if(to.indexOf('@') < 1)
         to = context->prefix() + to + "@" + reg->origin();
 
+    from = "\"" + display + "\" <" + from + ">";
+    to = "<" + to + ">";
+
+    QList<QPair<UString,UString>> headers = {
+        {"Subject", data["s"].toByteArray()},
+        {"X-MID", data["r"].toString()},
+        {"X-EP", QString::number(reg->endpoint())},
+        {"X-TS", data["p"].toDateTime().toString(Qt::ISODate)},
+        {"X-MS", data["u"].toString()},
+    };
+
     qDebug() << "Sending Message FROM" << from << "TO" << to << "VIA" << route;
+    context->message(from, to, route, headers, data["c"].toByteArray(), data["b"].toByteArray());
 }
 
 void Manager::requestDevlist(const Event& ev)

@@ -111,6 +111,7 @@ public:
 
     static ContactItem *findText(const QString& text);
     static ContactItem *findExtension(int number);
+    static ContactItem *find(const UString& who);
     static void purge();
 
 private:
@@ -124,6 +125,7 @@ private:
     int uid;
 
     static QList<ContactItem *> users, groups;
+    static QHash<UString,ContactItem *> foreign;
     static QHash<int,ContactItem *> index;
 };
 

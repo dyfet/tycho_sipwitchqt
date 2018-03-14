@@ -62,8 +62,10 @@ number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLo
             target = Contact(evt->request->req_uri);
             char *uri = nullptr;
             osip_uri_to_str(evt->request->req_uri, &uri);
-            if(uri)
+            if(uri) {
                 request = uri;      // for consistent auth processing
+                osip_free(uri);
+            }
             isLocal = ctx->isLocal(target.host());
         }
         if(evt->request && evt->request->to && event->request->to->url && evt->request->to->url->username)
@@ -227,8 +229,14 @@ void Event::Data::parseMessage(osip_message_t *msg)
         }
     }
 
-    if(msg->from)
+    if(msg->from) {
         from = msg->from->url;
+        if(msg->from->displayname)
+            display = UString(msg->from->displayname).unquote();
+        else if(msg->from->url && msg->from->url->username)
+            display = UString(msg->from->url->username).unquote();
+    }
+
     if(msg->to)
         to = msg->to->url;
 

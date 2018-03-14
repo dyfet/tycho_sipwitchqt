@@ -56,6 +56,10 @@ public:
         return userLabel;
     }
 
+    qlonglong endpoint() const {
+        return endpointId;
+    }
+
     int extension() const {
         return number;
     }
@@ -64,16 +68,8 @@ public:
         return static_cast<int>(timeout / 1000l);
     }
 
-    inline const UString host() const {
-        return address.host();
-    }
-
     inline const UString origin() const {
         return userOrigin;
-    }
-
-    inline quint16 port() const {
-        return address.port();
     }
 
     inline const UString route() const {

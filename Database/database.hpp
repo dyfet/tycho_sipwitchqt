@@ -106,6 +106,7 @@ signals:
 
 public slots:
     void localMessage(const Event& ev);
+    void messageResponse(const QByteArray& mid, const QByteArray &ep, int status);
 
 private slots:
     void sendRoster(const Event& ev);

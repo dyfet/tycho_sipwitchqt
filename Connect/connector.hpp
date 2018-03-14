@@ -58,8 +58,6 @@ private:
     int family, tls;
 
     void add_authentication();
-
-    const UString sipTo(const UString& to, const QList<QPair<UString,UString>>args) const;
     void processRoster(eXosip_event_t *event);
     void processDeviceList(eXosip_event_t *event);
 

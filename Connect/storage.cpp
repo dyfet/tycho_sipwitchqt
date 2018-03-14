@@ -245,6 +245,26 @@ bool Storage::runQuery(const QString &request, const QVariantList& parms)
     return true;
 }
 
+QVariant Storage::insert(const QString& request, const QVariantList &parms)
+{
+    if(!db.isOpen())
+        return QVariant();
+
+    QSqlQuery query(db);
+    query.prepare(request);
+    int count = -1;
+    qDebug() << "Request " << request << " LIST " << parms;
+    while(++count < parms.count())
+        query.bindValue(count, parms.at(count));
+
+    if(!query.exec()) {
+        qWarning() << "Query failed; " << query.lastQuery();
+        return QVariant();
+    }
+
+    return query.lastInsertId();
+}
+
 void Storage::updateCredentials(const QVariantHash &update)
 {
     if(!db.isOpen() || update.isEmpty())
