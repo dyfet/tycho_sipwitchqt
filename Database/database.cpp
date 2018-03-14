@@ -392,6 +392,8 @@ void Database::sendDeviceList(const Event& event)
             {"o", lastOnline},
         };
 
+
+        list << profile;
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
