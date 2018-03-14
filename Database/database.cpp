@@ -375,8 +375,8 @@ void Database::sendDeviceList(const Event& event)
     qDebug() << "REQUEST" << event.request();
     while(query.isActive() && query.next()) {
         auto record = query.record();
-        auto endpoint = record.value("endpoint").toInt();
-        auto extension = record.value("number").toInt();
+        auto endpoint = record.value("endpoint").toString();
+        auto extension = record.value("number").toString();
         auto label = record.value("label").toString();
         auto agent = record.value("agent").toString();
         auto resgistrated = record.value("created").toString();
@@ -408,7 +408,7 @@ void Database::sendDeviceList(const Event& event)
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
-    Context::roster(event, json);
+    Context::answerWithJson(event, json);
 }
 
 void Database::localMessage(const Event& ev)
@@ -619,7 +619,7 @@ void Database::sendRoster(const Event& event)
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
-    Context::roster(event, json);
+    Context::answerWithJson(event, json);
 }
 
 void Database::onTimeout()

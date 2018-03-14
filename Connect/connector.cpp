@@ -258,7 +258,7 @@ void Connector::run()
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
                 else if(MSG_IS_DEVLIST(event->request))
-                    qDebug() << "*** NEED TO PROCESS...";
+                    processDeviceList(event);
                 else if(MSG_IS_MESSAGE(event->request)) {
                     sequence = 0;
                     header = nullptr;
@@ -313,6 +313,16 @@ void Connector::run()
         emit finished();
     eXosip_quit(context);
     context = nullptr;
+}
+
+void Connector::processDeviceList(eXosip_event_t *event)
+{
+    osip_body_t *body = nullptr;
+    osip_message_get_body(event->response, 0, &body);
+    if(body && body->body && body->length > 0) {
+        QByteArray json(body->body, static_cast<int>(body->length));
+        emit changeDeviceList(json);
+    }
 }
 
 void Connector::processRoster(eXosip_event_t *event)

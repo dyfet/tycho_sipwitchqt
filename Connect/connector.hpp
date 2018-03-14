@@ -61,6 +61,8 @@ private:
 
     const UString sipTo(const UString& to, const QList<QPair<UString,UString>>args) const;
     void processRoster(eXosip_event_t *event);
+    void processDeviceList(eXosip_event_t *event);
+
 
 signals:
     void starting();
@@ -69,6 +71,7 @@ signals:
 
     void messageResult(int status, const QDateTime& timestamp, int sequence);
     void changeRoster(const QByteArray& json);
+    void changeDeviceList(const QByteArray& json);
 
 private slots:
 	void run();
