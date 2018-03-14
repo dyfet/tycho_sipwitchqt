@@ -18,7 +18,7 @@
  <class>Logout</class>
  <widget class="QDialog" name="Logout">
   <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
+   <enum>Qt::WindowModal</enum>
   </property>
   <property name="geometry">
    <rect>
