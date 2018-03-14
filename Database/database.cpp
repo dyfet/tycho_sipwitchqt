@@ -382,13 +382,7 @@ void Database::sendDeviceList(const Event& event)
         auto resgistrated = record.value("created").toString();
         auto lastOnline = record.value("last").toString();
 
-//        qDebug() << "**** ACCESS" << access;
-//        if(display.isEmpty())
-//            display = record.value("fullname").toString();
-//        if(display.isEmpty())
-//            display = record.value("name").toString();
 
-//        UString uri = event.uriTo(dialing);
         QJsonObject profile {
             {"e", endpoint},
             {"n", extension},
@@ -398,13 +392,6 @@ void Database::sendDeviceList(const Event& event)
             {"o", lastOnline},
         };
 
-//        if(!agent.isEmpty())
-//            profile.insert("a", "NoAgent");
-
-//        if(record.value("access").toString() == "REMOTE")
-//            profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
-
-        list << profile;
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
