@@ -33,6 +33,7 @@ static bool initialRoster = false;
 
 QList<ContactItem *> ContactItem::users;
 QList<ContactItem *> ContactItem::groups;
+QHash<UString,ContactItem *> ContactItem::foreign;
 QHash<int,ContactItem *> ContactItem::index;
 
 ContactItem::ContactItem(const QSqlRecord& record)
@@ -78,6 +79,7 @@ ContactItem::ContactItem(const QSqlRecord& record)
 
     if(!isExtension() || extensionNumber > 999) {
         contactType = "FOREIGN";
+        foreign[contactUri] = this;
         return;
     }
 
@@ -96,12 +98,25 @@ void ContactItem::purge()
     foreach(auto item, index.values())
         delete item;
 
+    foreign.clear();
     groups.clear();
     users.clear();
     index.clear();
     memset(local, 0, sizeof(local));
     highest = -1;
     me = -1;
+}
+
+ContactItem *ContactItem::find(const UString& id)
+{
+    if(id.isNumber())
+        return findExtension(id.toInt());
+
+    if(id.indexOf('@') < 1)
+        return nullptr;
+
+    // we should create new phonebook entries for "discovered" contacts...
+    return foreign[id];
 }
 
 ContactItem *ContactItem::findExtension(int number)

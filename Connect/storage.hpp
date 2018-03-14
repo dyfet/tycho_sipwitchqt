@@ -67,6 +67,7 @@ public:
     static void remove();
     static QVariantHash next(QSqlQuery& query);
 
+    QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
     bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
     int runQuery(const QStringList& list);
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());

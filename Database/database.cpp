@@ -398,6 +398,18 @@ void Database::sendDeviceList(const Event& event)
     Context::answerWithJson(event, json);
 }
 
+void Database::messageResponse(const QByteArray& mid, const QByteArray& ep, int status)
+{
+    // this wont work for postgres oid's...
+    qlonglong message = mid.toLongLong();
+    qlonglong endpoint = ep.toLongLong();
+
+    runQuery("UPDATE Outboxes SET msgstatus=? WHERE mid=? AND endpoint=?;",
+        {status, message, endpoint});
+
+    qDebug() << "MESSAGE RESPONSE" << message << endpoint << status;
+}
+
 void Database::localMessage(const Event& ev)
 {
     Q_ASSERT(ev.message() != nullptr);
@@ -485,10 +497,10 @@ void Database::localMessage(const Event& ev)
     }
 
     // create datatypes for msg table insertion...
-    auto msgFrom = QString(msg->from->url->username);
+    auto msgFrom = QString::fromUtf8(UString(msg->from->url->username).unquote());
     auto msgTo = QString::fromUtf8(to);
     auto msgSubject = QString::fromUtf8(ev.subject());
-    auto msgDisplay = QString(msg->from->displayname);
+    auto msgDisplay = QString::fromUtf8(ev.display());
     auto msgType = "text";
     auto msgPosted = ev.timestamp();
     auto msgExpires = ev.timestamp();
@@ -538,6 +550,7 @@ void Database::localMessage(const Event& ev)
     QVariantHash data;          // to be sent to manager for each send/sync
     data["f"] = msgFrom.toUtf8();
     data["t"] = msgTo.toInt();
+    data["d"] = ev.display();
     data["c"] = ev.contentType();
     data["b"] = ev.body();
     data["s"] = ev.subject();
@@ -558,12 +571,15 @@ void Database::localMessage(const Event& ev)
             qDebug() << "OUTBOX FAILED FOR" << endpoint;
             continue;
         }
-        if(msgstatus == SIP_OK)     // dont send if we marked them ok...
-            continue;
+        // TODO: drop FOR_RELEASE exclusion
+        // debug will self-echo for now, to facilitate some simple testing...
+        FOR_RELEASE(
+            if(msgstatus == SIP_OK)     // dont send if we marked them ok...
+                continue;
+        )
         emit sendMessage(endpoint, data);
     }
 }
-
 
 void Database::sendRoster(const Event& event)
 {

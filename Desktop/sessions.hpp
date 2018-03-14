@@ -115,6 +115,7 @@ private:
     QString callDisplay;                        // transitory call name
     QString currentTopic;                       // can be set...
     int cid, did;                               // exosip call info
+    bool saved;                                 // whether uses database...
 
     ContactItem *contact;
     QString status;
@@ -171,6 +172,7 @@ public:
     void listen(Listener *listener);
 
     static SessionItem *active();
+    static QModelIndex top();
 
 private:
     Desktop *desktop;
@@ -179,6 +181,7 @@ private:
 
     void resizeEvent(QResizeEvent *event) final;
 
+    void updateIndicators(SessionItem *item);
     void finishInput(const QString &error, const QDateTime &timestamp = QDateTime(), int sequence = 0);
     void scrollToBottom();
 
@@ -198,6 +201,7 @@ private slots:
     void changeConnector(Connector *connector);
     void createMessage();
     void checkInput(const QString& text);
+    void receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime &timestamp, int sequence, const UString &subject);
 };
 
 #endif

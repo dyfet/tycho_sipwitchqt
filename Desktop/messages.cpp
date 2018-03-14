@@ -40,7 +40,41 @@ static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
 static QColor groupColor(0, 96, 120);
 
-MessageItem::MessageItem(SessionItem *sid, const QString& text, const QDateTime &timestamp, int sequence, bool save) :
+MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
+session(sid)
+{
+    if(timestamp.isValid())
+        dateTime = timestamp;
+    else
+        dateTime = QDateTime::currentDateTime();
+
+    dayNumber = Util::currentDay(dateTime);
+    dateSequence = sequence;
+    msgType = TEXT_MESSAGE;
+    msgSubject = subject;
+    msgBody = text;
+    msgFrom = from;
+    msgTo = to;
+
+    if(msgFrom->isGroup()) {
+        itemColor = groupColor;
+        userString = "#" + msgFrom->textNumber;
+    }
+    else {
+        itemColor = userColor;
+        userString = "@" + msgFrom->textNumber;
+    }
+
+    textString = text;
+    if(msgFrom == Phonebook::self())
+        inbox = false;
+    else
+        inbox = true;
+
+    save();
+}
+
+MessageItem::MessageItem(SessionItem *sid, const QString& text, const QDateTime &timestamp, int sequence) :
 session(sid)
 {
     if(timestamp.isValid())
@@ -55,36 +89,16 @@ session(sid)
     msgBody = text.toUtf8();
     msgFrom = Phonebook::self();
     msgTo = session->contactItem();
-
-    if(msgFrom->isGroup())
-        itemColor = groupColor;
-    else
-        itemColor = userColor;
-
+    itemColor = userColor;
+    userString = "@" + msgFrom->textNumber;
     textString = text;
-    userString = session->status + msgFrom->textNumber;
     inbox = false;
 
-    // we should not have a disconnected db when we get here...
-    if(save) {
-        auto storage = Storage::instance();
-        Q_ASSERT(storage != nullptr);
-
-        storage->runQuery("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext) "
-                          "VALUES(?,?,?,?,?,?,?);", {
-                              msgFrom->uid,
-                              msgTo->uid,
-                              sid->contact->uid,
-                              dateSequence,
-                              dateTime,
-                              "TEXT",
-                              text
-        });
-    }
+    save();
 }
 
 MessageItem::MessageItem(const QSqlRecord& record) :
-session(nullptr)
+session(nullptr), saved(false)
 {
     auto sid = record.value("sid").toInt();
     auto from = record.value("msgfrom").toInt();
@@ -112,6 +126,7 @@ session(nullptr)
     dateSequence = record.value("seqid").toInt();
     msgSubject = record.value("subject").toString().toUtf8();
     dayNumber = Util::currentDay(dateTime);
+    saved = true;
 
     auto type = record.value("msgtype").toString();
     if(type == "TEXT") {
@@ -131,12 +146,35 @@ session(nullptr)
         itemColor = userColor;
 }
 
-QSize MessageItem::layout(const QStyleOptionViewItem& style, int row)
+void MessageItem::save()
+{
+    saved = true;
+    if(!session->saved)
+        return;
+
+    auto storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+
+    auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext) "
+                      "VALUES(?,?,?,?,?,?,?);", {
+                          msgFrom->uid,
+                          msgTo->uid,
+                          session->contact->uid,
+                          dateSequence,
+                          dateTime,
+                          "TEXT",
+                          msgBody
+    });
+    if(!mid.isValid())
+        saved = false;
+}
+
+QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrollHint)
 {   
     if(row == 0 || session->filtered[row - 1]->dayNumber != dayNumber)
         dateHint = true;
     else
-        dateHint = false;
+        dateHint = scrollHint;
 
     if(row == 0 || session->filtered[row-1]->msgFrom != msgFrom)
         userHint = true;
@@ -163,9 +201,9 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row)
             if(dayNumber + 1 == today)
                 dateString = dayYesterday;
             else if(dayNumber + 4 >= today)
-                dateString = dayOfWeek[date.dayOfWeek()];
+                dateString = dayOfWeek[date.dayOfWeek() - 1];
             else
-                dateString = dayOfWeek[date.dayOfWeek()] + "   " + monthOfYear[date.month()] + " " + QString::number(date.day());
+                dateString = dayOfWeek[date.dayOfWeek() - 1] + "   " + monthOfYear[date.month() - 1] + " " + QString::number(date.day());
         }
 
         textDateline.setTextOption(textCentered);
@@ -222,7 +260,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row)
     }
     height += textHeight + 4;
 
-    if(height)
+    if(height && !scrollHint)
         lastHint = QSize(width, height);
     else
         lastHint = QSize(0, 0);
@@ -316,9 +354,12 @@ bool MessageModel::add(MessageItem *item)
 
     if(!fast)
         beginInsertRows(QModelIndex(), rowFiltered, rowFiltered);
+
     session->messages.insert(rowMessages, item);
     if(!filtered)
         session->filtered.insert(rowFiltered, item);
+    if(!fast && rowFiltered < session->filtered.count() - 1)
+        session->filtered[rowFiltered + 1]->lastHint = QSize(0, 0);
     if(!fast)
         endInsertRows();
     return fast;
@@ -358,13 +399,13 @@ QStyledItemDelegate(parent)
     textOptions.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
     dayOfWeek = {
-        tr("Sunday"),
         tr("Monday"),
         tr("Tuesday"),
         tr("Wednesday"),
         tr("Thursday"),
         tr("Friday"),
         tr("Saturday"),
+        tr("Sunday"),
     };
 
     monthOfYear = {
@@ -398,6 +439,10 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
         return QSize(0, 0);
 
     auto item = session->filtered[row];
+
+    // kills dups and invalids
+    if(!item->saved)
+        return QSize(0, 0);
 
     if(item->lastHint.width() == style.rect.width())
         return item->lastHint;
@@ -462,4 +507,13 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     position.setX(style.rect.left() + 20);
     item->textLayout.draw(painter, position);
     painter->setFont(style.font);
+
+    // TODO: Force paint a top line in view if no headers visible...
+    /*
+    if(style.rect.y() < 1 && row < session->filtered.count() - 1 && !session->filtered[row + 1]->dateHint) {
+        qDebug() << "TOP LINE HINT REQUIRED";
+    }
+    else if(style.rect.y() < 1)
+        qDebug() << "NO TOP";
+    */
 }

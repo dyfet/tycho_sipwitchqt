@@ -110,17 +110,6 @@ QObject(), active(true), connected(false), registered(false), authenticated(fals
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 }
 
-const UString Listener::sipTo(const UString& id, const QList<QPair<UString, UString>> args) const
-{
-    UString sep = "?";
-    UString to = "<" + id;
-    foreach(auto arg, args) {
-        to += sep + arg.first + "=" + arg.second.escape();
-        sep = "&";
-    }
-    return to + ">";
-}
-
 void Listener::send_registration(osip_message_t *msg, bool auth)
 {
     if(!msg || rid < 0)
@@ -170,8 +159,10 @@ bool Listener::get_authentication(eXosip_event_t *event)
 
     osip_header_t *header = nullptr;
     osip_message_header_get_byname(event->response, "x-authorize", 0, &header);
-    if(header && header->hvalue)
+    if(header && header->hvalue) {
+        serverUser = UString(header->hvalue);
         serverCreds["user"] = QString(header->hvalue);
+    }
 
     if(!pauth && !wauth)
         return false;
@@ -261,6 +252,7 @@ void Listener::run()
                 osip_message_t *msg = nullptr;
                 uriFrom = UString::uri(serverSchema, serverId, serverHost, serverPort);
                 uriRoute = UString::uri(serverSchema, serverHost, serverPort);
+                sipLocal = uriFrom.mid(uriFrom.indexOf('@') + 1);
                 sipFrom = "<" + uriFrom + ">";
                 qDebug() << "Connecting to" << uriRoute;
                 qDebug() << "Connecting as" << uriFrom;
@@ -356,13 +348,14 @@ void Listener::run()
             qDebug() << "*** REQUEST FAILED" << error;
             break;
         case EXOSIP_MESSAGE_NEW:
-            if(MSG_IS_REGISTER(event->request)) {
-                Locker lock(context);
-                eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);
-                break;
+            if(MSG_IS_MESSAGE(event->request)) {
+                receiveMessage(event);
             }
-            else
-                dump(event->request);
+            else {
+                 Locker lock(context);
+                 // dump(event->request);
+                 eXosip_message_send_answer(context, event->tid, SIP_METHOD_NOT_ALLOWED, nullptr);
+            }
             break;
         default:
             if(event->request)
@@ -413,6 +406,145 @@ void Listener::run()
         emit finished();
     eXosip_quit(context);
     context = nullptr;
+}
+
+void Listener::receiveMessage(eXosip_event_t *event)
+{
+    osip_message_t *msg = event->request;
+    osip_body_t *body = nullptr;
+    auto status = SIP_OK;
+    auto to = event->request->to;
+    auto from = event->request->from;
+    char *uri = nullptr;
+    UString sipTo, sipFrom, msgType, subject = "None";
+    QDateTime timestamp;
+    int sequence = 0;
+    osip_header_t *header;
+
+    auto type = osip_message_get_content_type(msg);
+    osip_message_get_body(msg, 0, &body);
+    if(!body || !type || !type->type) {
+        status = SIP_UNDECIPHERABLE;
+        goto error;
+    }
+
+    if(!to || !to->url || !to->url->username) {
+        status = SIP_ADDRESS_INCOMPLETE;
+        goto error;
+    }
+
+    if(!from || !from->url || !from->url->username) {
+        status = SIP_ADDRESS_INCOMPLETE;
+        goto error;
+    }
+
+    if(isLocal(to->url)) {
+        UString id(to->url->username);
+        if(id != serverId && id != serverUser)
+            sipTo = id;
+        else
+            sipTo = serverId;
+    }
+    else {
+        uri = nullptr;
+        osip_uri_to_str(to->url, &uri);
+        if(uri) {
+            sipTo = uri;
+            osip_free(uri);
+        }
+        else {
+            status = SIP_ADDRESS_INCOMPLETE;
+            goto error;
+        }
+    }
+
+    if(isLocal(from->url)) {
+        UString id(from->url->username);
+        if(id != serverId && id !=  serverUser)
+            sipFrom = id;
+        else
+            sipFrom = serverId;
+    }
+    else {
+        uri = nullptr;
+        osip_uri_to_str(from->url, &uri);
+        if(uri) {
+            sipFrom = uri;
+            osip_free(uri);
+        }
+        else {
+            status = SIP_ADDRESS_INCOMPLETE;
+            goto error;
+        }
+    }
+
+    // cant be to and from same identity
+    if(sipTo == sipFrom) {
+        status = SIP_AMBIGUOUS;
+        goto error;
+    }
+
+    if(type->subtype)
+        msgType = UString(type->type) + "/" + type->subtype;
+    else
+        msgType = UString(type->type);
+
+    qDebug() << "***** DIALED" << sipTo << sipFrom << msgType;
+
+    if(msgType != "text/plain") {
+        status = SIP_NOT_ACCEPTABLE_HERE;
+        goto error;
+    }
+
+    if(body->length > 160) {
+        status = SIP_MESSAGE_TOO_LARGE;
+        goto error;
+    }
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, "x-ms", 0, &header);
+    if(header && header->hvalue)
+        sequence = atoi(header->hvalue);
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, "x-ts", 0, &header);
+    if(header && header->hvalue)
+        timestamp = QDateTime::fromString(QString(header->hvalue), Qt::ISODate);
+
+    header = nullptr;
+    osip_message_header_get_byname(msg, "subject", 0, &header);
+    if(header && header->hvalue)
+        subject = header->hvalue;
+
+    emit receiveText(sipFrom, sipTo, UString(QByteArray(body->body, static_cast<int>(body->length))), timestamp, sequence, subject);
+
+error:
+    // send reply...
+    Locker lock(context);
+    eXosip_message_send_answer(context, event->tid, status, nullptr);
+}
+
+bool Listener::isLocal(osip_uri_t *uri)
+{
+    quint16 basePort = 5060;
+    if(tls)
+        ++basePort;
+
+    UString host(uri->host);
+    quint16 port = basePort;
+
+    if(uri->port)
+        port = static_cast<quint16>(atoi(uri->port));
+
+    if(host == serverHost && port == serverPort)
+        return true;
+    if(host != serverHost)
+        return false;
+    if(serverPort == 0 && port == basePort)
+        return true;
+    if(serverPort == basePort && port == 0)
+        return true;
+    return false;
 }
 
 QVariantHash Listener::parseXdp(const UString& xdp)

@@ -51,6 +51,16 @@ public:
 		return d->event;
 	}
 
+    inline osip_message_t *sent() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->request;
+    }
+
+    inline osip_message_t *reply() const {
+        Q_ASSERT(d->event != nullptr);
+        return d->event->response;
+    }
+
     inline eXosip_event_type_t type() const {
         Q_ASSERT(d->event != nullptr);
         return d->event->type;
@@ -139,6 +149,10 @@ public:
 
     inline const Contact to() const {
         return d->to;
+    }
+
+    inline const UString display() const {
+        return d->display;
     }
 
     inline const UString request() const {
@@ -261,7 +275,7 @@ private:
         osip_authorization_t *authorization;
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason, initialize;
-        UString userid, nonce, digest, algorithm, request, contentType;
+        UString userid, nonce, digest, algorithm, request, contentType, display;
         QString label;
         Contact source;  // if nat, has first nat
         Contact from, to, target;
