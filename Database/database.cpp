@@ -370,10 +370,9 @@ void Database::sendDeviceList(const Event& event)
 
     auto query = getRecords("SELECT * FROM Endpoints WHERE number=?;", {event.number()});
 
-
     QJsonArray list;
-    qDebug() << "REQUEST" << event.request();
     while(query.isActive() && query.next()) {
+        qDebug() << "QUERY" << query.record();
         auto record = query.record();
         auto endpoint = record.value("endpoint").toString();
         auto extension = record.value("number").toString();
@@ -391,7 +390,7 @@ void Database::sendDeviceList(const Event& event)
             {"r", resgistrated},
             {"o", lastOnline},
         };
-
+        list << profile;
     }
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
