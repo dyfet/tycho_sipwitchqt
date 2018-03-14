@@ -42,7 +42,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
                         ui.table->setRowCount(ui.table->rowCount() + 1);
                         row++;
                     }
-            ui.table->removeRow(ui.table->rowCount());
+            ui.table->removeRow(ui.table->rowCount() - 1);
 //            auto count = ui.table->rowCount();
             auto count = row;
 

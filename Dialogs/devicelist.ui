@@ -111,16 +111,6 @@
        <string>1</string>
       </property>
      </row>
-     <row>
-      <property name="text">
-       <string>2</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>3</string>
-      </property>
-     </row>
      <column>
       <property name="text">
        <string notr="true">Endpoint</string>
