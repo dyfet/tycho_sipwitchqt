@@ -18,8 +18,8 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-# LinguistTools may be needed in the future...
 find_package(Qt5 5.5.1 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
+find_package(Qt5LinguistTools)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -128,14 +128,17 @@ file(GLOB dialogs_src Dialogs/*.cpp)
 file(GLOB dialogs_uic Dialogs/*.ui)
 file(GLOB markdown *.md)
 file(GLOB sipp_xml testdata/*.xml)
+file(GLOB desktop_ts Translations/sipwitchqt-desktop_*.ts)
 
-if(EXISTS "Translations/")
-    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations")
-    file(GLOB desktop_ts Translations/desktop_*.ts)
-    set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "translations")
-    qt5_add_translation(desktop_qm ${desktop_ts})
-    add_custom_target(translate SOURCES ${desktop_ts})
-endif()
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
+set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
+qt5_add_translation(desktop_qm ${desktop_ts})
+
+set(ts_desktop ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_hdr} ${dialogs_src} ${dialogs_uic} ${connect_hdr} ${connect_src})
+add_custom_target(translations SOURCES ${desktop_ts}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMAND ${Qt5_LUPDATE_EXECUTABLE} ${ts_desktop} -ts translations/sipwitchqt-desktop_es.ts
+) 
 
 if(APPLE)
     set_source_files_properties(${DESKTOP_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
@@ -176,6 +179,8 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
+install(FILES ${desktop_qm} DESTINATION "${CMAKE_INSTALL_DATADIR}/translations")
+
 if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
@@ -208,6 +213,8 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND cp -a "${DESKTOP_NAME}.app" stage/
             COMMAND dsymutil "stage/${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
             COMMAND mv "stage/${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}.dSYM" stage/
+            COMMAND mkdir -p "stage/${DESKTOP_NAME}.app/Contents/Translations"
+            COMMAND cp -a "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen/sipwitchqt-desktop_*.qm" "stage/${DESKTOP_NAME}.app/Contents/Translations"
             COMMAND "${MACDEPLOYQT_PATH}/macdeployqt" "stage/${DESKTOP_NAME}.app" -appstore-compliant ${APPSTORE_SIGN}
         )
     endif()

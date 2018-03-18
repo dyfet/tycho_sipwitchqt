@@ -92,6 +92,10 @@ public:
         return messageModel->last();
     }
 
+    bool isLoaded() const {
+        return loaded;
+    }
+
     bool isGroup() const {
         if(!contact)
             return false;

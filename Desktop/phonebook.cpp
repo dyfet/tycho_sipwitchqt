@@ -338,7 +338,7 @@ void Phonebook::search()
 
 void Phonebook::filterView(const QString& selected)
 {
-    if(!desktop->isCurrent(this) && !localModel)
+    if(!desktop->isCurrent(this) || !localModel)
         return;
 
     if(selected == searching)

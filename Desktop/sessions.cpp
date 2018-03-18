@@ -655,7 +655,12 @@ void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const U
         return;
     }
 
-    session->addMessage(msg);
+    // if session still unloaded, only create on disk...
+    if(session->isLoaded() || activeItem == session)
+        session->addMessage(msg);
+    else
+        delete msg;
+
     if(activeItem == session) {
         bool bottom = true;
         auto scroll = ui.messages->verticalScrollBar();

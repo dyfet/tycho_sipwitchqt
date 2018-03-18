@@ -409,18 +409,18 @@ QStyledItemDelegate(parent)
     };
 
     monthOfYear = {
-        tr("Jan"),
-        tr("Feb"),
-        tr("Mar"),
-        tr("Apr"),
-        tr("May"),
-        tr("Jun"),
-        tr("Jul"),
-        tr("Aug"),
-        tr("Sep"),
-        tr("Oct"),
-        tr("Nov"),
-        tr("Dec"),
+        tr("  January"),
+        tr("  Febuary"),
+        tr("    March"),
+        tr("    April"),
+        tr("      May"),
+        tr("     June"),
+        tr("     July"),
+        tr("   August"),
+        tr("September"),
+        tr("  October"),
+        tr(" November"),
+        tr(" December"),
     };
 
     dayToday = tr("Today");
