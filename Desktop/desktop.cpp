@@ -749,7 +749,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
     QCoreApplication::setOrganizationName("Tycho Softworks");
     QCoreApplication::setOrganizationDomain("tychosoft.com");
-    QCoreApplication::setApplicationName("Antisipate");
+    QCoreApplication::setApplicationName("SipWitchQt-Desktop");
     QTranslator localize;
 
     QApplication app(argc, argv);
@@ -757,13 +757,13 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(desktop);
 
 #if defined(Q_OS_MAC)
-    localize.load(QLocale::system().name(), "manpager", "_",
+    localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
         Args::exePath("../Translations"));
 #elif defined(Q_OS_WIN)
-    localize.load(QLocale::system().name(), "manpager", "_",
+    localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
         Args::exePath("./Translations"));
 #else
-    localize.load(QLocale::system().name(), "manpager", "_",
+    localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
         Args::exePath("../share/translations"));
 #endif
     if(!localize.isEmpty())
