@@ -12,10 +12,15 @@ BuildRequires: cmake >= 3.1.0
 BuildRequires: libqt5-qtbase-devel, libqt5-linguist-devel, gcc-c++
 BuildRequires: libosip2-devel, libeXosip2-devel >= 4.0.0
 BuildRequires: gperftools-devel, systemd-devel
+BuildRequires: systemd-rpm-macros
 
 %package server
 Recommends: libQt5Sql5-mysql, libQt5Sql5-sqlite
 Summary: sipwitchqt server
+Requires(pre): systemd									
+Requires(post): systemd									
+Requires(preun): systemd								
+Requires(postun): systemd
 
 %package utils
 Recommends: sipwitchqt-server, ruby-sqlite3
@@ -50,21 +55,17 @@ SipWitchQt desktop client.
 %install
 %cmake_install
 
-%post
-/sbin/chkconfig --add sipwitchqt
+%pre server
+%service_add_pre sipwitchd.service
 
-%preun
-if [ "$1" = 0 ]; then
-	/sbin/service sipwitchqt stop >/dev/null 2>&1
-	/sbin/chkconfig --del sipwitchqt
-fi	 
-exit 0
+%post server
+%service_add_post sipwitchd.service
 
-%postun
-if [ "$1" -ge 1 ] ; then
-	/sbin/service sipwitchqt condrestart >/dev/null 2>&1
-fi
-exit 0
+%preun server
+%service_del_preun sipwitchd.service
+
+%postun server
+%service_del_postun sipwitchd.service
 
 %files server
 %defattr(-,root,root)

@@ -237,7 +237,6 @@ void Connector::run()
                 error = event->response->status_code;
             if(event->response && event->response->status_code != SIP_UNAUTHORIZED)
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
-            qDebug() << event->request;
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error, QDateTime(), 0);
             if(error != SIP_UNAUTHORIZED)
