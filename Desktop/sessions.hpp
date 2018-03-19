@@ -110,6 +110,9 @@ public:
     unsigned loadMessages();
     QString title();
     bool setOnline(bool flag);
+//    QStringList searchMessages(QString searchTerm);
+
+
 
 private:
     QList<MessageItem *> messages;
@@ -177,6 +180,10 @@ public:
 
     static SessionItem *active();
     static QModelIndex top();
+
+    // Testing this function
+    QList<MessageItem *> searchMessages(QString searchterm);
+
 
 private:
     Desktop *desktop;
