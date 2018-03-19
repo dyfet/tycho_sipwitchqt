@@ -13,8 +13,17 @@
     <height>323</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <horstretch>15</horstretch>
+    <verstretch>15</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>DeviceList</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
@@ -63,6 +72,12 @@
         <size>
          <width>136</width>
          <height>136</height>
+        </size>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="mouseTracking">

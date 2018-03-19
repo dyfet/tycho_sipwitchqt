@@ -66,7 +66,6 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
 #endif
 
 #ifdef Q_OS_WIN
-
 class NativeEvent final : public QAbstractNativeEventFilter
 {
 private:
@@ -290,7 +289,7 @@ QMenu *Desktop::createPopupMenu()
 }
 
 void Desktop::shutdown()
-{   
+{
     bool threads = false;
 
     if(isVisible()) {

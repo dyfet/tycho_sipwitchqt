@@ -42,6 +42,8 @@ SessionModel *SessionModel::Instance = nullptr;
 SessionItem::SessionItem(ContactItem *contactItem, bool active) :
 messageModel(nullptr)
 {
+
+
     contact = contactItem;
     contact->session = this;
 
@@ -90,6 +92,8 @@ SessionItem::~SessionItem()
         delete msg;
     }
 }
+
+
 
 void SessionItem::addMessage(MessageItem *msg)
 {
@@ -151,6 +155,29 @@ unsigned SessionItem::loadMessages()
         storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;", {latest, sequence, contact->uid});
 
     return count;
+}
+
+//QStringList SessionItem::searchMessages(QString searchTerm){
+////    QString searchTerm = QString::fromUtf8(usearchTerm);
+//    auto sessionMessages = messages;
+//    QStringList message = {};
+//    QStringList result = {};
+//    foreach (auto singleMessage , sessionMessages) {
+//        message += QString::fromUtf8(singleMessage->body());
+//    }
+//    result = message.filter(searchTerm);
+//    return result;
+//}
+
+
+
+ QList <MessageItem *> Sessions::searchMessages(QString searchterm){
+    QList <MessageItem *> result = {};
+    foreach (auto singleMessage, activeItem->messages) {
+        if (QString::fromUtf8(singleMessage->body()).contains(searchterm))
+            result += singleMessage;
+    }
+   return result;
 }
 
 QString SessionItem::title()
@@ -393,7 +420,7 @@ SessionItem *Sessions::active()
 void Sessions::enter()
 {
     Toolbar::search()->setText("");
-    Toolbar::search()->setPlaceholderText(tr("Enter number or name to reach"));
+    Toolbar::search()->setPlaceholderText(tr("Search messages here"));
     Toolbar::search()->setEnabled(true);
 
     if(activeItem) {
@@ -419,25 +446,37 @@ void Sessions::search()
     UString text = Toolbar::search()->text().toUtf8();
     Toolbar::search()->setText("");
     if(text.isEmpty()) {
+        activeItem->filtered = activeItem->messages;
+        activeItem->model()->changeLayout();
         return;
     }
 
-    ContactItem *item = nullptr;
-    if(text.isNumber()) {
-        int number = text.toInt();
-        if(number >= 0 && number < 1000)
-            item = ContactItem::findExtension(number);
-    }
-    else
-        item = ContactItem::findText(QString::fromUtf8(text));
+    if(!activeItem){
+        ContactItem *item = nullptr;
 
-    if(item) {
-        activateContact(item);
-        desktop->statusMessage("");
-        return;
+        if(text.isNumber()) {
+            int number = text.toInt();
+            if(number >= 0 && number < 1000)
+                item = ContactItem::findExtension(number);
+        } else
+            item = ContactItem::findText(QString::fromUtf8(text));
+
+        if(item) { 
+            activateContact(item);
+            desktop->statusMessage("");
+            return;
+        } else{
+        QChar quote = '\"';
+        desktop->errorMessage(quote + QString::fromUtf8(text) + quote + tr(" not found or not unique"));
+        }
     }
-    QChar quote = '\"';
-    desktop->errorMessage(quote + QString::fromUtf8(text) + quote + tr(" not found or not unique"));
+    else{
+        activeItem->filtered = Sessions::searchMessages(QString::fromUtf8(text));
+        qDebug() << Sessions::searchMessages(QString::fromUtf8(text)) << endl;
+        activeItem->model()->changeLayout();
+    }
+
+
 }
 
 void Sessions::activateContact(ContactItem* contact)
@@ -475,7 +514,9 @@ void Sessions::activateSession(SessionItem* item)
     ui.inputFrame->setVisible(true);
     ui.input->setText(item->text());
     ui.input->setFocus();
+    activeItem->filtered = activeItem->messages;
     Toolbar::setTitle(item->title());
+    Toolbar::search()->setPlaceholderText("Search messages");
     item->loadMessages();
     scrollToBottom();
 }
@@ -505,6 +546,8 @@ void Sessions::activateSelf()
     ui.input->setText("");
     ui.inputFrame->setVisible(false);
     ui.messages->setModel(nullptr);
+    Toolbar::search()->setPlaceholderText(tr("Select extension or session"));
+
 }
 
 void Sessions::selectSelf()
