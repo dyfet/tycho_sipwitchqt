@@ -1,6 +1,11 @@
 What is SipWitchQt
 ==================
 
+
+
+[![pipeline status](https://gitlab.com/tychosoft/sipwitchqt/badges/master/pipeline.svg)](https://gitlab.com/tychosoft/sipwitchqt/commits/master)
+[![coverage report](https://gitlab.com/tychosoft/sipwitchqt/badges/master/coverage.svg)](https://gitlab.com/tychosoft/sipwitchqt/commits/master)
+
 This is a newly written from scratch enterprise sip server which extends sipwitch branding and re-thinks my original sipwitch architecture.  This new server is written using [Qt](https://www.qt.io) and C++11.  This package also introduces a new general purpose daemon service architecture for Qt rather than using Qt Service, and this is embedded thru src/Common.pri.
 
 One key difference between SipWitchQt and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchQt.
