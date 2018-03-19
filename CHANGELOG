@@ -1,15 +1,23 @@
-v0.0.1
-* Initial development testing release
+v0.1.4
+* I want to send a message to someone
+* I Want to receive messages
+* I want to search my messages
+* I want to logout, and back in
+* I want to know what extensions I can login as
+* I want the ui to become available in language of my choice
+* I want to know what devices are on my extension
+* I want to autostart when I login on linux
+* sipwitchqt message laying and rendering engine introduced
+* email and public uri properties added to contacts
 
-v0.0.2
-* More complete test harness debug config
-* Reset and dialogs for client
-* Release packaging for primary platforms
+v0.1.3
+* Roster processing on client and server
+* Search processing on sessions screen
+* click feedback, doubleclick contacts
+* vibrant and light icon schemes
 
-v0.1.0
-* Core authentication complete 
-* Core registration with expiration
-* Extended registration support for sipwitchqt clients
+v0.1.2
+* Start of sessions page and status
 
 v0.1.1
 * udp for eXosip2 messaging support
@@ -18,16 +26,16 @@ v0.1.1
 * Replacing json with xdp
 * Start of contacts (phonebook) page
 
-v0.1.2
-* Start of sessions page and status
+v0.1.0
+* Core authentication complete 
+* Core registration with expiration
+* Extended registration support for sipwitchqt clients
 
-v0.1.3
-* Roster processing on client and server
-* Search processing on sessions screen
-* click feedback, doubleclick contacts
-* vibrant and light icon schemes
+v0.0.2
+* More complete test harness debug config
+* Reset and dialogs for client
+* Release packaging for primary platforms
 
-v0.1.4
-* sipwitchqt message laying and rendering engine introduced
-* local message processing only for now (for testing ui)
-* email and public uri properties added to contacts
+v0.0.1
+* Initial development testing release
+
