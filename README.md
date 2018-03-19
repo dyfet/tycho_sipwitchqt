@@ -4,7 +4,7 @@ What is SipWitchQt
 
 
 [![pipeline status](https://gitlab.com/tychosoft/sipwitchqt/badges/master/pipeline.svg)](https://gitlab.com/tychosoft/sipwitchqt/commits/master)
-[![coverage report](https://gitlab.com/tychosoft/sipwitchqt/badges/master/coverage.svg)](https://gitlab.com/tychosoft/sipwitchqt/commits/master)
+
 
 This is a newly written from scratch enterprise sip server which extends sipwitch branding and re-thinks my original sipwitch architecture.  This new server is written using [Qt](https://www.qt.io) and C++11.  This package also introduces a new general purpose daemon service architecture for Qt rather than using Qt Service, and this is embedded thru src/Common.pri.
 
