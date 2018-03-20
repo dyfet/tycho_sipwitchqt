@@ -157,21 +157,7 @@ unsigned SessionItem::loadMessages()
     return count;
 }
 
-//QStringList SessionItem::searchMessages(QString searchTerm){
-////    QString searchTerm = QString::fromUtf8(usearchTerm);
-//    auto sessionMessages = messages;
-//    QStringList message = {};
-//    QStringList result = {};
-//    foreach (auto singleMessage , sessionMessages) {
-//        message += QString::fromUtf8(singleMessage->body());
-//    }
-//    result = message.filter(searchTerm);
-//    return result;
-//}
-
-
-
- QList <MessageItem *> Sessions::searchMessages(QString searchterm){
+QList <MessageItem *> Sessions::searchMessages(QString searchterm){
     QList <MessageItem *> result = {};
     foreach (auto singleMessage, activeItem->messages) {
         if (QString::fromUtf8(singleMessage->body()).contains(searchterm))
@@ -461,7 +447,7 @@ void Sessions::search()
         } else
             item = ContactItem::findText(QString::fromUtf8(text));
 
-        if(item) { 
+        if(item) {
             activateContact(item);
             desktop->statusMessage("");
             return;
