@@ -5,7 +5,7 @@ stages:
 
 #tests every commit including merge requests    
 test:
-  image: in1t3r/gitlabqt:build
+  image: in1t3r/gitlabqt:buildtest
   stage: test
   script:
     - cmake . | tee cmake.log
