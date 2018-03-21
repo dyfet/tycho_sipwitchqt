@@ -16,6 +16,7 @@ Release/
 *.key
 *.pem
 *.cfg
+*.cbp
 *-lock
 
 *.tar.gz
