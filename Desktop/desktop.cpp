@@ -34,6 +34,8 @@
 #include <QCloseEvent>
 #include <QResizeEvent>
 #include <csignal>
+#include <QFileDialog>
+#include <QMessageBox>
 
 static int result = 0;
 
@@ -741,6 +743,37 @@ void Desktop::listen(const QVariantHash& cred)
     sessions->listen(listener);
     listener->start();
     authorizing();
+}
+
+void Desktop::exportDb(void)
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+        tr("Export database: "), "",
+        tr("Backup database (*.dbdump);"));
+    if (fileName.isEmpty())
+        return;
+    else {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                file.errorString());
+            return;
+        }
+        QDataStream out(&file);
+//        QDataStream(QByteArray *a, QIODevice::OpenMode mode);
+        out.setVersion(QDataStream::Qt_DefaultCompiledVersion);
+        QSqlDatabase db = storage->database();
+        QFile::copy(Storage::storagePath(),newdb.db);
+
+//        out << db;
+    }
+}
+
+void Desktop::importDb(void)
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Import database: "), "",
+        tr("Import database (*.dbdump);"));
 }
 
 int main(int argc, char *argv[])
