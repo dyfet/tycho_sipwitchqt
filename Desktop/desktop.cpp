@@ -763,7 +763,7 @@ void Desktop::exportDb(void)
 //        QDataStream(QByteArray *a, QIODevice::OpenMode mode);
         out.setVersion(QDataStream::Qt_DefaultCompiledVersion);
         QSqlDatabase db = storage->database();
-        QFile::copy(Storage::storagePath(),newdb.db);
+//        QFile::copy(Storage::storagePath(),newdb.db);
 
 //        out << db;
     }
