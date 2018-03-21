@@ -462,6 +462,7 @@ void Sessions::search()
         activeItem->model()->changeLayout();
     }
 
+//just testing whether jobs work now.
 
 }
 
