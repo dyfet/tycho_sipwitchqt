@@ -754,7 +754,10 @@ void Desktop::exportDb(void)
     }
     else
     {
-        QMessageBox::information(this, tr("Database succesfully backed up"),tr("Database saved under name backup.db"));
+        auto ext = credentials()["extension"].toString();
+        auto lab = credentials()["label"].toString();
+        QString filename = ext + "-" + lab + "-" + "backup.db";
+        QMessageBox::information(this, tr("Database succesfully backed up"),tr("Database saved under name ") + filename);
 
     }
 }
