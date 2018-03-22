@@ -745,6 +745,7 @@ void Desktop::listen(const QVariantHash& cred)
     authorizing();
 }
 
+// Calls the Storage::copyDb function to copy existing database
 void Desktop::exportDb(void)
 {
     if(storage->copyDb() != 0)
@@ -758,11 +759,33 @@ void Desktop::exportDb(void)
     }
 }
 
+// Import database after make sure that client has went offline.
 void Desktop::importDb(void)
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Import database: "), "",
-        tr("Import database (*.dbdump);"));
+
+    Q_ASSERT(storage != nullptr);
+
+    emit changeStorage(nullptr);
+    warningMessage(tr("logging out..."));
+    offline();
+    delete storage;
+    storage = nullptr;
+
+
+
+    ui.toolBar->hide();
+    ui.pagerStack->setCurrentWidget(login);
+    login->enter();
+    ui.appPreferences->setEnabled(false);
+    if(storage->importDb()!= 0)
+    {
+        QMessageBox::warning(this, tr("Unable to import database"),tr("Database backup do not exist"));
+    }
+    else
+    {
+        QMessageBox::information(this, tr("Database succesfully restored"),tr("Database imported from the file backup.db"));
+
+    }
 }
 
 int main(int argc, char *argv[])

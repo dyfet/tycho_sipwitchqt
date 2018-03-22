@@ -331,4 +331,31 @@ int Storage::copyDb(void){
         )
 }
 
+int Storage::importDb(void)
+{
+    FOR_DEBUG(
+    QString fullpath = QString(DESKTOP_PREFIX) + "/backup.db";
+    qDebug() << fullpath;
+    QFile::remove(storagePath());
+    if (QFile::copy((QString(DESKTOP_PREFIX) + "/backup.db"),storagePath()))
+        return 0;
+    else
+        return 1;
+    )
+    FOR_RELEASE(
+       auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+       QString fileName = "backup.db";
+       QString fullPath;
+//       qDebug() << fullPath <<endl;
+       if(path.isEmpty()){
+           fullPath = fileName;
+       }
+       else
+           fullPath = path + "/" + fileName;
+       if (QFile::copy(fullPath,storagePath()))
+           return 0;
+       else
+           return 1;
+       )
+}
 
