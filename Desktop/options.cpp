@@ -34,6 +34,8 @@ QWidget(), desktop(control)
 //    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
 
     connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
+    connect(ui.ExportDb,&QPushButton::pressed,control,&Desktop::exportDb);
+    connect(ui.ImportDb,&QPushButton::pressed,control,&Desktop::importDb);
 
 }
 

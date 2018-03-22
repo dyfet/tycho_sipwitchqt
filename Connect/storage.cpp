@@ -306,3 +306,64 @@ QVariantHash Storage::next(QSqlQuery& query)
     return item;
 }
 
+
+#include <QStandardPaths>
+int Storage::copyDb(void){
+
+    QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
+    auto ext = extlab["extension"].toString();
+    auto lab = extlab["label"].toString();
+    qDebug() << "Extension is " << ext << " and label is " << lab << endl;
+    QString backupfilename = ext + "-" + lab + "-" + "backup.db";
+    qDebug() << "Backup filename " << backupfilename <<  endl;
+
+    FOR_DEBUG(
+     if (QFile::copy(storagePath(),(QString(DESKTOP_PREFIX) + "/" +backupfilename)))
+         return 0;
+     else
+         return 1;
+     )
+    FOR_RELEASE(
+        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        QString fileName = backupfilename;
+        QString fullPath;
+        if(path.isEmpty()){
+            fullPath = fileName;
+        }
+        else
+            fullPath = path + "/" + fileName;
+        if (QFile::copy(storagePath(),fullPath))
+            return 0;
+        else
+            return 1;
+        )
+}
+
+int Storage::importDb(void)
+{
+    FOR_DEBUG(
+    QString fullpath = QString(DESKTOP_PREFIX) + "/backup.db";
+    qDebug() << fullpath;
+    QFile::remove(storagePath());
+    if (QFile::copy((QString(DESKTOP_PREFIX) + "/backup.db"),storagePath()))
+        return 0;
+    else
+        return 1;
+    )
+    FOR_RELEASE(
+       auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+       QString fileName = "backup.db";
+       QString fullPath;
+//       qDebug() << fullPath <<endl;
+       if(path.isEmpty()){
+           fullPath = fileName;
+       }
+       else
+           fullPath = path + "/" + fileName;
+       if (QFile::copy(fullPath,storagePath()))
+           return 0;
+       else
+           return 1;
+       )
+}
+

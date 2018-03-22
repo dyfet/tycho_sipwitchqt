@@ -209,6 +209,8 @@ public slots:
     void showOptions(void);
     void showSessions(void);
     void showPhonebook(void);
+    void exportDb(void);
+    void importDb(void);
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);

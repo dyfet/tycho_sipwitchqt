@@ -34,6 +34,8 @@
 #include <QCloseEvent>
 #include <QResizeEvent>
 #include <csignal>
+#include <QFileDialog>
+#include <QMessageBox>
 
 static int result = 0;
 
@@ -741,6 +743,52 @@ void Desktop::listen(const QVariantHash& cred)
     sessions->listen(listener);
     listener->start();
     authorizing();
+}
+
+// Calls the Storage::copyDb function to copy existing database
+void Desktop::exportDb(void)
+{
+    if(storage->copyDb() != 0)
+    {
+        QMessageBox::warning(this, tr("Unable to backup the database"),tr("Database cannot be backed up"));
+    }
+    else
+    {
+        auto ext = credentials()["extension"].toString();
+        auto lab = credentials()["label"].toString();
+        QString filename = ext + "-" + lab + "-" + "backup.db";
+        QMessageBox::information(this, tr("Database succesfully backed up"),tr("Database saved under name ") + filename);
+
+    }
+}
+
+// Import database after make sure that client has went offline.
+void Desktop::importDb(void)
+{
+
+    Q_ASSERT(storage != nullptr);
+
+    emit changeStorage(nullptr);
+    warningMessage(tr("logging out..."));
+    offline();
+    delete storage;
+    storage = nullptr;
+
+
+
+    ui.toolBar->hide();
+    ui.pagerStack->setCurrentWidget(login);
+    login->enter();
+    ui.appPreferences->setEnabled(false);
+    if(storage->importDb()!= 0)
+    {
+        QMessageBox::warning(this, tr("Unable to import database"),tr("Database backup do not exist"));
+    }
+    else
+    {
+        QMessageBox::information(this, tr("Database succesfully restored"),tr("Database imported from the file backup.db"));
+
+    }
 }
 
 int main(int argc, char *argv[])
