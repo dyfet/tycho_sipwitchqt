@@ -307,11 +307,23 @@ QVariantHash Storage::next(QSqlQuery& query)
 }
 
 
+#include <QStandardPaths>
 int Storage::copyDb(void){
-     if (QFile::copy(storagePath(),(QString(DESKTOP_PREFIX) + "/backup.db")))
+     FOR_DEBUG(
+     if (QFile::copy(storagePath(),(QString() + "/backup.db")))
          return 0;
      else
          return 1;
+     )
+     FOR_RELEASE(
+        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        QString fileName = "backup.db";
+        if(path.isEmpty()){
+            return fileName;
+        }
+        else
+            return path + "/" + fileName;
+        )
 }
 
 
