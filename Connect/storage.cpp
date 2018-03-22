@@ -306,3 +306,12 @@ QVariantHash Storage::next(QSqlQuery& query)
     return item;
 }
 
+
+int Storage::copyDb(void){
+     if (QFile::copy(storagePath(),(QString(DESKTOP_PREFIX) + "/backup.db")))
+         return 0;
+     else
+         return 1;
+}
+
+

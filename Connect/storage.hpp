@@ -73,7 +73,7 @@ public:
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     QSqlQuery getQuery(const QString& request, const QVariantList& parms = QVariantList());
-
+    int copyDb(void);
 private:
     QSqlDatabase db;
     static UString ServerAddress;

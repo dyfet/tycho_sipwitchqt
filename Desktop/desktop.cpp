@@ -747,25 +747,14 @@ void Desktop::listen(const QVariantHash& cred)
 
 void Desktop::exportDb(void)
 {
-    QString fileName = QFileDialog::getSaveFileName(this,
-        tr("Export database: "), "",
-        tr("Backup database (*.dbdump);"));
-    if (fileName.isEmpty())
-        return;
-    else {
-        QFile file(fileName);
-        if (!file.open(QIODevice::WriteOnly)) {
-            QMessageBox::information(this, tr("Unable to open file"),
-                file.errorString());
-            return;
-        }
-        QDataStream out(&file);
-//        QDataStream(QByteArray *a, QIODevice::OpenMode mode);
-        out.setVersion(QDataStream::Qt_DefaultCompiledVersion);
-        QSqlDatabase db = storage->database();
-//        QFile::copy(Storage::storagePath(),newdb.db);
+    if(storage->copyDb() != 0)
+    {
+        QMessageBox::warning(this, tr("Unable to backup the database"),tr("Database cannot be backed up"));
+    }
+    else
+    {
+        QMessageBox::information(this, tr("Database succesfully backed up"),tr("Database saved under name backup.db"));
 
-//        out << db;
     }
 }
 
