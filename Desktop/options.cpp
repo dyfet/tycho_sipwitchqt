@@ -19,6 +19,7 @@
 #include "ui_options.h"
 #include "options.hpp"
 #include "../Dialogs/devicelist.hpp"
+#include "messages.hpp"
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -33,12 +34,21 @@ QWidget(), desktop(control)
 
 //    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
 
+//    connect(ui.fontSize, &QComboBox::currentTextChanged, control, &Desktop::changeFontValue);
     connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
     connect(ui.ExportDb,&QPushButton::pressed,control,&Desktop::exportDb);
     connect(ui.ImportDb,&QPushButton::pressed,control,&Desktop::importDb);
 
-}
+    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int index){
 
+        if (index == 0)
+            control->baseFont = control->font();
+        else if (index == 1){
+            control->baseFont.setPointSize(control->baseFont.pointSize() + 24);
+        }
+
+    } );
+}
 void Options::enter()
 {
     Toolbar::setTitle("");

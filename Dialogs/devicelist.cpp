@@ -14,6 +14,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     ui.setupUi(static_cast<QDialog*>(this));
     if(connector != nullptr) {
         connector->requestDeviceList();
+
         connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
                     auto jdoc = QJsonDocument::fromJson(json);
                     auto list = jdoc.array();

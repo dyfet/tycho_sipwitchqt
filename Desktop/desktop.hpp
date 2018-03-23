@@ -60,6 +60,7 @@
 
 class Desktop final : public QMainWindow
 {
+    friend class Options;
 	Q_OBJECT
     Q_DISABLE_COPY(Desktop)
 
@@ -214,6 +215,10 @@ public slots:
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);
+
+//    void changeFontText(QString &text);
+//    void changeFontValue(int &value);
+
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized

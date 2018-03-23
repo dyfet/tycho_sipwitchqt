@@ -791,6 +791,16 @@ void Desktop::importDb(void)
     }
 }
 
+
+//void changeFontValue(int &value){
+
+//}
+
+//void changeFontText(QString &text)
+//{
+
+//}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
