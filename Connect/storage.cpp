@@ -341,20 +341,25 @@ int Storage::copyDb(void){
 
 int Storage::importDb(void)
 {
+    QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
+    auto ext = extlab["extension"].toString();
+    auto lab = extlab["label"].toString();
+    qDebug() << "Extension is " << ext << " and label is " << lab << endl;
+    QString backupfilename = ext + "-" + lab + "-" + "backup.db";
+
     FOR_DEBUG(
-    QString fullpath = QString(DESKTOP_PREFIX) + "/backup.db";
+    QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
     qDebug() << fullpath;
     QFile::remove(storagePath());
-    if (QFile::copy((QString(DESKTOP_PREFIX) + "/backup.db"),storagePath()))
+    if (QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath()))
         return 0;
     else
         return 1;
     )
     FOR_RELEASE(
        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-       QString fileName = "backup.db";
+       QString fileName = backupfilename;
        QString fullPath;
-//       qDebug() << fullPath <<endl;
        if(path.isEmpty()){
            fullPath = fileName;
        }
