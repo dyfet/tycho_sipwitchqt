@@ -373,6 +373,7 @@ QWidget(), desktop(control), model(nullptr)
     connect(ui.status, &QPushButton::pressed, this, &Sessions::selectSelf);
     connect(ui.input, &QLineEdit::returnPressed, this, &Sessions::createMessage);
     connect(ui.input, &QLineEdit::textChanged, this, &Sessions::checkInput);
+    connect(desktop ,&Desktop::changeFont,this,&Sessions::refreshFont);
 
     connect(ui.bottom, &QPushButton::pressed, this, [this]() {
         scrollToBottom();
@@ -511,8 +512,7 @@ void Sessions::refreshFont()
 {
     auto old = ui.messages->itemDelegate();
     ui.messages->setItemDelegate(new MessageDelegate(this));
-    if (old)
-        delete old;
+    delete old;
     activeItem->model()->changeLayout();
 
 }
