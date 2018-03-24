@@ -162,23 +162,6 @@ QString Storage::name(const QVariantHash& creds, const UString &id)
     return hash.result().toBase64();
 }
 
-QSqlQuery Storage::getQuery(const QString& request, const QVariantList& parms)
-{
-    if(!db.isOpen())
-        return QSqlQuery();
-
-    QSqlQuery query(db);
-    query.prepare(request);
-    int count = -1;
-    qDebug() << "Request " << request << " LIST " << parms;
-    while(++count < parms.count())
-        query.bindValue(count, parms.at(count));
-    if(!query.exec())
-        return QSqlQuery();
-
-    return query;
-}
-
 QVariantHash Storage::getRecord(const QString& request, const QVariantList& parms)
 {
     if(!db.isOpen())
@@ -199,8 +182,6 @@ QVariantHash Storage::getRecord(const QString& request, const QVariantList& parm
 
 QSqlQuery Storage::getRecords(const QString& request, const QVariantList& parms)
 {
-    QVariantHash item;
-
     if(!db.isOpen())
         return QSqlQuery();
 
