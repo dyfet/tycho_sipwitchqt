@@ -130,8 +130,3 @@ void Options::enter()
     connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
 
-void fontIntChnaged(int){
-
-}
-
-

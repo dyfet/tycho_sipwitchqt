@@ -792,14 +792,11 @@ void Desktop::importDb(void)
 }
 
 
-void Desktop::changeFontValue(int &value){
 
-}
 
-//void changeFontText(QString &text)
-//{
 
-//}
+
+
 
 int main(int argc, char *argv[])
 {

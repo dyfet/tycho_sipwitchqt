@@ -221,8 +221,7 @@ public slots:
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);
-//    void changeFontText(QString &text);
-    void changeFontValue(int &value);
+
 
 
 private slots:
