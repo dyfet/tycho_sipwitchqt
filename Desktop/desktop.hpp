@@ -60,7 +60,7 @@
 
 class Desktop final : public QMainWindow
 {
-    friend class Options;
+//    friend class Options;
 	Q_OBJECT
     Q_DISABLE_COPY(Desktop)
 
@@ -104,8 +104,13 @@ public:
         return isCurrent(options);
     }
 
-    inline QFont font() const {
+    inline QFont getTheFont() const {           // get the global value of a basefont which is QFont value
+                                                // other font related variables use to base a font upon
         return baseFont;
+    }
+    inline void setTheFont(QFont font){         // set the global value of a basefont
+        baseFont = font;
+        emit changeFont();
     }
 
     QVariantHash storageCredentials() const {
@@ -191,6 +196,7 @@ private:
 signals:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *state);
+    void changeFont();
 
 public slots:
     void closeDeviceList(void);
@@ -215,9 +221,8 @@ public slots:
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);
-
 //    void changeFontText(QString &text);
-//    void changeFontValue(int &value);
+    void changeFontValue(int &value);
 
 
 private slots:
@@ -231,7 +236,7 @@ private slots:
     void trayAway();
 
     void setBanner(const QString& banner);
-    void shutdown();                            // application shutdown
+    void shutdown(); // application shutdown
 };
 
 #endif

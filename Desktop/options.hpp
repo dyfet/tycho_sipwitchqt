@@ -37,6 +37,9 @@ private:
 
 public slots:
 
+signals:
+    void fontIntChnaged(int );
+    QFont changeFont(void);
 };
 
 #endif

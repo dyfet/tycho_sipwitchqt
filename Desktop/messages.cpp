@@ -374,6 +374,8 @@ MessageDelegate::MessageDelegate(QWidget *parent) :
 QStyledItemDelegate(parent)
 {
     auto desktop = Desktop::instance();
+    textFont = userFont = timeFont = boldFont = desktop->getTheFont();
+
     userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
     timeFont.setWeight(10);

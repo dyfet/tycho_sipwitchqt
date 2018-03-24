@@ -507,6 +507,15 @@ void Sessions::activateSession(SessionItem* item)
     item->loadMessages();
     scrollToBottom();
 }
+void Sessions::refreshFont()
+{
+    auto old = ui.messages->itemDelegate();
+    ui.messages->setItemDelegate(new MessageDelegate(this));
+    if (old)
+        delete old;
+    activeItem->model()->changeLayout();
+
+}
 
 void Sessions::selectSession(const QModelIndex& index)
 {

@@ -20,6 +20,7 @@
 #include "options.hpp"
 #include "../Dialogs/devicelist.hpp"
 #include "messages.hpp"
+#include "sessions.hpp"
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -42,13 +43,18 @@ QWidget(), desktop(control)
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int index){
 
         if (index == 0)
-            control->baseFont = control->font();
+        {
+            control->setTheFont(QGuiApplication::font());
+        }
         else if (index == 1){
-            control->baseFont.setPointSize(control->baseFont.pointSize() + 24);
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() + 36);
+            control->setTheFont(stupidfont);
         }
 
     } );
 }
+
 void Options::enter()
 {
     Toolbar::setTitle("");
@@ -90,5 +96,8 @@ void Options::enter()
     connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
 
+void fontIntChnaged(int){
+
+}
 
 

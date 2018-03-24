@@ -792,9 +792,9 @@ void Desktop::importDb(void)
 }
 
 
-//void changeFontValue(int &value){
+void Desktop::changeFontValue(int &value){
 
-//}
+}
 
 //void changeFontText(QString &text)
 //{
