@@ -33,7 +33,7 @@ class Storage final : public QObject
     Q_DISABLE_COPY(Storage)
 
 public:
-    explicit Storage(const QString &key = QString(), const QVariantHash& cred = QVariantHash());
+    explicit Storage(const QString &dbname, const QString &key, const QVariantHash& cred = QVariantHash());
     ~Storage() final;
 
     bool isActive() {
@@ -63,8 +63,9 @@ public:
         return FromAddress;
     }
 
-    static bool exists();
-    static void remove();
+    static QString name(const QVariantHash& creds, const UString& id);
+    static bool exists(const QString &dbName);
+    static void remove(const QString &dbName);
     static QVariantHash next(QSqlQuery& query);
 
     QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
@@ -73,8 +74,8 @@ public:
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     QSqlQuery getQuery(const QString& request, const QVariantList& parms = QVariantList());
-    int copyDb(void);
-    int importDb(void);
+    int copyDb(const QString& dbName);
+    int importDb(const QString &dbName);
 
 private:
     QSqlDatabase db;
@@ -89,6 +90,17 @@ private:
  * that the storage is not async coupled, and so executes in the client event
  * thread.  The other is that it is only sqlite3 based.
  * \file storage.hpp
+ */
+
+/*!
+ * \class Storage
+ * \brief Provides persistant data store for SipWitchQt client applications.
+ * This provides an interface to a sqlite database that provides all client
+ * data.  This includes server credentials, contacts, messages, and call
+ * history for the client.  A unique database may be created for each
+ * endpoint the client logins in as.  Only one instance of this class should
+ * be used at a time.
+ * \author David Sugar <tychosoft@gmail.com>
  */
 
 #endif	
