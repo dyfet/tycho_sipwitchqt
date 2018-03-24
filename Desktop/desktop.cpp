@@ -130,7 +130,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     bool tray = !args.isSet("notray");
     if(args.isSet("reset")) {
-        Storage::remove();
+        Storage::remove(dbName);
         settings.clear();
     }
 
@@ -241,8 +241,9 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     ui.pagerStack->addWidget(login);
 
     setWindowTitle("Welcome to SipWitchQt " PROJECT_VERSION);
-    if(Storage::exists()) {
-        storage = new Storage("");
+    dbName = settings.value("database").toString();
+    if(Storage::exists(dbName)) {
+        storage = new Storage(dbName, "");
         emit changeStorage(storage);
         showSessions();
 
@@ -375,11 +376,31 @@ void Desktop::openLogout()
     dialog = new Logout(this);
 }
 
+void Desktop::eraseLogout()
+{
+    Q_ASSERT(dialog != nullptr);
+    Q_ASSERT(storage != nullptr);
+
+    settings.setValue("database", "");
+    emit changeStorage(nullptr);
+    closeDialog();
+    warningMessage(tr("logging out and erasing database..."));
+    offline();
+    delete storage;
+    storage = nullptr;
+    Storage::remove(dbName);
+    ui.toolBar->hide();
+    ui.pagerStack->setCurrentWidget(login);
+    login->enter();
+    ui.appPreferences->setEnabled(false);
+}
+
 void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
+    settings.setValue("database", "");
     emit changeStorage(nullptr);
     closeDialog();
     warningMessage(tr("logging out..."));
@@ -667,7 +688,6 @@ void Desktop::initial()
     if(Credentials.isEmpty())
         return;
 
-    Storage::remove();      // remove before trying an initial login...
     listen(Credentials);
 }
 
@@ -693,7 +713,9 @@ void Desktop::authorized(const QVariantHash& creds)
         auto schema = creds["schema"].toString().toUtf8();
         auto uri = QString(UString::uri(schema, creds["extension"].toString(), server, static_cast<quint16>(creds["port"].toInt())));
         auto opr = QString(UString::uri(schema, "0", server, static_cast<quint16>(creds["port"].toInt())));
-        storage = new Storage("", creds);
+        dbName = "sipwitchqt-" + Storage::name(creds, "desktop");
+        settings.setValue("database", dbName);
+        storage = new Storage(dbName, "", creds);
         storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, uri) "
                           "VALUES(?,?,?,?,?);", {
                               creds["extension"],
@@ -748,7 +770,10 @@ void Desktop::listen(const QVariantHash& cred)
 // Calls the Storage::copyDb function to copy existing database
 void Desktop::exportDb(void)
 {
-    if(storage->copyDb() != 0)
+    if(!storage) {
+        QMessageBox::warning(this, tr("No active database"),tr("Database cannot be backed up"));
+    }
+    else if(storage->copyDb(dbName) != 0)
     {
         QMessageBox::warning(this, tr("Unable to backup the database"),tr("Database cannot be backed up"));
     }
@@ -780,7 +805,7 @@ void Desktop::importDb(void)
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-    if(storage->importDb()!= 0)
+    if(storage->importDb(dbName)!= 0)
     {
         QMessageBox::warning(this, tr("Unable to import database"),tr("Database backup do not exist"));
     }

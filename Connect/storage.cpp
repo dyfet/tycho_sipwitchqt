@@ -18,26 +18,26 @@
 #include "storage.hpp"
 #include <QFileInfo>
 #include <QDebug>
+#include <QCryptographicHash>
 
 #ifdef DESKTOP_PREFIX
 
-static QString storagePath()
+static QString storagePath(const QString& dbName)
 {
-    return QString(DESKTOP_PREFIX) + "/client.db";
+    return QString(DESKTOP_PREFIX) + "/" + dbName + ".db";
 }
 
 #else
 
 #include <QStandardPaths>
 
-static QString storagePath()
+static QString storagePath(const QString& dbName)
 {
-	QString fileName = "sipwitchqt-client.db";
     auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
     if(path.isEmpty())
-        return fileName;
+        return dbName + ".db";
 
-    return path + "/" + fileName;
+    return path + "/" + dbName + ".db";
 }
 
 #endif
@@ -46,20 +46,20 @@ Storage *Storage::Instance = nullptr;
 UString Storage::FromAddress;
 UString Storage::ServerAddress;
 
-Storage::Storage(const QString& key, const QVariantHash &cred)
+Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &cred)
 {
     Q_UNUSED(key);
 
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
-    bool existing = exists();
+    bool existing = exists(dbName);
     
     db = QSqlDatabase::addDatabase("QSQLITE", "default");
     if(!db.isValid())
         return;
 
-    db.setDatabaseName(storagePath());
+    db.setDatabaseName(storagePath(dbName));
     db.open();
     if(!db.isOpen())
         return;
@@ -149,6 +149,17 @@ Storage::~Storage()
         db = QSqlDatabase();
         QSqlDatabase::removeDatabase("default");
     }
+}
+
+QString Storage::name(const QVariantHash& creds, const UString &id)
+{
+    UString extension = creds["extension"].toString().toUtf8();
+    UString label = creds["label"].toString().toLower().toUtf8();
+    UString key = extension + ":" + label + ":" + id;
+
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(key);
+    return hash.result().toBase64();
 }
 
 QSqlQuery Storage::getQuery(const QString& request, const QVariantList& parms)
@@ -280,14 +291,16 @@ void Storage::updateCredentials(const QVariantHash &update)
         {QString::fromUtf8(ServerAddress), cred["schema"], cred["host"], cred["port"], cred["user"], cred["secret"], cred["type"], cred["realm"]});
 }
 
-bool Storage::exists()
+bool Storage::exists(const QString& dbName)
 {
-	return QFileInfo::exists(storagePath());
+    if(dbName.isEmpty())
+        return false;
+    return QFileInfo::exists(storagePath(dbName));
 }
 
-void Storage::remove()
+void Storage::remove(const QString& dbName)
 {
-	QFile file(storagePath());
+    QFile file(storagePath(dbName));
 	file.remove();
 }
 
@@ -308,7 +321,7 @@ QVariantHash Storage::next(QSqlQuery& query)
 
 
 #include <QStandardPaths>
-int Storage::copyDb(void){
+int Storage::copyDb(const QString &dbName){
 
     QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
     auto ext = extlab["extension"].toString();
@@ -318,7 +331,7 @@ int Storage::copyDb(void){
     qDebug() << "Backup filename " << backupfilename <<  endl;
 
     FOR_DEBUG(
-     if (QFile::copy(storagePath(),(QString(DESKTOP_PREFIX) + "/" +backupfilename)))
+     if (QFile::copy(storagePath(dbName),(QString(DESKTOP_PREFIX) + "/" +backupfilename)))
          return 0;
      else
          return 1;
@@ -332,14 +345,14 @@ int Storage::copyDb(void){
         }
         else
             fullPath = path + "/" + fileName;
-        if (QFile::copy(storagePath(),fullPath))
+        if (QFile::copy(storagePath(dbName),fullPath))
             return 0;
         else
             return 1;
         )
 }
 
-int Storage::importDb(void)
+int Storage::importDb(const QString& dbName)
 {
     QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
     auto ext = extlab["extension"].toString();
@@ -350,8 +363,8 @@ int Storage::importDb(void)
     FOR_DEBUG(
     QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
     qDebug() << fullpath;
-    QFile::remove(storagePath());
-    if (QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath()))
+    QFile::remove(storagePath(dbName));
+    if (QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath(dbName)))
         return 0;
     else
         return 1;
@@ -365,7 +378,7 @@ int Storage::importDb(void)
        }
        else
            fullPath = path + "/" + fileName;
-       if (QFile::copy(fullPath,storagePath()))
+       if (QFile::copy(fullPath,storagePath(dbName)))
            return 0;
        else
            return 1;

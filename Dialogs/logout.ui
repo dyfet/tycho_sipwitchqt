@@ -120,7 +120,7 @@
      <item>
       <widget class="QLabel" name="labelAbout">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will log you out of the server. You will need to login again. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will log you out of the server. You will need to login again. You can use erase if you wish to clear all local data when you logout.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -159,7 +159,13 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="acceptButton">
+        <widget class="QPushButton" name="eraseButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>96</width>
@@ -173,7 +179,26 @@
           </size>
          </property>
          <property name="text">
-          <string>&amp;Accept</string>
+          <string>&amp;Erase</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="logoutButton">
+         <property name="minimumSize">
+          <size>
+           <width>96</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>96</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>&amp;Logout</string>
          </property>
          <property name="shortcut">
           <string>Meta+A</string>
