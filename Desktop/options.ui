@@ -613,6 +613,17 @@
             <property name="editable">
              <bool>false</bool>
             </property>
+            <property name="currentText">
+             <string>Normal</string>
+            </property>
+            <property name="modelColumn">
+             <number>0</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>Tiny</string>
+             </property>
+            </item>
             <item>
              <property name="text">
               <string>Small</string>
@@ -620,7 +631,22 @@
             </item>
             <item>
              <property name="text">
-              <string>Large</string>
+              <string>Normal</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Medium</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Medium Large</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Not normal</string>
              </property>
             </item>
            </widget>

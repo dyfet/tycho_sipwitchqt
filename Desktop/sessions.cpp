@@ -373,6 +373,7 @@ QWidget(), desktop(control), model(nullptr)
     connect(ui.status, &QPushButton::pressed, this, &Sessions::selectSelf);
     connect(ui.input, &QLineEdit::returnPressed, this, &Sessions::createMessage);
     connect(ui.input, &QLineEdit::textChanged, this, &Sessions::checkInput);
+    connect(desktop ,&Desktop::changeFont,this,&Sessions::refreshFont);
 
     connect(ui.bottom, &QPushButton::pressed, this, [this]() {
         scrollToBottom();
@@ -506,6 +507,14 @@ void Sessions::activateSession(SessionItem* item)
     Toolbar::search()->setPlaceholderText("Search messages");
     item->loadMessages();
     scrollToBottom();
+}
+void Sessions::refreshFont()
+{
+    auto old = ui.messages->itemDelegate();
+    ui.messages->setItemDelegate(new MessageDelegate(this));
+    delete old;
+    activeItem->model()->changeLayout();
+
 }
 
 void Sessions::selectSession(const QModelIndex& index)
