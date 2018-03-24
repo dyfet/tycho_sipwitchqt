@@ -40,6 +40,10 @@ public:
         return db.isValid() && db.isOpen();
     }
 
+    bool isExisting() {
+        return existing;
+    }
+
     QSqlDatabase database() {
         return db;
     }
@@ -78,6 +82,7 @@ public:
 
 private:
     QSqlDatabase db;
+    bool existing;
     static UString ServerAddress;
     static UString FromAddress;
     static Storage *Instance;
@@ -115,6 +120,10 @@ private:
  * Tests if the database driver is active and the db file was opened
  * successfully.
  * \return true if database is active.
+ *
+ * \fn Storage::isExisting()
+ * Check if existing or newly created database.
+ * \return true if pre-existing.
  *
  * \fn Storage::credentials()
  * Retrieves the credentials stored in the database.

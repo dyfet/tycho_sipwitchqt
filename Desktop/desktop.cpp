@@ -716,16 +716,18 @@ void Desktop::authorized(const QVariantHash& creds)
         dbName = "sipwitchqt-" + Storage::name(creds, "desktop");
         settings.setValue("database", dbName);
         storage = new Storage(dbName, "", creds);
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, uri) "
-                          "VALUES(?,?,?,?,?);", {
-                              creds["extension"],
-                              creds["extension"].toString(),
-                              creds["display"],
-                              creds["user"],
-                              uri,
-                          });
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, type, uri) "
-                          "VALUES(0,'0', 'Operators', 'operators', 'SYSTEM',?);", {opr});
+        if(!storage->isExisting()) {
+            storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, uri) "
+                              "VALUES(?,?,?,?,?);", {
+                                  creds["extension"],
+                                  creds["extension"].toString(),
+                                  creds["display"],
+                                  creds["user"],
+                                  uri,
+                              });
+            storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, type, uri) "
+                              "VALUES(0,'0', 'Operators', 'operators', 'SYSTEM',?);", {opr});
+        }
         emit changeStorage(storage);
     }
 

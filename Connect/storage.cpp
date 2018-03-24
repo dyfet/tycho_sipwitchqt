@@ -53,7 +53,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
-    bool existing = exists(dbName);
+    existing = exists(dbName);
     
     db = QSqlDatabase::addDatabase("QSQLITE", "default");
     if(!db.isValid())
