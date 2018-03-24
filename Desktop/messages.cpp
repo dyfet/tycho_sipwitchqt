@@ -374,7 +374,7 @@ MessageDelegate::MessageDelegate(QWidget *parent) :
 QStyledItemDelegate(parent)
 {
     auto desktop = Desktop::instance();
-    textFont = userFont = timeFont = boldFont = desktop->font();
+    textFont = userFont = timeFont = boldFont = desktop->getTheFont();
 
     userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
@@ -426,8 +426,8 @@ QStyledItemDelegate(parent)
     dayToday = tr("Today");
     dayYesterday = tr("Yesterday");
 
-    textHeight = QFontInfo(textFont).pixelSize();
-    monoHeight = QFontInfo(monoFont).pixelSize();
+    textHeight = QFontInfo(textFont).pointSize();
+    monoHeight = QFontInfo(monoFont).pointSize();
 }
 
 QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -444,17 +444,18 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     if(!item->saved)
         return QSize(0, 0);
 
-    if(item->lastHint.width() == style.rect.width())
-        return item->lastHint;
+//    if(item->lastHint.width() == style.rect.width())
+//        return item->lastHint;
 
     return item->layout(style, row);
 }
-
+#include <string>
 void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
+    const int increment = (int)(userFont.pointSize() * 3.7);
 
     if(!session || row < 0 || row > session->filtered.count())
         return;
@@ -489,7 +490,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         painter->setFont(userFont);
         painter->setPen(item->itemColor);
         painter->drawStaticText(userpos, item->textStatus);
-        userpos.rx() += 40;
+        userpos.rx() += increment;
         painter->drawStaticText(userpos, item->textDisplay);
         userpos.setX(style.rect.right() - 72);
         painter->setFont(timeFont);

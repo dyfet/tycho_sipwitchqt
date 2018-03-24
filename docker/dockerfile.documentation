@@ -16,7 +16,7 @@
 	libosip2-dev \
 	libssl-dev \
 	libexosip2-dev \
-	libsystemd-dev \
+	libsystemd-dev \ 
 	libqt5sql5-sqlite \
 	make \
 	cmake \
@@ -45,4 +45,4 @@
   --registration-token S6yboJN2yQSexj_vNpp5 \
   --executor docker \
   --description "My gitlabqt documentation" \
-  --docker-image "in1t3r/gitlabqt:documentation" 
+  --docker-image "in1t3r/gitlabqt:documentation"
