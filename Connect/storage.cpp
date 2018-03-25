@@ -159,7 +159,7 @@ QString Storage::name(const QVariantHash& creds, const UString &id)
 
     QCryptographicHash hash(QCryptographicHash::Sha256);
     hash.addData(key);
-    return hash.result().toBase64();
+    return hash.result().toHex();
 }
 
 QVariantHash Storage::getRecord(const QString& request, const QVariantList& parms)
