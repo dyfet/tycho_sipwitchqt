@@ -30,12 +30,14 @@ public:
     Options(Desktop *main);
 
     void enter();
+    void fontDialog();
 
 private:
     Desktop *desktop;
     QDialog *dialog;
 
 public slots:
+
 
 };
 

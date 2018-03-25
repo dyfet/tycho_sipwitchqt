@@ -201,6 +201,8 @@ public slots:
     void activateSession(SessionItem *item);
     void activateContact(ContactItem *item);
     void activateSelf();
+    void refreshFont();
+
 
 private slots:
     void search();
