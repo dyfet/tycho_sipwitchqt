@@ -41,6 +41,7 @@ QWidget(), desktop(control)
     connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
     connect(ui.ExportDb,&QPushButton::pressed,control,&Desktop::exportDb);
     connect(ui.ImportDb,&QPushButton::pressed,control,&Desktop::importDb);
+    connect(ui.pickfontbutton, &QToolButton::clicked, this, &Options::fontDialog);
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
@@ -59,16 +60,9 @@ QWidget(), desktop(control)
 
     } );
 
-    bool ok;
-    QFont font = QFontDialog::getFont(
-                    &ok, QFont("Helvetica [Cronyx]", 10), this);
-    if (ok) {
-        // the user clicked OK and font is set to the font the user selected
-    } else {
-        // the user canceled the dialog; font is set to the initial
-        // value, in this case Helvetica [Cronyx], 10
-    }
 }
+
+
 
 void Options::enter()
 {
@@ -111,3 +105,14 @@ void Options::enter()
     connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
 
+void Options::fontDialog()
+    {
+    bool ok;
+    QFont font = QFontDialog::getFont(
+                &ok, QFont("Helvetica [Cronyx]", 10), this);
+    if (ok) {
+        desktop->setTheFont(font);
+    } else {
+
+    }
+}

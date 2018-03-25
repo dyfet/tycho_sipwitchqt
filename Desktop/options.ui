@@ -618,7 +618,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="toolButton">
+           <widget class="QToolButton" name="pickfontbutton">
             <property name="text">
              <string>Pick a font...</string>
             </property>
