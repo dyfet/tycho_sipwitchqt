@@ -244,6 +244,13 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     dbName = settings.value("database").toString();
     if(Storage::exists(dbName)) {
         storage = new Storage(dbName, "");
+        if(storage && !storage->isActive()) {
+            errorMessage(tr("*** Database in use ***"));
+            delete storage;
+            storage = nullptr;
+        }
+    }
+    if(storage) {
         emit changeStorage(storage);
         showSessions();
 
@@ -716,7 +723,8 @@ void Desktop::authorized(const QVariantHash& creds)
         settings.setValue("database", dbName);
         storage = new Storage(dbName, "", creds);
         if(!storage->isActive()) {
-            errorMessage("*** Database failed to create ***");
+            errorMessage(tr("*** Database failed to create ***"));
+            storage = nullptr;
             return;
         }
         if(!storage->isExisting()) {
