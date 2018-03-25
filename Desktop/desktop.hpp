@@ -182,6 +182,7 @@ private:
     int currentExpiration;
     QDialog *dialog;
     QFont baseFont;
+    QString dbName;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
@@ -208,7 +209,7 @@ public slots:
     void menuClicked();
 
     void closeDialog(void);
-//    void doTheLogout(void);                     // modified version
+    void eraseLogout(void);
     void closeLogout(void);
     void openAbout(void);
     void openLogout(void);

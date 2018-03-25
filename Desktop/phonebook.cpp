@@ -428,8 +428,6 @@ void Phonebook::changeStorage(Storage *storage)
     ContactItem::purge();
 
     if(storage) {
-        memset(local, 0, sizeof(local));
-        highest = -1;
         auto creds = storage->credentials();
         me = creds["extension"].toInt();
         // load contacts in last update time order...

@@ -60,6 +60,53 @@ QWidget(), desktop(control)
 
     } );
 
+    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
+
+
+
+        if (ind == 0)
+        {
+            control->setTheFont(QGuiApplication::font());
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() - 3);
+            control->setTheFont(stupidfont);
+
+        }
+        else if (ind == 1)
+        {
+            control->setTheFont(QGuiApplication::font());
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() - 1);
+            control->setTheFont(stupidfont);
+
+        }
+        else if (ind == 2)
+        {
+            control->setTheFont(QGuiApplication::font());
+        }
+        else if (ind == 3){
+            control->setTheFont(QGuiApplication::font());
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() + 3);
+            control->setTheFont(stupidfont);
+        }
+        else if (ind == 4){
+            control->setTheFont(QGuiApplication::font());
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() + 6);
+            control->setTheFont(stupidfont);
+        }
+        else if (ind == 5)
+        {
+            control->setTheFont(QGuiApplication::font());
+            auto stupidfont = control->getTheFont();
+            stupidfont.setPointSize(stupidfont.pointSize() + 9);
+            control->setTheFont(stupidfont);
+        }
+
+
+
+    } );
 }
 
 

@@ -449,7 +449,7 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
 
     return item->layout(style, row);
 }
-
+#include <string>
 void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     auto row = index.row();
