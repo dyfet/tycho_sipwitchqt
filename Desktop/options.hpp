@@ -30,6 +30,7 @@ public:
     Options(Desktop *main);
 
     void enter();
+    void fontDialog();
 
 private:
     Desktop *desktop;

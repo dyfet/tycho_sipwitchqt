@@ -21,6 +21,8 @@
 #include "../Dialogs/devicelist.hpp"
 #include "messages.hpp"
 #include "sessions.hpp"
+#include <QFontDialog>
+
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -39,6 +41,24 @@ QWidget(), desktop(control)
     connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
     connect(ui.ExportDb,&QPushButton::pressed,control,&Desktop::exportDb);
     connect(ui.ImportDb,&QPushButton::pressed,control,&Desktop::importDb);
+    connect(ui.pickfontbutton, &QToolButton::clicked, this, &Options::fontDialog);
+
+    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
+
+        int change = 0;
+        if (ind == 0){ change = -3; }
+        else if (ind == 1) { change = -1; }
+        else if (ind == 2) { change = 0; }
+        else if (ind == 3) { change = 3; }
+        else if (ind == 4) { change = 6; }
+        else if (ind == 5) { change = 9; }
+
+        control->setTheFont(QGuiApplication::font());
+        auto stupidfont = control->getTheFont();
+        stupidfont.setPointSize(stupidfont.pointSize() + change);
+        control->setTheFont(stupidfont);
+
+    } );
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
@@ -89,6 +109,8 @@ QWidget(), desktop(control)
     } );
 }
 
+
+
 void Options::enter()
 {
     Toolbar::setTitle("");
@@ -130,3 +152,14 @@ void Options::enter()
     connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
 
+void Options::fontDialog()
+    {
+    bool ok;
+    QFont font = QFontDialog::getFont(
+                &ok, QFont("Helvetica [Cronyx]", 10), this);
+    if (ok) {
+        desktop->setTheFont(font);
+    } else {
+
+    }
+}
