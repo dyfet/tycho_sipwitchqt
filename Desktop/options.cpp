@@ -21,6 +21,8 @@
 #include "../Dialogs/devicelist.hpp"
 #include "messages.hpp"
 #include "sessions.hpp"
+#include <QFontDialog>
+
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -42,51 +44,32 @@ QWidget(), desktop(control)
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
+        int change = 0;
+        if (ind == 0){ change = -3; }
+        else if (ind == 1) { change = -1; }
+        else if (ind == 2) { change = 0; }
+        else if (ind == 3) { change = 3; }
+        else if (ind == 4) { change = 6; }
+        else if (ind == 5) { change = 9; }
 
-
-        if (ind == 0)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() - 3);
-            control->setTheFont(stupidfont);
-
-        }
-        else if (ind == 1)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() - 1);
-            control->setTheFont(stupidfont);
-
-        }
-        else if (ind == 2)
-        {
-            control->setTheFont(QGuiApplication::font());
-        }
-        else if (ind == 3){
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 3);
-            control->setTheFont(stupidfont);
-        }
-        else if (ind == 4){
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 6);
-            control->setTheFont(stupidfont);
-        }
-        else if (ind == 5)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 9);
-            control->setTheFont(stupidfont);
-        }
-
-
+        control->setTheFont(QGuiApplication::font());
+        auto stupidfont = control->getTheFont();
+        stupidfont.setPointSize(stupidfont.pointSize() + change);
+        control->setTheFont(stupidfont);
 
     } );
+
+    bool ok;
+    QFont font = QFontDialog::getFont(
+                    &ok, QFont("Helvetica [Cronyx]", 10), this);
+    if (ok) {
+        // the user clicked OK and font is set to the font the user selected
+    } else {
+        // the user canceled the dialog; font is set to the initial
+        // value, in this case Helvetica [Cronyx], 10
+    }
+//    myWidget.setFont(QFontDialog::getFont(0, myWidget.font()));
+
 }
 
 void Options::enter()

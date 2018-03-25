@@ -576,7 +576,13 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QGroupBox" name="groupBox_3">
+      <widget class="QGroupBox" name="messaging">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title">
         <string>Messaging</string>
        </property>
@@ -594,7 +600,34 @@
          <number>4</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <layout class="QHBoxLayout" name="Userfont">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMaximumSize</enum>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>1</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Pick a font</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton">
+            <property name="text">
+             <string>Pick a font...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="Font">
           <item>
            <widget class="QLabel" name="label_21">
             <property name="text">
@@ -614,7 +647,7 @@
              <bool>false</bool>
             </property>
             <property name="currentText">
-             <string>Normal</string>
+             <string>Tiny</string>
             </property>
             <property name="modelColumn">
              <number>0</number>
@@ -654,7 +687,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="expired">
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
@@ -696,7 +729,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <layout class="QHBoxLayout" name="Notif">
           <item>
            <widget class="QLabel" name="label_24">
             <property name="sizePolicy">
@@ -735,7 +768,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <layout class="QHBoxLayout" name="AudioNotif">
           <item>
            <widget class="QLabel" name="label_23">
             <property name="sizePolicy">
@@ -783,7 +816,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_4">
+      <widget class="QGroupBox" name="Appereance">
        <property name="title">
         <string>Behavior</string>
        </property>
