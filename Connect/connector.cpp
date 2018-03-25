@@ -31,12 +31,17 @@
 #define X_ROSTER    "X-ROSTER"
 #define X_PROFILE   "X-PROFILE"
 #define X_DEVLIST   "X-DEVLIST"
+#define X_PENDING   "X-PENDING"
+#define A_PENDING   "A-PENDING"
 
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_ROSTER))
 
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_DEVLIST))
+
+#define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_PENDING))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -253,6 +258,8 @@ void Connector::run()
                     processRoster(event);
                 else if(MSG_IS_DEVLIST(event->request))
                     processDeviceList(event);
+                else if(MSG_IS_PENDING(event->request))
+                    processPending(event);
                 else if(MSG_IS_MESSAGE(event->request)) {
                     sequence = 0;
                     header = nullptr;
@@ -309,6 +316,16 @@ void Connector::run()
     context = nullptr;
 }
 
+void Connector::processPending(eXosip_event_t *event)
+{
+    osip_body_t *body = nullptr;
+    osip_message_get_body(event->response, 0, &body);
+    if(body && body->body && body->length > 0) {
+        QByteArray json(body->body, static_cast<int>(body->length));
+        emit syncPending(json);
+    }
+}
+
 void Connector::processDeviceList(eXosip_event_t *event)
 {
     osip_body_t *body = nullptr;
@@ -327,6 +344,36 @@ void Connector::processRoster(eXosip_event_t *event)
         QByteArray json(body->body, static_cast<int>(body->length));
         emit changeRoster(json);
     }
+}
+
+void Connector::requestPending()
+{
+    qDebug() << "REQUEST PENDING";
+    auto to = UString::uri(serverSchema, serverHost, serverPort);
+    auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    osip_message_t *msg = nullptr;
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_PENDING, to, from, to);
+    if(!msg)
+        return;
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::ackPending()
+{
+    qDebug() << "ACK PENDING PROCESSED";
+    auto to = UString::uri(serverSchema, serverHost, serverPort);
+    auto from = UString::uri(serverSchema, serverId, serverHost, serverPort);
+    osip_message_t *msg = nullptr;
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, A_PENDING, to, from, to);
+    if(!msg)
+        return;
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
 }
 
 void Connector::stop(bool flag)

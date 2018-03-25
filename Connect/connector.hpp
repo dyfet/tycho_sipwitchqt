@@ -39,7 +39,9 @@ public:
     }
 
     void stop(bool shutdown = false);
+    void ackPending();
     void requestRoster();
+    void requestPending();
     void requestDeviceList();
     bool sendText(const UString& to, const UString& body, const UString subject = "None");
 private:
@@ -59,6 +61,7 @@ private:
 
     void add_authentication();
     void processRoster(eXosip_event_t *event);
+    void processPending(eXosip_event_t *event);
     void processDeviceList(eXosip_event_t *event);
 
 
@@ -68,6 +71,7 @@ signals:
     void failure(int code);
 
     void messageResult(int status, const QDateTime& timestamp, int sequence);
+    void syncPending(const QByteArray& json);
     void changeRoster(const QByteArray& json);
     void changeDeviceList(const QByteArray& json);
 

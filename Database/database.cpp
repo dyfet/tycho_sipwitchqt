@@ -82,6 +82,8 @@ QObject()
     Manager *manager = Manager::instance();
     connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
     connect(manager, &Manager::sendDevlist, this, &Database::sendDeviceList);
+    connect(manager, &Manager::sendPending, this, &Database::sendPending);
+    connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
 }
 
@@ -569,13 +571,49 @@ void Database::localMessage(const Event& ev)
             qDebug() << "OUTBOX FAILED FOR" << endpoint;
             continue;
         }
-        // TODO: drop FOR_RELEASE exclusion
-        // debug will self-echo for now, to facilitate some simple testing...
-        FOR_RELEASE(
-            if(msgstatus == SIP_OK)     // dont send if we marked them ok...
-                continue;
-        )
+        if(msgstatus == SIP_OK)     // dont send if we marked them ok...
+            continue;
         emit sendMessage(endpoint, data);
+    }
+}
+
+void Database::changePending(qlonglong endpoint)
+{
+    qDebug() << "Update pending for " << endpoint;
+    runQuery("UPDATE Outboxes SET msgstatus=200 WHERE msgstatus=100 AND endpoint=?;", {endpoint});
+}
+
+void Database::sendPending(const Event& event, qlonglong endpoint)
+{
+    qDebug() << "Seeking pending for " << event.number() << event.label();
+    auto query = getRecords("SELECT * FROM Outboxes,Messages WHERE Outboxes.endpoint=? AND Outboxes.msgstatus != 200;", {endpoint});
+
+    QJsonArray list;
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        QJsonObject message {
+            {"f", record.value("msgfrom").toString()},
+            {"t", record.value("msgto").toString()},
+            {"d", record.value("display").toString()},
+            {"b", record.value("msgtext").toString()},
+            {"c", record.value("msgtype").toString()},
+            {"s", record.value("subject").toString()},
+            {"p", record.value("posted").toDateTime().toString(Qt::ISODate)},
+            {"u", record.value("msgseq").toInt()},
+            {"e", record.value("expires").toDateTime().toString(Qt::ISODate)},
+        };
+
+        //qDebug() << "*** PENDING" << message << record.value("msgstatus").toInt();
+        list.insert(0, message);    // reverse order...
+    }
+
+    runQuery("UPDATE Outboxes SET msgstatus=100 WHERE msgstatus != 200 AND endpoint=?;", {endpoint});
+
+    if(list.count() < 1)
+        Context::reply(event, SIP_OK);
+    else {
+        QJsonDocument jdoc(list);
+        Context::answerWithJson(event, jdoc.toJson(QJsonDocument::Compact));
     }
 }
 
@@ -587,7 +625,6 @@ void Database::sendRoster(const Event& event)
 
 
     QJsonArray list;
-    qDebug() << "REQUEST" << event.request();
     while(query.isActive() && query.next()) {
         auto record = query.record();
         auto name = record.value("name").toString();
@@ -595,7 +632,6 @@ void Database::sendRoster(const Event& event)
         auto dialing = record.value("number").toString();
         auto email = record.value("email").toString();
         auto access = record.value("access").toString();
-        qDebug() << "**** ACCESS" << access;
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
