@@ -704,7 +704,6 @@ void Desktop::authorized(const QVariantHash& creds)
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
 
-    ui.toolBar->show();
     // apply or update credentials only after successfull authorization
     if(storage)
         storage->updateCredentials(creds);
@@ -716,6 +715,10 @@ void Desktop::authorized(const QVariantHash& creds)
         dbName = "sipwitchqt-" + Storage::name(creds, "desktop");
         settings.setValue("database", dbName);
         storage = new Storage(dbName, "", creds);
+        if(!storage->isActive()) {
+            errorMessage("*** Database failed to create ***");
+            return;
+        }
         if(!storage->isExisting()) {
             storage->runQuery("INSERT INTO Contacts(extension, dialing, display, user, uri) "
                               "VALUES(?,?,?,?,?);", {
@@ -731,7 +734,7 @@ void Desktop::authorized(const QVariantHash& creds)
         emit changeStorage(storage);
     }
 
-    // this is how we should get out of first time login screen...
+    ui.toolBar->show();
     if(isLogin())
         showSessions();
 

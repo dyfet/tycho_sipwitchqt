@@ -135,6 +135,8 @@ signals:
     void REQUEST_OPTIONS(const Event& ev);
     void REQUEST_ROSTER(const Event& ev);
     void REQUEST_DEVLIST(const Event& ev);
+    void REQUEST_PENDING(const Event& ev);
+    void ACK_PENDING(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);
     void LOCAL_MESSAGE(const Event& ev);

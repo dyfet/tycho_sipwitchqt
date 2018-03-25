@@ -38,6 +38,12 @@
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-DEVLIST"))
 
+#define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-PENDING"))
+
+#define MSG_IS_ACK_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "A-PENDING"))
+
 static bool active = true;
 
 volatile unsigned Context::instanceCount = 0;
@@ -186,6 +192,8 @@ void Context::run()
     if(netProto == IPPROTO_TCP) {
         connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
         connect(this, &Context::REQUEST_DEVLIST, stack, &Manager::requestDevlist);
+        connect(this, &Context::REQUEST_PENDING, stack, &Manager::requestPending);
+        connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
     }
 
     connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
@@ -280,6 +288,7 @@ bool Context::process(const Event& ev)
                 return reply(ev, SIP_OK);
             }
             emit REQUEST_OPTIONS(ev);
+            break;
         }
 
         if(MSG_IS_REGISTER(ev.message())) {
@@ -291,6 +300,7 @@ bool Context::process(const Event& ev)
                 return reply(ev, SIP_FORBIDDEN);
             }
             emit REQUEST_REGISTER(ev);
+            break;
         }
 
         if(MSG_IS_ROSTER(ev.message())) {
@@ -304,6 +314,20 @@ bool Context::process(const Event& ev)
             if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_DEVLIST(ev);
+            return false;
+        }
+
+        if(MSG_IS_PENDING(ev.message())) {
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_PENDING(ev);
+            return false;
+        }
+
+        if(MSG_IS_ACK_PENDING(ev.message())) {
+            if(ev.number() < 1 || ev.label() == "NONE")
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit ACK_PENDING(ev);
             return false;
         }
 

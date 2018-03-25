@@ -61,14 +61,18 @@ private:
 
 signals:
     void changeRealm(const QString& realm);
+    void changePending(qlonglong endpoint);
     void findEndpoint(const Event& ev);
     void sendRoster(const Event& ev);
     void sendDevlist(const Event& ev);
+    void sendPending(const Event& ev, qlonglong endpoint);
 
 public slots:
     void sendMessage(qlonglong endpoint, const QVariantHash& data);
+    void ackPending(const Event& ev);
     void requestRoster(const Event& ev);
     void requestDevlist(const Event& ev);
+    void requestPending(const Event& ev);
     void refreshRegistration(const Event& ev);
     void createRegistration(const Event& ev, const QVariantHash& endpoint);
 

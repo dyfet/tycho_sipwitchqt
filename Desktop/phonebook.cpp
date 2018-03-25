@@ -407,7 +407,9 @@ void Phonebook::changeConnector(Connector *connected)
             foreach(auto profile, list) {
                 localModel->updateContact(profile.toObject());
             }
-        });
+
+            connector->requestPending();
+        }, Qt::QueuedConnection);
 
         if(!initialRoster) {
             QTimer::singleShot(300, this, [this]{
@@ -415,6 +417,8 @@ void Phonebook::changeConnector(Connector *connected)
                     connector->requestRoster();
             });
         }
+        else
+            connector->requestPending();
     }
 }
 

@@ -631,6 +631,25 @@ void Sessions::changeConnector(Connector *connected)
             else
                 finishInput(tr("Failed to send"));
         }, Qt::QueuedConnection);
+
+        connect(connector, &Connector::syncPending, this, [this](const QByteArray& json) {
+            auto jdoc = QJsonDocument::fromJson(json);
+            auto list = jdoc.array();
+            foreach(auto obj, list) {
+                auto msg = obj.toObject();
+                UString from = msg["f"].toString().toUtf8();
+                UString to = msg["t"].toString().toUtf8();
+                UString subject = msg["s"].toString().toUtf8();
+                auto timestamp = QDateTime::fromString(msg["p"].toString(), Qt::ISODate);
+                auto sequence = msg["u"].toInt();
+                if(msg["c"] == "text") {
+                    UString text = msg["b"].toString().toUtf8();
+                    receiveText(from, to, text, timestamp, sequence, subject);
+                }
+            }
+            connector->ackPending();    // let server know we processed...
+        }, Qt::QueuedConnection);
+
     }
     else {
         // if we loose connection, we clear any pending send, and disable further input.

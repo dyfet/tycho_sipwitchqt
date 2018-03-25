@@ -110,7 +110,9 @@ public slots:
 
 private slots:
     void sendRoster(const Event& ev);
+    void sendPending(const Event& ev, qlonglong endpoint);
     void sendDeviceList(const Event& ev);
+    void changePending(qlonglong endpoint);
 
     void applyConfig(const QVariantHash& config);
     void onTimeout();

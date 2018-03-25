@@ -176,6 +176,55 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
     context->message(from, to, route, headers, data["c"].toByteArray(), data["b"].toByteArray());
 }
 
+void Manager::ackPending(const Event& ev)
+{
+    qDebug() << "ACK PENDING FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND PENDING REG";
+        Context::reply(ev, result);
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    Context::reply(ev, result);
+    emit changePending(reg->endpoint());
+}
+
+void Manager::requestPending(const Event& ev)
+{
+    qDebug() << "REQUESTING PENDING FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND PENDING REG";
+        Context::reply(ev, result);
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit sendPending(ev, reg->endpoint());
+}
+
 void Manager::requestDevlist(const Event& ev)
 {
     qDebug() << "REQUESTING DEVLIST FROM" << ev.number();
