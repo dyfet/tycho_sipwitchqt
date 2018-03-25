@@ -68,8 +68,6 @@ QWidget(), desktop(control)
         // the user canceled the dialog; font is set to the initial
         // value, in this case Helvetica [Cronyx], 10
     }
-//    myWidget.setFont(QFontDialog::getFont(0, myWidget.font()));
-
 }
 
 void Options::enter()
