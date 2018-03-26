@@ -828,8 +828,8 @@ void Desktop::importDb(void)
     }
 }
 void Desktop::resetFont(){
-    getBasicFont();
-    sessions->resetFont();
+    setTheFont(getBasicFont());
+    sessions->refreshFont();
 }
 
 

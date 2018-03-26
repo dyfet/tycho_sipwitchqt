@@ -798,11 +798,4 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
 
 
 
-void Sessions::resetFont(){
-    desktop->setTheFont(desktop->getBasicFont());
-    auto old = ui.messages->itemDelegate();
-    ui.messages->setItemDelegate(new MessageDelegate(this));
-    delete old;
-    activeItem->model()->changeLayout();
 
-}
