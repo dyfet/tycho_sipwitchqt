@@ -41,7 +41,7 @@ QWidget(), desktop(control)
     connect(ui.listDevices, &QPushButton::clicked, control, &Desktop::openDeviceList);
     connect(ui.ExportDb,&QPushButton::clicked,control,&Desktop::exportDb);
     connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
-    connect(ui.pickfontbutton, &QToolButton::clicked, this, &Options::fontDialog);
+    connect(ui.pickfontbutton, &QPushButton::clicked, this, &Options::fontDialog);
     connect(ui.resetFont, &QPushButton::clicked , control , &Desktop::resetFont);
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){

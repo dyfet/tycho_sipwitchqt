@@ -89,6 +89,14 @@ static QStringList sqliteTables = {
         "FOREIGN KEY (number) REFERENCES Extensions(number) "
             "ON DELETE CASCADE);",
 
+    "CREATE TABLE Admin ("
+        "name VARCHAR(32),"                     // group permission is for
+        "number INTEGER,"                       // extension with permission
+        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+            "ON DELETE CASCADE,"
+        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+            "ON DELETE CASCADE);",
+
     "CREATE TABLE Groups ("
         "pilot INTEGER,"                        // group tied to
         "member INTEGER,"                       // group member extension
@@ -152,6 +160,10 @@ static QStringList sqlitePreload = {
     "INSERT INTO Endpoints(number) VALUES(102);",
     "INSERT INTO Groups(pilot, member) VALUES(100, 101);",
     "INSERT INTO Groups(pilot, member) VALUES(100, 102);",
+
+    // 101 sysop and group admin for testing
+    "INSERT INTO Admin(name, number) VALUES('system', 101);",
+    "INSERT INTO Admin(name, number) VALUES('test', 101);",
 };
 #else
 static QStringList sqlitePreload = {

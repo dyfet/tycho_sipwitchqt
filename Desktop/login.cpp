@@ -56,6 +56,7 @@ void Login::enter()
 
 // can pre-stuff default testing extension in testdata/settings.cfg this way...
 
+    setEnabled(true);
     ui.secret->setText("");
     ui.identity->setText(desktop->config("login/extension", QString("")).toString());
 
@@ -71,16 +72,19 @@ void Login::enter()
 
 void Login::badIdentity()
 {
+    setEnabled(true);
     ui.identity->setFocus();
 }
 
 void Login::badPassword()
 {
+    setEnabled(true);
     ui.secret->setFocus();
 }
 
 void Login::badLabel()
 {
+    setEnabled(true);
     ui.label->setFocus();
 }
 

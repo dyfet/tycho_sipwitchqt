@@ -268,305 +268,291 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QGroupBox" name="groupBox_6">
-         <property name="title">
-          <string>Personal Speed Dials</string>
-         </property>
-         <property name="flat">
-          <bool>true</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <property name="topMargin">
-           <number>12</number>
+      <widget class="QGroupBox" name="groupBox_6">
+       <property name="title">
+        <string>Personal Speed Dials</string>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <property name="topMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+        <property name="horizontalSpacing">
+         <number>4</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>#2</string>
           </property>
-          <property name="bottomMargin">
-           <number>4</number>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>#9</string>
           </property>
-          <property name="horizontalSpacing">
-           <number>4</number>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QLineEdit" name="speed3">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
           </property>
-          <property name="verticalSpacing">
-           <number>0</number>
+         </widget>
+        </item>
+        <item row="7" column="3">
+         <widget class="QLineEdit" name="speed8">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
           </property>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>#2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>#9</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QLineEdit" name="speed3">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="3">
-           <widget class="QLineEdit" name="speed8">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QLineEdit" name="speed4">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="3">
-           <widget class="QLineEdit" name="speed9">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="label_11">
-            <property name="text">
-             <string>#4</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="3">
-           <widget class="QLineEdit" name="speed7">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="3">
-           <widget class="QLineEdit" name="speed6">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>#7</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="speed2">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>#8</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>#5</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>#3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLineEdit" name="speed1">
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>#6</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="3">
-           <widget class="QLineEdit" name="speed5">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>Ext # or sip uri</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>#1</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QLineEdit" name="speed4">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="3">
+         <widget class="QLineEdit" name="speed9">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>#4</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="3">
+         <widget class="QLineEdit" name="speed7">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="3">
+         <widget class="QLineEdit" name="speed6">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>#7</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLineEdit" name="speed2">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>#8</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>#5</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>#3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLineEdit" name="speed1">
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>#6</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QLineEdit" name="speed5">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string>Ext # or sip uri</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>#1</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Services</string>
        </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
+       <property name="flat">
+        <bool>true</bool>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <property name="horizontalSpacing">
-        <number>4</number>
-       </property>
-       <property name="verticalSpacing">
-        <number>6</number>
-       </property>
-       <item row="6" column="2">
-        <widget class="QPushButton" name="testButton">
-         <property name="minimumSize">
-          <size>
-           <width>96</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>96</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Test</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLabel" name="label_7">
-         <property name="minimumSize">
-          <size>
-           <width>180</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Test audio and web cam</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="label_18">
-         <property name="text">
-          <string>Associated endpoints</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
-        <widget class="QPushButton" name="listDevices">
-         <property name="minimumSize">
-          <size>
-           <width>96</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>96</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>List</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <property name="spacing">
-          <number>6</number>
-         </property>
-         <property name="bottomMargin">
-          <number>16</number>
-         </property>
-        </layout>
-       </item>
-       <item row="1" column="2">
-        <widget class="QPushButton" name="ImportDb">
-         <property name="text">
-          <string>ImportDb</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QPushButton" name="ExportDb">
-         <property name="text">
-          <string>ExportDb</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="exportlabel">
-         <property name="text">
-          <string>Export database</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="importLabel">
-         <property name="text">
-          <string>Import database</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="ImportDb">
+          <property name="minimumSize">
+           <size>
+            <width>96</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>96</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>ImportDb</string>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="exportlabel">
+          <property name="text">
+           <string>Export database</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="listLabel">
+          <property name="text">
+           <string>Associated endpoints</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="listDevices">
+          <property name="minimumSize">
+           <size>
+            <width>96</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>96</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>List</string>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QPushButton" name="testButton">
+          <property name="minimumSize">
+           <size>
+            <width>96</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>96</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Test</string>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="importLabel">
+          <property name="text">
+           <string>Import database</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="ExportDb">
+          <property name="minimumSize">
+           <size>
+            <width>96</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>96</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>ExportDb</string>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="testLabel">
+          <property name="minimumSize">
+           <size>
+            <width>180</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Test audio and web cam</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
     </layout>
    </item>
@@ -623,6 +609,18 @@
           </item>
           <item>
            <widget class="QPushButton" name="resetFont">
+            <property name="minimumSize">
+             <size>
+              <width>96</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>96</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>default</string>
             </property>
@@ -649,9 +647,21 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="pickfontbutton">
+           <widget class="QPushButton" name="pickfontbutton">
+            <property name="minimumSize">
+             <size>
+              <width>96</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>96</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
-             <string>Pick a font...</string>
+             <string>Pick font</string>
             </property>
            </widget>
           </item>
@@ -1024,6 +1034,12 @@
      </item>
      <item>
       <widget class="QGroupBox" name="creds">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title">
         <string>Authorization</string>
        </property>
@@ -1038,7 +1054,7 @@
          <number>12</number>
         </property>
         <property name="bottomMargin">
-         <number>4</number>
+         <number>0</number>
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -1177,6 +1193,9 @@
           <property name="spacing">
            <number>0</number>
           </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QPushButton" name="pushButton_5">
             <property name="sizePolicy">
@@ -1246,22 +1265,6 @@
        </layout>
       </widget>
      </item>
-     <item>
-      <spacer name="leftspacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
   </layout>
@@ -1295,8 +1298,6 @@
   <tabstop>speed7</tabstop>
   <tabstop>speed8</tabstop>
   <tabstop>speed9</tabstop>
-  <tabstop>listDevices</tabstop>
-  <tabstop>testButton</tabstop>
  </tabstops>
  <resources>
   <include location="../Resources/desktop.qrc"/>

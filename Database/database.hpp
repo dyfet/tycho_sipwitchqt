@@ -106,6 +106,7 @@ signals:
 
 public slots:
     void localMessage(const Event& ev);
+    void copyOutbox(qlonglong source, qlonglong target);
     void messageResponse(const QByteArray& mid, const QByteArray &ep, int status);
 
 private slots:

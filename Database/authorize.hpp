@@ -52,6 +52,7 @@ private:
 
 signals:
     void createEndpoint(const Event& event, const QVariantHash endpoint);
+    void copyOutboxes(qlonglong source, qlonglong target);
 
 protected slots:
     virtual void activate(const QVariantHash& config, bool isOpen);

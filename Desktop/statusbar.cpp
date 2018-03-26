@@ -48,7 +48,7 @@ QWidget(parent)
     findKey->setContext(Qt::ApplicationShortcut);
 
     clearIndicators();
-    Desktop *desktop = Desktop::instance();
+//    Desktop *desktop = Desktop::instance();
 //    connect(ui.f3Indicator, &QPushButton::clicked, main, &Main::searchText);
 //    connect(f3Key, &QShortcut::activated, main, &Main::searchText);
 //    connect(findKey, &QShortcut::activated, main, &Main::enableFind);

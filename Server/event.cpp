@@ -16,6 +16,7 @@
  */
 
 #include "context.hpp"
+#include <atomic>
 #include <QDebug>
 
 #ifndef SESSION_EXPIRES

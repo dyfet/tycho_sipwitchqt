@@ -185,6 +185,7 @@ void Manager::ackPending(const Event& ev)
     if(!reg) {
         qDebug() << "CANNOT FIND PENDING REG";
         Context::reply(ev, result);
+        return;
     }
 
     if(!ev.authorization()) {
@@ -210,6 +211,7 @@ void Manager::requestPending(const Event& ev)
     if(!reg) {
         qDebug() << "CANNOT FIND PENDING REG";
         Context::reply(ev, result);
+        return;
     }
 
     if(!ev.authorization()) {
@@ -234,6 +236,7 @@ void Manager::requestDevlist(const Event& ev)
     if(!reg) {
         qDebug() << "CANNOT FIND DEVLIST REG";
         Context::reply(ev, result);
+        return;
     }
 
     if(!ev.authorization()) {
@@ -258,6 +261,7 @@ void Manager::requestRoster(const Event& ev)
     if(!reg) {
         qDebug() << "CANNOT FIND ROSTER REG";
         Context::reply(ev, result);
+        return;
     }
 
     if(!ev.authorization()) {
