@@ -22,6 +22,8 @@
 #ifdef Q_OS_MAC
 #include <CommonCrypto/CommonCryptor.h>
 #include <CommonCrypto/CommonRandom.h>
+
+
 #else
 #include <openssl/rand.h>
 #endif

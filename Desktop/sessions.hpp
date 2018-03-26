@@ -185,6 +185,7 @@ public:
     QList<MessageItem *> searchMessages(QString searchterm);
 
 
+
 private:
     Desktop *desktop;
     Connector *connector;
@@ -202,6 +203,8 @@ public slots:
     void activateContact(ContactItem *item);
     void activateSelf();
     void refreshFont();
+    void resetFont();                       // Does not need to be a slot as we dont connect to it
+
 
 
 private slots:

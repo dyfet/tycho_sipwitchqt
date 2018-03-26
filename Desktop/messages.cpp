@@ -374,7 +374,7 @@ MessageDelegate::MessageDelegate(QWidget *parent) :
 QStyledItemDelegate(parent)
 {
     auto desktop = Desktop::instance();
-    textFont = userFont = timeFont = boldFont = desktop->getTheFont();
+    textFont = userFont = timeFont = boldFont = desktop->getCurrentFont();
 
     userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
@@ -455,7 +455,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
-    const int increment = (int)(userFont.pointSize() * 3.7);
+    const int increment = (int)(userFont.pointSize() * 6);
 
     if(!session || row < 0 || row > session->filtered.count())
         return;
