@@ -519,7 +519,7 @@ void Desktop::appState(Qt::ApplicationState state)
         break;
     }
 
-    qDebug() << "Application State" << state;
+//    qDebug() << "Application State" << state;             // disabled because it is always openning application output every few second
 }
 
 void Desktop::menuClicked()
