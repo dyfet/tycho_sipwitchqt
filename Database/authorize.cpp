@@ -39,6 +39,7 @@ QObject(), db(nullptr)
 
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(database, &Database::updateAuthorize, this, &Authorize::activate);
+    connect(this, &Authorize::copyOutboxes, database, &Database::copyOutbox);
 
     // future connections for quick aync between manager and auth
     Manager *manager = Manager::instance();
@@ -107,6 +108,9 @@ void Authorize::findEndpoint(const Event& event)
         if(endpoint.count() < 1) {
             warning() << "Initializing database for" << number << " with label " << label << endl;
             runQuery("INSERT INTO Endpoints(number, label) VALUES (?,?);", {number, label});
+            endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
+            auto origin = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label='NONE')", {number});
+            emit copyOutboxes(origin.value("endpoint").toLongLong(), endpoint.value("endpoint").toLongLong());
         }
     }
     else if(endpoint.count() < 1) {

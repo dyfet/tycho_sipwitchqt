@@ -26,6 +26,10 @@
 #cmakedefine QT_NO_DEBUG_OUTPUT
 #cmakedefine PRELOAD_DATABASE
 
+#ifndef QT_NO_DEBUG_OUTPUT
+#define DEBUG_TRANSLATIONS "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen"
+#endif
+
 #define SERVICE_NAME "${PROJECT_ARCHIVE}"
 #if defined(PROJECT_PREFIX)
 #define SERVICE_ETCPATH "${PROJECT_PREFIX}"

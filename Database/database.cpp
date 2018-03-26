@@ -366,6 +366,19 @@ bool Database::event(QEvent *evt)
     return true;
 }
 
+void Database::copyOutbox(qlonglong source, qlonglong target)
+{
+    unsigned count = 0;
+    auto query = getRecords("SELECT * FROM Outboxes WHERE endpoint=?", {source});
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        runQuery("INSERT INTO Outboxes(mid,endpoint,msgstatus) "
+                 "VALUES(?,?,0);", {record.value("mid"), target});
+        ++count;
+    }
+    qDebug() << "Copied" << count << "outboxes from" << source << "to" << target;
+}
+
 void Database::sendDeviceList(const Event& event)
 {
     qDebug() << "Seeking device list" << endl;
