@@ -121,7 +121,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     front = true;
 
     // for now, just this...
-    baseFont = QGuiApplication::font();
+    baseFont = getBasicFont();
 
 #ifdef Q_OS_WIN
     static NativeEvent nativeEvents;
@@ -418,8 +418,7 @@ void Desktop::closeLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-    // TODO add a releasing of serverLabel so
-    // user can login in same session again to the extension from which have logged out
+
 }
 
 void Desktop::closeDialog()
@@ -828,12 +827,10 @@ void Desktop::importDb(void)
 
     }
 }
-
-
-
-
-
-
+void Desktop::resetFont(){
+    getBasicFont();
+    sessions->resetFont();
+}
 
 
 int main(int argc, char *argv[])

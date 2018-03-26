@@ -517,6 +517,7 @@ void Sessions::refreshFont()
 
 }
 
+
 void Sessions::selectSession(const QModelIndex& index)
 {
     auto row = index.row();
@@ -789,4 +790,19 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
         ui.input->setFocus();
     else
         ui.messages->setFocus();
+}
+
+
+
+
+
+
+
+void Sessions::resetFont(){
+    desktop->setTheFont(desktop->getBasicFont());
+    auto old = ui.messages->itemDelegate();
+    ui.messages->setItemDelegate(new MessageDelegate(this));
+    delete old;
+    activeItem->model()->changeLayout();
+
 }

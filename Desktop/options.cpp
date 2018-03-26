@@ -38,73 +38,25 @@ QWidget(), desktop(control)
 //    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
 
 //    connect(ui.fontSize, &QComboBox::currentTextChanged, control, &Desktop::changeFontValue);
-    connect(ui.listDevices, &QPushButton::pressed, control, &Desktop::openDeviceList);
-    connect(ui.ExportDb,&QPushButton::pressed,control,&Desktop::exportDb);
-    connect(ui.ImportDb,&QPushButton::pressed,control,&Desktop::importDb);
+    connect(ui.listDevices, &QPushButton::clicked, control, &Desktop::openDeviceList);
+    connect(ui.ExportDb,&QPushButton::clicked,control,&Desktop::exportDb);
+    connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
     connect(ui.pickfontbutton, &QToolButton::clicked, this, &Options::fontDialog);
+    connect(ui.resetFont, &QPushButton::clicked , control , &Desktop::resetFont);
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
         int change = 0;
-        if (ind == 0){ change = -3; }
-        else if (ind == 1) { change = -1; }
-        else if (ind == 2) { change = 0; }
-        else if (ind == 3) { change = 3; }
-        else if (ind == 4) { change = 6; }
-        else if (ind == 5) { change = 9; }
+        if (ind == 0){ change = 8 ; }
+        else if (ind == 1) { change = 10; }
+        else if (ind == 2) { change = 13; }
+        else if (ind == 3) { change = 15; }
+        else if (ind == 4) { change = 18; }
+        else if (ind == 5) { change = 21; }
 
-        control->setTheFont(QGuiApplication::font());
-        auto stupidfont = control->getTheFont();
-        stupidfont.setPointSize(stupidfont.pointSize() + change);
+        auto stupidfont = control->getCurrentFont();
+        stupidfont.setPointSize(change);
         control->setTheFont(stupidfont);
-
-    } );
-
-    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
-
-
-
-        if (ind == 0)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() - 3);
-            control->setTheFont(stupidfont);
-
-        }
-        else if (ind == 1)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() - 1);
-            control->setTheFont(stupidfont);
-
-        }
-        else if (ind == 2)
-        {
-            control->setTheFont(QGuiApplication::font());
-        }
-        else if (ind == 3){
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 3);
-            control->setTheFont(stupidfont);
-        }
-        else if (ind == 4){
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 6);
-            control->setTheFont(stupidfont);
-        }
-        else if (ind == 5)
-        {
-            control->setTheFont(QGuiApplication::font());
-            auto stupidfont = control->getTheFont();
-            stupidfont.setPointSize(stupidfont.pointSize() + 9);
-            control->setTheFont(stupidfont);
-        }
-
-
 
     } );
 }
@@ -160,6 +112,6 @@ void Options::fontDialog()
     if (ok) {
         desktop->setTheFont(font);
     } else {
-
+       desktop->getCurrentFont() ;
     }
 }

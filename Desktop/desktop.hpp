@@ -38,6 +38,7 @@
 #include <QToolBar>
 #include <QSystemTrayIcon>
 #include <QSettings>
+#include <QGuiApplication>
 
 // config paths and names
 
@@ -104,12 +105,21 @@ public:
         return isCurrent(options);
     }
 
-    inline QFont getTheFont() const {           // get the global value of a basefont which is QFont value
-                                                // other font related variables use to base a font upon
+    inline QFont getCurrentFont(){                                      // get current value from the settings.cfg
+        baseFont.fromString(settings.value("font").toString());         // make fonts persistant across sessions and endpoints
+        if (!(baseFont.fromString(settings.value("font").toString())))  // So font is now client related and persistent
+            baseFont = QGuiApplication::font();
         return baseFont;
     }
+    inline QFont getBasicFont() {                      // simple getter for cases that current font do not work.
+        baseFont = QGuiApplication::font();
+        return baseFont;
+    }
+
+
     inline void setTheFont(QFont font){         // set the global value of a basefont
         baseFont = font;
+        settings.setValue("font", font.toString());
         emit changeFont();
     }
 
@@ -222,7 +232,7 @@ public slots:
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);
-
+    void resetFont();
 
 
 private slots:
