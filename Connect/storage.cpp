@@ -127,10 +127,12 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
             "callduration INTEGER DEFAULT 0,"       // call duration...
             "expires INTEGER DEFAULT 0,"            // carried expires header
+            "status Integer Default 0,"             // add status of message 0 for active 1 for expired
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"                         // depends on type...
             "CONSTRAINT byDate PRIMARY KEY (sid, posted DESC, seqid DESC),"
             "FOREIGN KEY (sid) REFERENCES Contacts(uid));",
+
     });
 
     FromAddress = UString::uri(cred["schema"].toString(), cred["extension"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));

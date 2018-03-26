@@ -43,6 +43,34 @@ QWidget(), desktop(control)
     connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
     connect(ui.pickfontbutton, &QToolButton::clicked, this, &Options::fontDialog);
     connect(ui.resetFont, &QPushButton::clicked , control , &Desktop::resetFont);
+    connect(ui.expires,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int expiresIndex){
+
+        QString expires = QString (desktop->expiration());
+        switch(expiresIndex) {
+        case 0:
+//            expiresIndex = 0;
+            expires = "1";
+            desktop->changeExpiration(expires);
+            break;
+        case 3:
+//            expiresIndex = 3;
+            expires = "30";
+            desktop->changeExpiration(expires);
+            break;
+        case 2:
+//            expiresIndex = 2;
+            expires = "14";
+            desktop->changeExpiration(expires);
+            break;
+        case 1:
+//            expiresIndex = 1
+            expires = "7";
+            desktop->changeExpiration(expires);
+            break;
+        default:
+            break;
+        }
+    });
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
@@ -53,6 +81,7 @@ QWidget(), desktop(control)
         else if (ind == 3) { change = 15; }
         else if (ind == 4) { change = 18; }
         else if (ind == 5) { change = 21; }
+
 
         auto stupidfont = control->getCurrentFont();
         stupidfont.setPointSize(change);
@@ -84,20 +113,11 @@ void Options::enter()
     /* Need explanation I think we are removing this not functional
     // part of code later as we will have different expiration options
     // that will work*/
-    int expiresIndex = 0;
-    auto expires = desktop->expiration();
-    switch(expires /= 86400) {
-    case 30:
-        expiresIndex = 2;
-        break;
-    case 14:
-        expiresIndex = 1;
-        break;
-    default:
-        break;
-    }
 
-    ui.expires->setCurrentIndex(expiresIndex);
+    QString expires = QString (desktop->expiration());
+    desktop->changeExpiration(expires);
+
+//    ui.expires->setCurrentIndex(expiresIndex);
 
     connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
 
