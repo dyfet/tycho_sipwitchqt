@@ -335,23 +335,20 @@ int Storage::copyDb(const QString &dbName){
         )
 }
 
-int Storage::importDb(const QString& dbName)
+bool Storage::importDb(const QString& dbName, const QVariantHash& creds)
 {
-    QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
-    auto ext = extlab["extension"].toString();
-    auto lab = extlab["label"].toString();
+    auto ext = creds["extension"].toString();
+    auto lab = creds["label"].toString();
     qDebug() << "Extension is " << ext << " and label is " << lab << endl;
     QString backupfilename = ext + "-" + lab + "-" + "backup.db";
 
     FOR_DEBUG(
-    QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
-    qDebug() << fullpath;
-    QFile::remove(storagePath(dbName));
-    if (QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath(dbName)))
-        return 0;
-    else
-        return 1;
+        QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
+        qDebug() << fullpath;
+        QFile::remove(storagePath(dbName));
+        return QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath(dbName));
     )
+
     FOR_RELEASE(
        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
        QString fileName = backupfilename;
@@ -361,10 +358,6 @@ int Storage::importDb(const QString& dbName)
        }
        else
            fullPath = path + "/" + fileName;
-       if (QFile::copy(fullPath,storagePath(dbName)))
-           return 0;
-       else
-           return 1;
-       )
+       return QFile::copy(fullPath,storagePath(dbName)))
 }
 

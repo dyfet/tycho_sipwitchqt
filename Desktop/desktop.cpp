@@ -694,6 +694,7 @@ void Desktop::initial()
     if(Credentials.isEmpty())
         return;
 
+    login->setEnabled(false);
     listen(Credentials);
 }
 
@@ -817,15 +818,23 @@ void Desktop::importDb(void)
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-    if(storage->importDb(dbName)!= 0)
-    {
+    if(!Storage::importDb(dbName, Credentials)) {
         QMessageBox::warning(this, tr("Unable to import database"),tr("Database backup do not exist"));
     }
-    else
-    {
+    else {
         QMessageBox::information(this, tr("Database succesfully restored"),tr("Database imported from the file backup.db"));
-
+        storage = new Storage(dbName, "");
+        if(storage && !storage->isActive()) {
+            errorMessage(tr("*** Restore failed ***"));
+            delete storage;
+            storage = nullptr;
+        }
+        else {
+            emit changeStorage(storage);
+            listen(storage->credentials());
+        }
     }
+
 }
 void Desktop::resetFont(){
     setTheFont(getBasicFont());
@@ -845,7 +854,10 @@ int main(int argc, char *argv[])
     QCommandLineParser args;
     Q_INIT_RESOURCE(desktop);
 
-#if defined(Q_OS_MAC)
+#if defined(DEBUG_TRANSLATIONS)
+    localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
+        DEBUG_TRANSLATIONS);
+#elif defined(Q_OS_MAC)
     localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
         Args::exePath("../Translations"));
 #elif defined(Q_OS_WIN)

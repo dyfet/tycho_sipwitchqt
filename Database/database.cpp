@@ -366,6 +366,19 @@ bool Database::event(QEvent *evt)
     return true;
 }
 
+void Database::copyOutbox(qlonglong source, qlonglong target)
+{
+    unsigned count = 0;
+    auto query = getRecords("SELECT * FROM Outboxes WHERE endpoint=?", {source});
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        runQuery("INSERT INTO Outboxes(mid,endpoint,msgstatus) "
+                 "VALUES(?,?,0);", {record.value("mid"), target});
+        ++count;
+    }
+    qDebug() << "Copied" << count << "outboxes from" << source << "to" << target;
+}
+
 void Database::sendDeviceList(const Event& event)
 {
     qDebug() << "Seeking device list" << endl;
@@ -586,7 +599,7 @@ void Database::changePending(qlonglong endpoint)
 void Database::sendPending(const Event& event, qlonglong endpoint)
 {
     qDebug() << "Seeking pending for " << event.number() << event.label();
-    auto query = getRecords("SELECT * FROM Outboxes,Messages WHERE Outboxes.endpoint=? AND Outboxes.msgstatus != 200;", {endpoint});
+    auto query = getRecords("SELECT * FROM Outboxes JOIN Messages ON Outboxes.mid = Messages.mid WHERE endpoint=? AND msgstatus != 200;", {endpoint});
 
     QJsonArray list;
     while(query.isActive() && query.next()) {
@@ -603,7 +616,7 @@ void Database::sendPending(const Event& event, qlonglong endpoint)
             {"e", record.value("expires").toDateTime().toString(Qt::ISODate)},
         };
 
-        //qDebug() << "*** PENDING" << message << record.value("msgstatus").toInt();
+        // qDebug() << "*** PENDING" << message << record.value("msgstatus").toInt();
         list.insert(0, message);    // reverse order...
     }
 
@@ -621,8 +634,7 @@ void Database::sendRoster(const Event& event)
 {
     qDebug() << "Seeking roster for" << event.number();
 
-    auto query = getRecords("SELECT * FROM Extensions,Authorize WHERE Extensions.name = Authorize.name ORDER BY Extensions.number");
-
+    auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.name = Authorize.name ORDER BY Extensions.number");
 
     QJsonArray list;
     while(query.isActive() && query.next()) {
@@ -652,8 +664,10 @@ void Database::sendRoster(const Event& event)
         if(record.value("access").toString() == "REMOTE")
             profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
 
+        // qDebug() << "*** CONTACT" << profile;
         list << profile;
     }
+    qDebug() << "Extension list" << list.count();
     QJsonDocument jdoc(list);
     auto json = jdoc.toJson(QJsonDocument::Compact);
     Context::answerWithJson(event, json);

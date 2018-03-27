@@ -78,7 +78,7 @@ public:
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     int copyDb(const QString& dbName);
-    int importDb(const QString &dbName);
+    static bool importDb(const QString &dbName, const QVariantHash &creds);
 
 private:
     QSqlDatabase db;

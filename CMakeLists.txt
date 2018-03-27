@@ -94,11 +94,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/userdata")
         set(PRELOAD_DATABASE true)
     else()
-        # Assumes server will re-generate db as schema will change.  This
-        # and preloading makes debug testing repeatable.  If you need
-        # a persistent debug config, then create a userdata directory.
-        file(REMOVE "testdata/local.db")
-        file(REMOVE "testdata/client.db")
         set(PRELOAD_DATABASE true)
         set(PROJECT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/testdata")
     endif()
@@ -229,6 +224,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND "${CMAKE_COMMAND}" -E make_directory stage
             COMMAND "${CMAKE_COMMAND}" -E copy sipwitchqt-desktop.exe stage
             COMMAND windeployqt --release --verbose=0 stage/sipwitchqt-desktop.exe
+            COMMAND xcopy /q "translations_autogen\\*.qm" "stage\\translations" >nul
             COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" stage
             COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" stage
             COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" stage
@@ -264,6 +260,7 @@ if(CMAKE_MAINTAINER)
         COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}-*.changes"
         COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}-*.dsc"
         COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}-*.deb"
+        COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_SOURCE_DIR}/testdata/*.db"
         COMMAND "${CMAKE_COMMAND}" -E remove -F "*.pdf"
         COMMAND "${CMAKE_COMMAND}" -E remove_directory "doc"
     )
