@@ -36,6 +36,7 @@
 #include <csignal>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMutex>
 
 static int result = 0;
 

@@ -225,8 +225,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             status = "#";
 
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(72);
-        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()).replace(QString("m"), QString()));
+        textTimestamp.setTextWidth(81);
+        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
         textStatus.setText(status + msgFrom->textNumber);
         textDisplay.setText(msgFrom->textDisplay);
         textDisplay.setTextFormat(Qt::RichText);
@@ -236,8 +236,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     else if(timeHint)
     {
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(72);
-        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()).replace(QString("m"), QString()));
+        textTimestamp.setTextWidth(81);
+        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
     }
 
     textLayout.setFont(textFont);
@@ -254,7 +254,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             break;
 
         line.setLeadingIncluded(false);
-        line.setLineWidth(width - 48);
+        line.setLineWidth(width - 75);
         line.setPosition(QPointF(0, textHeight));
         textHeight += line.height();
     }
@@ -378,8 +378,10 @@ QStyledItemDelegate(parent)
 
     userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
-    timeFont.setWeight(10);
-    timeFont.setPixelSize(9);
+//    timeFont.setWeight(10);
+    timeFont.setPointSize(textFont.pointSize() - 3);
+    if(timeFont.pointSize() <7)
+        timeFont.setPointSize(7);
     boldFont.setBold(true);
 
     monoFont = QFont("monospace");
@@ -455,7 +457,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
-    const int increment = (int)(userFont.pointSize() * 6);
+    const int increment = (int)(userFont.pointSize() * 3.7);
 
     if(!session || row < 0 || row > session->filtered.count())
         return;
@@ -492,22 +494,24 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         painter->drawStaticText(userpos, item->textStatus);
         userpos.rx() += increment;
         painter->drawStaticText(userpos, item->textDisplay);
-        userpos.setX(style.rect.right() - 72);
+        userpos.setX(style.rect.right() - 81);
         painter->setFont(timeFont);
         painter->setPen(pen);
         painter->drawStaticText(userpos, item->textTimestamp);
         position.ry() += item->userHeight;
     }
     else if(item->timeHint) {
-        position.setX(style.rect.right() - 72);
+        position.setX(style.rect.right() - 81);
         painter->setFont(timeFont);
         painter->drawStaticText(position, item->textTimestamp);
     }
 
+//    QLine line;
     painter->setFont(textFont);
-    position.setX(style.rect.left() + 20);
+    position.setX(style.rect.left());
     item->textLayout.draw(painter, position);
     painter->setFont(style.font);
+//    painter->drawLine();
 
     // TODO: Force paint a top line in view if no headers visible...
     /*
