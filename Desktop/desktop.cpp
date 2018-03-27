@@ -36,6 +36,7 @@
 #include <csignal>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMutex>
 
 static int result = 0;
 
@@ -519,7 +520,7 @@ void Desktop::appState(Qt::ApplicationState state)
         break;
     }
 
-    qDebug() << "Application State" << state;
+//    qDebug() << "Application State" << state;             // disabled because it is always openning application output every few second
 }
 
 void Desktop::menuClicked()
@@ -788,7 +789,7 @@ void Desktop::exportDb(void)
     }
     else if(storage->copyDb(dbName) != 0)
     {
-        QMessageBox::warning(this, tr("Unable to backup the database"),tr("Database cannot be backed up"));
+        QMessageBox::warning(this, tr("Unable to backup the database"),tr("Database cannot be backed up backup file already exist."));
     }
     else
     {
@@ -813,16 +814,19 @@ void Desktop::importDb(void)
     storage = nullptr;
 
 
-
+    auto ext = credentials()["extension"].toString();
+    auto lab = credentials()["label"].toString();
+    QString filename = ext + "-" + lab + "-" + "backup.db";
     ui.toolBar->hide();
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
+
     if(!Storage::importDb(dbName, Credentials)) {
         QMessageBox::warning(this, tr("Unable to import database"),tr("Database backup do not exist"));
     }
     else {
-        QMessageBox::information(this, tr("Database succesfully restored"),tr("Database imported from the file backup.db"));
+        QMessageBox::information(this, tr("Database succesfully restored"),tr("Database imported from the file") + filename);
         storage = new Storage(dbName, "");
         if(storage && !storage->isActive()) {
             errorMessage(tr("*** Restore failed ***"));

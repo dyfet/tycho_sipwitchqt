@@ -39,6 +39,7 @@ static QList<QString> monthOfYear;
 static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
 static QColor groupColor(0, 96, 120);
+static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
 session(sid)
@@ -192,7 +193,15 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     dateHeight = userHeight = textHeight = leadHeight = 0;
     textLayout.clearLayout();
     textLines.clear();
-
+    dynamicLine = (textFont.pointSize() - 3) * 8;
+    if (dynamicLine < 42)
+        dynamicLine = 50;
+    else if (dynamicLine < 83)
+        dynamicLine -= 15 ;
+    else if (dynamicLine > 83 )
+        dynamicLine -= 20 ;
+    else if (dynamicLine > 100)
+        dynamicLine -= 35 ;
     if(dateHint) {
         QString dateString = dayToday;
         auto today = Util::currentDay();
@@ -207,7 +216,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         }
 
         textDateline.setTextOption(textCentered);
-        textDateline.setTextWidth(96);
+        textDateline.setTextWidth(dynamicLine);
         textDateline.setText(dateString);
         textDateline.prepare(QTransform(), boldFont);
         dateHeight = QFontInfo(boldFont).pixelSize() + 4;
@@ -225,8 +234,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             status = "#";
 
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(72);
-        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()).replace(QString("m"), QString()));
+        textTimestamp.setTextWidth(dynamicLine);
+        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
         textStatus.setText(status + msgFrom->textNumber);
         textDisplay.setText(msgFrom->textDisplay);
         textDisplay.setTextFormat(Qt::RichText);
@@ -236,8 +245,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     else if(timeHint)
     {
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(72);
-        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()).replace(QString("m"), QString()));
+        textTimestamp.setTextWidth(dynamicLine);
+        textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
     }
 
     textLayout.setFont(textFont);
@@ -254,7 +263,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             break;
 
         line.setLeadingIncluded(false);
-        line.setLineWidth(width - 48);
+        line.setLineWidth(width - dynamicLine);
         line.setPosition(QPointF(0, textHeight));
         textHeight += line.height();
     }
@@ -378,8 +387,10 @@ QStyledItemDelegate(parent)
 
     userFont.setPointSize(userFont.pointSize() - 1);
     textFont.setPointSize(textFont.pointSize() + 1);
-    timeFont.setWeight(10);
-    timeFont.setPixelSize(9);
+//    timeFont.setWeight(10);
+    timeFont.setPointSize(textFont.pointSize() - 3);
+    if(timeFont.pointSize() <7)
+        timeFont.setPointSize(6);
     boldFont.setBold(true);
 
     monoFont = QFont("monospace");
@@ -455,7 +466,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
-    const int increment = (int)(userFont.pointSize() * 6);
+    const int increment = (int)(userFont.pointSize() * 3.7);
 
     if(!session || row < 0 || row > session->filtered.count())
         return;
@@ -492,22 +503,24 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         painter->drawStaticText(userpos, item->textStatus);
         userpos.rx() += increment;
         painter->drawStaticText(userpos, item->textDisplay);
-        userpos.setX(style.rect.right() - 72);
+        userpos.setX(style.rect.right() - dynamicLine);
         painter->setFont(timeFont);
         painter->setPen(pen);
         painter->drawStaticText(userpos, item->textTimestamp);
         position.ry() += item->userHeight;
     }
     else if(item->timeHint) {
-        position.setX(style.rect.right() - 72);
+        position.setX(style.rect.right() - dynamicLine);
         painter->setFont(timeFont);
         painter->drawStaticText(position, item->textTimestamp);
     }
 
+//    QLine line;
     painter->setFont(textFont);
-    position.setX(style.rect.left() + 20);
+    position.setX(style.rect.left());
     item->textLayout.draw(painter, position);
     painter->setFont(style.font);
+//    painter->drawLine();
 
     // TODO: Force paint a top line in view if no headers visible...
     /*

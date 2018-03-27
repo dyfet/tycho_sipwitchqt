@@ -752,6 +752,11 @@
             </property>
             <item>
              <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
               <string>7</string>
              </property>
             </item>
@@ -1270,8 +1275,8 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>fontSize</tabstop>
   <tabstop>expires</tabstop>
+  <tabstop>resetFont</tabstop>
   <tabstop>horizontalSlider_2</tabstop>
   <tabstop>horizontalSlider</tabstop>
   <tabstop>appearance</tabstop>
@@ -1298,6 +1303,12 @@
   <tabstop>speed7</tabstop>
   <tabstop>speed8</tabstop>
   <tabstop>speed9</tabstop>
+  <tabstop>ImportDb</tabstop>
+  <tabstop>listDevices</tabstop>
+  <tabstop>testButton</tabstop>
+  <tabstop>ExportDb</tabstop>
+  <tabstop>fontSize</tabstop>
+  <tabstop>pickfontbutton</tabstop>
  </tabstops>
  <resources>
   <include location="../Resources/desktop.qrc"/>
