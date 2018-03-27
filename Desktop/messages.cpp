@@ -192,7 +192,13 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     dateHeight = userHeight = textHeight = leadHeight = 0;
     textLayout.clearLayout();
     textLines.clear();
-
+    int dynamicLine = (textFont.pointSize() - 3) * 8;
+    if (dynamicLine < 60)
+        dynamicLine = 60;
+    if (dynamicLine > 83)
+        dynamicLine -= 20 ;
+    if (dynamicLine > 100)
+        dynamicLine -= 25 ;
     if(dateHint) {
         QString dateString = dayToday;
         auto today = Util::currentDay();
@@ -225,7 +231,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             status = "#";
 
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(81);
+        textTimestamp.setTextWidth(dynamicLine);
         textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
         textStatus.setText(status + msgFrom->textNumber);
         textDisplay.setText(msgFrom->textDisplay);
@@ -236,7 +242,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     else if(timeHint)
     {
         textTimestamp.setTextOption(textRight);
-        textTimestamp.setTextWidth(81);
+        textTimestamp.setTextWidth(dynamicLine);
         textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
     }
 
@@ -254,7 +260,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             break;
 
         line.setLeadingIncluded(false);
-        line.setLineWidth(width - 75);
+        line.setLineWidth(width - dynamicLine);
         line.setPosition(QPointF(0, textHeight));
         textHeight += line.height();
     }
@@ -381,7 +387,7 @@ QStyledItemDelegate(parent)
 //    timeFont.setWeight(10);
     timeFont.setPointSize(textFont.pointSize() - 3);
     if(timeFont.pointSize() <7)
-        timeFont.setPointSize(7);
+        timeFont.setPointSize(6);
     boldFont.setBold(true);
 
     monoFont = QFont("monospace");
