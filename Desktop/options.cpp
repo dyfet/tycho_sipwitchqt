@@ -75,12 +75,12 @@ QWidget(), desktop(control)
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
 
         int change = 0;
-        if (ind == 0){ change = 8 ; }
-        else if (ind == 1) { change = 10; }
-        else if (ind == 2) { change = 13; }
-        else if (ind == 3) { change = 15; }
-        else if (ind == 4) { change = 18; }
-        else if (ind == 5) { change = 21; }
+        if (ind == 0){ change = 6 ; }
+        else if (ind == 1) { change = 8; }
+        else if (ind == 2) { change = 10; }
+        else if (ind == 3) { change = 13; }
+        else if (ind == 4) { change = 15; }
+        else if (ind == 5) { change = 18; }
 
 
         auto stupidfont = control->getCurrentFont();

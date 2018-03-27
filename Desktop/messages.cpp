@@ -39,6 +39,7 @@ static QList<QString> monthOfYear;
 static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
 static QColor groupColor(0, 96, 120);
+static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
 session(sid)
@@ -192,13 +193,15 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     dateHeight = userHeight = textHeight = leadHeight = 0;
     textLayout.clearLayout();
     textLines.clear();
-    int dynamicLine = (textFont.pointSize() - 3) * 8;
-    if (dynamicLine < 60)
-        dynamicLine = 60;
-    if (dynamicLine > 83)
+    dynamicLine = (textFont.pointSize() - 3) * 8;
+    if (dynamicLine < 42)
+        dynamicLine = 50;
+    else if (dynamicLine < 83)
+        dynamicLine -= 15 ;
+    else if (dynamicLine > 83 )
         dynamicLine -= 20 ;
-    if (dynamicLine > 100)
-        dynamicLine -= 25 ;
+    else if (dynamicLine > 100)
+        dynamicLine -= 35 ;
     if(dateHint) {
         QString dateString = dayToday;
         auto today = Util::currentDay();
@@ -213,7 +216,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         }
 
         textDateline.setTextOption(textCentered);
-        textDateline.setTextWidth(96);
+        textDateline.setTextWidth(dynamicLine);
         textDateline.setText(dateString);
         textDateline.prepare(QTransform(), boldFont);
         dateHeight = QFontInfo(boldFont).pixelSize() + 4;
@@ -500,14 +503,14 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         painter->drawStaticText(userpos, item->textStatus);
         userpos.rx() += increment;
         painter->drawStaticText(userpos, item->textDisplay);
-        userpos.setX(style.rect.right() - 81);
+        userpos.setX(style.rect.right() - dynamicLine);
         painter->setFont(timeFont);
         painter->setPen(pen);
         painter->drawStaticText(userpos, item->textTimestamp);
         position.ry() += item->userHeight;
     }
     else if(item->timeHint) {
-        position.setX(style.rect.right() - 81);
+        position.setX(style.rect.right() - dynamicLine);
         painter->setFont(timeFont);
         painter->drawStaticText(position, item->textTimestamp);
     }
