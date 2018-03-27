@@ -19,6 +19,7 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QCryptographicHash>
+#include <QDateTime>
 
 #ifdef DESKTOP_PREFIX
 
@@ -314,7 +315,8 @@ int Storage::copyDb(const QString &dbName){
     qDebug() << "Backup filename " << backupfilename <<  endl;
 
     FOR_DEBUG(
-     if (QFile::copy(storagePath(dbName),(QString(DESKTOP_PREFIX) + "/" +backupfilename)))
+    QString fullpath = QString(DESKTOP_PREFIX) + "/" +backupfilename;
+     if (QFile::copy(storagePath(dbName),(fullpath)))
          return 0;
      else
          return 1;
