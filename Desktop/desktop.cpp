@@ -783,7 +783,6 @@ void Desktop::listen(const QVariantHash& cred)
 // Calls the Storage::copyDb function to copy existing database
 void Desktop::exportDb(void)
 {
-    auto fullpath = Storage::fullpath;
     if(!storage) {
         QMessageBox::warning(this, tr("No active database"),tr("Database cannot be backed up"));
     }
