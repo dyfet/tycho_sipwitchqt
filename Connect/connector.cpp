@@ -245,6 +245,7 @@ void Connector::run()
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error, QDateTime(), 0);
             if(error != SIP_UNAUTHORIZED)
+                emit statusResult(error, "");
                 qDebug() << "*** FAILED" << error;
             if(error == 666)
                 emit failure(666);
@@ -276,6 +277,7 @@ void Connector::run()
                 }
                 break;
             default:
+                emit statusResult(event->response->status_code, "");
                 qDebug() << "*** ANSWER FAILURE" << event->response->status_code;
                 break;
             }

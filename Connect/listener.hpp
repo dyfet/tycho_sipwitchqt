@@ -74,6 +74,7 @@ private:
     int rid;
 
 signals:
+    void statusResult(int status, const QString& text);
     void changeStatus(const QByteArray bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void messageResult(int status);
