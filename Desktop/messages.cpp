@@ -38,7 +38,8 @@ static QList<QString> dayOfWeek;
 static QList<QString> monthOfYear;
 static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
-static QColor groupColor(0, 96, 120);
+static QColor selfColor(16, 120, 64);
+static QColor groupColor(0, 64, 120);
 static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
@@ -67,8 +68,10 @@ session(sid)
     }
 
     textString = text;
-    if(msgFrom == Phonebook::self())
+    if(msgFrom == Phonebook::self()) {
+        itemColor = selfColor;
         inbox = false;
+    }
     else
         inbox = true;
 
@@ -90,7 +93,7 @@ session(sid)
     msgBody = text.toUtf8();
     msgFrom = Phonebook::self();
     msgTo = session->contactItem();
-    itemColor = userColor;
+    itemColor = selfColor;
     userString = "@" + msgFrom->textNumber;
     textString = text;
     inbox = false;
@@ -136,13 +139,15 @@ session(nullptr), saved(false)
     }
 
     userString = session->status + msgFrom->textNumber;
-    if(sid == to)
+    if(msgFrom == Phonebook::self())
         inbox = false;
     else
         inbox = true;
 
     if(msgFrom->isGroup())
         itemColor = groupColor;
+    else if(!inbox)
+        itemColor = selfColor;
     else
         itemColor = userColor;
 }
@@ -240,6 +245,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         textDisplay.setText(msgFrom->textDisplay);
         textDisplay.setTextFormat(Qt::RichText);
         userHeight = QFontInfo(userFont).pixelSize() + 4;
+        if(!dateHint)
+            userHeight += 4;
         height += userHeight;
     }
     else if(timeHint)
@@ -498,6 +505,8 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     if(item->userHint) {
         auto userpos = position;
         auto pen = painter->pen();
+        if(!item->dateHint)
+            userpos.ry() += 4;
         painter->setFont(userFont);
         painter->setPen(item->itemColor);
         painter->drawStaticText(userpos, item->textStatus);

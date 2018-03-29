@@ -70,6 +70,7 @@ signals:
 	void finished();
     void failure(int code);
 
+    void statusResult(int status, const QString& text);
     void messageResult(int status, const QDateTime& timestamp, int sequence);
     void syncPending(const QByteArray& json);
     void changeRoster(const QByteArray& json);

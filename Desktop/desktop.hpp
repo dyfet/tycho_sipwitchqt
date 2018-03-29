@@ -210,9 +210,9 @@ signals:
     void changeFont();
 
 public slots:
+
     void closeDeviceList(void);
     void openDeviceList(void);
-
 
     void initial(void);
     void dockClicked();
@@ -240,6 +240,7 @@ private slots:
     void offline(void);                         // lost server connection
     void authorizing(void);                     // registering with server...
     void failed(int error_code);                // sip session fatal error
+    void statusResult(int status, const QString& text);
 
     void appState(Qt::ApplicationState state);
     void trayAction(QSystemTrayIcon::ActivationReason reason);

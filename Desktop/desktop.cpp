@@ -585,6 +585,44 @@ void Desktop::trayAction(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+void Desktop::statusResult(int status, const QString& text)
+{
+    QString msg;
+
+    switch(status) {
+    case SIP_OK:
+        if(text.isEmpty())
+            clearMessage();
+        else
+            statusMessage(text);
+        return;
+    case SIP_NOT_FOUND:
+    case SIP_DOES_NOT_EXIST_ANYWHERE:
+        msg = tr("Unknown extension or name used");
+        break;
+    case SIP_FORBIDDEN:
+    case SIP_UNAUTHORIZED:
+    case SIP_METHOD_NOT_ALLOWED:
+        msg = tr("Unauthorized or invalid request");
+        break;
+    case SIP_INTERNAL_SERVER_ERROR:
+        msg = tr("Server request failed");
+        break;
+    case 666:
+        failed(666);
+        return;
+    default:
+        msg = tr("Request failed or rejected");
+        break;
+    }
+
+    if(!text.isEmpty())
+        msg = text;
+
+    if(!msg.isEmpty())
+        errorMessage(msg);
+}
+
 void Desktop::failed(int error_code)
 {
     offline();
@@ -756,7 +794,7 @@ void Desktop::authorized(const QVariantHash& creds)
         emit changeConnector(connector);
         statusMessage(tr("online"));
         connect(connector, &Connector::failure, this, &Desktop::failed);
-
+        connect(connector, &Connector::statusResult, this, &Desktop::statusResult);
     }
     setState(ONLINE);
 }
@@ -776,6 +814,7 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
     connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
+    connect(listener, &Listener::statusResult, this, &Desktop::statusResult);
     sessions->listen(listener);
     listener->start();
     authorizing();

@@ -344,7 +344,7 @@ void Listener::run()
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error);
             else
-                dump(event->request);
+                emit statusResult(error, "");
             qDebug() << "*** REQUEST FAILED" << error;
             break;
         case EXOSIP_MESSAGE_NEW:
