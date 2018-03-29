@@ -8,7 +8,9 @@ CREATE TABLE Switches (
     version VARCHAR(8) NOT NULL,          -- db series supported
     uuid CHAR(36) NOT NULL,               -- switch uuid
     last DATETIME,
-    PRIMARY KEY (uuid));
+    PRIMARY KEY (uuid)
+    );
+
 
 CREATE TABLE Authorize (
     name VARCHAR(32),                     -- authorizing user or group id
@@ -22,7 +24,8 @@ CREATE TABLE Authorize (
     fwd_away INTEGER DEFAULT -1,          -- forward offline/away
     fwd_busy INTEGER DEFAULT -1,          -- forward busy
     fwd_answer INTEGER DEFAULT -1,        -- forward no answer
-    PRIMARY KEY (name));
+    PRIMARY KEY (name)
+);
 
 CREATE TABLE Extensions (
     number INTEGER NOT NULL,              -- ext number
@@ -33,7 +36,8 @@ CREATE TABLE Extensions (
     display VARCHAR(64),                  -- can override group display
     PRIMARY KEY (number),
     FOREIGN KEY (name) REFERENCES Authorize(name)
-        ON DELETE CASCADE);
+        ON DELETE CASCADE
+);
 
 CREATE TABLE Endpoints (
     endpoint INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +47,8 @@ CREATE TABLE Endpoints (
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     last DATETIME DEFAULT 0,
     FOREIGN KEY (number) REFERENCES Extensions(number)
-        ON DELETE CASCADE);
+        ON DELETE CASCADE
+);
 
 CREATE UNIQUE INDEX Registry ON Endpoints(number, label);
 
@@ -56,7 +61,8 @@ CREATE TABLE Speeds (
     number INTEGER,                       -- speed dial --
     CONSTRAINT dialing PRIMARY KEY (name, number),
     FOREIGN KEY (name) REFERENCES Authorize(name)
-        ON DELETE CASCADE);
+        ON DELETE CASCADE
+);
 
 CREATE TABLE Calling (
     name VARCHAR(32),                     -- group hunt is part of
@@ -65,7 +71,8 @@ CREATE TABLE Calling (
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE,
     FOREIGN KEY (number) REFERENCES Extensions(number)
-        ON DELETE CASCADE);
+        ON DELETE CASCADE
+);
 
 CREATE TABLE Admin (
     name VARCHAR(32),                     -- group permission is for
@@ -73,17 +80,17 @@ CREATE TABLE Admin (
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE,
     FOREIGN KEY (number) REFERENCES Extensions(number)
-        ON DELETE CASCADE);
+        ON DELETE CASCADE
+);
 
 CREATE TABLE Groups (
     pilot INTEGER,                        -- group tied to
     member INTEGER,                       -- group member extension
     priority INTEGER DEFAULT -1,          -- coverage priority
     CONSTRAINT Grouping PRIMARY KEY (pilot, member),
-    FOREIGN KEY (pilot) REFERENCES Extension(number)
-        ON DELETE CASCADE,
-    FOREIGN KEY (member) REFERENCES Extensions(number)
-        ON DELETE CASCADE);
+    FOREIGN KEY (pilot) REFERENCES Extension(number)  ON DELETE CASCADE,
+    FOREIGN KEY (member) REFERENCES Extensions(number) ON DELETE CASCADE
+);
 
 CREATE TABLE Providers (
     contact VARCHAR(128) NOT NULL,        -- provider host uri
@@ -91,7 +98,8 @@ CREATE TABLE Providers (
     userid VARCHAR(32) NOT NULL,          -- auth code
     passwd VARCHAR(128) NOT NULL,         -- password to hash from
     display VARCHAR(64) NOT NULL,         -- provider short name
-    PRIMARY KEY (contact));
+    PRIMARY KEY (contact)
+);
 
 CREATE TABLE Messages (
     mid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,7 +111,9 @@ CREATE TABLE Messages (
     posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires TIMESTAMP,                    -- estimated expiration
     msgtype VARCHAR(8),
-    msgtext TEXT);
+    msgtext TEXT
+);
+
 
 CREATE TABLE Outboxes (
     mid INTEGER,
@@ -113,5 +123,6 @@ CREATE TABLE Outboxes (
     FOREIGN KEY (mid) REFERENCES Messages(mid)
         ON DELETE CASCADE,
     FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint)
-        ON DELETE CASCADE);,
-};
+        ON DELETE CASCADE
+);
+
