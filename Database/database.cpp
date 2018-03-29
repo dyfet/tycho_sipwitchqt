@@ -395,7 +395,6 @@ void Database::sendDeviceList(const Event& event)
         auto agent = record.value("agent").toString();
         auto resgistrated = record.value("created").toString();
         auto lastOnline = record.value("last").toString();
-
         QJsonObject profile {
             {"e", endpoint},
             {"n", extension},
