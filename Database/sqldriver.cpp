@@ -50,9 +50,9 @@ static QStringList sqliteTables = {
     "CREATE TABLE Extensions ("
         "extnbr INTEGER NOT NULL,"              // ext number
         "authname VARCHAR(32) DEFAULT '@nobody',"   // group affinity
-        "priority INTEGER DEFAULT 0,"           // ring/dial priority
+        "extpriority INTEGER DEFAULT 0,"           // ring/dial priority
         "callaccess INTEGER DEFAULT 0,"         // outgoing restrictions
-        "describe VARCHAR(64),"                 // location info
+        "extlocation VARCHAR(64),"              // location info
         "display VARCHAR(64),"                  // can override group display
         "PRIMARY KEY (extnbr),"
         "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
@@ -83,7 +83,7 @@ static QStringList sqliteTables = {
     "CREATE TABLE Calling ("
         "authname VARCHAR(32),"                     // group hunt is part of
         "extnbr INTEGER,"                       // extension # to ring
-        "priority INTEGER DEFAULT 0,"           // hunt group priority order
+        "extpriority INTEGER DEFAULT 0,"           // hunt group priority order
         "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
@@ -100,7 +100,7 @@ static QStringList sqliteTables = {
     "CREATE TABLE Groups ("
         "grpnbr INTEGER,"                       // group tied to
         "extnbr INTEGER,"                       // group member extension
-        "priority INTEGER DEFAULT -1,"          // coverage priority
+        "extpriority INTEGER DEFAULT -1,"          // coverage priority
         "CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),"
         "FOREIGN KEY (grpnbr) REFERENCES Extension(extnbr) "
             "ON DELETE CASCADE,"
