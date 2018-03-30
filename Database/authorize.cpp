@@ -94,8 +94,8 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    auto endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
-    auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {number});
+    auto endpoint = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?)", {number, label});
+    auto extension = getRecord("SELECT * FROM Extensions WHERE extnbr=?", {number});
 
     if(extension.count() < 1) {
         warning() << "Cannot authorize " << number << "; not found";
@@ -106,10 +106,10 @@ void Authorize::findEndpoint(const Event& event)
     // a sipwitch client specific registration feature...
     if(event.initialize() == "label") {
         if(endpoint.count() < 1) {
-            warning() << "Initializing database for" << number << " with label " << label << endl;
-            runQuery("INSERT INTO Endpoints(number, label) VALUES (?,?);", {number, label});
-            endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
-            auto origin = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label='NONE')", {number});
+            warning() << "Initializing database for " << number << " with label " << label;
+            runQuery("INSERT INTO Endpoints(extnbr, label) VALUES (?,?);", {number, label});
+            endpoint = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?)", {number, label});
+            auto origin = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label='NONE')", {number});
             emit copyOutboxes(origin.value("endpoint").toLongLong(), endpoint.value("endpoint").toLongLong());
         }
     }
@@ -120,15 +120,15 @@ void Authorize::findEndpoint(const Event& event)
     }
 
     auto eid = endpoint.value("endpoint").toLongLong();
-    auto user = extension.value("name").toString();
-    auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
+    auto user = extension.value("authname").toString();
+    auto authorize = getRecord("SELECT * FROM Authorize WHERE authname=?", {user});
     if(authorize.count() < 1) {
         error() << "Extension " << number << " has no authorization";
         Context::reply(event, SIP_FORBIDDEN);
         return;
     }
 
-    auto type = authorize.value("type").toString();
+    auto type = authorize.value("authtype").toString();
     if(type != "USER" && type != "DEVICE") {
         warning() << "Cannot authorize " << number << " as a " << type.toLower();
         Context::reply(event, SIP_FORBIDDEN);
@@ -160,7 +160,7 @@ void Authorize::findEndpoint(const Event& event)
         {"realm", authorize.value("realm")},
         {"user", user},
         {"display", display},
-        {"digest", authorize.value("digest")},
+        {"digest", authorize.value("authdigest")},
         {"secret", authorize.value("secret")},
         {"number", number},
         {"label", label},

@@ -283,15 +283,15 @@ bool Database::create()
                      realm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
                      uuid, PROJECT_VERSION});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "system", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "nobody", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "anonymous", "SYSTEM", "DISABLED"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "operators", "SYSTEM", "PILOT"});
-        runQuery("INSERT INTO Extensions(number, name, display) VALUES (?,?,?);", {
+        runQuery("INSERT INTO Extensions(extnbr, authname, display) VALUES (?,?,?);", {
                      0, "operators", "Operators"});
         runQuery(Util::preloadConfig(driver));
     }
@@ -301,7 +301,7 @@ bool Database::create()
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT realm, series, dialing FROM Config WHERE id=1;");
+    query.prepare("SELECT * FROM Config WHERE id=1;");
     if(!query.exec()) {
         error() << "No config found " << driver;
         close();
@@ -310,7 +310,7 @@ bool Database::create()
     else if(query.next())
         config = query.record();
 
-    if(config.value("dialing").toString() == "STD3") {
+    if(config.value("dialplan").toString() == "STD3") {
         firstNumber = 100;
         lastNumber = 699;
     }
@@ -383,18 +383,19 @@ void Database::sendDeviceList(const Event& event)
 {
     qDebug() << "Seeking device list" << endl;
 
-    auto query = getRecords("SELECT * FROM Endpoints WHERE number=?;", {event.number()});
+    auto query = getRecords("SELECT * FROM Endpoints WHERE extnbr=?;", {event.number()});
 
     QJsonArray list;
     while(query.isActive() && query.next()) {
         qDebug() << "QUERY" << query.record();
         auto record = query.record();
         auto endpoint = record.value("endpoint").toString();
-        auto extension = record.value("number").toString();
+        auto extension = record.value("extnbr").toString();
         auto label = record.value("label").toString();
         auto agent = record.value("agent").toString();
         auto resgistrated = record.value("created").toString();
-        auto lastOnline = record.value("last").toString();
+        auto lastOnline = record.value("lastaccess").toString();
+
         QJsonObject profile {
             {"e", endpoint},
             {"n", extension},
@@ -441,7 +442,7 @@ void Database::localMessage(const Event& ev)
     // if from local extenion, validate it has endpoints, find outbox sync
     if(number > 0) {
         auto count = 0;
-        auto query = getRecords("SELECT endpoint, label FROM Endpoints WHERE number=?;", {number});
+        auto query = getRecords("SELECT endpoint, label FROM Endpoints WHERE extnbr=?;", {number});
         while(query.isActive() && query.next()) {
             auto record = query.record();
             auto label = record.value("label").toString().toUtf8();
@@ -466,9 +467,9 @@ void Database::localMessage(const Event& ev)
     if(to.isNumber()) {
         // see if group...
         auto count = 0;
-        auto query = getRecords("SELECT member FROM Groups WHERE pilot=?;", {to.toInt()});
+        auto query = getRecords("SELECT extnbr FROM Groups WHERE grpnbr=?;", {to.toInt()});
         while(query.isActive() && query.next()) {
-            auto member = query.record().value("member").toInt();
+            auto member = query.record().value("extnbr").toInt();
             // dont send to self in group...
             if(member != number)
                 targets << member;
@@ -480,9 +481,9 @@ void Database::localMessage(const Event& ev)
     else {
         // gather extensions by auth record for named public access
         QString name = QString::fromUtf8(to);
-        auto query = getRecords("SELECT number FROM Extensions WHERE name=?;", {name});
+        auto query = getRecords("SELECT extnbr FROM Extensions WHERE authname=?;", {name});
         while(query.isActive() && query.next()) {
-            targets << query.record().value("number").toInt();
+            targets << query.record().value("extnbr").toInt();
         }
     }
 
@@ -495,7 +496,7 @@ void Database::localMessage(const Event& ev)
 
     // now convert targets to an endpoint send list...
     foreach(auto target, targets) {
-        auto query = getRecords("SELECT endpoint FROM Endpoints WHERE number=?;", {target});
+        auto query = getRecords("SELECT endpoint FROM Endpoints WHERE extnbr=?;", {target});
         while(query.isActive() && query.next())
             sendList << query.record().value("endpoint").toLongLong();
     }
@@ -633,34 +634,34 @@ void Database::sendRoster(const Event& event)
 {
     qDebug() << "Seeking roster for" << event.number();
 
-    auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.name = Authorize.name ORDER BY Extensions.number");
+    auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname ORDER BY Extensions.extnbr");
 
     QJsonArray list;
     while(query.isActive() && query.next()) {
         auto record = query.record();
-        auto name = record.value("name").toString();
+        auto name = record.value("authname").toString();
         auto display = record.value("display").toString();
-        auto dialing = record.value("number").toString();
+        auto dialing = record.value("extnbr").toString();
         auto email = record.value("email").toString();
-        auto access = record.value("access").toString();
+        auto access = record.value("authaccess").toString();
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
-            display = record.value("name").toString();
+            display = record.value("authname").toString();
 
         UString uri = event.uriTo(dialing);
         QJsonObject profile {
             {"a", name},
-            {"n", record.value("number").toInt()},
+            {"n", record.value("extnbr").toInt()},
             {"u", QString::fromUtf8(uri)},
             {"d", display},
-            {"t", record.value("type").toString()},
+            {"t", record.value("authtype").toString()},
         };
 
         if(!email.isEmpty())
             profile.insert("e", email);
 
-        if(record.value("access").toString() == "REMOTE")
+        if(record.value("authaccess").toString() == "REMOTE")
             profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
 
         // qDebug() << "*** CONTACT" << profile;
