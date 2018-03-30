@@ -28,29 +28,29 @@ CREATE TABLE Authorize (
 );
 
 CREATE TABLE Extensions (
-    num INTEGER NOT NULL,              -- ext number
+    number INTEGER NOT NULL,              -- ext numberber
     name VARCHAR(32) DEFAULT '@nobody',   -- group affinity
     priority INTEGER DEFAULT 0,           -- ring/dial priority
     restric INTEGER DEFAULT 0,           -- outgoing restrictions
     description VARCHAR(64),                 -- location info
     display VARCHAR(64),                  -- can override group display
-    PRIMARY KEY (num),
+    PRIMARY KEY (number),
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE
 );
 
 CREATE TABLE Endpoints (
     endpoint INTEGER PRIMARY KEY AUTO_INCREMENT,
-    num INTEGER NOT NULL,              -- extension of endpoint
+    number INTEGER NOT NULL,              -- extension of endpoint
     label VARCHAR(32) DEFAULT 'NONE',      -- label id
     agent VARCHAR(64),                    -- agent id
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     last DATETIME DEFAULT 0,
-    FOREIGN KEY (num) REFERENCES Extensions(num)
+    FOREIGN KEY (number) REFERENCES Extensions(number)
         ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX Registry ON Endpoints(num, label);
+CREATE UNIQUE INDEX Registry ON Endpoints(number, label);
 
 -- the system speed dialing is system group 10-99
 -- per extension group personal speed dials 01-09 (--1---9)
@@ -58,28 +58,28 @@ CREATE UNIQUE INDEX Registry ON Endpoints(num, label);
 CREATE TABLE Speeds (
     name VARCHAR(32),                     -- speed dial for...
     target VARCHAR(128),                  -- local or external uri
-    num INTEGER,                       -- speed dial --
-    CONSTRAINT dialing PRIMARY KEY (name, num),
+    number INTEGER,                       -- speed dial --
+    CONSTRAINT dialing PRIMARY KEY (name, number),
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE
 );
 
 CREATE TABLE Calling (
     name VARCHAR(32),                     -- group hunt is part of
-    num INTEGER,                       -- extension -- to ring
+    number INTEGER,                       -- extension -- to ring
     priority INTEGER DEFAULT 0,           -- hunt group priority order
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE,
-    FOREIGN KEY (num) REFERENCES Extensions(num)
+    FOREIGN KEY (number) REFERENCES Extensions(number)
         ON DELETE CASCADE
 );
 
 CREATE TABLE Admin (
     name VARCHAR(32),                     -- group permission is for
-    num INTEGER,                       -- extension with permission
+    number INTEGER,                       -- extension with permission
     FOREIGN KEY (name) REFERENCES Authorize(name)
         ON DELETE CASCADE,
-    FOREIGN KEY (num) REFERENCES Extensions(num)
+    FOREIGN KEY (number) REFERENCES Extensions(number)
         ON DELETE CASCADE
 );
 
@@ -88,8 +88,8 @@ CREATE TABLE Groups (
     mem INTEGER,                       -- group member extension
     priority INTEGER DEFAULT -1,          -- coverage priority
     CONSTRAINT group PRIMARY KEY (pilot, mem),
-    FOREIGN KEY (pilot) REFERENCES Extension(num)  ON DELETE CASCADE,
-    FOREIGN KEY (mem) REFERENCES Extensions(num) ON DELETE CASCADE
+    FOREIGN KEY (pilot) REFERENCES Extension(number)  ON DELETE CASCADE,
+    FOREIGN KEY (mem) REFERENCES Extensions(number) ON DELETE CASCADE
 );
 
 CREATE TABLE Providers (
