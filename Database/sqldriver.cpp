@@ -24,8 +24,8 @@ static QStringList sqliteTables = {
     "CREATE TABLE Config ("
         "id INTEGER PRIMARY KEY,"               // rowid in sqlite
         "realm VARCHAR(128) NOT NULL,"          // site realm
-        "series INTEGER DEFAULT 9,"             // site db series
-        "dialing VARCHAR(8) DEFAULT 'STD3');",  // site dialing plan
+        "dbseries INTEGER DEFAULT 9,"             // site db series
+        "dialplan VARCHAR(8) DEFAULT 'STD3');",  // site dialing plan
 
     "CREATE TABLE Switches ("
         "version VARCHAR(8) NOT NULL,"          // db series # supported
@@ -42,9 +42,9 @@ static QStringList sqliteTables = {
         "authaccess VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
         "email VARCHAR(128),"                   // email contact to use (avatar, etc)
         "fullname VARCHAR(64),"                 // display name
-        "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
-        "fwd_busy INTEGER DEFAULT -1,"          // forward busy
-        "fwd_answer INTEGER DEFAULT -1,"        // forward no answer
+        "fwdaway INTEGER DEFAULT -1,"          // forward offline/away
+        "fwdbusy INTEGER DEFAULT -1,"          // forward busy
+        "fwdnoanswer INTEGER DEFAULT -1,"        // forward no answer
         "PRIMARY KEY (authname));",
 
     "CREATE TABLE Extensions ("

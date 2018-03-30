@@ -301,7 +301,7 @@ bool Database::create()
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT realm, series, dialing FROM Config WHERE id=1;");
+    query.prepare("SELECT * FROM Config WHERE id=1;");
     if(!query.exec()) {
         error() << "No config found " << driver;
         close();
@@ -310,7 +310,7 @@ bool Database::create()
     else if(query.next())
         config = query.record();
 
-    if(config.value("dialing").toString() == "STD3") {
+    if(config.value("dialplan").toString() == "STD3") {
         firstNumber = 100;
         lastNumber = 699;
     }

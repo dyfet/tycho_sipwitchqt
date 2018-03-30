@@ -106,7 +106,7 @@ void Authorize::findEndpoint(const Event& event)
     // a sipwitch client specific registration feature...
     if(event.initialize() == "label") {
         if(endpoint.count() < 1) {
-            warning() << "Initializing database for" << number << " with label " << label << endl;
+            warning() << "Initializing database for " << number << " with label " << label;
             runQuery("INSERT INTO Endpoints(extnbr, label) VALUES (?,?);", {number, label});
             endpoint = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?)", {number, label});
             auto origin = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label='NONE')", {number});
