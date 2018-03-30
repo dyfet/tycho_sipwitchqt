@@ -1,11 +1,11 @@
-### User Story sprint
+# User Story sprint
 
-## User Experience:
+### User Experience:
 
 
 * [ ] I as a user need _____________ functionality, so I can __________________.
 
 
-## Implementation related:
+### Implementation related:
 
 * [ ] Need to implement ______ so the functionality __________ can exist.
