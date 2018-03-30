@@ -19,6 +19,12 @@
 #include "sqldriver.hpp"
 
 #include <QStringList>
+#include <QFile>
+
+//void createTables(){
+
+//    QFile::open("sqlite.sql",QIODevice::ReadOnly);
+//}
 
 static QStringList sqliteTables = {
     "CREATE TABLE Config ("
