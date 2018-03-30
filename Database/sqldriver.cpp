@@ -34,8 +34,8 @@ static QStringList sqliteTables = {
         "PRIMARY KEY (uuid));",
 
     "CREATE TABLE Authorize ("
-        "name VARCHAR(32),"                     // authorizing user or group id
-        "type VARCHAR(8) DEFAULT 'USER',"       // group type
+        "authname VARCHAR(32),"                     // authorizing user or group id
+        "authtype VARCHAR(8) DEFAULT 'USER',"       // group type
         "digest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
@@ -45,17 +45,17 @@ static QStringList sqliteTables = {
         "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
         "fwd_busy INTEGER DEFAULT -1,"          // forward busy
         "fwd_answer INTEGER DEFAULT -1,"        // forward no answer
-        "PRIMARY KEY (name));",
+        "PRIMARY KEY (authname));",
 
     "CREATE TABLE Extensions ("
         "extnbr INTEGER NOT NULL,"              // ext number
-        "name VARCHAR(32) DEFAULT '@nobody',"   // group affinity
+        "authname VARCHAR(32) DEFAULT '@nobody',"   // group affinity
         "priority INTEGER DEFAULT 0,"           // ring/dial priority
         "callaccess INTEGER DEFAULT 0,"         // outgoing restrictions
         "describe VARCHAR(64),"                 // location info
         "display VARCHAR(64),"                  // can override group display
         "PRIMARY KEY (extnbr),"
-        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+        "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Endpoints ("
@@ -73,26 +73,26 @@ static QStringList sqliteTables = {
     // per extension group personal speed dials 01-09 (#1-#9)
 
     "CREATE TABLE Speeds ("
-        "name VARCHAR(32),"                     // speed dial for...
+        "authname VARCHAR(32),"                     // speed dial for...
         "target VARCHAR(128),"                  // local or external uri
         "extnbr INTEGER,"                       // speed dial #
-        "CONSTRAINT dialing PRIMARY KEY (name, extnbr),"
-        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+        "CONSTRAINT dialing PRIMARY KEY (authname, extnbr),"
+        "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Calling ("
-        "name VARCHAR(32),"                     // group hunt is part of
+        "authname VARCHAR(32),"                     // group hunt is part of
         "extnbr INTEGER,"                       // extension # to ring
         "priority INTEGER DEFAULT 0,"           // hunt group priority order
-        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+        "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Admin ("
-        "name VARCHAR(32),"                     // group permission is for
+        "authname VARCHAR(32),"                     // group permission is for
         "extnbr INTEGER,"                       // extension with permission
-        "FOREIGN KEY (name) REFERENCES Authorize(name) "
+        "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
@@ -147,23 +147,23 @@ static QStringList sqlitePragmas = {
 #ifdef PRELOAD_DATABASE
 static QStringList sqlitePreload = {
     // "test1" and "test2", for extensions 101 and 102, password is "testing"
-    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access) "
+    "INSERT INTO Authorize(authname, digest, realm, secret, fullname, authtype, access) "
         "VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');",
-    "INSERT INTO Authorize(name, digest, realm, secret, fullname, type, access, email) "
+    "INSERT INTO Authorize(authname, digest, realm, secret, fullname, authtype, access, email) "
         "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','REMOTE','test2@localhost');",
-    "INSERT INTO Authorize(name, fullname, type, access) "
+    "INSERT INTO Authorize(authname, fullname, authtype, access) "
         "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
-    "INSERT INTO Extensions(extnbr, name) VALUES(100, 'test');",
-    "INSERT INTO Extensions(extnbr, name) VALUES(101, 'test1');",
-    "INSERT INTO Extensions(extnbr, name) VALUES(102, 'test2');",
+    "INSERT INTO Extensions(extnbr, authname) VALUES(100, 'test');",
+    "INSERT INTO Extensions(extnbr, authname) VALUES(101, 'test1');",
+    "INSERT INTO Extensions(extnbr, authname) VALUES(102, 'test2');",
     "INSERT INTO Endpoints(extnbr) VALUES(101);",
     "INSERT INTO Endpoints(extnbr) VALUES(102);",
     "INSERT INTO Groups(grpnbr, extnbr) VALUES(100, 101);",
     "INSERT INTO Groups(grpnbr, extnbr) VALUES(100, 102);",
 
     // 101 sysop and group admin for testing
-    "INSERT INTO Admin(name, extnbr) VALUES('system', 101);",
-    "INSERT INTO Admin(name, extnbr) VALUES('test', 101);",
+    "INSERT INTO Admin(authname, extnbr) VALUES('system', 101);",
+    "INSERT INTO Admin(authname, extnbr) VALUES('test', 101);",
 };
 #else
 static QStringList sqlitePreload = {

@@ -283,15 +283,15 @@ bool Database::create()
                      realm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
                      uuid, PROJECT_VERSION});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
                      "system", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
                      "nobody", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
                      "anonymous", "SYSTEM", "DISABLED"});
-        runQuery("INSERT INTO Authorize(name, type, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
                      "operators", "SYSTEM", "PILOT"});
-        runQuery("INSERT INTO Extensions(extnbr, name, display) VALUES (?,?,?);", {
+        runQuery("INSERT INTO Extensions(extnbr, authname, display) VALUES (?,?,?);", {
                      0, "operators", "Operators"});
         runQuery(Util::preloadConfig(driver));
     }
@@ -481,7 +481,7 @@ void Database::localMessage(const Event& ev)
     else {
         // gather extensions by auth record for named public access
         QString name = QString::fromUtf8(to);
-        auto query = getRecords("SELECT extnbr FROM Extensions WHERE name=?;", {name});
+        auto query = getRecords("SELECT extnbr FROM Extensions WHERE authname=?;", {name});
         while(query.isActive() && query.next()) {
             targets << query.record().value("extnbr").toInt();
         }
@@ -634,12 +634,12 @@ void Database::sendRoster(const Event& event)
 {
     qDebug() << "Seeking roster for" << event.number();
 
-    auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.name = Authorize.name ORDER BY Extensions.extnbr");
+    auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname ORDER BY Extensions.extnbr");
 
     QJsonArray list;
     while(query.isActive() && query.next()) {
         auto record = query.record();
-        auto name = record.value("name").toString();
+        auto name = record.value("authname").toString();
         auto display = record.value("display").toString();
         auto dialing = record.value("extnbr").toString();
         auto email = record.value("email").toString();
@@ -647,7 +647,7 @@ void Database::sendRoster(const Event& event)
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
-            display = record.value("name").toString();
+            display = record.value("authname").toString();
 
         UString uri = event.uriTo(dialing);
         QJsonObject profile {
@@ -655,7 +655,7 @@ void Database::sendRoster(const Event& event)
             {"n", record.value("extnbr").toInt()},
             {"u", QString::fromUtf8(uri)},
             {"d", display},
-            {"t", record.value("type").toString()},
+            {"t", record.value("authtype").toString()},
         };
 
         if(!email.isEmpty())

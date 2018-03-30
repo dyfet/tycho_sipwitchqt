@@ -120,15 +120,15 @@ void Authorize::findEndpoint(const Event& event)
     }
 
     auto eid = endpoint.value("endpoint").toLongLong();
-    auto user = extension.value("name").toString();
-    auto authorize = getRecord("SELECT * FROM Authorize WHERE name=?", {user});
+    auto user = extension.value("authname").toString();
+    auto authorize = getRecord("SELECT * FROM Authorize WHERE authname=?", {user});
     if(authorize.count() < 1) {
         error() << "Extension " << number << " has no authorization";
         Context::reply(event, SIP_FORBIDDEN);
         return;
     }
 
-    auto type = authorize.value("type").toString();
+    auto type = authorize.value("authtype").toString();
     if(type != "USER" && type != "DEVICE") {
         warning() << "Cannot authorize " << number << " as a " << type.toLower();
         Context::reply(event, SIP_FORBIDDEN);
