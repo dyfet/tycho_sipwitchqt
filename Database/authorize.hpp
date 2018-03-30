@@ -27,7 +27,7 @@ class Authorize : public QObject
     friend class Database;
 
 public:
-    virtual ~Authorize();
+    ~Authorize() override;
 
     static Authorize *instance() {
         return Instance;

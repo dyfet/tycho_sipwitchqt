@@ -160,7 +160,7 @@ void Authorize::findEndpoint(const Event& event)
         {"realm", authorize.value("realm")},
         {"user", user},
         {"display", display},
-        {"digest", authorize.value("digest")},
+        {"digest", authorize.value("authdigest")},
         {"secret", authorize.value("secret")},
         {"number", number},
         {"label", label},

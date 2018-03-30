@@ -36,10 +36,10 @@ static QStringList sqliteTables = {
     "CREATE TABLE Authorize ("
         "authname VARCHAR(32),"                     // authorizing user or group id
         "authtype VARCHAR(8) DEFAULT 'USER',"       // group type
-        "digest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
+        "authdigest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
-        "access VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
+        "authaccess VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
         "email VARCHAR(128),"                   // email contact to use (avatar, etc)
         "fullname VARCHAR(64),"                 // display name
         "fwd_away INTEGER DEFAULT -1,"          // forward offline/away
@@ -147,11 +147,11 @@ static QStringList sqlitePragmas = {
 #ifdef PRELOAD_DATABASE
 static QStringList sqlitePreload = {
     // "test1" and "test2", for extensions 101 and 102, password is "testing"
-    "INSERT INTO Authorize(authname, digest, realm, secret, fullname, authtype, access) "
+    "INSERT INTO Authorize(authname, authdigest, realm, secret, fullname, authtype, authaccess) "
         "VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');",
-    "INSERT INTO Authorize(authname, digest, realm, secret, fullname, authtype, access, email) "
+    "INSERT INTO Authorize(authname, authdigest, realm, secret, fullname, authtype, authaccess, email) "
         "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','REMOTE','test2@localhost');",
-    "INSERT INTO Authorize(authname, fullname, authtype, access) "
+    "INSERT INTO Authorize(authname, fullname, authtype, authaccess) "
         "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
     "INSERT INTO Extensions(extnbr, authname) VALUES(100, 'test');",
     "INSERT INTO Extensions(extnbr, authname) VALUES(101, 'test1');",

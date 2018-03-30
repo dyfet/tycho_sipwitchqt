@@ -283,13 +283,13 @@ bool Database::create()
                      realm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
                      uuid, PROJECT_VERSION});
-        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "system", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "nobody", "SYSTEM", "LOCAL"});
-        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "anonymous", "SYSTEM", "DISABLED"});
-        runQuery("INSERT INTO Authorize(authname, authtype, access) VALUES(?,?,?);", {
+        runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "operators", "SYSTEM", "PILOT"});
         runQuery("INSERT INTO Extensions(extnbr, authname, display) VALUES (?,?,?);", {
                      0, "operators", "Operators"});
@@ -643,7 +643,7 @@ void Database::sendRoster(const Event& event)
         auto display = record.value("display").toString();
         auto dialing = record.value("extnbr").toString();
         auto email = record.value("email").toString();
-        auto access = record.value("access").toString();
+        auto access = record.value("authaccess").toString();
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
@@ -661,7 +661,7 @@ void Database::sendRoster(const Event& event)
         if(!email.isEmpty())
             profile.insert("e", email);
 
-        if(record.value("access").toString() == "REMOTE")
+        if(record.value("authaccess").toString() == "REMOTE")
             profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
 
         // qDebug() << "*** CONTACT" << profile;
