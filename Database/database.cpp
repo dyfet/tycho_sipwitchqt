@@ -301,7 +301,7 @@ bool Database::create()
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT * FROM Config WHERE id=1;");
+    query.prepare("SELECT * FROM Config;");
     if(!query.exec()) {
         error() << "No config found " << driver;
         close();

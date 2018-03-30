@@ -1,3 +1,12 @@
+-- init for mysql
+INSERT INTO Config(realm) VALUES ("testing");
+INSERT INTO Authorize(authname, authtype, authaccess) VALUES ("system", "SYSTEM", "LOCAL");
+
+INSERT INTO Authorize(authname, authtype, authaccess) VALUES("nobody", "SYSTEM", "LOCAL");
+INSERT INTO Authorize(authname, authtype, authaccess) VALUES("anonymous", "SYSTEM", "DISABLED");
+INSERT INTO Authorize(authname, authtype, authaccess) VALUES("operators", "SYSTEM", "PILOT");
+INSERT INTO Extensions(extnbr, authname, display) VALUES (0, "operators", "Operators");
+
 -- test1 and test2, for extensions 101 and 102, password is testing
 INSERT INTO Authorize(authname, authdigest, realm, secret, fullname, authtype, authaccess)
     VALUES('test1','MD5','testing','74d0a5bd38ed78708aacb9f056e40120','Test User #1','USER','LOCAL');
