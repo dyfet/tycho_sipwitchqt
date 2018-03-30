@@ -30,7 +30,7 @@ static QStringList sqliteTables = {
     "CREATE TABLE Switches ("
         "version VARCHAR(8) NOT NULL,"          // db series # supported
         "uuid CHAR(36) NOT NULL,"               // switch uuid
-        "last DATETIME,"
+        "lastaccess DATETIME,"
         "PRIMARY KEY (uuid));",
 
     "CREATE TABLE Authorize ("
@@ -64,7 +64,7 @@ static QStringList sqliteTables = {
         "label VARCHAR(32) DEFAULT 'NONE',"      // label id
         "agent VARCHAR(64),"                    // agent id
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
-        "last DATETIME DEFAULT 0,"
+        "lastaccess DATETIME DEFAULT 0,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
     "CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);",
