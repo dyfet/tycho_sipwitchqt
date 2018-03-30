@@ -85,11 +85,11 @@ CREATE TABLE Admin (
 
 CREATE TABLE Groups (
     pilot INTEGER,                        -- group tied to
-    mem INTEGER,                       -- group member extension
+    member INTEGER,                       -- group memberber extension
     priority INTEGER DEFAULT -1,          -- coverage priority
-    CONSTRAINT group PRIMARY KEY (pilot, mem),
+    CONSTRAINT group PRIMARY KEY (pilot, member),
     FOREIGN KEY (pilot) REFERENCES Extension(number)  ON DELETE CASCADE,
-    FOREIGN KEY (mem) REFERENCES Extensions(number) ON DELETE CASCADE
+    FOREIGN KEY (member) REFERENCES Extensions(number) ON DELETE CASCADE
 );
 
 CREATE TABLE Providers (
