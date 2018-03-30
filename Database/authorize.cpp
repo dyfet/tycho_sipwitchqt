@@ -94,8 +94,8 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
-    auto endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
-    auto extension = getRecord("SELECT * FROM Extensions WHERE number=?", {number});
+    auto endpoint = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?)", {number, label});
+    auto extension = getRecord("SELECT * FROM Extensions WHERE extnbr=?", {number});
 
     if(extension.count() < 1) {
         warning() << "Cannot authorize " << number << "; not found";
@@ -107,9 +107,9 @@ void Authorize::findEndpoint(const Event& event)
     if(event.initialize() == "label") {
         if(endpoint.count() < 1) {
             warning() << "Initializing database for" << number << " with label " << label << endl;
-            runQuery("INSERT INTO Endpoints(number, label) VALUES (?,?);", {number, label});
-            endpoint = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label=?)", {number, label});
-            auto origin = getRecord("SELECT * FROM Endpoints WHERE (number=?) AND (label='NONE')", {number});
+            runQuery("INSERT INTO Endpoints(extnbr, label) VALUES (?,?);", {number, label});
+            endpoint = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?)", {number, label});
+            auto origin = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label='NONE')", {number});
             emit copyOutboxes(origin.value("endpoint").toLongLong(), endpoint.value("endpoint").toLongLong());
         }
     }

@@ -48,26 +48,26 @@ static QStringList sqliteTables = {
         "PRIMARY KEY (name));",
 
     "CREATE TABLE Extensions ("
-        "number INTEGER NOT NULL,"              // ext number
+        "extnbr INTEGER NOT NULL,"              // ext number
         "name VARCHAR(32) DEFAULT '@nobody',"   // group affinity
         "priority INTEGER DEFAULT 0,"           // ring/dial priority
-        "restrict INTEGER DEFAULT 0,"           // outgoing restrictions
+        "callaccess INTEGER DEFAULT 0,"         // outgoing restrictions
         "describe VARCHAR(64),"                 // location info
         "display VARCHAR(64),"                  // can override group display
-        "PRIMARY KEY (number),"
+        "PRIMARY KEY (extnbr),"
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Endpoints ("
         "endpoint INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "number INTEGER NOT NULL,"              // extension of endpoint
+        "extnbr INTEGER NOT NULL,"               // extension of endpoint
         "label VARCHAR(32) DEFAULT 'NONE',"      // label id
         "agent VARCHAR(64),"                    // agent id
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "last DATETIME DEFAULT 0,"
-        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+        "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
-    "CREATE UNIQUE INDEX Registry ON Endpoints(number, label);",
+    "CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);",
 
     // the "system" speed dialing is system group 10-99
     // per extension group personal speed dials 01-09 (#1-#9)
@@ -75,36 +75,36 @@ static QStringList sqliteTables = {
     "CREATE TABLE Speeds ("
         "name VARCHAR(32),"                     // speed dial for...
         "target VARCHAR(128),"                  // local or external uri
-        "number INTEGER,"                       // speed dial #
-        "CONSTRAINT dialing PRIMARY KEY (name, number),"
+        "extnbr INTEGER,"                       // speed dial #
+        "CONSTRAINT dialing PRIMARY KEY (name, extnbr),"
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Calling ("
         "name VARCHAR(32),"                     // group hunt is part of
-        "number INTEGER,"                       // extension # to ring
+        "extnbr INTEGER,"                       // extension # to ring
         "priority INTEGER DEFAULT 0,"           // hunt group priority order
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE,"
-        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+        "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Admin ("
         "name VARCHAR(32),"                     // group permission is for
-        "number INTEGER,"                       // extension with permission
+        "extnbr INTEGER,"                       // extension with permission
         "FOREIGN KEY (name) REFERENCES Authorize(name) "
             "ON DELETE CASCADE,"
-        "FOREIGN KEY (number) REFERENCES Extensions(number) "
+        "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Groups ("
-        "pilot INTEGER,"                        // group tied to
-        "member INTEGER,"                       // group member extension
+        "grpnbr INTEGER,"                       // group tied to
+        "extnbr INTEGER,"                       // group member extension
         "priority INTEGER DEFAULT -1,"          // coverage priority
-        "CONSTRAINT Grouping PRIMARY KEY (pilot, member),"
-        "FOREIGN KEY (pilot) REFERENCES Extension(number) "
+        "CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),"
+        "FOREIGN KEY (grpnbr) REFERENCES Extension(extnbr) "
             "ON DELETE CASCADE,"
-        "FOREIGN KEY (member) REFERENCES Extensions(number) "
+        "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Providers ("
@@ -153,17 +153,17 @@ static QStringList sqlitePreload = {
         "VALUES('test2','MD5','testing','6d292c665b1ed72b8bfdbb5d45173d98','Test User #2','USER','REMOTE','test2@localhost');",
     "INSERT INTO Authorize(name, fullname, type, access) "
         "VALUES('test', 'Test Group', 'GROUP', 'LOCAL');",
-    "INSERT INTO Extensions(number, name) VALUES(100, 'test');",
-    "INSERT INTO Extensions(number, name) VALUES(101, 'test1');",
-    "INSERT INTO Extensions(number, name) VALUES(102, 'test2');",
-    "INSERT INTO Endpoints(number) VALUES(101);",
-    "INSERT INTO Endpoints(number) VALUES(102);",
-    "INSERT INTO Groups(pilot, member) VALUES(100, 101);",
-    "INSERT INTO Groups(pilot, member) VALUES(100, 102);",
+    "INSERT INTO Extensions(extnbr, name) VALUES(100, 'test');",
+    "INSERT INTO Extensions(extnbr, name) VALUES(101, 'test1');",
+    "INSERT INTO Extensions(extnbr, name) VALUES(102, 'test2');",
+    "INSERT INTO Endpoints(extnbr) VALUES(101);",
+    "INSERT INTO Endpoints(extnbr) VALUES(102);",
+    "INSERT INTO Groups(grpnbr, extnbr) VALUES(100, 101);",
+    "INSERT INTO Groups(grpnbr, extnbr) VALUES(100, 102);",
 
     // 101 sysop and group admin for testing
-    "INSERT INTO Admin(name, number) VALUES('system', 101);",
-    "INSERT INTO Admin(name, number) VALUES('test', 101);",
+    "INSERT INTO Admin(name, extnbr) VALUES('system', 101);",
+    "INSERT INTO Admin(name, extnbr) VALUES('test', 101);",
 };
 #else
 static QStringList sqlitePreload = {
