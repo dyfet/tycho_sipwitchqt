@@ -87,7 +87,7 @@ CREATE TABLE Groups (
     pilot INTEGER,                        -- group tied to
     member INTEGER,                       -- group memberber extension
     priority INTEGER DEFAULT -1,          -- coverage priority
-    CONSTRAINT group PRIMARY KEY (pilot, member),
+    CONSTRAINT group Unique (pilot, member),
     FOREIGN KEY (pilot) REFERENCES Extension(number)  ON DELETE CASCADE,
     FOREIGN KEY (member) REFERENCES Extensions(number) ON DELETE CASCADE
 );
