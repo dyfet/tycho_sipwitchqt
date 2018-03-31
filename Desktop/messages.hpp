@@ -24,6 +24,7 @@
 #include <QTextLayout>
 #include <QTextLine>
 #include <QStaticText>
+#include <QListView>
 #include "../Common/types.hpp"
 #include "phonebook.hpp"
 
@@ -83,8 +84,12 @@ public:
     void clearSearch() {
         while(formats.size() > textFormats)
             formats.removeLast();
+        clearHover();
     }
 
+    void clearHover();
+    bool hover(const QPoint& pos);
+    QString textClicked();
     void addSearch(int pos, int len);
     void findFormats();
     QSize layout(const QStyleOptionViewItem& style, int row, bool scrollHint = false);
@@ -107,6 +112,9 @@ private:
     bool saved;                         // for dup/failed save killing
     double dateHeight, userHeight, textHeight, leadHeight;
     int textFormats;
+    int textUnderline;
+    int lineHint;
+    bool userUnderline;
 
     QStaticText textStatus, textDisplay, textTimestamp, textDateline;
     QString textString, userString;
@@ -124,7 +132,8 @@ class MessageModel final : public QAbstractListModel
 
 public:
     MessageModel(SessionItem *list) : QAbstractListModel(), session(list) {}
-        
+
+    bool hover(const QModelIndex& index, const QPoint &pos);
     void fastUpdate(int count = 1);
     bool add(MessageItem *item);
     QModelIndex last();
@@ -133,6 +142,7 @@ public:
 
 private:
     SessionItem *session;
+    QModelIndex lastHover;
 
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
@@ -142,10 +152,17 @@ class MessageDelegate final : public QStyledItemDelegate
 {
 public:
     MessageDelegate(QWidget *parent);
+    ~MessageDelegate();
 
 private:
+    QListView *listView;
+
     QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
     void paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    bool eventFilter(QObject *list, QEvent *event) final;
+
+signals:
+    void clickedText(const QString& text);
 };
 
 #endif

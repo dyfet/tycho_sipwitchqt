@@ -28,6 +28,7 @@
 static QFont textFont;                      // default message text font
 static QFont timeFont;
 static QFont userFont;
+static QFont lineFont;
 static QFont monoFont;                      // default mono font
 static QFont boldFont;
 static int textHeight, monoHeight;
@@ -146,18 +147,21 @@ session(nullptr), saved(false)
         textString = QString::fromUtf8(msgBody);
     }
 
-    userString = session->status + msgFrom->textNumber;
-    if(msgFrom == Phonebook::self())
+    if(msgFrom->isGroup()) {
+        itemColor = groupColor;
+        userString = "#" + msgFrom->textNumber;
+    }
+    else {
+        itemColor = userColor;
+        userString = "@" + msgFrom->textNumber;
+    }
+
+    if(msgFrom == Phonebook::self()) {
         inbox = false;
+        itemColor = selfColor;
+    }
     else
         inbox = true;
-
-    if(msgFrom->isGroup())
-        itemColor = groupColor;
-    else if(!inbox)
-        itemColor = selfColor;
-    else
-        itemColor = userColor;
 
     findFormats();
 }
@@ -165,6 +169,9 @@ session(nullptr), saved(false)
 void MessageItem::findFormats()
 {
     textFormats = 0;
+    textUnderline = -1;
+    userUnderline = false;
+
     foreach(auto search, findMatches) {
         auto match = search.first.match(msgBody);
         auto pos = 0;
@@ -180,6 +187,67 @@ void MessageItem::findFormats()
             ++textFormats;
         }
     }
+}
+
+QString MessageItem::textClicked()
+{
+    if(userUnderline)
+        return userString.left(4);
+    else if(textUnderline > -1)
+        return textString.mid(formats[textUnderline].start, formats[textUnderline].length);
+    return QString();
+}
+
+void MessageItem::clearHover()
+{
+    if(textUnderline > -1) {
+        formats[textUnderline].format.setFontUnderline(false);
+        textUnderline = -1;
+    }
+    userUnderline = false;
+}
+
+bool MessageItem::hover(const QPoint& pos)
+{
+    auto priorUnderline = textUnderline;
+    auto priorUser = userUnderline;
+
+    if(!userHint || pos.y() > lineHint || pos.y() < (lineHint - userHeight))
+        userUnderline = false;
+    else
+        userUnderline = true;
+
+    if(textUnderline > -1)
+        formats[textUnderline].format.setFontUnderline(false);
+
+    textUnderline = -1;
+    if(pos.x() > 2 && pos.x() < lastHint.width() - dynamicLine && pos.y() > lineHint) {
+        auto bottom = lineHint;
+        auto count = 0;
+        foreach(auto line, textLines) {
+            bottom += line.height();
+            if(pos.y() < bottom)
+                break;
+            bottom += 4;
+            ++count;
+        }
+        if(count < textLines.count()) {
+            auto textPos = textLines[count].xToCursor(pos.x(), QTextLine::CursorOnCharacter);
+            auto entry = 0;
+            foreach(auto format, formats) {
+                if(textPos >= format.start && textPos < format.start + format.length) {
+                    textUnderline = entry;
+                    break;
+                }
+                if(++entry >= textFormats)
+                    break;
+            }
+        }
+    }
+
+    if(textUnderline > -1)
+        formats[textUnderline].format.setFontUnderline(true);
+    return (textUnderline != priorUnderline) || (userUnderline != priorUser);
 }
 
 void MessageItem::save()
@@ -305,7 +373,10 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     textLayout.setFont(textFont);
     textLayout.beginLayout();
 
+    lineHint = height;
     textHeight = 0;
+    textLines.clear();
+
     for(;;) {
         auto line = textLayout.createLine();
         if(!line.isValid())
@@ -315,6 +386,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         line.setLineWidth(width - dynamicLine);
         line.setPosition(QPointF(0, textHeight));
         textHeight += line.height();
+        textLines << line;
     }
     height += textHeight + 4;
 
@@ -428,13 +500,37 @@ QModelIndex MessageModel::last()
     return index(session->filtered.count() - 1);
 }
 
+bool MessageModel::hover(const QModelIndex& index, const QPoint& pos)
+{
+    auto row = lastHover.row();
+    lastHover = index;
+    if(row != index.row() && session && row >= 0 && row < session->filtered.count()) {
+        session->filtered[row]->clearHover();
+        emit dataChanged(index, index);
+    }
+
+    row = index.row();
+    if(!session || row < 0 || row >= session->filtered.count())
+        return false;
+
+    auto item = session->filtered[row];
+    if(item->hover(pos))
+        emit dataChanged(index, index);
+    return false;
+}
+
 MessageDelegate::MessageDelegate(QWidget *parent) :
 QStyledItemDelegate(parent)
 {
     auto desktop = Desktop::instance();
-    textFont = userFont = timeFont = boldFont = desktop->getCurrentFont();
 
+    listView = (static_cast<QListView*>(parent));
+    listView->viewport()->installEventFilter(this);
+
+    textFont = userFont = lineFont = timeFont = boldFont = desktop->getCurrentFont();
     userFont.setPointSize(userFont.pointSize() - 1);
+    lineFont.setPointSize(userFont.pointSize());
+    lineFont.setUnderline(true);
     textFont.setPointSize(textFont.pointSize() + 1);
 //    timeFont.setWeight(10);
     timeFont.setPointSize(textFont.pointSize() - 3);
@@ -490,6 +586,11 @@ QStyledItemDelegate(parent)
     monoHeight = QFontInfo(monoFont).pointSize();
 }
 
+MessageDelegate::~MessageDelegate()
+{
+    listView->removeEventFilter(this);
+}
+
 QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     auto row = index.row();
@@ -509,7 +610,7 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
 
     return item->layout(style, row);
 }
-#include <string>
+
 void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     auto row = index.row();
@@ -549,9 +650,13 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         auto pen = painter->pen();
         if(!item->dateHint)
             userpos.ry() += 4;
-        painter->setFont(userFont);
+        if(item->userUnderline)
+            painter->setFont(lineFont);
+        else
+            painter->setFont(userFont);
         painter->setPen(item->itemColor);
         painter->drawStaticText(userpos, item->textStatus);
+        painter->setFont(userFont);
         userpos.rx() += increment;
         painter->drawStaticText(userpos, item->textDisplay);
         userpos.setX(style.rect.right() - dynamicLine);
@@ -581,4 +686,40 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     else if(style.rect.y() < 1)
         qDebug() << "NO TOP";
     */
+}
+
+bool MessageDelegate::eventFilter(QObject *list, QEvent *event)
+{
+    switch(event->type()) {
+    case QEvent::MouseButtonRelease: {
+        auto session = Sessions::active();
+        if(!session)
+            break;
+
+        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto index = listView->indexAt(mpos);
+        auto row = index.row();
+        if(row < 0 || row >= session->filtered.count())
+            break;
+
+        auto text = session->filtered[row]->textClicked();
+        if(text.isEmpty())
+            break;
+
+        Sessions::instance()->clickedText(text);
+        break;
+    }
+    case QEvent::MouseMove: {
+        auto model = static_cast<MessageModel*>(listView->model());
+        if(!model)
+            break;
+        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto index = listView->indexAt(mpos);
+        model->hover(index, mpos - listView->visualRect(index).topLeft());
+        break;
+    }
+    default:
+        break;
+    }
+    return QStyledItemDelegate::eventFilter(list, event);
 }

@@ -183,19 +183,21 @@ public:
 
     void enter();
     void listen(Listener *listener);
+    QList<MessageItem *> searchMessages(const QString &searchTerm);
+    void clickedText(const QString& text);
 
     static SessionItem *active();
     static QModelIndex top();
-
-    // Testing this function
-    QList<MessageItem *> searchMessages(const QString &searchTerm);
-
-
+    static Sessions *instance() {
+        return Instance;
+    }
 
 private:
     Desktop *desktop;
     Connector *connector;
     SessionModel *model;
+
+    static Sessions *Instance;
 
     void resizeEvent(QResizeEvent *event) final;
 
@@ -209,8 +211,6 @@ public slots:
     void activateContact(ContactItem *item);
     void activateSelf();
     void refreshFont();
-
-
 
 private slots:
     void search();
