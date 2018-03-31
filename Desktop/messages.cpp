@@ -25,7 +25,6 @@
 #include <QTextOption>
 #include <QRegularExpression>
 
-static int currentSequence = 0;
 static QFont textFont;                      // default message text font
 static QFont timeFont;
 static QFont userFont;
@@ -497,13 +496,13 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     auto session = Sessions::active();
 
     if(!session || row < 0 || row > session->filtered.count())
-        return QSize(0, 0);
+        return {0, 0};
 
     auto item = session->filtered[row];
 
     // kills dups and invalids
     if(!item->saved)
-        return QSize(0, 0);
+        return {0, 0};
 
 //    if(item->lastHint.width() == style.rect.width())
 //        return item->lastHint;
@@ -516,7 +515,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
-    const int increment = (int)(userFont.pointSize() * 6);
+    auto increment = static_cast<int>(userFont.pointSize() * 6);
 
     if(!session || row < 0 || row > session->filtered.count())
         return;

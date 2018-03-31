@@ -33,18 +33,15 @@ public:
     UString(const std::string& ref) noexcept : QByteArray(ref.c_str()) {}
     UString(const char ch) noexcept : QByteArray() { append(ch); }
     UString(UString&& from) noexcept: QByteArray(std::move(from)) {}
-    UString(const UString& ref) noexcept : QByteArray(ref) {}
+    UString(const UString& ref) noexcept = default;
 
     explicit operator std::string() const {
         return std::string(constData());
     }
 
-    UString& operator=(const UString& ref) {
-        QByteArray::operator=(ref);
-        return *this;
-    }
+    UString& operator=(const UString& ref) = default;
 
-    UString& operator=(UString&& from) {
+    UString& operator=(UString&& from) noexcept {
         QByteArray::operator=(from);
         return *this;
     }

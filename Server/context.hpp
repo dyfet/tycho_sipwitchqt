@@ -43,13 +43,13 @@ public:
         UNAUTHENTICATED =   1 << 10,    // unathenticated requests allowed
     };
 
-    typedef struct {
+    using Schema = struct {
         UString name;
         UString uri;
         Protocol proto;
         quint16 inPort;
         int inProto;
-    } Schema;
+    };
 
     QAbstractSocket::NetworkLayerProtocol protocol();
 
@@ -93,7 +93,7 @@ public:
         return instanceCount > 0;
     }
 
-    const UString uriTo(const UString& id, QList<QPair<UString,UString>> args = QList<QPair<UString,UString>>()) const;
+    const UString uriTo(const UString& id, const QList<QPair<UString, UString> > &args = QList<QPair<UString,UString>>()) const;
     const UString uriFrom(const UString& id = UString()) const;
     const UString hostname() const;
     void applyHostnames(const QStringList& names, const QString& host);

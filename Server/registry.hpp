@@ -84,7 +84,7 @@ public:
         address.refresh(expires);
     }
 
-    inline bool allow(UString id) const {
+    inline bool allow(const UString& id) const {
         return allows.indexOf(id.toLower()) > -1;
     }
 

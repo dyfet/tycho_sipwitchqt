@@ -249,19 +249,19 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
     auto rows = highest + 1;
 
     if(row < 0 || row >= rows)
-        return QSize(0,0);
+        return {0, 0};
 
     auto item = local[row];
     if(item == nullptr || item->display().isEmpty())
-        return QSize(0, 0);
+        return {0, 0};
 
     auto filter = item->filter();
     if(searching.length() > 0 && filter.length() > 0) {
         if(filter.indexOf(searching) < 0 && searching != item->authUserId)
-            return QSize(0, 0);
+            return {0, 0};
     }
 
-    return QSize(ui.contacts->width(), CONST_CELLHIGHT);
+    return {ui.contacts->width(), CONST_CELLHIGHT};
 }
 
 void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -442,8 +442,8 @@ void Phonebook::changeStorage(Storage *storage)
         auto query = storage->getRecords("SELECT * FROM Contacts ORDER BY last DESC, sequence DESC");
         if(query.isActive()) {
             qDebug() << "***** LOADING CONTACTS, SELF=" << me;
-            while(query.next()) {
-                auto item = new ContactItem(query.record());
+            while(query.next()) {                               // NOLINT
+                auto item = new ContactItem(query.record());    // NOLINT
                 Q_UNUSED(item);
             }
             localModel = new LocalContacts(this);

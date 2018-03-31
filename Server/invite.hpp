@@ -62,7 +62,7 @@ class RemoteSegment final : public Segment
 public:
     RemoteSegment(int callid, Invite *ip, Provider *prov);   // standard provider
     RemoteSegment(int callid, Invite *ip, Context *ctx);     // p2p calls...
-    ~RemoteSegment();
+    ~RemoteSegment() final;
 
 private:
     const Provider *provider;

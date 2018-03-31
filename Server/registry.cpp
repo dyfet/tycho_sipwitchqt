@@ -114,7 +114,7 @@ Registry::~Registry()
     aliases.remove(userId, this);
 }
 
-void Registry::cleanup(void)
+void Registry::cleanup()
 {
     auto snapshot = registries;
     foreach(auto reg, snapshot) {

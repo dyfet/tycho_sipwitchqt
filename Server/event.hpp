@@ -37,8 +37,8 @@ class Event final
 public:
     Event();
     Event(eXosip_event_t *evt, Context *ctx);
-    Event(const Event& copy);
-    ~Event();
+    Event(const Event& copy) = default;
+    ~Event() = default;
 
     inline operator bool() const;
 

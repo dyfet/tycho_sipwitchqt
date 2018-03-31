@@ -821,7 +821,7 @@ void Desktop::listen(const QVariantHash& cred)
 }
 
 // Calls the Storage::copyDb function to copy existing database
-void Desktop::exportDb(void)
+void Desktop::exportDb()
 {
     if(!storage) {
         QMessageBox::warning(this, tr("No active database"),tr("Database cannot be backed up"));
@@ -841,7 +841,7 @@ void Desktop::exportDb(void)
 }
 
 // Import database after make sure that client has went offline.
-void Desktop::importDb(void)
+void Desktop::importDb()
 {
 
     Q_ASSERT(storage != nullptr);

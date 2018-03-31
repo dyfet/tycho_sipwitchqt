@@ -30,10 +30,10 @@ class RequestEvent final : public QEvent
 {
     Q_DISABLE_COPY(RequestEvent)
 public:
-    RequestEvent(int event, Request::ErrorResult error = Request::Success, const QList<QSqlRecord> results = QList<QSqlRecord>()) :
+    RequestEvent(int event, Request::ErrorResult error = Request::Success, const QList<QSqlRecord>& results = QList<QSqlRecord>()) :
     QEvent(static_cast<QEvent::Type>(event)), Results(results), Error(error) {}
 
-    ~RequestEvent();
+    ~RequestEvent() final;
 
     const QList<QSqlRecord> results() const {
         return Results;
@@ -48,7 +48,7 @@ private:
     Request::ErrorResult Error;
 };
 
-RequestEvent::~RequestEvent() {}
+RequestEvent::~RequestEvent() = default;
 
 // NOTE: Use case may be something like
 // emit DB_AUTHORIZE(new Request(this, event, &authResponse, 10000))
@@ -96,7 +96,7 @@ bool Request::cancelled()
 
 bool Request::event(QEvent *evt)
 {
-    int id = static_cast<int>(evt->type());
+    auto id = static_cast<int>(evt->type());
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
