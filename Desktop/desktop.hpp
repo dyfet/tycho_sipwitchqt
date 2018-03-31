@@ -66,14 +66,14 @@ class Desktop final : public QMainWindow
     Q_DISABLE_COPY(Desktop)
 
 public:
-    typedef enum {
+    enum state_t {
         INITIAL,
         OFFLINE,
         AUTHORIZING,
         CALLING,
         DISCONNECTING,
         ONLINE,
-    } state_t;
+    };
 
     Desktop(const QCommandLineParser& args);
 

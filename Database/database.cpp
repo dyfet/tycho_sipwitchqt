@@ -44,7 +44,7 @@ public:
     DatabaseEvent(int event, Request *req = nullptr) :
     QEvent(static_cast<QEvent::Type>(event)), request(req) {}
 
-    ~DatabaseEvent();
+    ~DatabaseEvent() final;
 
     Request *reply() const {
         return request;
@@ -54,7 +54,7 @@ private:
     Request *request;
 };
 
-DatabaseEvent::~DatabaseEvent() {}
+DatabaseEvent::~DatabaseEvent() = default;
 
 static bool failed = false;
 
@@ -342,7 +342,7 @@ int Database::getCount(const QString& id)
 
 bool Database::event(QEvent *evt)
 {
-    int id = static_cast<int>(evt->type());
+    auto id = static_cast<int>(evt->type());
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
@@ -356,8 +356,6 @@ bool Database::event(QEvent *evt)
         reply->notifyFailed();
         return true;
     }
-
-    int count = 0;
 
     switch(id) {
     case COUNT_EXTENSIONS:

@@ -36,9 +36,9 @@ class MessageItem final
 
     Q_DISABLE_COPY(MessageItem)
 public:
-    typedef enum {
+    enum type_t {
         TEXT_MESSAGE,
-    } type_t;
+    };
 
     MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence);
     MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString &text, const QDateTime& timestamp, int sequence, const UString &subject);

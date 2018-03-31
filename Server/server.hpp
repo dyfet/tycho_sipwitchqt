@@ -31,11 +31,11 @@
 
 #define SERVER_CONFIG   "CONFIG"
 
-typedef enum {
+enum SERVER_STATE {
     SERVER_RUNNING,
     SERVER_WATCHDOG,
     SERVER_STOPPED
-} SERVER_STATE;
+};
 
 class Server final : public QObject
 {
@@ -45,8 +45,8 @@ class Server final : public QObject
     friend class Control;
 
 public:
-    typedef enum { START, UP, SUSPENDED, DOWN } State;
-    typedef QByteArray Symbol;  // convenience type for env symbol string
+    enum State { START, UP, SUSPENDED, DOWN };
+    using Symbol = QByteArray;  // convenience type for env symbol string
 
     Server(int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
     ~Server();
@@ -109,7 +109,7 @@ public:
     static void resume();
 
 private:
-    typedef QHash<QString, Symbol> ServerEnv;
+    using ServerEnv = QHash<QString, Symbol>;
 
     QCoreApplication app;
 

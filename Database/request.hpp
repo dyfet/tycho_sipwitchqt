@@ -29,10 +29,10 @@
 
 class Request : public QObject
 {
-	Q_OBJECT
-	Q_DISABLE_COPY(Request)
+    Q_OBJECT
+    Q_DISABLE_COPY(Request)
 public:
-    typedef enum {
+    enum ErrorResult {
         Success = 0,        // successful query
         Timeout,            // query timed out
         DbFailed,           // database connect failure
@@ -40,9 +40,9 @@ public:
         Partial,            // partial result
         Invalid,            // query invalid
         Immediate,          // immediate result returned (same as success)
-    }   ErrorResult;
+    };
 
-    typedef void (QObject::*Reply)(ErrorResult, const Event&, const QList<QSqlRecord>&);
+    using Reply = void(&)(ErrorResult, const Event&, const QList<QSqlRecord>&);
 
     Request(QObject *parent, const Event& sip, int expires);
     Request(QObject *parent, const Event& sip, int expires, Reply method);
@@ -59,7 +59,7 @@ public:
 
     void notifySuccess(QSqlQuery &results, ErrorResult error = Success);
     void notifyFailed(ErrorResult error = DbFailed);
-	
+
 private:
     ErrorResult status;
     Event sipEvent;
@@ -71,7 +71,7 @@ signals:
     void results(ErrorResult, const Event&, const QList<QSqlRecord>&);
 
 private slots:
-	void timeout();
+    void timeout();
 };
 
 /*!
@@ -100,4 +100,4 @@ private slots:
  * \author David Sugar <tychosoft@gmail.com>
  */
 
-#endif	
+#endif
