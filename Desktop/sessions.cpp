@@ -20,6 +20,7 @@
 
 #include <QPainter>
 #include <QScrollBar>
+#include <QDesktopServices>
 
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
@@ -37,13 +38,12 @@ static QString userStatus = "@", groupStatus = "#";
 static QPen groupActive("blue"), groupDefault("black");
 static QPen onlineUser("green"), offlineUser("black"), busyUser("yellow");
 
+Sessions *Sessions::Instance = nullptr;
 SessionModel *SessionModel::Instance = nullptr;
 
 SessionItem::SessionItem(ContactItem *contactItem, bool active) :
 messageModel(nullptr)
 {
-
-
     contact = contactItem;
     contact->session = this;
 
@@ -92,8 +92,6 @@ SessionItem::~SessionItem()
         delete msg;
     }
 }
-
-
 
 void SessionItem::addMessage(MessageItem *msg)
 {
@@ -373,6 +371,9 @@ QWidget(), desktop(control), model(nullptr)
     ui.sessions->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.messages->setAttribute(Qt::WA_MacShowFocusRect, false);
 
+    Q_ASSERT(Instance == nullptr);
+    Instance = this;
+
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Sessions::search);
     connect(desktop, &Desktop::changeStorage, this, &Sessions::changeStorage);
     connect(desktop, &Desktop::changeConnector, this, &Sessions::changeConnector);
@@ -389,7 +390,7 @@ QWidget(), desktop(control), model(nullptr)
 
     SessionModel::purge();
     ui.sessions->setItemDelegate(new SessionDelegate(this));
-    ui.messages->setItemDelegate(new MessageDelegate(this));
+    ui.messages->setItemDelegate(new MessageDelegate(ui.messages));
 }
 
 void Sessions::resizeEvent(QResizeEvent *event)
@@ -431,6 +432,28 @@ void Sessions::enter()
 void Sessions::listen(Listener *listener)
 {
     connect(listener, &Listener::receiveText, this, &Sessions::receiveText);
+}
+
+void Sessions::clickedText(const QString& text)
+{
+    if(text[0] == '@' || text[0] == '#') {
+        ContactItem *item = nullptr;
+        auto number = text.mid(1).toInt();
+        if(number >= 0 && number < 1000)
+            item = ContactItem::findExtension(number);
+        if(item) {
+            activateContact(item);
+            desktop->statusMessage("");
+            return;
+        }
+        desktop->errorMessage("Extension " + text.mid(1) + " not found");
+        return;
+    }
+
+    if(text.left(7) != "http://" && text.left(8) != "https://")
+        QDesktopServices::openUrl("http://" + text);
+    else
+        QDesktopServices::openUrl(text);
 }
 
 void Sessions::search()
@@ -523,12 +546,11 @@ void Sessions::activateSession(SessionItem* item)
 void Sessions::refreshFont()
 {
     auto old = ui.messages->itemDelegate();
-    ui.messages->setItemDelegate(new MessageDelegate(this));
+    ui.messages->setItemDelegate(new MessageDelegate(ui.messages));
     delete old;
     activeItem->model()->changeLayout();
 
 }
-
 
 void Sessions::selectSession(const QModelIndex& index)
 {
