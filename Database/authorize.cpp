@@ -31,7 +31,6 @@ QObject(), db(nullptr)
     database = Database::instance();
     if(order) {
         auto thread = Server::createThread("authorize", order);
-        thread->setPriority(QThread::HighPriority);
         moveToThread(thread);
     }
     else
@@ -207,8 +206,12 @@ void Authorize::activate(const QVariantHash& config, bool opened)
             }
         }
     }
-    if(db)
+    if(db) {
+        thread()->setPriority(QThread::HighPriority);
         qDebug() << "Authorization thread activated";
+    }
+    else
+        thread()->setPriority(QThread::NormalPriority);
 }
 
 int Authorize::runQuery(const QStringList& list)

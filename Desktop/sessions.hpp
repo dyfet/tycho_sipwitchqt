@@ -106,6 +106,12 @@ public:
         inputText = text;
     }
 
+    void clearSearch() {
+        foreach(auto msg, filtered) {
+            msg->clearSearch();
+        }
+    }
+
     void addMessage(MessageItem *item);
     unsigned loadMessages();
     QString title();
@@ -182,7 +188,7 @@ public:
     static QModelIndex top();
 
     // Testing this function
-    QList<MessageItem *> searchMessages(QString searchterm);
+    QList<MessageItem *> searchMessages(QString searchTerm);
 
 
 

@@ -19,6 +19,12 @@
 #include "sqldriver.hpp"
 
 #include <QStringList>
+#include <QFile>
+
+//void createTables(){
+
+//    QFile::open("sqlite.sql",QIODevice::ReadOnly);
+//}
 
 static QStringList sqliteTables = {
     "CREATE TABLE Config ("
@@ -102,7 +108,7 @@ static QStringList sqliteTables = {
         "extnbr INTEGER,"                       // group member extension
         "extpriority INTEGER DEFAULT -1,"          // coverage priority
         "CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),"
-        "FOREIGN KEY (grpnbr) REFERENCES Extension(extnbr) "
+        "FOREIGN KEY (grpnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
