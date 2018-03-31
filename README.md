@@ -10,6 +10,8 @@ This is a newly written from scratch enterprise sip server which extends sipwitc
 
 One key difference between SipWitchQt and GNU SIPWitch is that all of the management to configure and control this new server is now contained in a simple Sql backend database.  Qt's Sql plugin support is used for generic access to backend databases such as MySQL, SQLite, etc.  Frictionless call support is to be achieved by isolating backend db queries to a separate thread and by smart caching of db records for active extensions.  By using a generic Sql backend, it also becomes very easy to write web based administrative and control front ends for SipWitchQt.
 
+Note: Development of this project is done over at https://gitlab.com/tychosoft/sipwitchqt/ and this is only ever few weeks push to mirror repository.
+
 ## Dependencies
 
 SipWitchQt requires libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, you can still enable bootstrap by modifying the project file, though it is recommended instead to package newer libraries for these.  For Fedora (and eventually Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
