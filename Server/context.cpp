@@ -381,7 +381,7 @@ const UString Context::uriFrom(const UString& id) const
     return schema.uri + id + "@" + uriAddress;
 }
 
-const UString Context::uriTo(const UString& id, const QList<QPair<UString, UString>> args) const
+const UString Context::uriTo(const UString& id, const QList<QPair<UString, UString>>& args) const
 {
     UString to = id;
     UString sep = "?";

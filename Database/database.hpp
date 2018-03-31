@@ -33,7 +33,7 @@ class Database final : public QObject
     friend class Authorize;
 
 public:
-    ~Database();
+    ~Database() final;
 
     bool isFile() const {
         return Util::dbIsFile(driver);
@@ -50,7 +50,7 @@ public:
     static QPair<int,int> range() {
         if(!Instance)
             return {0, 0};
-        return {(int)Instance->firstNumber, (int)Instance->lastNumber};
+        return {static_cast<int>(Instance->firstNumber), static_cast<int>(Instance->lastNumber)};
     }
 
     static int sequence() {

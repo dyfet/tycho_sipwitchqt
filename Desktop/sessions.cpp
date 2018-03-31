@@ -157,7 +157,7 @@ unsigned SessionItem::loadMessages()
     return count;
 }
 
-QList <MessageItem *> Sessions::searchMessages(QString searchTerm){
+QList <MessageItem *> Sessions::searchMessages(const QString& searchTerm){
     QList <MessageItem *> result = {};
     foreach (auto singleMessage, activeItem->messages) {
         singleMessage->clearSearch();
@@ -315,18 +315,18 @@ QSize SessionDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     auto rows = sessions.size();
 
     if(row < 0 || row >= rows)
-        return QSize(0,0);
+        return {0, 0};
 
     auto spacing = 0;
     auto item = sessions[row];
     auto contact = item->contact;
     if(contact == nullptr || item->display().isEmpty())
-        return QSize(0, 0);
+        return {0, 0};
 
     if(row == groups.size())
         spacing += 4;
 
-    return QSize(ui.sessions->width(), CONST_CELLHIGHT + spacing);
+    return {ui.sessions->width(), CONST_CELLHIGHT + spacing};
 }
 
 void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -399,7 +399,7 @@ void Sessions::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
     if(!active && activeItem) {
         active = true;
-        QTimer::singleShot(60, this, [this](){
+        QTimer::singleShot(60, this, [](){
             active = false;
             if(activeItem && activeItem->model())
                 activeItem->model()->changeLayout();
@@ -769,6 +769,7 @@ void Sessions::scrollToBottom()
 
 void Sessions::updateIndicators(SessionItem *item)
 {
+    Q_UNUSED(item);
     // TODO: sorting, marking unread, etc...
 }
 

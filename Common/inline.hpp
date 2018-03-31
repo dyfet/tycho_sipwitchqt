@@ -22,8 +22,7 @@
 
 namespace Util {
     template<typename T>
-    T clampRange(const T& value, const T& min, const T& max)
-    {
+    T clampRange(const T& value, const T& min, const T& max) {
         if(value < min)
             return min;
 
@@ -34,8 +33,7 @@ namespace Util {
     }
 
     template<typename T>
-    bool inRange(const T& value, const T& min, const T& max)
-    {
+    bool inRange(const T& value, const T& min, const T& max) {
         return !(value < min || value > max);
     }
 }

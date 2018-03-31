@@ -33,19 +33,19 @@
 class Contact final
 {
 public:
-    Contact(const UString& address, quint16 port, const UString& user = UString(), int duration = -1) noexcept;
+    Contact(const UString& address, quint16 port, const UString&  user = UString(), int duration = -1) noexcept;
     Contact(const QString& uri, QString server = QString()) noexcept;
     explicit Contact(osip_contact_t *contact) noexcept;
     Contact(const osip_uri_t *uri) noexcept;
     Contact() noexcept;
-    Contact(const Contact& from) noexcept;
+    Contact(const Contact& from) noexcept = default;
 
     Contact& operator+=(const Contact& from) {
         refresh(from);
         return *this;
     }
 
-    Contact& operator=(const Contact& from);
+    Contact& operator=(const Contact& from) = default;
 
     explicit operator bool() const {
         return hostPort != 0 && !hostName.isEmpty();

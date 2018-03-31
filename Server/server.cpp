@@ -56,11 +56,11 @@
 
 using namespace std;
 
-typedef struct {
+using Context = struct {
     QThread *thread;
     QThread::Priority priority;
     unsigned order;
-} Context;
+};
 
 enum {
     // server events...
@@ -81,7 +81,7 @@ public:
         exitReason = code;
     }
 
-    ~ServerEvent();
+    ~ServerEvent() final;
 
     int reason() const {
         return exitReason;
@@ -91,7 +91,7 @@ private:
     int exitReason;
 };
 
-ServerEvent::~ServerEvent() {}
+ServerEvent::~ServerEvent() = default;
 
 static bool notifySystemD = false;
 static int exitReason = 0;
@@ -413,7 +413,7 @@ int Server::start(QThread::Priority priority)
 
 bool Server::event(QEvent *evt)
 {
-    int id = static_cast<int>(evt->type());
+    auto id = static_cast<int>(evt->type());
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
@@ -488,7 +488,7 @@ QThread *Server::createThread(const QString& name, unsigned order, QThread::Prio
     if(RunState != START)
         return nullptr;
 
-    QThread *thread = new QThread;
+    auto thread = new QThread;
     thread->setObjectName(name);
     Context context = {thread, priority, order};
     contexts << context;

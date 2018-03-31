@@ -160,7 +160,7 @@ class Phonebook final : public QWidget
     Q_OBJECT
 public:
     Phonebook(Desktop *main, Sessions* sessionsPage);
-    ~Phonebook() = default;
+    ~Phonebook() final = default;
 
     void enter();
 

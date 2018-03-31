@@ -316,7 +316,7 @@ void Manager::createRegistration(const Event& event, const QVariantHash& endpoin
         Context::reply(event, SIP_NOT_FOUND);
     }
     else {
-        Registry *reg = new Registry(endpoint);
+        auto reg = new Registry(endpoint);
         if(!reg)
             Context::reply(event, SIP_INTERNAL_SERVER_ERROR);
         else

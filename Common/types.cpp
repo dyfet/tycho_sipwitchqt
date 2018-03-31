@@ -62,8 +62,7 @@ bool UString::isQuoted(const char *qc) const
     if(qc[1])
         q2[0] = qc[1];
 
-    return startsWith(q1) && endsWith(q2);
-
+    return startsWith(q1) && endsWith(q2); // NOLINT
 }
 
 UString UString::escape() const
@@ -100,10 +99,8 @@ UString UString::unquote(const char *qc) const
     if(qc[1])
         q2[0] = qc[1];
 
-    if(startsWith(q1) && endsWith(q2))
-        return mid(1, length() - 2);
+    return startsWith(q1) && endsWith(q2) ? mid(1, length() - 2) : trimmed(); // NOLINT
 
-    return trimmed();
 }
 
 UString UString::quote(const char *qc) const

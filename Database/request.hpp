@@ -55,7 +55,7 @@ public:
         return signalled;
     }
 
-    bool cancelled(void);
+    bool cancelled();
 
     void notifySuccess(QSqlQuery &results, ErrorResult error = Success);
     void notifyFailed(ErrorResult error = DbFailed);

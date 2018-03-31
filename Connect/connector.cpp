@@ -164,7 +164,7 @@ void Connector::requestDeviceList()
     eXosip_message_send_request(context, msg);
 }
 
-bool Connector::sendText(const UString& to, const UString& body, const UString subject)
+bool Connector::sendText(const UString& to, const UString& body, const UString& subject)
 {
     osip_message_t *msg = nullptr;
     UString sipTo = "<" + to + ">";

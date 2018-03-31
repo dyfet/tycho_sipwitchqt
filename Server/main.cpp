@@ -37,10 +37,6 @@ Main::Main(Server *server)
     connect(server, &Server::finished, this, &Main::onShutdown);
 }
 
-Main::~Main()
-{
-}
-
 void Main::onStartup()
 {
     debug() << "Control manager startup";
@@ -103,7 +99,7 @@ int main(int argc, char **argv)
     output() << "Config: " << server[SERVER_CONFIG];
 
     // validate global parsing results...
-    quint16 port = server[CURRENT_PORT].toShort();
+    quint16 port = server[CURRENT_PORT].toUShort();
     if(port < 100 || port > 65534 || port % 2)
         crit(95) << port << ": invalid sip port value";
 

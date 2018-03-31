@@ -65,32 +65,32 @@ public:
 
     static QThread *findThread(const QString& name);
 
-    inline static Server *instance(void) {
+    inline static Server *instance() {
         Q_ASSERT(Instance != nullptr);
         return Instance;
     }
 
-    inline static State state(void) {
+    inline static State state() {
         return RunState;
     }
 
-    inline static bool up(void) {
+    inline static bool up() {
         return RunState != START && RunState != DOWN;
     }
 
-    inline static bool verbose(void) {
+    inline static bool verbose() {
         return DebugVerbose;
     }
 
-    inline static QString uuid(void) {
+    inline static QString uuid() {
         return Uuid;
     }
 
-    inline static bool isService(void) {
+    inline static bool isService() {
         return RunAsService;
     }
 
-    inline static bool isDetached(void) {
+    inline static bool isDetached() {
         return RunAsDetached;
     }
 
@@ -98,7 +98,7 @@ public:
         return Env[key];
     }
 
-    inline static const QHash<QString, Symbol> env(void) {
+    inline static const QHash<QString, Symbol> env() {
         return Env;
     }
 

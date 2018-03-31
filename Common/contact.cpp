@@ -19,11 +19,13 @@
 #include "../Common/util.hpp"
 #include "contact.hpp"
 
-Contact::Contact(const UString& address, quint16 port, const UString& user, int duration) noexcept :
-userName(user), expiration(0)
+Contact::Contact(const UString& address, quint16 port, const UString& user, int duration) noexcept
 {
+    userName = user;
     hostName = address;
     hostPort = port;
+    expiration = 0;
+
     if(duration > -1) {
         time(&expiration);
         expiration += duration;
@@ -122,22 +124,9 @@ hostPort(0), expiration(0)
         hostPort = Util::portNumber(uri->port);
 }
 
-Contact::Contact(const Contact& from) noexcept :
-hostName(from.hostName), hostPort(from.hostPort), userName(from.userName), expiration(from.expiration)
-{
-}
-
 Contact::Contact() noexcept :
 hostPort(0), expiration(0)
 {
-}
-
-Contact& Contact::operator=(const Contact& from) {
-    hostName = from.hostName;
-    hostPort = from.hostPort;
-    userName = from.userName;
-    expiration = from.expiration;
-    return *this;
 }
 
 const UString Contact::toString() const {

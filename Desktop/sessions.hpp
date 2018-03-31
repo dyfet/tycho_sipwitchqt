@@ -181,14 +181,14 @@ class Sessions : public QWidget
 public:
     Sessions(Desktop *main);
 
-    void enter(void);
+    void enter();
     void listen(Listener *listener);
 
     static SessionItem *active();
     static QModelIndex top();
 
     // Testing this function
-    QList<MessageItem *> searchMessages(QString searchTerm);
+    QList<MessageItem *> searchMessages(const QString &searchTerm);
 
 
 

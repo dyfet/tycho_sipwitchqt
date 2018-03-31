@@ -275,15 +275,6 @@ Event::Event(eXosip_event_t *evt, Context *ctx)
     d = new Event::Data(evt, ctx, next);
 }
 
-Event::Event(const Event& copy) :
-d(copy.d)
-{
-}
-
-Event::~Event()
-{
-}
-
 const UString Event::text() const
 {
     UString result;

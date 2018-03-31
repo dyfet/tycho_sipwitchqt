@@ -117,7 +117,7 @@ public:
     }
 
 
-    inline void setTheFont(QFont font){         // set the global value of a basefont
+    inline void setTheFont(const QFont& font){         // set the global value of a basefont
         baseFont = font;
         settings.setValue("font", font.toString());
         emit changeFont();
@@ -211,24 +211,24 @@ signals:
 
 public slots:
 
-    void closeDeviceList(void);
-    void openDeviceList(void);
+    void closeDeviceList();
+    void openDeviceList();
 
-    void initial(void);
+    void initial();
     void dockClicked();
     void menuClicked();
 
-    void closeDialog(void);
-    void eraseLogout(void);
-    void closeLogout(void);
-    void openAbout(void);
-    void openLogout(void);
+    void closeDialog();
+    void eraseLogout();
+    void closeLogout();
+    void openAbout();
+    void openLogout();
 
-    void showOptions(void);
-    void showSessions(void);
-    void showPhonebook(void);
-    void exportDb(void);
-    void importDb(void);
+    void showOptions();
+    void showSessions();
+    void showPhonebook();
+    void exportDb();
+    void importDb();
 
     void changeAppearance(const QString& appearance);
     void changeExpiration(const QString& expiration);
@@ -237,8 +237,8 @@ public slots:
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized
-    void offline(void);                         // lost server connection
-    void authorizing(void);                     // registering with server...
+    void offline();                         // lost server connection
+    void authorizing();                     // registering with server...
     void failed(int error_code);                // sip session fatal error
     void statusResult(int status, const QString& text);
 
