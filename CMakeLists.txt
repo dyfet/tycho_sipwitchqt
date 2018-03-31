@@ -35,7 +35,7 @@ if(WIN32)
     set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    set(system_libs ssleay32 libeay32 advapi32 user32 crypt32 gdi32 ws2_32)
+    set(system_libs libssl libcrypto advapi32 user32 crypt32 gdi32 ws2_32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
 
@@ -124,6 +124,7 @@ file(GLOB dialogs_src Dialogs/*.cpp)
 file(GLOB dialogs_uic Dialogs/*.ui)
 file(GLOB markdown *.md)
 file(GLOB sipp_xml testdata/*.xml)
+file(GLOB database_sql Database/*.sql)
 file(GLOB desktop_ts Translations/sipwitchqt-desktop_*.ts)
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
@@ -151,7 +152,7 @@ add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 
-add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml})
+add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -192,8 +193,8 @@ if(BOOTSTRAP_PATH AND WIN32)
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
         COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libeay32.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libssl-1_1-x64.dll" .
+        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libcrypto-1_1-x64.dll" .
     )
 endif()
 
@@ -227,8 +228,8 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND xcopy /q "translations_autogen\\*.qm" "stage\\translations" >nul
             COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" stage
             COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" stage
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/ssleay32.dll" stage
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libeay32.dll" stage
+            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libssl-1_1-x64.dll" stage
+            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libcrypto-1_1.x64.dll" stage
             COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" stage/COPYING.txt
             COMMAND iscc setup.iss
             COMMAND "${CMAKE_COMMAND}" -E rename Setup.exe stage/Setup.exe

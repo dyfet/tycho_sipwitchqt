@@ -80,7 +80,7 @@ CREATE TABLE Groups (
     extnbr INTEGER,                       -- group member extension
     extpriority INTEGER DEFAULT -1,          -- coverage priority
     CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),
-    FOREIGN KEY (grpnbr) REFERENCES Extension(extnbr)
+    FOREIGN KEY (grpnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE,
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);

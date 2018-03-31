@@ -157,11 +157,19 @@ unsigned SessionItem::loadMessages()
     return count;
 }
 
-QList <MessageItem *> Sessions::searchMessages(QString searchterm){
+QList <MessageItem *> Sessions::searchMessages(QString searchTerm){
     QList <MessageItem *> result = {};
     foreach (auto singleMessage, activeItem->messages) {
-        if (QString::fromUtf8(singleMessage->body()).contains(searchterm))
+        singleMessage->clearSearch();
+        int len = searchTerm.length();
+        if (QString::fromUtf8(singleMessage->body()).contains(searchTerm)) {
+            int pos = 0;
+            while((pos =  singleMessage->body().indexOf(searchTerm, pos)) > -1 ) {
+                singleMessage->addSearch(pos, len);
+                ++pos;
+            }
             result += singleMessage;
+        }
     }
    return result;
 }
@@ -433,8 +441,11 @@ void Sessions::search()
     UString text = Toolbar::search()->text().toUtf8();
     Toolbar::search()->setText("");
     if(text.isEmpty()) {
-        activeItem->filtered = activeItem->messages;
-        activeItem->model()->changeLayout();
+        if(activeItem) {
+            activeItem->filtered = activeItem->messages;
+            activeItem->clearSearch();
+            activeItem->model()->changeLayout();
+        }
         return;
     }
 
@@ -503,6 +514,7 @@ void Sessions::activateSession(SessionItem* item)
     ui.input->setText(item->text());
     ui.input->setFocus();
     activeItem->filtered = activeItem->messages;
+    activeItem->clearSearch();
     Toolbar::setTitle(item->title());
     Toolbar::search()->setPlaceholderText("Search messages");
     item->loadMessages();
