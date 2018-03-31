@@ -417,8 +417,12 @@ void Phonebook::changeConnector(Connector *connected)
                     connector->requestRoster();
             });
         }
-        else
-            connector->requestPending();
+        else {
+            QTimer::singleShot(300, this, [this] {
+                if(connector)
+                    connector->requestPending();
+            });
+        }
     }
 }
 

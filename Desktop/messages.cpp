@@ -23,6 +23,7 @@
 #include <QFont>
 #include <QTextLayout>
 #include <QTextOption>
+#include <QRegularExpression>
 
 static int currentSequence = 0;
 static QFont textFont;                      // default message text font
@@ -40,6 +41,12 @@ static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
 static QColor selfColor(16, 120, 64);
 static QColor groupColor(0, 64, 120);
+static QColor searchColor(240, 240, 0);
+static QColor urlColor(0, 0, 240);
+static QRegularExpression findGroup(R"([\#]\d\d\d)");
+static QRegularExpression findUser(R"([\@]\d\d\d)");
+static QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
+static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}};
 static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
@@ -75,6 +82,7 @@ session(sid)
     else
         inbox = true;
 
+    findFormats();
     save();
 }
 
@@ -98,6 +106,7 @@ session(sid)
     textString = text;
     inbox = false;
 
+    findFormats();
     save();
 }
 
@@ -150,6 +159,28 @@ session(nullptr), saved(false)
         itemColor = selfColor;
     else
         itemColor = userColor;
+
+    findFormats();
+}
+
+void MessageItem::findFormats()
+{
+    textFormats = 0;
+    foreach(auto search, findMatches) {
+        auto match = search.first.match(msgBody);
+        auto pos = 0;
+        for(;;) {
+            auto start = match.capturedStart(pos);
+            if(start < 0)
+                break;
+            QTextLayout::FormatRange range;
+            range.start = start;
+            range.length = match.capturedLength(pos++);
+            range.format.setForeground(search.second);
+            formats << range;
+            ++textFormats;
+        }
+    }
 }
 
 void MessageItem::save()
@@ -173,6 +204,15 @@ void MessageItem::save()
     });
     if(!mid.isValid())
         saved = false;
+}
+
+void MessageItem::addSearch(int pos, int len)
+{
+    QTextLayout::FormatRange range;
+    range.start = pos;
+    range.length = len;
+    range.format.setBackground(searchColor);
+    formats << range;
 }
 
 QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrollHint)
@@ -255,6 +295,9 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         textTimestamp.setTextWidth(dynamicLine);
         textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
     }
+
+    textLayout.clearFormats();
+    textLayout.setFormats(formats);
 
     textLayout.setFont(textFont);
     textLayout.setText(textString);

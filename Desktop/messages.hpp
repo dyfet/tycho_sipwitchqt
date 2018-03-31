@@ -80,6 +80,13 @@ public:
         return dateSequence;
     }
 
+    void clearSearch() {
+        while(formats.size() > textFormats)
+            formats.removeLast();
+    }
+
+    void addSearch(int pos, int len);
+    void findFormats();
     QSize layout(const QStyleOptionViewItem& style, int row, bool scrollHint = false);
 
 private:
@@ -99,12 +106,13 @@ private:
     bool dateHint, userHint, timeHint;  // hinting for time header & user change
     bool saved;                         // for dup/failed save killing
     double dateHeight, userHeight, textHeight, leadHeight;
+    int textFormats;
 
     QStaticText textStatus, textDisplay, textTimestamp, textDateline;
     QString textString, userString;
     QColor itemColor;
     QTextLayout textLayout;
-    QList<QTextLayout::FormatRange> textFormats, userFormats;
+    QVector<QTextLayout::FormatRange> formats;
     QList<QTextLine> textLines;
 
     void save();
