@@ -265,11 +265,11 @@ bool Database::reopen()
 
 bool Database::create()
 {
-    bool init = Util::dbIsFile(driver);
+    bool init = Util::dbIsFile(driver);         // TODO: remove on IPL turnover
 
     failed = false;
 
-    if(init && QDir::current().exists(name))
+    if(init && QDir::current().exists(name))    // TODO: crit on IPL turnover
         init = false;
 
     if(!reopen())
@@ -277,7 +277,7 @@ bool Database::create()
 
     info() << "Loaded database driver " << driver;
 
-    if(init) {
+    if(init) {                                  // init is kept for now, later ipl...
         runQuery(Util::createQuery(driver));
         runQuery("INSERT INTO Config(realm) VALUES(?);", {
                      realm});
@@ -295,20 +295,18 @@ bool Database::create()
                      0, "operators", "Operators"});
         runQuery(Util::preloadConfig(driver));
     }
-    else if(Util::dbIsFile(driver)) {
+    else if(Util::dbIsFile(driver)) {       // sqlite special case...
         runQuery("UPDATE Config SET realm=? WHERE id=1;", {realm});
         runQuery("VACUUM");
     }
 
     QSqlQuery query(db);
     query.prepare("SELECT * FROM Config;");
-    if(!query.exec()) {
-        error() << "No config found " << driver;
-        close();
-        return false;
-    }
-    else if(query.next())
+    if(query.exec() && query.next())
         config = query.record();
+
+    if(config.count() < 1)
+        crit(80) << "Uninitialized database for " << driver << "; use ipl loader";
 
     if(config.value("dialplan").toString() == "STD3") {
         firstNumber = 100;

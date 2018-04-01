@@ -434,9 +434,11 @@ void Sessions::listen(Listener *listener)
     connect(listener, &Listener::receiveText, this, &Sessions::receiveText);
 }
 
-void Sessions::clickedText(const QString& text)
+void Sessions::clickedText(const QString& text, enum ClickedItem type)
 {
-    if(text[0] == '@' || text[0] == '#') {
+    qDebug() << "TYPE" << type;
+    switch(type) {
+    case EXTENSION_CLICKED: {
         ContactItem *item = nullptr;
         auto number = text.mid(1).toInt();
         if(number >= 0 && number < 1000)
@@ -449,11 +451,25 @@ void Sessions::clickedText(const QString& text)
         desktop->errorMessage("Extension " + text.mid(1) + " not found");
         return;
     }
-
-    if(text.left(7) != "http://" && text.left(8) != "https://")
-        QDesktopServices::openUrl("http://" + text);
-    else
-        QDesktopServices::openUrl(text);
+    case MAP_CLICKED: {
+        qDebug() << "GEO COORDINATE FUTURE MAP" << text;
+        return;
+    }
+    case NUMBER_CLICKED: {
+        auto nbr = text;
+        nbr.replace(" ", "");
+        qDebug() << "phone nbr" << nbr;
+        return;
+    }
+    case URL_CLICKED: {
+        if(text.left(7) != "http://" && text.left(8) != "https://")
+            QDesktopServices::openUrl("http://" + text);
+        else
+            QDesktopServices::openUrl(text);
+    }
+    default:
+        return;
+    }
 }
 
 void Sessions::search()
