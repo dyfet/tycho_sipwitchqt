@@ -184,7 +184,7 @@ public:
     void enter();
     void listen(Listener *listener);
     QList<MessageItem *> searchMessages(const QString &searchTerm);
-    void clickedText(const QString& text);
+    void clickedText(const QString& text, enum ClickedItem);
 
     static SessionItem *active();
     static QModelIndex top();

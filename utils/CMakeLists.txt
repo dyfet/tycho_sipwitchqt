@@ -6,6 +6,8 @@ FILE(GLOB ruby *.rb)
 add_custom_target(manpages SOURCES ${man1})
 add_custom_target(scripts SOURCES ${ruby})
 
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/ipl-sipwitch.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME ipl-sipwitch)
+
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/swlite-authorize.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME swlite-authorize)
 
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/swlite-endpoints.rb DESTINATION ${CMAKE_INSTALL_SBINDIR} RENAME swlite-endpoints)

@@ -5,6 +5,7 @@ CMakeFiles/
 CMakeScripts/
 Debug/
 Release/
+Bootstrap/
 
 *.user.*
 *.user

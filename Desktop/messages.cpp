@@ -43,10 +43,14 @@ static QColor selfColor(16, 120, 64);
 static QColor groupColor(0, 64, 120);
 static QColor searchColor(240, 240, 0);
 static QColor urlColor(0, 0, 240);
+static QColor mapColor(0, 0, 244);
+static QColor nbrColor(240, 120, 0);
 static QRegularExpression findGroup(R"([\#]\d\d\d)");
 static QRegularExpression findUser(R"([\@]\d\d\d)");
 static QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
-static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}};
+static QRegularExpression findMap(R"([-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?))");
+static QRegularExpression findDialing(R"(\+(?:[0-9] ?){6,14}[0-9])");
+static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}, {findMap, mapColor}, {findDialing, nbrColor}};
 static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
@@ -189,13 +193,24 @@ void MessageItem::findFormats()
     }
 }
 
-QString MessageItem::textClicked()
+QPair<QString, enum ClickedItem> MessageItem::textClicked()
 {
     if(userUnderline)
-        return userString.left(4);
-    else if(textUnderline > -1)
-        return textString.mid(formats[textUnderline].start, formats[textUnderline].length);
-    return QString();
+        return {userString.left(4), EXTENSION_CLICKED};
+    else if(textUnderline > -1) {
+        auto type = TEXT_CLICKED;
+        auto color = formats[textUnderline].format.foreground();
+        if(color == urlColor)
+            type = URL_CLICKED;
+        else if(color == nbrColor)
+            type = NUMBER_CLICKED;
+        else if(color == mapColor)
+            type = MAP_CLICKED;
+        else if(color == selfColor || color == groupColor || color == userColor)
+            type = EXTENSION_CLICKED;
+        return {textString.mid(formats[textUnderline].start, formats[textUnderline].length), type};
+    }
+    return {QString(), NOTHING_CLICKED};
 }
 
 void MessageItem::clearHover()
@@ -702,11 +717,11 @@ bool MessageDelegate::eventFilter(QObject *list, QEvent *event)
         if(row < 0 || row >= session->filtered.count())
             break;
 
-        auto text = session->filtered[row]->textClicked();
-        if(text.isEmpty())
+        auto clicked = session->filtered[row]->textClicked();
+        if(clicked.first.isEmpty())
             break;
 
-        Sessions::instance()->clickedText(text);
+        Sessions::instance()->clickedText(clicked.first, clicked.second);
         break;
     }
     case QEvent::MouseMove: {

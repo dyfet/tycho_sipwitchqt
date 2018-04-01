@@ -26,6 +26,7 @@
 //    QFile::open("sqlite.sql",QIODevice::ReadOnly);
 //}
 
+// TODO: remove on ipl turnover
 static QStringList sqliteTables = {
     "CREATE TABLE Config ("
         "id INTEGER PRIMARY KEY,"               // rowid in sqlite
@@ -150,7 +151,7 @@ static QStringList sqlitePragmas = {
     "PRAGMA temp_store = MEMORY;",
 };
 
-#ifdef PRELOAD_DATABASE
+#ifdef PRELOAD_DATABASE             // TODO: remove on ipl turnover
 static QStringList sqlitePreload = {
     // "test1" and "test2", for extensions 101 and 102, password is "testing"
     "INSERT INTO Authorize(authname, authdigest, realm, secret, fullname, authtype, authaccess) "

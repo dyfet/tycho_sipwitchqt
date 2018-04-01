@@ -30,6 +30,15 @@
 
 class SessionItem;
 
+enum ClickedItem {
+    TEXT_CLICKED,
+    URL_CLICKED,
+    EXTENSION_CLICKED,
+    NUMBER_CLICKED,
+    MAP_CLICKED,
+    NOTHING_CLICKED
+};
+
 class MessageItem final
 {
     friend class MessageDelegate;
@@ -89,7 +98,7 @@ public:
 
     void clearHover();
     bool hover(const QPoint& pos);
-    QString textClicked();
+    QPair<QString, enum ClickedItem> textClicked();
     void addSearch(int pos, int len);
     void findFormats();
     QSize layout(const QStyleOptionViewItem& style, int row, bool scrollHint = false);
@@ -162,7 +171,7 @@ private:
     bool eventFilter(QObject *list, QEvent *event) final;
 
 signals:
-    void clickedText(const QString& text);
+    void clickedText(const QString& text, enum ClickedItem);
 };
 
 #endif

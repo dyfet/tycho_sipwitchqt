@@ -38,12 +38,6 @@ if(WIN32)
     set(system_libs libssl libcrypto advapi32 user32 crypt32 gdi32 ws2_32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
-
-    if(BOOTSTRAP_PREFIX)
-        set(BOOTSTRAP_PATH "${BOOTSTRAP_PREFIX}/bin")
-        include_directories("${BOOTSTRAP_PREFIX}/include")
-        link_directories("${BOOTSTRAP_PREFIX}/lib")
-    endif()
 elseif(APPLE)
     if(NOT EXISTS "/usr/local/opt/libexosip")
         message(FATAL_ERROR "*** requires: brew install libexosip")
@@ -127,6 +121,14 @@ file(GLOB sipp_xml testdata/*.xml)
 file(GLOB database_sql Database/*.sql)
 file(GLOB desktop_ts Translations/sipwitchqt-desktop_*.ts)
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
+    add_subdirectory(Bootstrap)
+    set(BOOTSTRAP_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/Bootstrap")
+    set(BOOTSTRAP_PATH "${BOOTSTRAP_PREFIX}/bin")
+    include_directories("${BOOTSTRAP_PREFIX}/include")
+    link_directories("${BOOTSTRAP_PREFIX}/lib")
+endif()
+
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
 set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
 qt5_add_translation(desktop_qm ${desktop_ts})
@@ -151,6 +153,11 @@ set_target_properties(desktop-app PROPERTIES OUTPUT_NAME "${DESKTOP_NAME}")
 add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_rc})
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
+    add_dependencies(server-app libeXosip2)
+    add_dependencies(desktop-app libeXosip2)
+endif()
 
 add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
@@ -183,20 +190,10 @@ if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.png" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
-
 endif()
 
-# platform specific post link
-
-if(BOOTSTRAP_PATH AND WIN32)
-    Execute_Process(
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libssl-1_1-x64.dll" .
-        COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libcrypto-1_1-x64.dll" .
-    )
-endif()
+install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
+install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-sqlite.sql)
 
 # staging releases; we do not stage debug because it uses testdata...
 
@@ -226,10 +223,6 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND "${CMAKE_COMMAND}" -E copy sipwitchqt-desktop.exe stage
             COMMAND windeployqt --release --verbose=0 stage/sipwitchqt-desktop.exe
             COMMAND xcopy /q "translations_autogen\\*.qm" "stage\\translations" >nul
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/cares.dll" stage
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/zlib.dll" stage
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libssl-1_1-x64.dll" stage
-            COMMAND "${CMAKE_COMMAND}" -E copy "${BOOTSTRAP_PATH}/libcrypto-1_1.x64.dll" stage
             COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" stage/COPYING.txt
             COMMAND iscc setup.iss
             COMMAND "${CMAKE_COMMAND}" -E rename Setup.exe stage/Setup.exe

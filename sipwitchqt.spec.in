@@ -71,7 +71,9 @@ SipWitchQt desktop client.
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt-server
+%{_sbindir}/ipl-sipwitch
 %{_sysconfdir}/sv/sipwitchqt/run
+%{_datadir}/schemas/sipwitch-*.sql
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_libdir}/systemd/system/sipwitchd.service
 
