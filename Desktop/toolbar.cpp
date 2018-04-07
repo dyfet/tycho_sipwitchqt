@@ -18,7 +18,7 @@
 #include "desktop.hpp"
 #include "ui_toolbar.h"
 
-#include <QtWidgets>
+#include <QToolBar>
 
 static Ui::Toolbar ui;
 

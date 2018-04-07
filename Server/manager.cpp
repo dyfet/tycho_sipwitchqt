@@ -84,6 +84,10 @@ void Manager::applyNames()
 void Manager::applyConfig(const QVariantHash& config)
 {
     ServerNames = config["localnames"].toStringList();
+    if(ServerNames.count() < 1) {               // auto add localhost for * case
+        ServerNames << "127.0.0.1";
+        ServerNames << "localhost";
+    }
     if(!config["banner"].toString().isEmpty())
         ServerBanner = config["banner"].toString();
     QString hostname = config["host"].toString();

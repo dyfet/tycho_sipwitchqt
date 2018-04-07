@@ -114,6 +114,9 @@ bool Database::runQuery(const QString &request, const QVariantList &parms)
     if(!reopen())
         return false;
 
+    unsigned retries = 0;
+
+retry:
     QSqlQuery query(db);
     query.prepare(request);
 
@@ -123,6 +126,8 @@ bool Database::runQuery(const QString &request, const QVariantList &parms)
         query.bindValue(count, parms.at(count));
 
     if(query.exec() != true) {
+        if(resume() && ++retries < 3)
+            goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return false;
     }
@@ -134,6 +139,9 @@ QVariant Database::insert(const QString& request, const QVariantList &parms)
     if(!reopen())
         return QVariant();
 
+    unsigned retries = 0;
+
+retry:
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
@@ -142,6 +150,8 @@ QVariant Database::insert(const QString& request, const QVariantList &parms)
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
+        if(resume() && ++retries < 3)
+            goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return QVariant();
     }
@@ -154,6 +164,9 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
     if(!reopen())
         return QSqlRecord();
 
+    unsigned retries = 0;
+
+retry:
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
@@ -162,7 +175,9 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
-        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+        if(resume() && ++retries < 3)
+            goto retry;
+        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();            
         return QSqlRecord();
     }
 
@@ -177,6 +192,9 @@ QSqlQuery Database::getRecords(const QString& request, const QVariantList &parms
     if(!reopen())
         return QSqlQuery();
 
+    unsigned retries = 0;
+
+retry:
     QSqlQuery query(db);
     query.prepare(request);
     int count = -1;
@@ -184,8 +202,12 @@ QSqlQuery Database::getRecords(const QString& request, const QVariantList &parms
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
-    if(!query.exec())
+    if(!query.exec()) {
+        if(resume() && ++retries < 3)
+            goto retry;
+        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return QSqlQuery();
+    }
 
     return query;
 }
@@ -194,6 +216,19 @@ void Database::init(unsigned order)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = new Database(order);
+}
+
+bool Database::resume()
+{
+    if(isFile())        // we do not reconnect failed fs databases
+        return false;
+    if(failed)
+        return false;
+    close();
+    auto result = reopen();
+    if(!result)
+        failed = true;
+    return result;
 }
 
 void Database::close()
@@ -686,6 +721,9 @@ void Database::applyConfig(const QVariantHash& config)
     driver = config["database"].toString();
     uuid = Server::uuid();
     failed = false;
+
+    if(user.isEmpty())
+        user = config["database/user"].toString();
 
     if(realm.isEmpty()) {
         realm = Server::sym(CURRENT_NETWORK);

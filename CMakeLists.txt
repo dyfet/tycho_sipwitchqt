@@ -33,6 +33,7 @@ set(DESKTOP_NAME "sipwitchqt-desktop")
 
 if(WIN32)
     set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt")
+    set(BOOTSTRAP_REQUESTED true)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(system_libs libssl libcrypto advapi32 user32 crypt32 gdi32 ws2_32)
@@ -121,7 +122,7 @@ file(GLOB sipp_xml testdata/*.xml)
 file(GLOB database_sql Database/*.sql)
 file(GLOB desktop_ts Translations/sipwitchqt-desktop_*.ts)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
+if(BOOTSTRAP_REQUESTED AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
     add_subdirectory(Bootstrap)
     set(BOOTSTRAP_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/Bootstrap")
     set(BOOTSTRAP_PATH "${BOOTSTRAP_PREFIX}/bin")
@@ -154,12 +155,12 @@ add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
+if(BOOTSTRAP_REQUESTED AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
     add_dependencies(server-app libeXosip2)
     add_dependencies(desktop-app libeXosip2)
 endif()
 
-add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
+add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -190,6 +191,7 @@ if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.png" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
 endif()
 
 install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)

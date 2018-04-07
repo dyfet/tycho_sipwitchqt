@@ -18,7 +18,6 @@
 #include "desktop.hpp"
 #include "ui_statusbar.h"
 
-#include <QtWidgets>
 #include <QStatusBar>
 
 static Ui::Statusbar ui;

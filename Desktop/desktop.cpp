@@ -53,9 +53,15 @@ static void signal_handler(int signo)
 #ifdef Q_OS_MAC
 #include <objc/objc.h>
 #include <objc/message.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
 
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const QString& text);
+
+static io_connect_t ioroot = 0;
+static io_object_t iopobj;
+static IONotificationPortRef iopref;
 
 static bool dock_click_handler(::id self, SEL _cmd, ...)
 {
@@ -66,6 +72,52 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
     QMetaObject::invokeMethod(desktop, "dockClicked", Qt::QueuedConnection);
     return false;
 }
+
+static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
+    Q_UNUSED(ioservice);
+    Q_UNUSED(ref);
+
+    auto desktop = Desktop::instance();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+
+    switch(mtype) {
+    case kIOMessageCanSystemSleep:
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemWillSleep:
+        QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemHasPoweredOn:
+        QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
+        break;
+    default:
+        break;
+    }
+
+#pragma clang pop
+}
+
+static void iop_startup()
+{
+    void *ref = nullptr;
+
+    if(ioroot != 0)
+        return;
+
+    ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
+    if(!ioroot) {
+        qWarning() << "Registration for power management failed";
+        return;
+    }
+    else
+        qDebug() << "Power management enabled";
+
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
+}
+
 #endif
 
 #ifdef Q_OS_WIN
@@ -81,19 +133,17 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
     Q_UNUSED(result);
 
     MSG *msg = static_cast<MSG*>(message);
-    Desktop *desktop = nullptr;
-
-    Q_UNUSED(desktop);
+    auto desktop = Desktop::instance();
 
     switch(msg->message) {
     case WM_POWERBROADCAST:
         switch(msg->wParam) {
         case PBT_APMRESUMEAUTOMATIC:
         case PBT_APMRESUMESUSPEND:
-//          resume...
+            QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
             break;
         case PBT_APMSUSPEND:
-//          suspend..
+            QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
             break;
         default:
             break;
@@ -120,6 +170,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     Instance = this;
     connector = nullptr;
     front = true;
+    powerReconnect = false;
 
     // for now, just this...
     baseFont = getBasicFont();
@@ -162,6 +213,8 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
 
 #if defined(Q_OS_MAC)
+    iop_startup();
+
     appBar = new QMenuBar(this);
     appMenu = appBar->addMenu(tr("SipWitchQt Desktop"));
     appMenu->addAction(ui.appAbout);
@@ -551,6 +604,37 @@ void Desktop::menuClicked()
 void Desktop::dockClicked()
 {
     trayAction(QSystemTrayIcon::MiddleClick);
+}
+
+void Desktop::powerSuspend()
+{
+    qDebug() << "*** POWER SUSPEND";
+    if(connector) {
+        closeDialog();
+        setEnabled(false);
+        statusMessage(tr("suspending..."));
+        offline();
+        powerReconnect = true;
+    }
+    else
+        powerReconnect = false;
+}
+
+void Desktop::powerResume()
+{
+    qDebug() << "*** POWER RESUME";
+    if(!connector && powerReconnect && storage) {
+        powerReconnect = false;
+        statusMessage(tr("resuming..."));
+        QTimer::singleShot(1200, this, [this]() {
+            setEnabled(true);
+            if(!connector && !listener) {
+                listen(storage->credentials());
+            }
+        });
+    }
+    else
+        setEnabled(true);
 }
 
 void Desktop::trayAway()
