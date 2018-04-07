@@ -158,7 +158,7 @@ set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 if(WIN32)
     set(DIST_FORMAT zip)
 else()
-    set(DIST_FORMAT tat.gz)
+    set(DIST_FORMAT tar.gz)
 endif()
 
 add_custom_target(dist
