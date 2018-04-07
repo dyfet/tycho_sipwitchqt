@@ -23,6 +23,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "stage\*"; DestDir: "{app}"; Flags: createallsubdirs recursesubdirs; Components: Desktop Server; Excludes: "sipwitchqt-desktop.exe"
 Source: "stage\sipwitchqt-desktop.exe"; DestDir: "{app}"; Components: Desktop;
 Source: "sipwitchqt-server.exe"; DestDir: "{app}"; Components: Server;
+Source: "*.zip"; DestDir: "{app}/sources"; Flags: createallsubdirs recursesubdirs; Components: Sources;
 
 [Icons]
 Name: "{group}\SipWitchQt"; Filename: "{app}\sipwitchqt-desktop.exe"; WorkingDir: "{app}"; IconFilename: "{app}\sipwitchqt-desktop.exe"; IconIndex: 0; Components: Desktop; Languages: english
@@ -34,4 +35,5 @@ Filename: "{app}\vcredist_x86.exe"; WorkingDir: "{app}"; Flags: postinstall skip
 [Components]
 Name: "Desktop"; Description: "Desktop Client"; Types: compact full; Flags: checkablealone; Languages: english
 Name: "Server"; Description: "SipWitchQt Server"; Types: custom; Flags: checkablealone; MinVersion: 0,6.0; Languages: english
+Name: "Sources"; Description: "Complete Sources"; Types: custom; Flags: checkablealone; MinVersion: 0,6.0; Languages: english
 

@@ -155,9 +155,22 @@ add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 
+if(WIN32)
+    set(DIST_FORMAT zip)
+else()
+    set(DIST_FORMAT tat.gz)
+endif()
+
+add_custom_target(dist
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-*.${DIST_FORMAT}"
+    COMMAND git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.${DIST_FORMAT}" --format ${DIST_FORMAT} --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" "v${PROJECT_VERSION}" 2>/dev/null || git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.${DIST_FORMAT}" --format ${DIST_FORMAT} --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" HEAD
+)
+
 if(BOOTSTRAP_REQUESTED AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Bootstrap/")
     add_dependencies(server-app libeXosip2)
     add_dependencies(desktop-app libeXosip2)
+    add_dependencies(dist redist)
 endif()
 
 add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
@@ -233,21 +246,13 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND zip -q stage/Symbols.zip *.pdb
             COMMAND cd stage && zip Setup.zip Setup.exe && cd ..
         )
+        add_dependencies(stage dist)
     endif()
 endif()
 
 # these targets mostly used in makefiles only...
+
 if(CMAKE_MAINTAINER)
-    add_custom_target(dist
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-*.tar.gz"
-        COMMAND git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" "v${PROJECT_VERSION}" 2>/dev/null || git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" HEAD   
-    )
-
-    add_custom_target(source
-        DEPENDS dist
-    )
-
     add_custom_target(distclean
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMAND ${CMAKE_BUILD_TOOL} clean
