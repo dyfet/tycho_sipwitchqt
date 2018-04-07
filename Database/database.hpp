@@ -94,6 +94,7 @@ private:
     QVariant insert(const QString& request, const QVariantList &parms = QVariantList());
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
     QSqlQuery getRecords(const QString& request, const QVariantList& parms = QVariantList());
+    bool resume();
     bool reopen();
     bool create();
     void close();

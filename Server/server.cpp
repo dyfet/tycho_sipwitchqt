@@ -110,12 +110,15 @@ bool Server::RunAsDetached = false;
 volatile Server::State Server::RunState = Server::START;
 
 #ifdef Q_OS_MAC
+#include <thread>
 
 // FIXME: This will require a new thread for cfrunloop to work!!
 
 static io_connect_t ioroot = 0;
 static io_object_t iopobj;
 static IONotificationPortRef iopref;
+static std::thread powerthread;
+static CFRunLoopRef runloop;
 
 static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
     Q_UNUSED(ioservice);
@@ -157,7 +160,15 @@ static void iop_startup()
     else
         debug() << "Power management enabled";
 
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
+    runloop = CFRunLoopGetCurrent();
+    CFRunLoopAddSource(runloop, IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
+    CFRunLoopRun();
+}
+
+static void iop_shutdown()
+{
+    CFRunLoopStop(runloop);
+    powerthread.join();
 }
 
 #endif
@@ -257,6 +268,14 @@ static void handleSignals(int signo)
         disableSignals();
         Server::shutdown(signo);
         break;
+#if defined(SIGUSR1) && defined(SIGUSR2)
+    case SIGUSR1:
+        Server::suspend();
+        break;
+    case SIGUSR2:
+        Server::resume();
+        break;
+#endif
 #ifdef SIGHUP
     case SIGHUP:
         Server::reload();
@@ -267,10 +286,6 @@ static void handleSignals(int signo)
 
 static void enableSignals()
 {
-#ifdef Q_OS_MAC
-    iop_startup();
-#endif
-
 #ifdef Q_OS_WIN
     if(!Server::isService())
         SetConsoleCtrlHandler((PHANDLER_ROUTINE)consoleHandler, TRUE);
@@ -285,6 +300,10 @@ static void enableSignals()
 #endif
     ::signal(SIGINT, handleSignals);
     ::signal(SIGTERM, handleSignals);
+#if defined(SIGUSR1) && defined(SIGUSR2)
+    ::signal(SIGUSR1, handleSignals);
+    ::signal(SIGUSR2, handleSignals);
+#endif
 }
 
 Server::Server(int& argc, char **argv, QCommandLineParser& args, const QVariantHash& keypairs):
@@ -522,6 +541,10 @@ void Server::startup()
     emit changeConfig(CurrentConfig);
     emit started();
     notify(SERVER_RUNNING, "Ready to process");
+
+#ifdef Q_OS_MAC
+    powerthread = std::thread(&iop_startup);
+#endif
 }
 
 void Server::notify(SERVER_STATE state, const char *text)
@@ -605,6 +628,9 @@ void Server::resume()
 
 bool Server::shutdown(int reason)
 {
+#ifdef Q_OS_MAC
+    iop_shutdown();
+#endif
     if(exitReason)
         return false;
 

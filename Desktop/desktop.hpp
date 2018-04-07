@@ -193,6 +193,7 @@ private:
     QDialog *dialog;
     QFont baseFont;
     QString dbName;
+    bool powerReconnect;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
@@ -216,6 +217,8 @@ public slots:
 
     void initial();
     void dockClicked();
+    void powerSuspend();
+    void powerResume();
     void menuClicked();
 
     void closeDialog();

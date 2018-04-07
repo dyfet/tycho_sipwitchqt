@@ -76,6 +76,7 @@ SipWitchQt desktop client.
 %{_datadir}/schemas/sipwitch-*.sql
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_libdir}/systemd/system/sipwitchd.service
+%attr(0750,root,root) %{_libdir}/systemd/system-sleep/sipwqt-sleep.sh
 
 %files utils
 %defattr(-,root,root)
