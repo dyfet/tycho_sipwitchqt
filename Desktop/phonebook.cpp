@@ -29,7 +29,6 @@ static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
 static ContactItem *clickedItem = nullptr;
-static bool initialRoster = false;
 
 QList<ContactItem *> ContactItem::users;
 QList<ContactItem *> ContactItem::groups;
@@ -398,7 +397,7 @@ void Phonebook::changeConnector(Connector *connected)
             if(!connector)
                 return;
 
-            initialRoster = true;
+            desktop->clearRoster();
             refreshRoster.start(3600000);   // once an hour...
 
             auto jdoc = QJsonDocument::fromJson(json);
@@ -411,7 +410,7 @@ void Phonebook::changeConnector(Connector *connected)
             connector->requestPending();
         }, Qt::QueuedConnection);
 
-        if(!initialRoster) {
+        if(desktop->checkRoster()) {
             QTimer::singleShot(300, this, [this]{
                 if(connector)
                     connector->requestRoster();
@@ -450,8 +449,6 @@ void Phonebook::changeStorage(Storage *storage)
         }
         emit changeSessions(storage, ContactItem::sessions());
     }
-    else
-        initialRoster = false;
 
     ui.contacts->setModel(localModel);
 }

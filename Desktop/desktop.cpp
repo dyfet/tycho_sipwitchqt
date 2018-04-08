@@ -171,6 +171,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connector = nullptr;
     front = true;
     powerReconnect = false;
+    updateRoster = true;
 
     // for now, just this...
     baseFont = getBasicFont();
@@ -472,7 +473,7 @@ void Desktop::closeLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-
+    updateRoster = true;        // force update at next login...
 }
 
 void Desktop::closeDialog()
@@ -883,11 +884,6 @@ void Desktop::authorized(const QVariantHash& creds)
     setState(ONLINE);
 }
 
-void Desktop::setBanner(const QString& banner)
-{
-    setWindowTitle(banner);
-}
-
 void Desktop::listen(const QVariantHash& cred)
 {
     Q_ASSERT(listener == nullptr);
@@ -897,8 +893,17 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
-    connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
+    //connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
     connect(listener, &Listener::statusResult, this, &Desktop::statusResult);
+
+    connect(listener, &Listener::changeBanner, this, [this](const QString& banner) {
+        setWindowTitle(banner);
+    });
+
+    connect(listener, &Listener::updateRoster, this, [this]() {
+        updateRoster = true;
+    });
+
     sessions->listen(listener);
     listener->start();
     authorizing();
@@ -927,7 +932,6 @@ void Desktop::exportDb()
 // Import database after make sure that client has went offline.
 void Desktop::importDb()
 {
-
     Q_ASSERT(storage != nullptr);
 
     emit changeStorage(nullptr);
@@ -935,7 +939,6 @@ void Desktop::importDb()
     offline();
     delete storage;
     storage = nullptr;
-
 
     auto ext = credentials()["extension"].toString();
     auto lab = credentials()["label"].toString();
@@ -963,11 +966,11 @@ void Desktop::importDb()
     }
 
 }
-void Desktop::resetFont(){
+
+void Desktop::resetFont() {
     setTheFont(getBasicFont());
     sessions->refreshFont();
 }
-
 
 int main(int argc, char *argv[])
 {

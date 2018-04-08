@@ -80,6 +80,7 @@ signals:
     void messageResult(int status);
     void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject);
     void authorize(const QVariantHash& creds);
+    void updateRoster();
     void failure(int code);
     void starting();
 	void finished();
