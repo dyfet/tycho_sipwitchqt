@@ -105,29 +105,38 @@ public:
         return isCurrent(options);
     }
 
-    inline QFont getCurrentFont(){                                      // get current value from the settings.cfg
+    QVariantHash storageCredentials() const {
+        if(storage)
+            return storage->credentials();
+        else
+            return QVariantHash();
+    }
+
+    inline bool checkRoster() const {
+        return updateRoster;
+    }
+
+    inline void clearRoster() {
+        updateRoster = false;
+    }
+
+    inline QFont getCurrentFont() {                                      // get current value from the settings.cfg
         baseFont.fromString(settings.value("font").toString());         // make fonts persistant across sessions and endpoints
         if (!(baseFont.fromString(settings.value("font").toString())))  // So font is now client related and persistent
             baseFont = QGuiApplication::font();
         return baseFont;
     }
+
     inline QFont getBasicFont() {                      // simple getter for cases that current font do not work.
         baseFont = QGuiApplication::font();
         return baseFont;
     }
 
 
-    inline void setTheFont(const QFont& font){         // set the global value of a basefont
+    inline void setTheFont(const QFont& font) {         // set the global value of a basefont
         baseFont = font;
         settings.setValue("font", font.toString());
         emit changeFont();
-    }
-
-    QVariantHash storageCredentials() const {
-        if(storage)
-            return storage->credentials();
-        else
-            return QVariantHash();
     }
 
     // status bar functions...
@@ -194,6 +203,7 @@ private:
     QFont baseFont;
     QString dbName;
     bool powerReconnect;
+    bool updateRoster;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
@@ -248,8 +258,6 @@ private slots:
     void appState(Qt::ApplicationState state);
     void trayAction(QSystemTrayIcon::ActivationReason reason);
     void trayAway();
-
-    void setBanner(const QString& banner);
     void shutdown(); // application shutdown
 };
 

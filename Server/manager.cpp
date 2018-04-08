@@ -31,6 +31,7 @@ UString Manager::ServerRealm;
 UString Manager::ServerBanner = "Welcome to SipWitchQt " PROJECT_VERSION;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
+std::atomic<unsigned> Manager::RosterSequence;
 unsigned Manager::Contexts = 0;
 
 Manager::Manager(unsigned order)
@@ -42,6 +43,8 @@ Manager::Manager(unsigned order)
 #ifndef Q_OS_WIN
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>("sipwitchqt"));
 #endif
+
+    RosterSequence.store(1, std::memory_order_release);
 
     Server *server = Server::instance();
     connect(thread(), &QThread::started, this, &Manager::startup);
@@ -298,6 +301,7 @@ void Manager::refreshRegistration(const Event &ev)
                     xdp += "d=" + reg->display() + "\n";
                     xdp += "f=" + UString::number(range.first) + "\n";
                     xdp += "l=" + UString::number(range.second) + "\n";
+                    xdp += "r=" + UString::number(static_cast<int>(checkRoster())) + "\n";
                     xdp += "s=" + UString::number(Database::sequence());
                     xdp += "a=" + Registry::bitmask() + "\n";
                 }

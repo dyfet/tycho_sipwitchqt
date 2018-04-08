@@ -39,6 +39,14 @@ public:
         return ServerRealm;
     }
 
+    static void updateRoster() {
+         RosterSequence.fetch_add(1, std::memory_order_release);
+    }
+
+    static unsigned checkRoster() {
+        return RosterSequence.load(std::memory_order_acquire) % 8192;
+    }
+
     static const QByteArray computeDigest(const UString &id, const UString &secret, QCryptographicHash::Algorithm digest = QCryptographicHash::Md5);
     static void create(const QList<QHostAddress>& list, quint16 port, unsigned mask);
     static void create(const QHostAddress& addr, quint16 port, unsigned mask);
@@ -53,6 +61,7 @@ private:
     static Manager *Instance;
     static unsigned Contexts;
     static QThread::Priority Priority;
+    static std::atomic<unsigned> RosterSequence;
 
     void applyNames();
 
