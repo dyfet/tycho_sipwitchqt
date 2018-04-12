@@ -31,6 +31,7 @@ UString Manager::ServerRealm;
 UString Manager::ServerBanner = "Welcome to SipWitchQt " PROJECT_VERSION;
 QStringList Manager::ServerAliases;
 QStringList Manager::ServerNames;
+std::atomic<unsigned> Manager::RosterSequence;
 unsigned Manager::Contexts = 0;
 
 Manager::Manager(unsigned order)
@@ -42,6 +43,8 @@ Manager::Manager(unsigned order)
 #ifndef Q_OS_WIN
     osip_trace_initialize_syslog(TRACE_LEVEL0, const_cast<char *>("sipwitchqt"));
 #endif
+
+    RosterSequence.store(1, std::memory_order_release);
 
     Server *server = Server::instance();
     connect(thread(), &QThread::started, this, &Manager::startup);
@@ -84,6 +87,10 @@ void Manager::applyNames()
 void Manager::applyConfig(const QVariantHash& config)
 {
     ServerNames = config["localnames"].toStringList();
+    if(ServerNames.count() < 1) {               // auto add localhost for * case
+        ServerNames << "127.0.0.1";
+        ServerNames << "localhost";
+    }
     if(!config["banner"].toString().isEmpty())
         ServerBanner = config["banner"].toString();
     QString hostname = config["host"].toString();
@@ -202,6 +209,32 @@ void Manager::ackPending(const Event& ev)
     emit changePending(reg->endpoint());
 }
 
+void Manager::requestAuthorize(const Event& ev)
+{
+    qDebug() << "REQUESTING AUTHORIZE FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND AUTHORIZE REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeAuthorize(ev);
+}
+
+
 void Manager::requestPending(const Event& ev)
 {
     qDebug() << "REQUESTING PENDING FROM" << ev.number();
@@ -252,6 +285,31 @@ void Manager::requestDevlist(const Event& ev)
     emit sendDevlist(ev);
 }
 
+void Manager::requestProfile(const Event& ev)
+{
+    qDebug() << "REQUESTING PROFILE FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND PROFILE REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit updateProfile(ev, reg->user());
+}
+
 void Manager::requestRoster(const Event& ev)
 {
     qDebug() << "REQUESTING ROSTER FROM" << ev.number();
@@ -291,9 +349,11 @@ void Manager::refreshRegistration(const Event &ev)
                     auto range = Database::range();
                     xdp += "v=0\n";
                     xdp += "b=" + ServerBanner + "\n";
+                    xdp += "p=" + reg->privs() + "\n";
                     xdp += "d=" + reg->display() + "\n";
                     xdp += "f=" + UString::number(range.first) + "\n";
                     xdp += "l=" + UString::number(range.second) + "\n";
+                    xdp += "r=" + UString::number(static_cast<int>(checkRoster())) + "\n";
                     xdp += "s=" + UString::number(Database::sequence());
                     xdp += "a=" + Registry::bitmask() + "\n";
                 }

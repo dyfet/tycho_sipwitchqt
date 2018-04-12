@@ -35,11 +35,17 @@
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-ROSTER"))
 
+#define MSG_IS_PROFILE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-PROFILE"))
+
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-DEVLIST"))
 
 #define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-PENDING"))
+
+#define MSG_IS_AUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-AUTHORIZE"))
 
 #define MSG_IS_ACK_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "A-PENDING"))
@@ -191,8 +197,10 @@ void Context::run()
 
     if(netProto == IPPROTO_TCP) {
         connect(this, &Context::REQUEST_ROSTER, stack, &Manager::requestRoster);
+        connect(this, &Context::REQUEST_PROFILE, stack, &Manager::requestProfile);
         connect(this, &Context::REQUEST_DEVLIST, stack, &Manager::requestDevlist);
         connect(this, &Context::REQUEST_PENDING, stack, &Manager::requestPending);
+        connect(this, &Context::REQUEST_AUTHORIZE, stack, &Manager::requestAuthorize);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
     }
 
@@ -291,6 +299,7 @@ bool Context::process(const Event& ev)
             break;
         }
 
+
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
@@ -310,10 +319,38 @@ bool Context::process(const Event& ev)
             return false;
         }
 
+        if(MSG_IS_PROFILE(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 && !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(ev.contentType() != "profile/json" && ev.body().size() > 0)
+                return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
+            emit REQUEST_PROFILE(ev);
+            return false;
+        }
+
         if(MSG_IS_DEVLIST(ev.message())) {
             if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_DEVLIST(ev);
+            return false;
+        }
+
+        if(MSG_IS_AUTHORIZE(ev.message())) {
+            auto to = ev.message()->to;
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(!ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.contentType() != "authorize/json" || ev.body().size() < 1)
+                return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
+            emit REQUEST_AUTHORIZE(ev);
             return false;
         }
 

@@ -127,6 +127,13 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
+    auto access = authorize.value("authaccess");
+    if(access == "SUSPEND") {
+        warning() << "Extension " << number << " has been suspended";
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
     auto type = authorize.value("authtype").toString();
     if(type != "USER" && type != "DEVICE") {
         warning() << "Cannot authorize " << number << " as a " << type.toLower();
@@ -155,6 +162,16 @@ void Authorize::findEndpoint(const Event& event)
     if(display.isEmpty())
         display = user;
 
+    auto privs = QString("none");
+    auto record = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {number});
+    if(record.count() > 0)
+        privs = "sysadmin";
+    else {
+        record = getRecord("SELECT * FROM Groups WHERE (grpnbr=0) AND (extnbr=?);", {number});
+        if(record.count() > 0)
+            privs = "operator";
+    }
+
     QVariantHash reply = {
         {"realm", authorize.value("realm")},
         {"user", user},
@@ -166,6 +183,7 @@ void Authorize::findEndpoint(const Event& event)
         {"endpoint", eid},
         {"origin", request},
         {"expires", expires},
+        {"privs", privs},
     };
     emit createEndpoint(event, reply);
 }
@@ -182,28 +200,31 @@ void Authorize::activate(const QVariantHash& config, bool opened)
     if(database->isFile() && opened)
         db = &database->db;
     else if(opened) {
-        local = QSqlDatabase::addDatabase(database->driver, "auth");
+        local = QSqlDatabase::addDatabase(database->dbDriver, "auth");
         db = &local;
         if(!db->isValid()) {
             error() << "Invalid auth connection";
             db = nullptr;
         }
         else {
-            db->setDatabaseName(database->name);
-            if(!database->host.isEmpty())
-                db->setHostName(database->host);
-            if(database->port)
-                db->setPort(database->port);
-            if(!database->user.isEmpty())
-                db->setUserName(database->user);
-            if(!database->pass.isEmpty())
-                db->setPassword(database->pass);
+            db->setDatabaseName(database->dbName);
+            if(!database->dbHost.isEmpty())
+                db->setHostName(database->dbHost);
+            if(database->dbPort)
+                db->setPort(database->dbPort);
+            if(!database->dbUser.isEmpty())
+                db->setUserName(database->dbUser);
+            if(!database->dbPass.isEmpty())
+                db->setPassword(database->dbPass);
             if(!db->open()) {
+                failed = true;
                 error() << "Failed auth connection";
                 local = QSqlDatabase();
                 QSqlDatabase::removeDatabase("auth");
                 db = nullptr;
             }
+            else
+                failed = false;
         }
     }
     if(db) {
@@ -230,9 +251,47 @@ int Authorize::runQuery(const QStringList& list)
     return count;
 }
 
+bool Authorize::resume()
+{
+    if(failed || &local != db)
+        return false;
+
+    local.close();
+    return checkConnection();
+}
+
+bool Authorize::checkConnection()
+{
+    if(db == &local) {
+        if(local.isOpen() && local.isValid())
+            return true;
+
+        qDebug() << "Authorize(RE-CONNECT)";
+        local.close();
+        if(!local.open()) {
+            failed = true;
+            error() << "Authorized connection failed";
+            return false;
+        }
+        else
+            failed = false;
+
+    }
+    if(!db)
+        return false;
+
+    return true;
+}
+
 bool Authorize::runQuery(const QString &request, const QVariantList &parms)
 {
     if(db == &local) {
+        if(!checkConnection())
+            return false;
+
+        unsigned retries = 0;
+
+retry:
         QSqlQuery query(local);
         query.prepare(request);
 
@@ -242,6 +301,8 @@ bool Authorize::runQuery(const QString &request, const QVariantList &parms)
             query.bindValue(count, parms.at(count));
 
         if(query.exec() != true) {
+            if(resume() && ++retries < 3)
+                goto retry;
             warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
             return false;
         }
@@ -254,6 +315,12 @@ bool Authorize::runQuery(const QString &request, const QVariantList &parms)
 QSqlQuery Authorize::getRecords(const QString& request, const QVariantList& parms)
 {
     if(db == &local) {
+        if(!checkConnection())
+            return QSqlQuery();
+
+        unsigned retries = 0;
+
+retry:
         QSqlQuery query(local);
         query.prepare(request);
         int count = -1;
@@ -261,8 +328,12 @@ QSqlQuery Authorize::getRecords(const QString& request, const QVariantList& parm
         while(++count < parms.count())
             query.bindValue(count, parms.at(count));
 
-        if(!query.exec())
+        if(!query.exec()) {
+            if(resume() && ++retries < 3)
+                goto retry;
+            warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
             return QSqlQuery();
+        }
 
         return query;
     }
@@ -274,6 +345,12 @@ QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parm
 {
 
     if(db == &local) {
+        if(!checkConnection())
+            return QSqlRecord();
+
+        unsigned retries = 0;
+
+retry:
         QSqlQuery query(local);
         query.prepare(request);
         int count = -1;
@@ -281,8 +358,12 @@ QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parm
         while(++count < parms.count())
             query.bindValue(count, parms.at(count));
 
-        if(!query.exec())
+        if(!query.exec()) {
+            if(resume() && ++retries < 3)
+                goto retry;
+            warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
             return QSqlRecord();
+        }
 
         if(!query.next())
             return QSqlRecord();

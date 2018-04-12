@@ -20,6 +20,7 @@
 #include <QDebug>
 #include <QCryptographicHash>
 #include <QDateTime>
+//#include <QSettings>
 
 #ifdef DESKTOP_PREFIX
 
@@ -42,6 +43,9 @@ static QString storagePath(const QString& dbName)
 }
 
 #endif
+//#if defined(DESKTOP_PREFIX)
+//#define CONFIG_FROM DESKTOP_PREFIX "/settings.cfg", QSettings::IniFormat
+//#endif
 
 Storage *Storage::Instance = nullptr;
 UString Storage::FromAddress;
@@ -108,9 +112,12 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "uri VARCHAR(128),"
             "dialing VARCHAR(64),"                  // used to tie together msgs
             "display VARCHAR(64) DEFAULT NULL,"
-            "mailto VARCHAR(128),"
-            "puburi VARCHAR(128),"
-            "last DATETIME DEFAULT 0);",
+            "mailto VARCHAR(128) DEFAULT '',"
+            "puburi VARCHAR(128) DEFAULT '',"
+            "last DATETIME DEFAULT 0,"
+            "info TEXT DEFAULT '',"
+            "coverage INTEGER DEFAULT -1,"
+            "answering INTEGER DEFAULT 0);",
         "CREATE INDEX ByContact ON Contacts(last DESC, sequence DESC);",
 
         // Messages are stored in the database to be reloaded when the client
@@ -127,7 +134,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "posted TIMESTAMP,"
             "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
             "callduration INTEGER DEFAULT 0,"       // call duration...
-            "expires INTEGER DEFAULT 0,"            // carried expires header
+            "expires TIMESTAMP ,"            // carried expires header
             "status Integer Default 0,"             // add status of message 0 for active 1 for expired
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"                         // depends on type...
@@ -142,6 +149,14 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
         {cred["extension"], cred["user"], cred["display"], cred["label"], cred["secret"], QString::fromUtf8(ServerAddress), cred["schema"], cred["host"], cred["port"], cred["type"], cred["realm"]});
 }
 
+void Storage::updateExpiration(int expires){
+    QDateTime current = current.currentDateTime();
+    QDateTime expired = current.addSecs(-(expires));
+
+    qDebug() << "current date is" << current << " is Expire is " << expires << " expired is " << expired << endl;
+    runQuery("UPDATE Messages set expires=?", {expired});
+
+}
 Storage::~Storage()
 {
     Instance = nullptr;
@@ -258,6 +273,11 @@ QVariant Storage::insert(const QString& request, const QVariantList &parms)
     }
 
     return query.lastInsertId();
+}
+
+void Storage::updateSelf(const QString& text)
+{
+    runQuery("UPDATE Credentials SET display=? WHERE id=1;", {text});
 }
 
 void Storage::updateCredentials(const QVariantHash &update)

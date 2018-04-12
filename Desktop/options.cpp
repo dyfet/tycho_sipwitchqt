@@ -23,7 +23,6 @@
 #include "sessions.hpp"
 #include <QFontDialog>
 
-
 #ifdef  HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -43,33 +42,36 @@ QWidget(), desktop(control)
     connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
     connect(ui.pickfontbutton, &QPushButton::clicked, this, &Options::fontDialog);
     connect(ui.resetFont, &QPushButton::clicked , control , &Desktop::resetFont);
-    connect(ui.expires,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=](int expiresIndex){
+    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex){
 
-        QString expires = QString (desktop->expiration());
-        switch(expiresIndex) {
-        case 0:
-//            expiresIndex = 0;
-            expires = "1";
-            desktop->changeExpiration(expires);
-            break;
-        case 3:
-//            expiresIndex = 3;
-            expires = "30";
-            desktop->changeExpiration(expires);
-            break;
-        case 2:
-//            expiresIndex = 2;
-            expires = "14";
-            desktop->changeExpiration(expires);
-            break;
-        case 1:
-//            expiresIndex = 1
-            expires = "7";
-            desktop->changeExpiration(expires);
-            break;
-        default:
-            break;
+
+        int expiration = 86400;
+        if (expiresIndex == "3 min")
+        {
+            expiration = 3 * 60;
+            desktop->changeExpiration(expiration);
+        } else if (expiresIndex == "10 min")
+        {
+            expiration = 10 * 60;
+            desktop->changeExpiration(expiration);
+        } else if (expiresIndex == "1")
+        {
+            expiration = 1 * 86400;
+            desktop->changeExpiration(expiration);
+        } else if (expiresIndex == "7")
+        {
+            expiration = 7 * 86400;
+            desktop->changeExpiration(expiration);
+        } else if (expiresIndex == "14")
+        {
+            expiration = 14 * 86400;
+            desktop->changeExpiration(expiration);
+        }else if (expiresIndex == "30")
+        {
+            expiration = 30 * 86400;
+            desktop->changeExpiration(expiration);
         }
+
     });
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
@@ -106,7 +108,6 @@ void Options::enter()
     ui.appearance->setCurrentText(desktop->appearance());
 
     auto creds = storage->credentials();
-    ui.displayName->setText(creds["display"].toString());
     ui.server->setText(creds["host"].toString());
     ui.secret->setText("");
 
@@ -114,8 +115,8 @@ void Options::enter()
     // part of code later as we will have different expiration options
     // that will work*/
 
-    QString expires = QString (desktop->expiration());
-    desktop->changeExpiration(expires);
+//    QString expires = QString (desktop->expiration());
+//    desktop->changeExpiration(expires);
 
 //    ui.expires->setCurrentIndex(expiresIndex);
 

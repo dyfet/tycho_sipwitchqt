@@ -20,6 +20,7 @@
 #include "../Dialogs/about.hpp"
 #include "../Dialogs/devicelist.hpp"
 #include "../Dialogs/logout.hpp"
+#include "../Dialogs/adduser.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
@@ -53,9 +54,15 @@ static void signal_handler(int signo)
 #ifdef Q_OS_MAC
 #include <objc/objc.h>
 #include <objc/message.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
 
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const QString& text);
+
+static io_connect_t ioroot = 0;
+static io_object_t iopobj;
+static IONotificationPortRef iopref;
 
 static bool dock_click_handler(::id self, SEL _cmd, ...)
 {
@@ -66,6 +73,52 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
     QMetaObject::invokeMethod(desktop, "dockClicked", Qt::QueuedConnection);
     return false;
 }
+
+static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
+    Q_UNUSED(ioservice);
+    Q_UNUSED(ref);
+
+    auto desktop = Desktop::instance();
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+
+    switch(mtype) {
+    case kIOMessageCanSystemSleep:
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemWillSleep:
+        QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
+        IOAllowPowerChange(ioroot, (long)args);
+        break;
+    case kIOMessageSystemHasPoweredOn:
+        QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
+        break;
+    default:
+        break;
+    }
+
+#pragma clang pop
+}
+
+static void iop_startup()
+{
+    void *ref = nullptr;
+
+    if(ioroot != 0)
+        return;
+
+    ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
+    if(!ioroot) {
+        qWarning() << "Registration for power management failed";
+        return;
+    }
+    else
+        qDebug() << "Power management enabled";
+
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
+}
+
 #endif
 
 #ifdef Q_OS_WIN
@@ -81,19 +134,17 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
     Q_UNUSED(result);
 
     MSG *msg = static_cast<MSG*>(message);
-    Desktop *desktop = nullptr;
-
-    Q_UNUSED(desktop);
+    auto desktop = Desktop::instance();
 
     switch(msg->message) {
     case WM_POWERBROADCAST:
         switch(msg->wParam) {
         case PBT_APMRESUMEAUTOMATIC:
         case PBT_APMRESUMESUSPEND:
-//          resume...
+            QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
             break;
         case PBT_APMSUSPEND:
-//          suspend..
+            QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
             break;
         default:
             break;
@@ -120,6 +171,8 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     Instance = this;
     connector = nullptr;
     front = true;
+    powerReconnect = false;
+    updateRoster = true;
 
     // for now, just this...
     baseFont = getBasicFont();
@@ -138,7 +191,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
-    currentExpiration = 86400 * settings.value("expires", 7).toInt();
+    currentExpiration = settings.value("expires", 7 * 86400).toInt();
     currentAppearance = settings.value("appearance", "Vibrant").toString();
 
     control = new Control(this);
@@ -157,11 +210,14 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
     connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
+    connect(toolbar->addUser(), &QPushButton::pressed, this, &Desktop::openAddUser);
 
     connect(ui.appLogout, &QAction::triggered, this, &Desktop::openLogout);
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
 
 #if defined(Q_OS_MAC)
+    iop_startup();
+
     appBar = new QMenuBar(this);
     appMenu = appBar->addMenu(tr("SipWitchQt Desktop"));
     appMenu->addAction(ui.appAbout);
@@ -370,6 +426,17 @@ void Desktop::setState(state_t state)
 #endif
 }
 
+void Desktop::openAddUser()
+{
+    closeDialog();
+    setEnabled(false);
+    auto obj = new AddUser(this, connector);
+    dialog = obj;
+    connect(obj, &AddUser::error, this, [=](const QString& msg) {
+        errorMessage(msg);
+    });
+}
+
 void Desktop::openAbout()
 {
     closeDialog();
@@ -401,6 +468,7 @@ void Desktop::eraseLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
+    updateRoster = true;
 }
 
 void Desktop::closeLogout()
@@ -419,7 +487,7 @@ void Desktop::closeLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
-
+    updateRoster = true;        // force update at next login...
 }
 
 void Desktop::closeDialog()
@@ -490,10 +558,14 @@ void Desktop::clearMessage()
     ui.statusBar->clearMessage();
 }
 
-void Desktop::changeExpiration(const QString& expires)
+
+
+void Desktop::changeExpiration(int expires)
 {
-    settings.setValue("expires", expires.toInt());
-    currentExpiration = (86400 * expires.toInt());
+    storage->updateExpiration(expires);
+    currentExpiration = expires;
+    settings.setValue("expires", expires);
+    qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
 }
 
 void Desktop::changeAppearance(const QString& appearance)
@@ -538,6 +610,7 @@ void Desktop::menuClicked()
     popup->addAction(ui.appAbout);
     if(storage && (State == Desktop::OFFLINE || State == Desktop::ONLINE))
         popup->addAction(ui.trayAway);
+    popup->addAction(ui.trayDnd);
     popup->addAction(ui.appLogout);
     popup->addAction(ui.appQuit);
     popup->popup(this->mapToGlobal(QPoint(4, 24)));
@@ -551,6 +624,37 @@ void Desktop::menuClicked()
 void Desktop::dockClicked()
 {
     trayAction(QSystemTrayIcon::MiddleClick);
+}
+
+void Desktop::powerSuspend()
+{
+    qDebug() << "*** POWER SUSPEND";
+    if(connector) {
+        closeDialog();
+        setEnabled(false);
+        statusMessage(tr("suspending..."));
+        offline();
+        powerReconnect = true;
+    }
+    else
+        powerReconnect = false;
+}
+
+void Desktop::powerResume()
+{
+    qDebug() << "*** POWER RESUME";
+    if(!connector && powerReconnect && storage) {
+        powerReconnect = false;
+        statusMessage(tr("resuming..."));
+        QTimer::singleShot(1200, this, [this]() {
+            setEnabled(true);
+            if(!connector && !listener) {
+                listen(storage->credentials());
+            }
+        });
+    }
+    else
+        setEnabled(true);
 }
 
 void Desktop::trayAway()
@@ -599,6 +703,9 @@ void Desktop::statusResult(int status, const QString& text)
     case SIP_NOT_FOUND:
     case SIP_DOES_NOT_EXIST_ANYWHERE:
         msg = tr("Unknown extension or name used");
+        break;
+    case SIP_CONFLICT:
+        msg = tr("Cannot modify existing");
         break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
@@ -705,6 +812,7 @@ void Desktop::failed(int error_code)
 
 void Desktop::offline()
 {
+    toolbar->disableAddContact();
     // if already offline, we can ignore...
     if(!listener)
         return;
@@ -749,6 +857,8 @@ void Desktop::authorized(const QVariantHash& creds)
 {
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
+    if(isAdmin())
+        toolbar->enableAddContact();
 
     // apply or update credentials only after successfull authorization
     if(storage)
@@ -799,11 +909,6 @@ void Desktop::authorized(const QVariantHash& creds)
     setState(ONLINE);
 }
 
-void Desktop::setBanner(const QString& banner)
-{
-    setWindowTitle(banner);
-}
-
 void Desktop::listen(const QVariantHash& cred)
 {
     Q_ASSERT(listener == nullptr);
@@ -813,11 +918,30 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
-    connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
+    //connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
     connect(listener, &Listener::statusResult, this, &Desktop::statusResult);
+
+    connect(listener, &Listener::changeBanner, this, [this](const QString& banner) {
+        setWindowTitle(banner);
+    });
+
+    connect(listener, &Listener::updateRoster, this, [this]() {
+        if(!updateRoster && connector)
+            connector->requestRoster();
+        updateRoster = true;
+    });
+
     sessions->listen(listener);
     listener->start();
     authorizing();
+}
+
+void Desktop::setSelf(const QString& text)
+{
+    if(storage) {
+        storage->updateSelf(text);
+        emit changeSelf(text);
+    }
 }
 
 // Calls the Storage::copyDb function to copy existing database
@@ -843,7 +967,6 @@ void Desktop::exportDb()
 // Import database after make sure that client has went offline.
 void Desktop::importDb()
 {
-
     Q_ASSERT(storage != nullptr);
 
     emit changeStorage(nullptr);
@@ -851,7 +974,6 @@ void Desktop::importDb()
     offline();
     delete storage;
     storage = nullptr;
-
 
     auto ext = credentials()["extension"].toString();
     auto lab = credentials()["label"].toString();
@@ -879,10 +1001,14 @@ void Desktop::importDb()
     }
 
 }
-void Desktop::resetFont(){
+
+void Desktop::resetFont() {
     setTheFont(getBasicFont());
     sessions->refreshFont();
 }
+
+
+
 
 
 int main(int argc, char *argv[])

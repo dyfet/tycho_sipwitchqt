@@ -54,6 +54,7 @@ public:
     }
 
     void updateCredentials(const QVariantHash &cred);
+    void updateSelf(const QString& text);
 
     static Storage *instance() {
         return Instance;
@@ -79,6 +80,8 @@ public:
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     int copyDb(const QString& dbName);
     static bool importDb(const QString &dbName, const QVariantHash &creds);
+
+    void updateExpiration(int expires);
 
 private:
     QSqlDatabase db;
@@ -142,6 +145,9 @@ private:
  * Used to update the credentials stored in the currently opened database.
  * This only updates values that are supplied.  All other credential values
  * are unchanged in storage.
+ *
+ * \fn Storage::updateSelf(const QString& displayName)
+ * Used to update the display name of the active user.
  *
  * \fn Storage::server()
  * Convenience method to find the SipWitchQt server uri the currently open

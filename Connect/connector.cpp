@@ -33,6 +33,7 @@
 #define X_DEVLIST   "X-DEVLIST"
 #define X_PENDING   "X-PENDING"
 #define A_PENDING   "A-PENDING"
+#define X_AUTHORIZE "X-AUTHORIZE"
 
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_ROSTER))
@@ -42,6 +43,12 @@
 
 #define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_PENDING))
+
+#define MSG_IS_PROFILE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_PROFILE))
+
+#define MSG_IS_AUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_AUTHORIZE))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -134,6 +141,42 @@ void Connector::add_authentication()
 
     Locker lock(context);
     eXosip_add_authentication_info(context, serverId, user, secret, algo, realm);
+}
+
+void Connector::createAuthorize(const UString& to, const QByteArray& body)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + UString::uri(serverSchema, to, serverHost, serverPort) + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_AUTHORIZE, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    if(body.size() > 0) {
+        osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+        osip_message_set_content_type(msg, "authorize/json");
+    }
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::sendProfile(const UString& to, const QByteArray& body)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_PROFILE, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    if(body.size() > 0) {
+        osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+        osip_message_set_content_type(msg, "profile/json");
+    }
+    eXosip_message_send_request(context, msg);
 }
 
 void Connector::requestRoster()
@@ -244,9 +287,10 @@ void Connector::run()
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error, QDateTime(), 0);
-            if(error != SIP_UNAUTHORIZED)
+            if(error != SIP_UNAUTHORIZED) {
                 emit statusResult(error, "");
                 qDebug() << "*** FAILED" << error;
+            }
             if(error == 666)
                 emit failure(666);
             break;
@@ -257,6 +301,18 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
+                else if(MSG_IS_PROFILE(event->request))
+                    processProfile(event);
+                else if(MSG_IS_AUTHORIZE(event->request)) {
+                    emit statusResult(SIP_OK, "");
+                    UString target = "0";
+                    if(event->request->to && event->request->to->url && event->request->to->url->username)
+                        target = event->request->to->url->username;
+                    if(target.toInt() > 0) {
+                        target = UString::uri(serverSchema, target, serverHost, serverPort);
+                        requestProfile(target);
+                    }
+                }
                 else if(MSG_IS_DEVLIST(event->request))
                     processDeviceList(event);
                 else if(MSG_IS_PENDING(event->request))
@@ -335,6 +391,16 @@ void Connector::processDeviceList(eXosip_event_t *event)
     if(body && body->body && body->length > 0) {
         QByteArray json(body->body, static_cast<int>(body->length));
         emit changeDeviceList(json);
+    }
+}
+
+void Connector::processProfile(eXosip_event_t *event)
+{
+    osip_body_t *body = nullptr;
+    osip_message_get_body(event->response, 0, &body);
+    if(body && body->body && body->length > 0) {
+        QByteArray json(body->body, static_cast<int>(body->length));
+        emit changeProfile(json);
     }
 }
 

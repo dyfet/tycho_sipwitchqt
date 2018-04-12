@@ -23,6 +23,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QLineEdit>
+#include <QPushButton>
 
 #include "../Common/compiler.hpp"
 
@@ -37,7 +38,10 @@ public:
     void clearSearch();
     void disableSearch();
     void enableSearch();
+    void enableAddContact();
+    void disableAddContact();
     QString searching();
+    QPushButton *addUser();
 
     static inline Toolbar *instance() {
         return Instance;

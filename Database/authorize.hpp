@@ -38,6 +38,8 @@ public:
 protected:
     Authorize(unsigned order);
 
+    bool checkConnection();
+    bool resume();
     bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
     int runQuery(const QStringList& list);
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
@@ -47,6 +49,7 @@ private:
     Database *database;
     QSqlDatabase *db;
     QSqlDatabase local;
+    bool failed;
 
     static Authorize *Instance;
 

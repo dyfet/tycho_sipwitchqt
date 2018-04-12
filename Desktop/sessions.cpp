@@ -388,6 +388,10 @@ QWidget(), desktop(control), model(nullptr)
         scrollToBottom();
     });
 
+    connect(control, &Desktop::changeSelf, this, [](const QString& text) {
+        ui.self->setText(text);
+    });
+
     SessionModel::purge();
     ui.sessions->setItemDelegate(new SessionDelegate(this));
     ui.messages->setItemDelegate(new MessageDelegate(ui.messages));
@@ -508,8 +512,8 @@ void Sessions::search()
         }
     }
     else{
-        activeItem->filtered = Sessions::searchMessages(QString::fromUtf8(text));
-        qDebug() << Sessions::searchMessages(QString::fromUtf8(text)) << endl;
+        activeItem->filtered = searchMessages(QString::fromUtf8(text));
+        qDebug() << searchMessages(QString::fromUtf8(text)) << endl;
         activeItem->model()->changeLayout();
     }
 
@@ -811,6 +815,7 @@ void Sessions::updateIndicators(SessionItem *item)
     // TODO: sorting, marking unread, etc...
 }
 
+
 void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int sequence)
 {
     if(!error.isEmpty())
@@ -842,8 +847,6 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
     else
         ui.messages->setFocus();
 }
-
-
 
 
 

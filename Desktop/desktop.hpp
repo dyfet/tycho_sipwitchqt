@@ -105,29 +105,38 @@ public:
         return isCurrent(options);
     }
 
-    inline QFont getCurrentFont(){                                      // get current value from the settings.cfg
+    QVariantHash storageCredentials() const {
+        if(storage)
+            return storage->credentials();
+        else
+            return QVariantHash();
+    }
+
+    inline bool checkRoster() const {
+        return updateRoster;
+    }
+
+    inline void clearRoster() {
+        updateRoster = false;
+    }
+
+    inline QFont getCurrentFont() {                                      // get current value from the settings.cfg
         baseFont.fromString(settings.value("font").toString());         // make fonts persistant across sessions and endpoints
         if (!(baseFont.fromString(settings.value("font").toString())))  // So font is now client related and persistent
             baseFont = QGuiApplication::font();
         return baseFont;
     }
+
     inline QFont getBasicFont() {                      // simple getter for cases that current font do not work.
         baseFont = QGuiApplication::font();
         return baseFont;
     }
 
 
-    inline void setTheFont(const QFont& font){         // set the global value of a basefont
+    inline void setTheFont(const QFont& font) {         // set the global value of a basefont
         baseFont = font;
         settings.setValue("font", font.toString());
         emit changeFont();
-    }
-
-    QVariantHash storageCredentials() const {
-        if(storage)
-            return storage->credentials();
-        else
-            return QVariantHash();
     }
 
     // status bar functions...
@@ -136,6 +145,7 @@ public:
     void statusMessage(const QString& msg, int timeout = 5000);
     void clearMessage();
 
+    void setSelf(const QString& text);
     bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
@@ -171,6 +181,14 @@ public:
         return Credentials;
     }
 
+    inline static bool isAdmin() {
+        return (Credentials["privs"].toString() == "sysadmin");
+    }
+
+    inline static bool isOperator() {
+        return (Credentials["privs"].toString() == "operator");
+    }
+
 private:
     Login *login;
     Sessions *sessions;
@@ -193,6 +211,8 @@ private:
     QDialog *dialog;
     QFont baseFont;
     QString dbName;
+    bool powerReconnect;
+    bool updateRoster;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
@@ -207,15 +227,17 @@ private:
 signals:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *state);
+    void changeSelf(const QString& text);
     void changeFont();
 
 public slots:
-
     void closeDeviceList();
     void openDeviceList();
 
     void initial();
     void dockClicked();
+    void powerSuspend();
+    void powerResume();
     void menuClicked();
 
     void closeDialog();
@@ -223,6 +245,7 @@ public slots:
     void closeLogout();
     void openAbout();
     void openLogout();
+    void openAddUser();
 
     void showOptions();
     void showSessions();
@@ -231,7 +254,7 @@ public slots:
     void importDb();
 
     void changeAppearance(const QString& appearance);
-    void changeExpiration(const QString& expiration);
+    void changeExpiration(int expire);
     void resetFont();
 
 
@@ -245,8 +268,6 @@ private slots:
     void appState(Qt::ApplicationState state);
     void trayAction(QSystemTrayIcon::ActivationReason reason);
     void trayAway();
-
-    void setBanner(const QString& banner);
     void shutdown(); // application shutdown
 };
 

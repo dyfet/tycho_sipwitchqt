@@ -30,7 +30,8 @@
 
 static const char *eid(eXosip_event_type ev);
 
-static bool exiting = false;
+static bool exitingFlag = false;
+static unsigned rosterSequence = 0xffff;
 
 // internal lock class
 class Locker final
@@ -402,7 +403,7 @@ void Listener::run()
         eXosip_event_free(event);
     }
 
-    if(!exiting)
+    if(!exitingFlag)
         emit finished();
     eXosip_quit(context);
     context = nullptr;
@@ -551,6 +552,7 @@ QVariantHash Listener::parseXdp(const UString& xdp)
 {
     QVariantHash result;
     auto lines = xdp.split('\n');
+    serverCreds["privs"] = "none";
     foreach(auto line, lines) {
         if(line.left(2) == "b=") {
             auto banner = line.mid(2);
@@ -563,8 +565,16 @@ QVariantHash Listener::parseXdp(const UString& xdp)
             sipFrom = UString("\"") + UString(line.mid(2)) + "\" <" + uriFrom + ">";
             serverCreds["display"] = line.mid(2);
         }
+        else if(line.left(2) == "p=")
+            serverCreds["privs"] = line.mid(2);
         else if(line.left(2) == "f=")
             serverFirst = line.mid(2).toInt();
+        else if(line.left(2) == "r=") {
+            auto rosterPrior = rosterSequence;
+            rosterSequence = line.mid(2).toUInt();
+            if(rosterSequence != rosterPrior)
+                emit updateRoster();
+        }
         else if(line.left(2) == "l=")
             serverLast = line.mid(2).toInt();
         else if(line.left(2) == "a=") {
@@ -589,7 +599,7 @@ void Listener::timeout()
 
 void Listener::stop(bool shutdown)
 {
-    exiting = shutdown;
+    exitingFlag = shutdown;
     active = false;
 }
 
