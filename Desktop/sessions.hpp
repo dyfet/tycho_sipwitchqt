@@ -116,7 +116,6 @@ public:
     unsigned loadMessages();
     QString title();
     bool setOnline(bool flag);
-//    QStringList searchMessages(QString searchTerm);
 
 
 

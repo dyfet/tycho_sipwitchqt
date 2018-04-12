@@ -522,6 +522,16 @@
             </property>
             <item>
              <property name="text">
+              <string>3 min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>10 min</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
               <string>1</string>
              </property>
             </item>
