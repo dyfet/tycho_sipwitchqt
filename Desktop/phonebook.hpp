@@ -81,6 +81,14 @@ public:
         return contactTimestamp;
     }
 
+    QString info() const {
+        return extendedInfo;
+    }
+
+    QString dialed() const {
+        return textNumber;
+    }
+
     QDateTime updated() const {
         return contactUpdated;
     }
@@ -101,6 +109,8 @@ public:
         return contactFilter;
     }
 
+    void add();
+
     static QList<ContactItem*> sessions() {
         return groups + users;
     }
@@ -109,6 +119,8 @@ public:
         return index[uid];
     }
 
+    static QStringList allUsers();
+    static QStringList allGroups();
     static ContactItem *findText(const QString& text);
     static ContactItem *findExtension(int number);
     static ContactItem *find(const UString& who);
@@ -119,14 +131,17 @@ private:
     UString displayName, contactUri, contactTimestamp, contactType;
     UString contactPublic, contactEmail;
     QString contactFilter, textDisplay, textNumber, authUserId;
+    QString extendedInfo;
     QDateTime contactUpdated;
-    bool group;
+    bool group, added;
     int extensionNumber;
     int uid;
 
     static QList<ContactItem *> users, groups;
     static QHash<UString,ContactItem *> foreign;
     static QHash<int,ContactItem *> index;
+    static QSet<QString> usrAuths;
+    static QSet<QString> grpAuths;
 };
 
 class LocalContacts final : public QAbstractListModel
@@ -137,7 +152,7 @@ public:
     LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
     void setFilter(const UString& filter);
 
-    void updateContact(const QJsonObject& json);
+    ContactItem *updateContact(const QJsonObject& json);
     void clickContact(int row);
 
 private:    
@@ -164,14 +179,23 @@ public:
 
     void enter();
 
+    static Phonebook *instance() {
+        return Instance;
+    }
+
     static ContactItem *self();
 
 private:
     Desktop *desktop;
     LocalDelegate *localPainter;
     LocalContacts *localModel;
+    bool requestPending;
     Connector *connector;
     QTimer refreshRoster;
+
+    static Phonebook *Instance;
+
+    void updateProfile(ContactItem *item);
 
 signals:
      void changeSessions(Storage *storage, const QList<ContactItem *>& contacts);
@@ -182,6 +206,9 @@ private slots:
     void selectContact(const QModelIndex& index);
     void changeConnector(Connector *connector);
     void changeStorage(Storage *storage);
+    void changeProfile();
+    void promoteRemote();
+    void demoteLocal();
 };
 
 #endif

@@ -127,6 +127,13 @@ void Authorize::findEndpoint(const Event& event)
         return;
     }
 
+    auto access = authorize.value("authaccess");
+    if(access == "SUSPEND") {
+        warning() << "Extension " << number << " has been suspended";
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
     auto type = authorize.value("authtype").toString();
     if(type != "USER" && type != "DEVICE") {
         warning() << "Cannot authorize " << number << " as a " << type.toLower();
@@ -155,6 +162,16 @@ void Authorize::findEndpoint(const Event& event)
     if(display.isEmpty())
         display = user;
 
+    auto privs = QString("none");
+    auto record = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {number});
+    if(record.count() > 0)
+        privs = "sysadmin";
+    else {
+        record = getRecord("SELECT * FROM Groups WHERE (grpnbr=0) AND (extnbr=?);", {number});
+        if(record.count() > 0)
+            privs = "operator";
+    }
+
     QVariantHash reply = {
         {"realm", authorize.value("realm")},
         {"user", user},
@@ -166,6 +183,7 @@ void Authorize::findEndpoint(const Event& event)
         {"endpoint", eid},
         {"origin", request},
         {"expires", expires},
+        {"privs", privs},
     };
     emit createEndpoint(event, reply);
 }
@@ -182,22 +200,22 @@ void Authorize::activate(const QVariantHash& config, bool opened)
     if(database->isFile() && opened)
         db = &database->db;
     else if(opened) {
-        local = QSqlDatabase::addDatabase(database->driver, "auth");
+        local = QSqlDatabase::addDatabase(database->dbDriver, "auth");
         db = &local;
         if(!db->isValid()) {
             error() << "Invalid auth connection";
             db = nullptr;
         }
         else {
-            db->setDatabaseName(database->name);
-            if(!database->host.isEmpty())
-                db->setHostName(database->host);
-            if(database->port)
-                db->setPort(database->port);
-            if(!database->user.isEmpty())
-                db->setUserName(database->user);
-            if(!database->pass.isEmpty())
-                db->setPassword(database->pass);
+            db->setDatabaseName(database->dbName);
+            if(!database->dbHost.isEmpty())
+                db->setHostName(database->dbHost);
+            if(database->dbPort)
+                db->setPort(database->dbPort);
+            if(!database->dbUser.isEmpty())
+                db->setUserName(database->dbUser);
+            if(!database->dbPass.isEmpty())
+                db->setPassword(database->dbPass);
             if(!db->open()) {
                 failed = true;
                 error() << "Failed auth connection";

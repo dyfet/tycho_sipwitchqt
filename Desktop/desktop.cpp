@@ -20,6 +20,7 @@
 #include "../Dialogs/about.hpp"
 #include "../Dialogs/devicelist.hpp"
 #include "../Dialogs/logout.hpp"
+#include "../Dialogs/adduser.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 
@@ -209,6 +210,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
     connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
+    connect(toolbar->addUser(), &QPushButton::pressed, this, &Desktop::openAddUser);
 
     connect(ui.appLogout, &QAction::triggered, this, &Desktop::openLogout);
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
@@ -424,6 +426,17 @@ void Desktop::setState(state_t state)
 #endif
 }
 
+void Desktop::openAddUser()
+{
+    closeDialog();
+    setEnabled(false);
+    auto obj = new AddUser(this, connector);
+    dialog = obj;
+    connect(obj, &AddUser::error, this, [=](const QString& msg) {
+        errorMessage(msg);
+    });
+}
+
 void Desktop::openAbout()
 {
     closeDialog();
@@ -455,6 +468,7 @@ void Desktop::eraseLogout()
     ui.pagerStack->setCurrentWidget(login);
     login->enter();
     ui.appPreferences->setEnabled(false);
+    updateRoster = true;
 }
 
 void Desktop::closeLogout()
@@ -592,6 +606,7 @@ void Desktop::menuClicked()
     popup->addAction(ui.appAbout);
     if(storage && (State == Desktop::OFFLINE || State == Desktop::ONLINE))
         popup->addAction(ui.trayAway);
+    popup->addAction(ui.trayDnd);
     popup->addAction(ui.appLogout);
     popup->addAction(ui.appQuit);
     popup->popup(this->mapToGlobal(QPoint(4, 24)));
@@ -684,6 +699,9 @@ void Desktop::statusResult(int status, const QString& text)
     case SIP_NOT_FOUND:
     case SIP_DOES_NOT_EXIST_ANYWHERE:
         msg = tr("Unknown extension or name used");
+        break;
+    case SIP_CONFLICT:
+        msg = tr("Cannot modify existing");
         break;
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
@@ -790,6 +808,7 @@ void Desktop::failed(int error_code)
 
 void Desktop::offline()
 {
+    toolbar->disableAddContact();
     // if already offline, we can ignore...
     if(!listener)
         return;
@@ -834,6 +853,8 @@ void Desktop::authorized(const QVariantHash& creds)
 {
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
+    if(isAdmin())
+        toolbar->enableAddContact();
 
     // apply or update credentials only after successfull authorization
     if(storage)
@@ -901,12 +922,22 @@ void Desktop::listen(const QVariantHash& cred)
     });
 
     connect(listener, &Listener::updateRoster, this, [this]() {
+        if(!updateRoster && connector)
+            connector->requestRoster();
         updateRoster = true;
     });
 
     sessions->listen(listener);
     listener->start();
     authorizing();
+}
+
+void Desktop::setSelf(const QString& text)
+{
+    if(storage) {
+        storage->updateSelf(text);
+        emit changeSelf(text);
+    }
 }
 
 // Calls the Storage::copyDb function to copy existing database

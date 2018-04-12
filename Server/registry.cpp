@@ -74,6 +74,7 @@ timeout(-1), serverContext(nullptr)
     userId = ep.value("user").toString();
     userSecret = ep.value("secret").toString().toUtf8();
     userOrigin = ep.value("origin").toByteArray();
+    userPrivs = ep.value("privs").toString().toUtf8();
     number = ep.value("number").toInt();
     userLabel = ep.value("label").toString().toUtf8();
     timeout = ep.value("expires").toInt() * 1000l;

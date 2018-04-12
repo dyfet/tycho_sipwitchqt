@@ -36,7 +36,7 @@ public:
     ~Database() final;
 
     bool isFile() const {
-        return Util::dbIsFile(driver);
+        return Util::dbIsFile(dbDriver);
     }
 
     static Database *instance() {
@@ -68,20 +68,20 @@ private:
     static const int interval = 10000;
 
     QSqlDatabase db;
-    QSqlRecord config;
-    QTimer timer;
-    QString uuid;
-    QString realm;
-    QString driver;
-    QString host;
-    QString name;
-    QString user;
-    QString pass;
+    QSqlRecord dbConfig;
+    QTimer dbTimer;
+    QString dbUuid;
+    QString dbRealm;
+    QString dbDriver;
+    QString dbHost;
+    QString dbName;
+    QString dbUser;
+    QString dbPass;
+    int dbPort;
 
     int expiresNat, expiresUdp, expiresTcp;
 
     volatile int firstNumber, lastNumber, dbSequence;
-    int port;
 
     Database(unsigned order);
 
@@ -112,7 +112,9 @@ public slots:
 
 private slots:
     void sendRoster(const Event& ev);
+    void sendProfile(const Event& ev, const UString& auth);
     void sendPending(const Event& ev, qlonglong endpoint);
+    void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);
     void changePending(qlonglong endpoint);
 

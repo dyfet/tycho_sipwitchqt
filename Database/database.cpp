@@ -71,19 +71,21 @@ QObject()
     expiresTcp = 600;
 
     moveToThread(Server::createThread("database", order));
-    timer.moveToThread(thread());
-    timer.setSingleShot(true);
+    dbTimer.moveToThread(thread());
+    dbTimer.setSingleShot(true);
 
     Server *server = Server::instance();
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(server, &Server::changeConfig, this, &Database::applyConfig);
-    connect(&timer, &QTimer::timeout, this, &Database::onTimeout);
+    connect(&dbTimer, &QTimer::timeout, this, &Database::onTimeout);
 
     Manager *manager = Manager::instance();
     connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
+    connect(manager, &Manager::updateProfile, this, &Database::sendProfile);
     connect(manager, &Manager::sendDevlist, this, &Database::sendDeviceList);
     connect(manager, &Manager::sendPending, this, &Database::sendPending);
     connect(manager, &Manager::changePending, this, &Database::changePending);
+    connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
 }
 
@@ -233,7 +235,7 @@ bool Database::resume()
 
 void Database::close()
 {
-    timer.stop();
+    dbTimer.stop();
     if(db.isOpen()) {
         db.close();
         debug() << "Database(CLOSE)";
@@ -251,33 +253,33 @@ bool Database::reopen()
         return false;
 
     if(db.isOpen()) {
-        timer.setInterval(interval);
-        timer.setSingleShot(true);
+        dbTimer.setInterval(interval);
+        dbTimer.setSingleShot(true);
         return true;
     }
 
     close();
-    db = QSqlDatabase::addDatabase(driver, "default");
+    db = QSqlDatabase::addDatabase(dbDriver, "default");
     if(!db.isValid()) {
         failed = true;
         FOR_DEBUG(
             debug() << "Database(FAILED)";
         )
         FOR_RELEASE(
-            error() << "Invalid database driver " << driver;
+            error() << "Invalid database driver " << dbDriver;
         )
         return false;
     }
-    db.setDatabaseName(name);
+    db.setDatabaseName(dbName);
     if(!isFile()) {
-        if(!host.isEmpty())
-            db.setHostName(host);
-        if(port)
-            db.setPort(port);
-        if(!user.isEmpty())
-            db.setUserName(user);
-        if(!pass.isEmpty())
-            db.setPassword(pass);
+        if(!dbHost.isEmpty())
+            db.setHostName(dbHost);
+        if(dbPort)
+            db.setPort(dbPort);
+        if(!dbUser.isEmpty())
+            db.setUserName(dbUser);
+        if(!dbPass.isEmpty())
+            db.setPassword(dbPass);
     }
     db.open();
     if(!db.isOpen()) {
@@ -290,34 +292,33 @@ bool Database::reopen()
         return false;
     }
 
-    runQuery(Util::pragmaQuery(driver));
+    runQuery(Util::pragmaQuery(dbDriver));
 
     debug() << "Database(OPEN)";
-    timer.setInterval(interval);
-    timer.start();
+    dbTimer.setInterval(interval);
+    dbTimer.start();
     return true;
 }
 
 bool Database::create()
 {
-    bool init = Util::dbIsFile(driver);         // TODO: remove on IPL turnover
+    bool init = Util::dbIsFile(dbDriver);         // TODO: remove on IPL turnover
 
     failed = false;
 
-    if(init && QDir::current().exists(name))    // TODO: crit on IPL turnover
+    if(init && QDir::current().exists(dbName))    // TODO: crit on IPL turnover
         init = false;
 
     if(!reopen())
         return false;
 
-    info() << "Loaded database driver " << driver;
+    info() << "Loaded database driver " << dbDriver;
 
     if(init) {                                  // init is kept for now, later ipl...
-        runQuery(Util::createQuery(driver));
-        runQuery("INSERT INTO Config(realm) VALUES(?);", {
-                     realm});
+        runQuery(Util::createQuery(dbDriver));
+        runQuery("INSERT INTO Config(realm) VALUES(?);", {dbRealm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
-                     uuid, PROJECT_VERSION});
+                     dbUuid, PROJECT_VERSION});
         runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
                      "system", "SYSTEM", "LOCAL"});
         runQuery("INSERT INTO Authorize(authname, authtype, authaccess) VALUES(?,?,?);", {
@@ -328,30 +329,30 @@ bool Database::create()
                      "operators", "SYSTEM", "PILOT"});
         runQuery("INSERT INTO Extensions(extnbr, authname, display) VALUES (?,?,?);", {
                      0, "operators", "Operators"});
-        runQuery(Util::preloadConfig(driver));
+        runQuery(Util::preloadConfig(dbDriver));
     }
-    else if(Util::dbIsFile(driver)) {       // sqlite special case...
-        runQuery("UPDATE Config SET realm=? WHERE id=1;", {realm});
+    else if(Util::dbIsFile(dbDriver)) {       // sqlite special case...
+        runQuery("UPDATE Config SET realm=? WHERE id=1;", {dbRealm});
         runQuery("VACUUM");
     }
 
     QSqlQuery query(db);
     query.prepare("SELECT * FROM Config;");
     if(query.exec() && query.next())
-        config = query.record();
+        dbConfig = query.record();
 
-    if(config.count() < 1)
-        crit(80) << "Uninitialized database for " << driver << "; use ipl loader";
+    if(dbConfig.count() < 1)
+        crit(80) << "Uninitialized database for " << dbDriver << "; use ipl loader";
 
-    if(config.value("dialplan").toString() == "STD3") {
+    if(dbConfig.value("dialplan").toString() == "STD3") {
         firstNumber = 100;
         lastNumber = 699;
     }
 
     qDebug() << "Extension range" << firstNumber << "to" << lastNumber;
 
-    if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, uuid}))
-        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {uuid, PROJECT_VERSION});
+    if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, dbUuid}))
+        runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {dbUuid, PROJECT_VERSION});
 
     return true;
 }
@@ -661,6 +662,193 @@ void Database::sendPending(const Event& event, qlonglong endpoint)
     }
 }
 
+void Database::changeAuthorize(const Event& event)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "Seeking authorize for" << target;
+    if(target < firstNumber || target > lastNumber) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto record = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {event.number()});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    bool exists = getRecord("SELECT * FROM Extensions WHERE extnbr=?;", {target}).count() > 0;
+
+    auto jdoc = QJsonDocument::fromJson(event.body());
+    auto json = jdoc.object();
+    auto user = json["a"].toString();
+    if(!user.isEmpty()) {
+        if(exists || getRecord("SELECT * FROM Authorize WHERE authname=?;", {user}).count() > 0) {
+            Context::reply(event, SIP_CONFLICT);
+            return;
+        }
+        auto realm = json["r"].toString();
+        auto digest = json["d"].toString();
+        auto secret = json["s"].toString();
+        auto fullName = json["f"].toString();
+        auto type = json["t"].toString();
+        runQuery("INSERT INTO Authorize(authname, authdigest, realm, secret, fullname, authtype) "
+                 "VALUES(?,?,?,?,?,?);", {user, digest, realm, secret, fullName, type});
+
+    }
+    if(user.isEmpty()) {
+        user = json["e"].toString();
+        if(getRecord("SELECT * FROM Authorize WHERE authname=?;", {user}).count()  < 1) {
+            Context::reply(event, SIP_NOT_FOUND);
+            return;
+        }
+    }
+    if(!user.isEmpty() && exists) {
+        qDebug() << "Cannot create extension:" << target << "already exists";
+        Context::reply(event, SIP_CONFLICT);
+        return;
+    }
+
+    if(!user.isEmpty()) {
+        runQuery("INSERT INTO Extensions(extnbr, authname) "
+                 "VALUES(?,?);", {target, user});
+        runQuery("INSERT INTO Endpoints(extnbr) VALUES(?);", {target});
+        Manager::updateRoster();
+    }
+    Context::reply(event, SIP_OK);
+}
+
+void Database::sendProfile(const Event& event, const UString& authuser)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "Seeking profile for" << target;
+    if(target < firstNumber || target > lastNumber) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+
+    auto access = record.value("authaccess").toString();
+    auto display = record.value("display").toString();
+    auto altDisplay = record.value("fullname").toString();
+    if(altDisplay.isEmpty())
+        altDisplay = record.value("authname").toString();
+    if(display.isEmpty())
+        display = record.value("fullname").toString();
+    if(display.isEmpty())
+        display = record.value("authname").toString();
+    auto uri = event.uriTo(record.value("extnbr").toString());
+    auto email = record.value("email").toString();
+    auto userid = record.value("authname").toString();
+    QString info, puburi;
+    if(access == "REMOTE")
+        puburi = userid + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
+
+    auto privs = QString("none");
+    if(access == "SUSPEND")
+        privs = "suspend";
+    else {
+        auto admin = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {target});
+        if(admin.count() > 0)
+            privs = "sysadmin";
+        else {
+            auto oper = getRecord("SELECT * FROM Groups WHERE (grpnbr=0) AND (extnbr=?);", {target});
+            if(oper.count() > 0)
+                privs = "operator";
+        }
+    }
+
+    QJsonObject profile {
+        {"a", userid},
+        {"n", target},
+        {"d", display},
+        {"u", QString::fromUtf8(uri)},
+        {"t", record.value("authtype").toString()},
+        {"e", email},
+        {"p", puburi},
+        {"i", info},
+        {"s", privs},
+    };
+
+    if(event.body().size() > 0) {
+        bool allowed = (userid == authuser);
+        bool operAllowed = false;
+        bool admin = false;
+
+        record = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {event.number()});
+        if(record.count() > 0) {
+            admin = true;
+            allowed = true;
+            operAllowed = true;
+        }
+
+        if(!operAllowed) {
+            record = getRecord("SELECT * FROM Groups WHERE (grpnbr=0) AND (extnbr=?);", {event.number()});
+            if(record.count() > 0)
+                operAllowed = true;
+        }
+
+        if(!allowed && !operAllowed) {
+            Context::reply(event, SIP_FORBIDDEN);
+            return;
+        }
+
+        auto jdoc = QJsonDocument::fromJson(event.body());
+        auto json = jdoc.object();
+        auto display = json["d"].toString();
+        auto email = json["e"].toString();
+        auto changedAccess = json["a"].toString().toUpper();
+
+        if(!changedAccess.isEmpty() && !admin) {
+            Context::reply(event, SIP_FORBIDDEN);
+            return;
+        }
+
+        if(changedAccess == "LOCAL" && access == "REMOTE") {
+            profile["p"] = "";
+            access = "LOCAL";
+        }
+        else if(changedAccess == "REMOTE" && access == "LOCAL") {
+            access = "REMOTE";
+            profile["p"] = userid + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
+        }
+        else if(!changedAccess.isEmpty()) {
+            Context::reply(event, SIP_FORBIDDEN);
+            return;
+        }
+
+        if(changedAccess.isEmpty()) {
+            if(operAllowed || allowed) {
+                if(display.isEmpty())
+                    display = altDisplay;
+                profile["d"] = display;
+            }
+            else
+                display = profile["d"].toString();
+            if(allowed)
+                profile["e"] = email;
+            else
+                email = profile["e"].toString();
+        }
+        else {
+            display = profile["d"].toString();
+            email = profile["e"].toString();
+        }
+
+        runQuery("UPDATE Extensions SET display=? WHERE extnbr=?;", {display, target});
+        runQuery("UPDATE Authorize SET email=?, authaccess=? WHERE authname=?;", {email, access, userid});
+        Manager::updateRoster();
+    }
+
+    QJsonDocument jdoc(profile);
+    Context::answerWithJson(event, jdoc.toJson(QJsonDocument::Compact));
+}
+
 void Database::sendRoster(const Event& event)
 {
     qDebug() << "Seeking roster for" << event.number();
@@ -671,6 +859,9 @@ void Database::sendRoster(const Event& event)
     while(query.isActive() && query.next()) {
         auto record = query.record();
         auto name = record.value("authname").toString();
+        if(name == "anonymous") // skip anon for roster
+            continue;
+
         auto display = record.value("display").toString();
         auto dialing = record.value("extnbr").toString();
         auto email = record.value("email").toString();
@@ -680,6 +871,10 @@ void Database::sendRoster(const Event& event)
         if(display.isEmpty())
             display = record.value("authname").toString();
 
+        QString puburi;
+        if(record.value("authaccess").toString() == "REMOTE")
+            puburi = name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
+
         UString uri = event.uriTo(dialing);
         QJsonObject profile {
             {"a", name},
@@ -687,13 +882,9 @@ void Database::sendRoster(const Event& event)
             {"u", QString::fromUtf8(uri)},
             {"d", display},
             {"t", record.value("authtype").toString()},
+            {"e", email},
+            {"p", puburi},
         };
-
-        if(!email.isEmpty())
-            profile.insert("e", email);
-
-        if(record.value("authaccess").toString() == "REMOTE")
-            profile.insert("p", name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK)));
 
         // qDebug() << "*** CONTACT" << profile;
         list << profile;
@@ -712,44 +903,44 @@ void Database::onTimeout()
 
 void Database::applyConfig(const QVariantHash& config)
 {
-    realm = config["realm"].toString();
-    name = config["database/name"].toString();
-    host = config["database/host"].toString();
-    port = config["database/port"].toInt();
-    user = config["database/username"].toString();
-    pass = config["database/password"].toString();
-    driver = config["database"].toString();
-    uuid = Server::uuid();
+    dbRealm = config["realm"].toString();
+    dbName = config["database/name"].toString();
+    dbHost = config["database/host"].toString();
+    dbPort = config["database/port"].toInt();
+    dbUser = config["database/username"].toString();
+    dbPass = config["database/password"].toString();
+    dbDriver = config["database"].toString();
+    dbUuid = Server::uuid();
     failed = false;
 
-    if(user.isEmpty())
-        user = config["database/user"].toString();
+    if(dbUser.isEmpty())
+        dbUser = config["database/user"].toString();
 
-    if(realm.isEmpty()) {
-        realm = Server::sym(CURRENT_NETWORK);
-        if(realm.isEmpty() || realm == "local" || realm == "localhost" || realm == "localdomain")
-            realm = Server::uuid();
+    if(dbRealm.isEmpty()) {
+        dbRealm = Server::sym(CURRENT_NETWORK);
+        if(dbRealm.isEmpty() || dbRealm == "local" || dbRealm == "localhost" || dbRealm == "localdomain")
+            dbRealm = Server::uuid();
     }
 
-    qDebug() << "DRIVER NAME " << driver;
+    qDebug() << "DRIVER NAME " << dbDriver;
 
-    if(driver.isEmpty() && host.isEmpty())
-        driver = "QSQLITE";
-    else if(driver.isEmpty())
-        driver = "QMYSQL";
+    if(dbDriver.isEmpty() && dbHost.isEmpty())
+        dbDriver = "QSQLITE";
+    else if(dbDriver.isEmpty())
+        dbDriver = "QMYSQL";
 
     // normalize names for Qt database driver plugins
-    driver = driver.toUpper();
-    if(driver[0] != QChar('Q'))
-        driver = "Q" + driver;
+    dbDriver = dbDriver.toUpper();
+    if(dbDriver[0] != QChar('Q'))
+        dbDriver = "Q" + dbDriver;
 
-    if(driver == "QSQLITE3")
-        driver = "QSQLITE";
+    if(dbDriver == "QSQLITE3")
+        dbDriver = "QSQLITE";
 
-    if(Util::dbIsFile(driver))
-        name = "local.db";
-    else if(name.isEmpty())
-        name = "REALM_" + realm.toUpper();
+    if(Util::dbIsFile(dbDriver))
+        dbName = "local.db";
+    else if(dbName.isEmpty())
+        dbName = "REALM_" + dbRealm.toUpper();
 
     create();
     emit updateAuthorize(config, db.isOpen());

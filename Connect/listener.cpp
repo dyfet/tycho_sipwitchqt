@@ -552,6 +552,7 @@ QVariantHash Listener::parseXdp(const UString& xdp)
 {
     QVariantHash result;
     auto lines = xdp.split('\n');
+    serverCreds["privs"] = "none";
     foreach(auto line, lines) {
         if(line.left(2) == "b=") {
             auto banner = line.mid(2);
@@ -564,6 +565,8 @@ QVariantHash Listener::parseXdp(const UString& xdp)
             sipFrom = UString("\"") + UString(line.mid(2)) + "\" <" + uriFrom + ">";
             serverCreds["display"] = line.mid(2);
         }
+        else if(line.left(2) == "p=")
+            serverCreds["privs"] = line.mid(2);
         else if(line.left(2) == "f=")
             serverFirst = line.mid(2).toInt();
         else if(line.left(2) == "r=") {
