@@ -155,6 +155,11 @@ public:
     ContactItem *updateContact(const QJsonObject& json);
     void clickContact(int row);
 
+    void changeLayout() {
+        layoutAboutToBeChanged();
+        layoutChanged();
+    }
+
 private:    
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
@@ -178,6 +183,7 @@ public:
     ~Phonebook() final = default;
 
     void enter();
+    void setWidth(int width);
 
     static Phonebook *instance() {
         return Instance;
@@ -195,10 +201,12 @@ private:
 
     static Phonebook *Instance;
 
+    bool event(QEvent *event) final;
     void updateProfile(ContactItem *item);
 
 signals:
      void changeSessions(Storage *storage, const QList<ContactItem *>& contacts);
+     void changeWidth(int width);
 
 private slots:
     void search();

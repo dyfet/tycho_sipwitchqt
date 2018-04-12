@@ -62,7 +62,7 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="sep1">
+    <widget class="Line" name="separator">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
        <horstretch>0</horstretch>
