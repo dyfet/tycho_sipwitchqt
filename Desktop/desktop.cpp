@@ -191,7 +191,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
-    currentExpiration = 86400 * settings.value("expires", 7).toInt();
+    currentExpiration = settings.value("expires", 7 * 86400).toInt();
     currentAppearance = settings.value("appearance", "Vibrant").toString();
 
     control = new Control(this);
@@ -558,10 +558,14 @@ void Desktop::clearMessage()
     ui.statusBar->clearMessage();
 }
 
-void Desktop::changeExpiration(const QString& expires)
+
+
+void Desktop::changeExpiration(int expires)
 {
-    settings.setValue("expires", expires.toInt());
-    currentExpiration = (86400 * expires.toInt());
+    storage->updateExpiration(expires);
+    currentExpiration = expires;
+    settings.setValue("expires", expires);
+    qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
 }
 
 void Desktop::changeAppearance(const QString& appearance)
@@ -1002,6 +1006,10 @@ void Desktop::resetFont() {
     setTheFont(getBasicFont());
     sessions->refreshFont();
 }
+
+
+
+
 
 int main(int argc, char *argv[])
 {

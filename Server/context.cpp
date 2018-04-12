@@ -299,6 +299,7 @@ bool Context::process(const Event& ev)
             break;
         }
 
+
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);

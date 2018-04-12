@@ -81,6 +81,8 @@ public:
     int copyDb(const QString& dbName);
     static bool importDb(const QString &dbName, const QVariantHash &creds);
 
+    void updateExpiration(int expires);
+
 private:
     QSqlDatabase db;
     bool existing;

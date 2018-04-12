@@ -254,7 +254,7 @@ public slots:
     void importDb();
 
     void changeAppearance(const QString& appearance);
-    void changeExpiration(const QString& expiration);
+    void changeExpiration(int expire);
     void resetFont();
 
 
