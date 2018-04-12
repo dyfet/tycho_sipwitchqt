@@ -145,6 +145,7 @@ public:
     void statusMessage(const QString& msg, int timeout = 5000);
     void clearMessage();
 
+    void setSelf(const QString& text);
     bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
 
@@ -178,6 +179,14 @@ public:
 
     inline static const QVariantHash credentials() {
         return Credentials;
+    }
+
+    inline static bool isAdmin() {
+        return (Credentials["privs"].toString() == "sysadmin");
+    }
+
+    inline static bool isOperator() {
+        return (Credentials["privs"].toString() == "operator");
     }
 
 private:
@@ -218,10 +227,10 @@ private:
 signals:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *state);
+    void changeSelf(const QString& text);
     void changeFont();
 
 public slots:
-
     void closeDeviceList();
     void openDeviceList();
 
@@ -236,6 +245,7 @@ public slots:
     void closeLogout();
     void openAbout();
     void openLogout();
+    void openAddUser();
 
     void showOptions();
     void showSessions();

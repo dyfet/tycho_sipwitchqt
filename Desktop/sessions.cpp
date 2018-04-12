@@ -388,6 +388,10 @@ QWidget(), desktop(control), model(nullptr)
         scrollToBottom();
     });
 
+    connect(control, &Desktop::changeSelf, this, [](const QString& text) {
+        ui.self->setText(text);
+    });
+
     SessionModel::purge();
     ui.sessions->setItemDelegate(new SessionDelegate(this));
     ui.messages->setItemDelegate(new MessageDelegate(ui.messages));

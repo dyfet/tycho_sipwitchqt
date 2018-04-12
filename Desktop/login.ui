@@ -224,6 +224,9 @@
          </property>
          <item>
           <widget class="QLineEdit" name="identity">
+           <property name="toolTip">
+            <string>Extension # or sip uri (extension#@server) for your user extension. </string>
+           </property>
            <property name="text">
             <string/>
            </property>
@@ -273,6 +276,9 @@
              <height>22</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Password associated with your user</string>
+           </property>
            <property name="echoMode">
             <enum>QLineEdit::Password</enum>
            </property>
@@ -288,6 +294,9 @@
              <width>96</width>
              <height>22</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Unique label id for this client instance</string>
            </property>
            <property name="editable">
             <bool>true</bool>
@@ -317,6 +326,9 @@
              <width>96</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Connect to server and login</string>
            </property>
            <property name="text">
             <string>Connect</string>

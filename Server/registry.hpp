@@ -76,6 +76,10 @@ public:
         return address.toString();
     }
 
+    inline const UString privs() const {
+        return userPrivs;
+    }
+
     inline Context *context() const {
         return serverContext;
     }
@@ -122,7 +126,7 @@ public:
 
 private:
     UString userId, userLabel, userSecret, authRealm, authDigest;
-    UString userDisplay, userAgent, userOrigin;
+    UString userDisplay, userAgent, userOrigin, userPrivs;
     int number, rid;
     qlonglong endpointId;               // endpoint id from database
     qint64 timeout;                     // time till expires

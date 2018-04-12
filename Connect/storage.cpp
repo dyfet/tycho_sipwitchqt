@@ -108,9 +108,12 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "uri VARCHAR(128),"
             "dialing VARCHAR(64),"                  // used to tie together msgs
             "display VARCHAR(64) DEFAULT NULL,"
-            "mailto VARCHAR(128),"
-            "puburi VARCHAR(128),"
-            "last DATETIME DEFAULT 0);",
+            "mailto VARCHAR(128) DEFAULT '',"
+            "puburi VARCHAR(128) DEFAULT '',"
+            "last DATETIME DEFAULT 0,"
+            "info TEXT DEFAULT '',"
+            "coverage INTEGER DEFAULT -1,"
+            "answering INTEGER DEFAULT 0);",
         "CREATE INDEX ByContact ON Contacts(last DESC, sequence DESC);",
 
         // Messages are stored in the database to be reloaded when the client
@@ -258,6 +261,11 @@ QVariant Storage::insert(const QString& request, const QVariantList &parms)
     }
 
     return query.lastInsertId();
+}
+
+void Storage::updateSelf(const QString& text)
+{
+    runQuery("UPDATE Credentials SET display=? WHERE id=1;", {text});
 }
 
 void Storage::updateCredentials(const QVariantHash &update)

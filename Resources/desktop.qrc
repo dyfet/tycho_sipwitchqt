@@ -30,6 +30,10 @@
 	<file>dialpad@2x.png</file>
 	<file>people.png</file>
 	<file>people@2x.png</file>
+	<file>phone.png</file>
+	<file>phone@2x.png</file>
+	<file>group.png</file>
+	<file>group@2x.png</file>
 	<file>locked.png</file>
 	<file>locked@2x.png</file>
 	<file>unlocked.png</file>
@@ -40,6 +44,12 @@
 	<file>person@2x.png</file>
 	<file>downscroll.png</file>
 	<file>downscroll@2x.png</file>
+	<file>world.png</file>
+	<file>world@2x.png</file>
+	<file>noworld.png</file>
+	<file>noworld@2x.png</file>
+	<file>add.png</file>
+	<file>add@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>
