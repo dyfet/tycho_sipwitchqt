@@ -112,12 +112,16 @@ public:
         }
     }
 
+    unsigned unread() {
+        return unreadCount;
+    }
+
     void addMessage(MessageItem *item);
+    void clearUnread();
+    void addUnread();
     unsigned loadMessages();
     QString title();
     bool setOnline(bool flag);
-
-
 
 private:
     QList<MessageItem *> messages;
@@ -128,11 +132,13 @@ private:
     QString currentTopic;                       // can be set...
     int cid, did;                               // exosip call info
     bool saved;                                 // whether uses database...
-
+    unsigned unreadCount;                       // unread message count
     ContactItem *contact;
     QString status;
     QPen color;
     bool online, busy, loaded;
+
+    static unsigned totalUnread;
 };
 
 class SessionModel final : public QAbstractListModel
@@ -146,6 +152,11 @@ public:
 
     ~SessionModel() final {
         Instance = nullptr;
+    }
+
+    void changeLayout() {
+        layoutAboutToBeChanged();
+        layoutChanged();
     }
 
     void add(SessionItem *item);
@@ -177,6 +188,7 @@ private:
 
 class Sessions : public QWidget
 {
+    Q_OBJECT
 public:
     Sessions(Desktop *main);
 
@@ -184,6 +196,7 @@ public:
     void listen(Listener *listener);
     QList<MessageItem *> searchMessages(const QString &searchTerm);
     void clickedText(const QString& text, enum ClickedItem);
+    void setWidth(int width);
 
     static SessionItem *active();
     static QModelIndex top();
@@ -199,10 +212,13 @@ private:
     static Sessions *Instance;
 
     void resizeEvent(QResizeEvent *event) final;
+    bool event(QEvent *event) final;
 
-    void updateIndicators(SessionItem *item);
     void finishInput(const QString &error, const QDateTime &timestamp = QDateTime(), int sequence = 0);
     void scrollToBottom();
+
+signals:
+    void changeWidth(int width);
 
 public slots:
     void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
@@ -215,8 +231,6 @@ private slots:
     void search();
     void selectSelf();
     void selectSession(const QModelIndex& index);
-    void requestRoster();
-    void changeActive(const QVariantHash& status);
     void changeStorage(Storage *storage);
     void changeConnector(Connector *connector);
     void createMessage();

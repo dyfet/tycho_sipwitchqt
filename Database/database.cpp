@@ -612,10 +612,7 @@ void Database::localMessage(const Event& ev)
             msgstatus = SIP_OK;
         auto outbox = insert("INSERT INTO Outboxes(mid, endpoint, msgstatus) "
                              "VALUES(?,?,?);", {mid, endpoint, msgstatus});
-        if(!outbox.isValid()) {
-            qDebug() << "OUTBOX FAILED FOR" << endpoint;
-            continue;
-        }
+        qDebug() << "OUTBOX POSTED FOR" << endpoint;
         if(msgstatus == SIP_OK)     // dont send if we marked them ok...
             continue;
         emit sendMessage(endpoint, data);

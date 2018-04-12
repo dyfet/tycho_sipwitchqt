@@ -29,6 +29,8 @@ static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
 static ContactItem *clickedItem = nullptr;
+static bool mousePressed = false;
+static QPoint mousePosition;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -345,7 +347,10 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
     pos.ry() -= CONST_CELLLIFT;  // off bottom
     painter->drawText(pos, item->textNumber);
     pos.rx() += 32;
-    painter->drawText(pos, item->textDisplay);
+    int width = style.rect.width() - 32;
+    auto metrics = painter->fontMetrics();
+    auto text = metrics.elidedText(item->textDisplay, Qt::ElideRight, width);
+    painter->drawText(pos, text);
 }
 
 Phonebook::Phonebook(Desktop *control, Sessions *sessions) :
@@ -395,6 +400,15 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     ContactItem::purge();
     localPainter = new LocalDelegate(this);
     ui.contacts->setItemDelegate(localPainter);
+}
+
+void Phonebook::setWidth(int width)
+{
+    if(width < 132)
+        width = 132;
+    if(width > size().width() / 3)
+        width = size().width() / 3;
+    ui.contacts->setMaximumWidth(width);
 }
 
 void Phonebook::enter()
@@ -729,6 +743,52 @@ void Phonebook::changeStorage(Storage *storage)
     }
 
     ui.contacts->setModel(localModel);
+}
+
+bool Phonebook::event(QEvent *event)
+{
+    switch(event->type()) {
+    case QEvent::MouseButtonPress: {
+        auto mpos = static_cast<QMouseEvent *>(event)->pos();
+        auto rect = QRect(ui.separator->pos(), ui.separator->size());
+        rect.setLeft(rect.left() - 2);
+        rect.setRight(rect.right() + 2);
+        if(rect.contains(mpos)) {
+            mousePosition = mpos;
+            mousePressed = true;
+            ui.separator->setStyleSheet("color: red;");
+        }
+        break;
+    }
+    case QEvent::MouseMove: {
+        if(mousePressed) {
+            auto mpos = static_cast<QMouseEvent *>(event)->pos();
+            auto width = ui.contacts->maximumWidth() + mpos.x() - mousePosition.x();
+            auto maxWidth = size().width() / 3;
+            if(width < 132 || width > maxWidth) {
+                mousePressed = false;
+                ui.separator->setStyleSheet(QString());
+                break;
+            }
+            mousePosition.setX(mpos.x());
+            ui.contacts->setMaximumWidth(width);
+            emit changeWidth(width);
+            if(localModel)
+                localModel->changeLayout();
+        }
+        break;
+    }
+    case QEvent::MouseButtonRelease: {
+        if(mousePressed) {
+            ui.separator->setStyleSheet(QString());
+            mousePressed = false;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return QWidget::event(event);
 }
 
 

@@ -35,11 +35,14 @@ static SessionItem *clickedItem = nullptr;
 static SessionItem *inputItem = nullptr;
 static SessionItem *activeItem = nullptr, *local[1000];
 static QString userStatus = "@", groupStatus = "#";
-static QPen groupActive("blue"), groupDefault("black");
+static QPen groupActive("blue"), groupDefault("black"), unreadStatus("red");
 static QPen onlineUser("green"), offlineUser("black"), busyUser("yellow");
+static bool mousePressed = false;
+static QPoint mousePosition;
 
 Sessions *Sessions::Instance = nullptr;
 SessionModel *SessionModel::Instance = nullptr;
+unsigned SessionItem::totalUnread = 0;
 
 SessionItem::SessionItem(ContactItem *contactItem, bool active) :
 messageModel(nullptr)
@@ -68,6 +71,7 @@ messageModel(nullptr)
     busy = loaded = false;
     cid = did = -1;
     saved = true;
+    unreadCount = 0;
 
     auto number = contactItem->number();
     if(number > -1 && number < 1000)
@@ -93,6 +97,32 @@ SessionItem::~SessionItem()
     }
 }
 
+void SessionItem::clearUnread()
+{
+    if(!unreadCount)
+        return;
+
+    totalUnread -= unreadCount;
+    unreadCount = 0;
+    if(isGroup())
+        color = groupDefault;
+
+    SessionModel::update(this);
+    Desktop::setUnread(totalUnread);
+}
+
+void SessionItem::addUnread()
+{
+    ++unreadCount;
+    ++totalUnread;
+
+    if(isGroup())
+        color = groupActive;
+
+    SessionModel::update(this);
+    Desktop::setUnread(totalUnread);
+}
+
 void SessionItem::addMessage(MessageItem *msg)
 {
     Q_ASSERT(msg != nullptr);
@@ -109,8 +139,6 @@ void SessionItem::addMessage(MessageItem *msg)
     Q_ASSERT(storage != nullptr);
     storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;", {
                           msg->posted(), msg->sequence(), contact->uid});
-
-    // TODO: re-sort model if user...tick new msg indicator if group...
 }
 
 unsigned SessionItem::loadMessages()
@@ -241,6 +269,7 @@ void SessionModel::purge()
 {
     ui.messages->setModel(nullptr);
     activeItem = nullptr;
+    SessionItem::totalUnread = 0;
 
     if(activeMessage) {
         delete activeMessage;
@@ -254,6 +283,7 @@ void SessionModel::purge()
     }
     sessions.clear();
     groups.clear();
+    Desktop::setUnread(0);
 }
 
 void SessionModel::update(SessionItem *session)
@@ -285,7 +315,7 @@ refresh:
 
     auto item = session->contact;
     if(old == item->display())
-        return;
+        goto refresh;
 
     auto old_row = std::distance(groups.begin(), groups.find(old));
     auto new_row = std::distance(groups.begin(), groups.upperBound(item->display()));
@@ -359,9 +389,29 @@ void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     painter->drawText(pos, item->status);
 
     // show display name...maybe later add elipsis...
+    auto metrics = painter->fontMetrics();
+    auto width = style.rect.width() - 16;
+    if(item->unreadCount > 0)
+        width -= 24;
+    auto text = metrics.elidedText(item->display(), Qt::ElideRight, width);
+
     pos.rx() += 16;
     painter->setPen(pen);
-    painter->drawText(pos, item->display());
+    painter->drawText(pos, text);
+
+    QString unreadText = "";
+    if(item->unreadCount > 99)
+        unreadText="**";
+    else if(item->unreadCount)
+        unreadText= QString::number(item->unreadCount);
+    else
+        return;
+
+    pos.setX(style.rect.x() + style.rect.width() - 20);
+    painter->setPen(unreadStatus);
+    painter->drawText(pos, unreadText);
+    painter->setPen(pen);
+
 }
 
 Sessions::Sessions(Desktop *control) :
@@ -397,6 +447,65 @@ QWidget(), desktop(control), model(nullptr)
     ui.messages->setItemDelegate(new MessageDelegate(ui.messages));
 }
 
+bool Sessions::event(QEvent *event)
+{
+    switch(event->type()) {
+    case QEvent::MouseButtonPress: {
+        auto mpos = static_cast<QMouseEvent *>(event)->pos();
+        auto rect = QRect(ui.separator->pos(), ui.separator->size());
+        rect.setLeft(rect.left() - 2);
+        rect.setRight(rect.right() + 2);
+        if(rect.contains(mpos)) {
+            qDebug() << "MOUSE" << mpos << "VS" << rect;
+            mousePosition = mpos;
+            mousePressed = true;
+            ui.separator->setStyleSheet("color: red;");
+        }
+        break;
+    }
+    case QEvent::MouseMove: {
+        if(mousePressed) {
+            auto mpos = static_cast<QMouseEvent *>(event)->pos();
+            auto width = ui.sessions->maximumWidth() + mpos.x() - mousePosition.x();
+            auto maxWidth = size().width() / 3;
+            if(width < 132 || width > maxWidth) {
+                mousePressed = false;
+                ui.separator->setStyleSheet(QString());
+                break;
+            }
+            mousePosition.setX(mpos.x());
+            ui.sessions->setMaximumWidth(width);
+            emit changeWidth(width);
+            if(model)
+                model->changeLayout();
+            if(activeItem && activeItem->model())
+                activeItem->model()->changeLayout();
+        }
+        break;
+    }
+    case QEvent::MouseButtonRelease: {
+        if(mousePressed) {
+            ui.separator->setStyleSheet(QString());
+            mousePressed = false;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return QWidget::event(event);
+}
+
+void Sessions::setWidth(int width)
+{
+    if(width < 132)
+        width = 132;
+    if(width > size().width() / 3)
+        width = size().width() / 3;
+
+    ui.sessions->setMaximumWidth(width);
+}
+
 void Sessions::resizeEvent(QResizeEvent *event)
 {
     static bool active = false;
@@ -422,6 +531,8 @@ void Sessions::enter()
     Toolbar::search()->setText("");
     Toolbar::search()->setPlaceholderText(tr("Search messages here"));
     Toolbar::search()->setEnabled(true);
+    mousePressed = false;
+    ui.separator->setStyleSheet(QString());
 
     if(activeItem) {
         Toolbar::setTitle(activeItem->title());
@@ -470,6 +581,7 @@ void Sessions::clickedText(const QString& text, enum ClickedItem type)
             QDesktopServices::openUrl("http://" + text);
         else
             QDesktopServices::openUrl(text);
+        return;
     }
     default:
         return;
@@ -561,8 +673,10 @@ void Sessions::activateSession(SessionItem* item)
     Toolbar::setTitle(item->title());
     Toolbar::search()->setPlaceholderText("Search messages");
     item->loadMessages();
+    item->clearUnread();
     scrollToBottom();
 }
+
 void Sessions::refreshFont()
 {
     auto old = ui.messages->itemDelegate();
@@ -781,11 +895,13 @@ void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const U
             bottom = false;
         if(bottom)
             scrollToBottom();
-        else
+        else {
+            session->addUnread();
             ui.bottom->setVisible(true);
+        }
     }
     else {
-        updateIndicators(session);
+        session->addUnread();
     }
 }
 
@@ -805,16 +921,10 @@ void Sessions::scrollToBottom()
     ui.bottom->setVisible(false);
     if(!activeItem || activeItem->count() < 1)
         return;
+    activeItem->clearUnread();
     auto index = activeItem->lastMessage();
     ui.messages->scrollTo(index, QAbstractItemView::PositionAtBottom);
 }
-
-void Sessions::updateIndicators(SessionItem *item)
-{
-    Q_UNUSED(item);
-    // TODO: sorting, marking unread, etc...
-}
-
 
 void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int sequence)
 {
@@ -832,11 +942,13 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
             ui.input->setText("");
             if(bottom)
                 scrollToBottom();
-            else
+            else {
+                inputItem->addUnread();
                 ui.bottom->setVisible(true);
+            }
         }
         else {
-            updateIndicators(inputItem);
+            inputItem->addUnread();
         }
     }
 

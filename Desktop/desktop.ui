@@ -237,6 +237,14 @@
     <string>Logout from app</string>
    </property>
   </action>
+  <action name="trayLogout">
+   <property name="text">
+    <string>Logout</string>
+   </property>
+   <property name="toolTip">
+    <string>Server logout</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../Resources/desktop.qrc"/>
