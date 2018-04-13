@@ -58,7 +58,7 @@ static void signal_handler(int signo)
 #include <IOKit/IOMessage.h>
 
 void set_dock_icon(const QIcon& icon);
-void set_dock_label(const QString& text);
+void set_dock_label(const UString& text);
 
 static io_connect_t ioroot = 0;
 static io_object_t iopobj;
@@ -228,6 +228,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     dockMenu = new QMenu();
     dockMenu->addAction(ui.trayDnd);
     dockMenu->addAction(ui.trayAway);
+    dockMenu->addAction(ui.trayLogout);
     qt_mac_set_dock_menu(dockMenu);
 
     auto inst = objc_msgSend(reinterpret_cast<objc_object *>(objc_getClass("NSApplication")), sel_registerName("sharedApplication"));
@@ -272,6 +273,16 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown);
     connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState);
 
+    connect(sessions, &Sessions::changeWidth, [=](int width) {
+        settings.setValue("width", width);
+        phonebook->setWidth(width);
+    });
+
+    connect(phonebook, &Phonebook::changeWidth, [=](int width) {
+        settings.setValue("width", width);
+        sessions->setWidth(width);
+    });
+
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
 
@@ -279,6 +290,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         trayMenu = new QMenu();
         trayMenu->addAction(ui.trayDnd);
         trayMenu->addAction(ui.trayAway);
+        trayMenu->addAction(ui.trayLogout);
         trayMenu->addAction(ui.trayQuit);
 
         trayIcon->setContextMenu(trayMenu);
@@ -293,6 +305,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     ui.trayDnd->setChecked(true);   // FIXME: testing...
     // connect(ui.trayDnd, &QAction::triggered, this, &Desktop::trayDnd);
     connect(ui.trayAway, &QAction::triggered, this, &Desktop::trayAway);
+    connect(ui.trayLogout, &QAction::triggered, this, &Desktop::openLogout);
 
     login = new Login(this);
     ui.pagerStack->addWidget(login);
@@ -333,6 +346,11 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         settings.setValue("position", pos());
         ui.appPreferences->setEnabled(false);
     }
+    auto width = settings.value("width").toInt();
+    if(!width)
+        width = 136;
+    sessions->setWidth(width);
+    phonebook->setWidth(width);
 }
 
 void Desktop::closeEvent(QCloseEvent *event)
@@ -391,6 +409,16 @@ void Desktop::shutdown()
         qDebug() << "Shutting down threads...";
         QThread::msleep(500);       // sleep long enough for stack to end...
     }
+}
+
+void Desktop::setUnread(unsigned count)
+{
+#ifdef Q_OS_MAC
+    UString text = UString::number(count);
+    if(!count)
+        text = "";
+    set_dock_label(text);
+#endif
 }
 
 void Desktop::setState(state_t state)
@@ -1006,10 +1034,6 @@ void Desktop::resetFont() {
     setTheFont(getBasicFont());
     sessions->refreshFont();
 }
-
-
-
-
 
 int main(int argc, char *argv[])
 {

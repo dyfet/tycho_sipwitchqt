@@ -7,6 +7,9 @@ V0.2.0
 * Cleaner db handling for login/logout and multiple dbs
 * Client import/export
 * Font picker for message view
+* Admin can create users from client
+* Phonebook expanded
+* New message indicators
 
 v0.1.4
 * I want to send a message to someone

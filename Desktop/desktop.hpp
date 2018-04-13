@@ -189,6 +189,8 @@ public:
         return (Credentials["privs"].toString() == "operator");
     }
 
+    static void setUnread(unsigned unread);
+
 private:
     Login *login;
     Sessions *sessions;
