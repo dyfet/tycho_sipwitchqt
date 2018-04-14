@@ -182,11 +182,11 @@ public:
     }
 
     inline static bool isAdmin() {
-        return (Credentials["privs"].toString() == "sysadmin");
+        return (State == Desktop::ONLINE && Credentials["privs"].toString() == "sysadmin");
     }
 
     inline static bool isOperator() {
-        return (Credentials["privs"].toString() == "operator");
+        return (State == Desktop::ONLINE && Credentials["privs"].toString() == "operator");
     }
 
     static void setUnread(unsigned unread);

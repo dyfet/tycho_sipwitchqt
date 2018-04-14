@@ -189,14 +189,15 @@ int LocalContacts::rowCount(const QModelIndex& parent) const
     Q_UNUSED(parent);
     if(highest < 0)
         return 0;
-    return highest + 1;
+
+    return highest + 2;
 }
 
 QVariant LocalContacts::data(const QModelIndex& index, int role) const
 {
     int row = index.row();
-    int rows = rowCount(index);
-    if(row < 0 || row >= rows || role!= Qt::DisplayRole)
+
+    if(row < 0 || row >= highest || role!= Qt::DisplayRole)
         return QVariant();
 
     auto item = local[row];
@@ -315,6 +316,9 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
     auto row = index.row();
     auto rows = highest + 1;
 
+    if(row == highest + 1 && Desktop::isAdmin())
+        return {ui.contacts->width(), 16};
+
     if(row < 0 || row >= rows)
         return {0, 0};
 
@@ -339,18 +343,29 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
     auto item = local[index.row()];
     auto pos = style.rect.bottomLeft();
 
-    if(item == clickedItem) {
+    if(item && item == clickedItem && index.row()) {
         painter->fillRect(style.rect, QColor(CONST_CLICKCOLOR));
         clickedItem = nullptr;
     }
 
-    pos.ry() -= CONST_CELLLIFT;  // off bottom
-    painter->drawText(pos, item->textNumber);
-    pos.rx() += 32;
-    int width = style.rect.width() - 32;
-    auto metrics = painter->fontMetrics();
-    auto text = metrics.elidedText(item->textDisplay, Qt::ElideRight, width);
-    painter->drawText(pos, text);
+    if(index.row() == highest + 1) {
+        QRect image = style.rect;
+        image.setTop(image.top() + 3);
+        auto icon = QIcon(":/icons/add.png");
+        image.setWidth(image.height());
+        painter->drawImage(image, icon.pixmap(image.size()).toImage());
+        pos.rx() += 32;
+        painter->drawText(pos, tr("Add..."));
+    }
+    else if(item) {
+        pos.ry() -= CONST_CELLLIFT;  // off bottom
+        painter->drawText(pos, item->textNumber);
+        pos.rx() += 32;
+        int width = style.rect.width() - 32;
+        auto metrics = painter->fontMetrics();
+        auto text = metrics.elidedText(item->textDisplay, Qt::ElideRight, width);
+        painter->drawText(pos, text);
+    }
 }
 
 Phonebook::Phonebook(Desktop *control, Sessions *sessions) :
@@ -613,10 +628,17 @@ void Phonebook::selectContact(const QModelIndex& index)
 {
     ui.profileStack->setCurrentWidget(ui.blankPage);
     auto row = index.row();
+
+    if(row == highest + 1) {
+        Desktop::instance()->openAddUser();
+        return;
+    }
+
     if(row < 0 || row > highest)
         return;
 
     auto item = local[row];
+
     if(!item)
         return;
 
@@ -715,6 +737,8 @@ void Phonebook::changeConnector(Connector *connected)
         ui.profileStack->setCurrentWidget(ui.blankPage);
         refreshRoster.stop();
     }
+    if(localModel)
+        localModel->changeLayout();
 }
 
 void Phonebook::changeStorage(Storage *storage)

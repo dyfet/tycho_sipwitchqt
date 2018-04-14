@@ -40,27 +40,11 @@ QWidget(parent)
     ui.setupUi(this);
     ui.searchText->setAttribute(Qt::WA_MacShowFocusRect, false);
     Search = ui.searchText;
-    disableAddContact();
 }
 
 void Toolbar::setTitle(const QString& text)
 {
     ui.title->setText(text);
-}
-
-void Toolbar::enableAddContact()
-{
-    ui.addUser->setVisible(true);
-}
-
-void Toolbar::disableAddContact()
-{
-    ui.addUser->setVisible(false);
-}
-
-QPushButton *Toolbar::addUser()
-{
-    return ui.addUser;
 }
 
 void Toolbar::clearSearch()

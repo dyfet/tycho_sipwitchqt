@@ -151,7 +151,6 @@ class LocalContacts final : public QAbstractListModel
 public:
     LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
     void setFilter(const UString& filter);
-
     ContactItem *updateContact(const QJsonObject& json);
     void clickContact(int row);
 
@@ -160,7 +159,7 @@ public:
         layoutChanged();
     }
 
-private:    
+private:
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
 };
