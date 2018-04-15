@@ -176,6 +176,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     // for now, just this...
     baseFont = getBasicFont();
+    baseHeight = QFontInfo(baseFont).pixelSize();
 
 #ifdef Q_OS_WIN
     static NativeEvent nativeEvents;
