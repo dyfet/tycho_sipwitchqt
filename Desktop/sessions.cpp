@@ -39,6 +39,7 @@ static QPen groupActive("blue"), groupDefault("black"), unreadStatus("red");
 static QPen onlineUser("green"), offlineUser("black"), busyUser("yellow");
 static bool mousePressed = false;
 static QPoint mousePosition;
+static int cellHeight, cellLift = 3;
 
 Sessions *Sessions::Instance = nullptr;
 SessionModel *SessionModel::Instance = nullptr;
@@ -354,7 +355,7 @@ QSize SessionDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     if(row == groups.size())
         spacing += 4;
 
-    return {ui.sessions->width(), CONST_CELLHIGHT + spacing};
+    return {ui.sessions->width(), cellHeight + spacing};
 }
 
 void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -379,12 +380,12 @@ void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
 
     // if clicked...
     if(item == clickedItem) {
-        auto rect = QRect(pos.x(), pos.y() - CONST_CELLHIGHT, style.rect.width() - 4, CONST_CELLHIGHT);
+        auto rect = QRect(pos.x(), pos.y() - cellHeight, style.rect.width() - 4, cellHeight);
         painter->fillRect(rect, QColor(CONST_CLICKCOLOR));
         clickedItem = nullptr;
     }
 
-    pos.ry() -= CONST_CELLLIFT;  // off bottom
+    pos.ry() -= cellLift;  // off bottom
     painter->setPen(item->color);
     painter->drawText(pos, item->status);
 
@@ -420,9 +421,11 @@ QWidget(), desktop(control), model(nullptr)
     ui.setupUi(static_cast<QWidget *>(this));
     ui.sessions->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.messages->setAttribute(Qt::WA_MacShowFocusRect, false);
+    ui.expand->setVisible(false);
 
     Q_ASSERT(Instance == nullptr);
     Instance = this;
+    cellHeight = QFontInfo(desktop->getBasicFont()).pixelSize() + 5;
 
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Sessions::search);
     connect(desktop, &Desktop::changeStorage, this, &Sessions::changeStorage);
@@ -710,6 +713,7 @@ void Sessions::activateSelf()
     Toolbar::search()->setFocus();
     ui.input->setText("");
     ui.inputFrame->setVisible(false);
+    ui.toolFrame->setVisible(false);
     ui.messages->setModel(nullptr);
     Toolbar::search()->setPlaceholderText(tr("Select extension or session"));
 
@@ -835,6 +839,11 @@ void Sessions::createMessage()
 
     // get what we need to send message...
     auto target = activeItem->contact->uri();
+
+    if(!connector) {
+        desktop->errorMessage("not online");
+        return;
+    }
 
     if(!connector->sendText(target, ui.input->text().toUtf8())) {
         desktop->errorMessage("Send failed");

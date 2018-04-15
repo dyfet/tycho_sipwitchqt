@@ -45,6 +45,7 @@ static QColor searchColor(240, 240, 0);
 static QColor urlColor(0, 0, 240);
 static QColor mapColor(0, 0, 244);
 static QColor nbrColor(240, 120, 0);
+static QColor tinted(255, 255, 223);
 static QRegularExpression findGroup(R"([\#]\d\d\d)");
 static QRegularExpression findUser(R"([\@]\d\d\d)");
 static QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
@@ -187,6 +188,7 @@ void MessageItem::findFormats()
             range.start = start;
             range.length = match.capturedLength(pos++);
             range.format.setForeground(search.second);
+            range.format.setBackground(tinted);
             formats << range;
             ++textFormats;
         }

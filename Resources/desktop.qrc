@@ -50,6 +50,10 @@
 	<file>noworld@2x.png</file>
 	<file>add.png</file>
 	<file>add@2x.png</file>
+	<file>del.png</file>
+	<file>del@2x.png</file>
+	<file>burger.png</file>
+	<file>burger@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>

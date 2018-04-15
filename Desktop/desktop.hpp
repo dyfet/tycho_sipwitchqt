@@ -56,8 +56,6 @@
 
 #define CONST_CLICKTIME 120
 #define CONST_CLICKCOLOR "lightgray"
-#define CONST_CELLLIFT  3
-#define CONST_CELLHIGHT 18
 
 class Desktop final : public QMainWindow
 {
@@ -182,11 +180,11 @@ public:
     }
 
     inline static bool isAdmin() {
-        return (Credentials["privs"].toString() == "sysadmin");
+        return (State == Desktop::ONLINE && Credentials["privs"].toString() == "sysadmin");
     }
 
     inline static bool isOperator() {
-        return (Credentials["privs"].toString() == "operator");
+        return (State == Desktop::ONLINE && Credentials["privs"].toString() == "operator");
     }
 
     static void setUnread(unsigned unread);
@@ -212,6 +210,7 @@ private:
     int currentExpiration;
     QDialog *dialog;
     QFont baseFont;
+    int baseHeight;
     QString dbName;
     bool powerReconnect;
     bool updateRoster;

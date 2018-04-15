@@ -97,7 +97,7 @@
    <addaction name="actionMenu"/>
    <addaction name="actionSessions"/>
    <addaction name="actionContacts"/>
-   <addaction name="actionDialpad"/>
+   <addaction name="actionDialer"/>
    <addaction name="actionSettings"/>
   </widget>
   <action name="actionSessions">
@@ -112,16 +112,16 @@
     <string>Call and message activity</string>
    </property>
   </action>
-  <action name="actionDialpad">
+  <action name="actionDialer">
    <property name="icon">
     <iconset resource="../Resources/desktop.qrc">
      <normaloff>:/icons/dialpad.png</normaloff>:/icons/dialpad.png</iconset>
    </property>
    <property name="text">
-    <string>Dialpad</string>
+    <string>Dialer</string>
    </property>
    <property name="toolTip">
-    <string>Enable dialpad mode</string>
+    <string>External contacts</string>
    </property>
   </action>
   <action name="actionSettings">

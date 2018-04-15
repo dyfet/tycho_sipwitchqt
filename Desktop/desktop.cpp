@@ -176,6 +176,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     // for now, just this...
     baseFont = getBasicFont();
+    baseHeight = QFontInfo(baseFont).pixelSize();
 
 #ifdef Q_OS_WIN
     static NativeEvent nativeEvents;
@@ -210,7 +211,6 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
 
     connect(ui.appQuit, &QAction::triggered, qApp, &QApplication::quit);
     connect(ui.appAbout, &QAction::triggered, this, &Desktop::openAbout);
-    connect(toolbar->addUser(), &QPushButton::pressed, this, &Desktop::openAddUser);
 
     connect(ui.appLogout, &QAction::triggered, this, &Desktop::openLogout);
     connect(ui.appPreferences, &QAction::triggered, this, &Desktop::showOptions);
@@ -840,7 +840,6 @@ void Desktop::failed(int error_code)
 
 void Desktop::offline()
 {
-    toolbar->disableAddContact();
     // if already offline, we can ignore...
     if(!listener)
         return;
@@ -885,8 +884,6 @@ void Desktop::authorized(const QVariantHash& creds)
 {
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
-    if(isAdmin())
-        toolbar->enableAddContact();
 
     // apply or update credentials only after successfull authorization
     if(storage)
