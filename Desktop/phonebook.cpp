@@ -31,6 +31,7 @@ static ContactItem *activeItem = nullptr;
 static ContactItem *clickedItem = nullptr;
 static bool mousePressed = false;
 static QPoint mousePosition;
+static int cellHeight, cellLift = 3;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -317,7 +318,7 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
     auto rows = highest + 1;
 
     if(row == highest + 1 && Desktop::isAdmin())
-        return {ui.contacts->width(), 16};
+        return {ui.contacts->width(), cellHeight - cellLift};
 
     if(row < 0 || row >= rows)
         return {0, 0};
@@ -332,7 +333,7 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
             return {0, 0};
     }
 
-    return {ui.contacts->width(), CONST_CELLHIGHT};
+    return {ui.contacts->width(), cellHeight};
 }
 
 void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
@@ -351,14 +352,14 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
     if(index.row() == highest + 1) {
         QRect image = style.rect;
         image.setTop(image.top() + 3);
-        auto icon = QIcon(":/icons/add.png");
         image.setWidth(image.height());
-        painter->drawImage(image, icon.pixmap(image.size()).toImage());
+        auto icon = QIcon(":/icons/add.png");
+        icon.paint(painter, image);
         pos.rx() += 32;
         painter->drawText(pos, tr("Add..."));
     }
     else if(item) {
-        pos.ry() -= CONST_CELLLIFT;  // off bottom
+        pos.ry() -= cellLift;  // off bottom
         painter->drawText(pos, item->textNumber);
         pos.rx() += 32;
         int width = style.rect.width() - 32;
@@ -374,6 +375,7 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     Q_ASSERT(Instance == nullptr);
     Instance = this;
     requestPending = false;
+    cellHeight = QFontInfo(desktop->getBasicFont()).pixelSize() + 5;
 
     ui.setupUi(static_cast<QWidget *>(this));
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);

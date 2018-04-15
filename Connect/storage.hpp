@@ -145,9 +145,11 @@ private:
  * Used to update the credentials stored in the currently opened database.
  * This only updates values that are supplied.  All other credential values
  * are unchanged in storage.
+ * \param creds updated values to store in database.
  *
  * \fn Storage::updateSelf(const QString& displayName)
  * Used to update the display name of the active user.
+ * \param displayName Display Name to use for currently logged in user.
  *
  * \fn Storage::server()
  * Convenience method to find the SipWitchQt server uri the currently open
@@ -162,19 +164,25 @@ private:
  * \fn Storage::name(const QVariantHash& creds, const UString& seed)
  * Used to compute a hashed name for the database based on the the
  * credentials the database will use, and a seed string for the hash.
+ * \param creds Used to for extension and label.
+ * \param seed Defined by application.
  * \return hashed database name as a base64.
  *
  * \fn Storage::exists(const QString& dbname)
  * Tests if the given sqlite database currently exists on disk.
+ * \param dbName Name of database file to test for.
  * \return true if the database name is found.
  *
  * \fn Storage::remove(const QString& dbname)
+ * \param Name of database file to remove.
  * Removes the given named sqlite database.
  *
  * \fn Storage::getRecord(const QString& query, const QVariantList& params)
  * Used to retrieve a single record based on a query string provided.  The
  * query string can use ? for values that will be bound from an optional
  * list of params.  The query must be one that can return a single record.
+ * \param query SQL query string, with ? for binding values.
+ * \param params to bind ? values with.
  * \return QVariantHash of column values keyed by field name.
  *
  * \fn Storage::getRecords(const QString& query, const QVariantList& params)
@@ -182,14 +190,17 @@ private:
  * provided.  The query string can use ? for values that will be bound from
  * an optional list of params.  The next() method can be used to convert
  * each row retrieved into a QVariantHash like getRecord() does.
+ * \param query SQL query string, with ? for binding values.
+ * \param params to bind ? values with.
  * \return QSqlQuery object to retrieve records from.
  *
  * \fn Storage::next(QSqlQuery& query)
  * A convenience method to be used with getRecords() to retrieve the next row
  * of a query and convert it to a QVariantHash.
+ * \param SQL query object currently being processed.
  * \return QVariantHash of column values keyed by field name.
  *
- * \fn Storage::insert(const QString& string, const QVariantList& parms)
+ * \fn Storage::insert(const QString& query, const QVariantList& params)
  * This is used to perform a Sql insert operation as a query string.  The
  * query string can use ? for values that will be bound from an optional list
  * of parameters.  The operation returns a representation of the Sql lastId()
@@ -197,7 +208,9 @@ private:
  * typically be the id of the row inserted which may be needed as a foreign
  * key for constructing joined tables.  For sqlite and mysql this is typically
  * a qlonglong value, for Postgresql this may be an oid.
- * @return QVariant of Sql lastId() function.
+ * \param query SQL insert query, values with ? values to bind.
+ * \param params for ? values to bind.
+ * \return QVariant of Sql lastId() function.
  *
  * \fn Storage::runQuery(const QString& string, const QVariantList& params)
  * A convenience method to run a query on the current storage database where
@@ -205,20 +218,23 @@ private:
  * string can use ? for values that will be bound from an optional list of
  * params.  The query can be an insert, update, remove, etc.  Generally
  * selects would be done with getRecord(s).
- * @return true if successful.
+ * \return true if successful.
  *
  * \fn Storage::runQuery(const QStringList& list)
  * A convenience method to run a series of queries that have no substitution
  * values.  This is typically used to load a schema.
- * @return count of succesful queries.
+ * \param list stand-alone SQL queries to process.
+ * \return count of succesful queries.
  *
  * \fn Storage::copyDb(const QString& dbname)
  * Used to create a backup copy of an existing database.
- * @return 1 on success.
+ * \param dbname Name of database to copy.
+ * \return 1 on success.
  *
  * \fn Storage::importDb(const QString& dbname)
  * Used to import a backup into the existing database.
- * @return 1 on success.
+ * \param dbname Name of database to import to.
+ * \return 1 on success.
  */
 
 #endif	

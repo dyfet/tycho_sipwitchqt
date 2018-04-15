@@ -56,8 +56,6 @@
 
 #define CONST_CLICKTIME 120
 #define CONST_CLICKCOLOR "lightgray"
-#define CONST_CELLLIFT  3
-#define CONST_CELLHIGHT 18
 
 class Desktop final : public QMainWindow
 {
@@ -212,6 +210,7 @@ private:
     int currentExpiration;
     QDialog *dialog;
     QFont baseFont;
+    int baseHeight;
     QString dbName;
     bool powerReconnect;
     bool updateRoster;
