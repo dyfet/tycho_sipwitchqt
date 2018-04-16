@@ -8,6 +8,7 @@
 	qtbase5-dev qtbase5-dev-tools \
 	qttools5-dev qttools5-dev-tools \
 	qt5-qmake qt5-default \
+	libavahi-client-dev \
 	ca-certificates \
 	libgoogle-perftools-dev \
 	libexosip2-11 \
@@ -40,7 +41,7 @@
   RUN gitlab-runner register \
   -n \
   --url https://gitlab.com/ \
-  --tag-list "docker,docker-compose" \
+  --tag-list "docker,docker-compose, docs" \
   --run-untagged \
   --registration-token S6yboJN2yQSexj_vNpp5 \
   --executor docker \

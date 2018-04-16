@@ -8,6 +8,7 @@
 	qtbase5-dev qtbase5-dev-tools \
 	qttools5-dev qttools5-dev-tools \
 	qt5-qmake qt5-default \
+	libavahi-client-dev \
 	ca-certificates \
 	libgoogle-perftools-dev \
 	libexosip2-11 \
