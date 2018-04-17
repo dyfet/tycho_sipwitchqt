@@ -28,7 +28,6 @@ docs:
   when: manual
   tags:
     - docker
-    - docs
   only:
     - master
   artifacts:
