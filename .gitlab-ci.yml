@@ -20,7 +20,7 @@ debug:
       - ./*.log
 
 # Run to build release builds    
-debug:
+release:
   image: in1t3r/gitlabqt:build
   stage: test
   script:
