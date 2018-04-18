@@ -8,11 +8,11 @@ test:
   image: in1t3r/gitlabqt:build
   stage: test
   script:
-    - cmake . | tee cmake.log
+    - cmake --build . --target all | tee cmake.log
     - make | tee make.log
   tags:
     - docker
-
+    - test
   artifacts:
     expire_in: 2 weeks
     when: always
@@ -22,9 +22,10 @@ test:
 docs:
   image: in1t3r/gitlabqt:documentation
   stage: docs
+
   script:
-    - cmake
-    - make docs
+    - cmake --build . --target docs
+    # - make docs
   when: manual
   tags:
     - docker
