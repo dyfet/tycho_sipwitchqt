@@ -1,14 +1,15 @@
 stages:
 #- build
-- test
+- debug
+- release
 - docs
 
-#tests every commit including merge requests    
-test:
+# Build debug release version after each commit or merge requests    
+debug:
   image: in1t3r/gitlabqt:build
   stage: test
   script:
-    - cmake --build . --target all | tee cmake.log
+    - cmake -DCMAKE_BUILD_TYPE=Debug  --build . --target server-app desktop-app test | tee cmake.log
     - make | tee make.log
   tags:
     - docker
@@ -17,6 +18,22 @@ test:
     when: always
     paths:
       - ./*.log
+
+# Run to build release builds    
+debug:
+  image: in1t3r/gitlabqt:build
+  stage: test
+  script:
+    - cmake --build . --target server-app desktop-app | tee cmake.log
+    - make | tee make.log
+  tags:
+    - docker
+  artifacts:
+    expire_in: 2 weeks
+    when: on_success
+    paths:
+      - ./*.log
+
 
 docs:
   image: in1t3r/gitlabqt:documentation
