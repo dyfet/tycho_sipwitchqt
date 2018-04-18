@@ -12,7 +12,6 @@ test:
     - make | tee make.log
   tags:
     - docker
-    - test
   artifacts:
     expire_in: 2 weeks
     when: always
@@ -29,7 +28,6 @@ docs:
   when: manual
   tags:
     - docker
-    - docs
   only:
     - master
   artifacts:
