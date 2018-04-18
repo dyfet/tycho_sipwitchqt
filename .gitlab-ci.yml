@@ -23,7 +23,7 @@ release:
   image: in1t3r/gitlabqt:build
   stage: build
   script:
-    - cmake --build . | tee cmake.log
+    - cmake -DCMAKE_BUILD_TYPE=Release --build . | tee cmake.log
     - make | tee make.log
   tags:
     - docker
