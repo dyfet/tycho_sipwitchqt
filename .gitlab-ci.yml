@@ -39,7 +39,7 @@ docs:
   stage: docs
 
   script:
-    - cmake --build . --target docs
+    - cmake -DCMAKE_BUILD_TYPE=Debug --build . --target docs
     - make docs
   when: manual
   tags:
