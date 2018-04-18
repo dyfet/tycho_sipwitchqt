@@ -8,7 +8,7 @@ debug:
   image: in1t3r/gitlabqt:build
   stage: build
   script:
-    - cmake -DCMAKE_BUILD_TYPE=Debug  --build . --target server-app desktop-app test | tee cmake.log
+    - cmake -DCMAKE_BUILD_TYPE=Debug  --build . --target server-app desktop-app support-files | tee cmake.log
     - make | tee make.log
   tags:
     - docker
