@@ -25,10 +25,11 @@ docs:
 
   script:
     - cmake --build . --target docs
-    # - make docs
+    - make docs
   when: manual
   tags:
     - docker
+    - docs
   only:
     - master
   artifacts:
