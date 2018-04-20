@@ -149,14 +149,6 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
         {cred["extension"], cred["user"], cred["display"], cred["label"], cred["secret"], QString::fromUtf8(ServerAddress), cred["schema"], cred["host"], cred["port"], cred["type"], cred["realm"]});
 }
 
-void Storage::updateExpiration(int expires){
-    QDateTime current = current.currentDateTime();
-    QDateTime expired = current.addSecs(-(expires));
-
-    qDebug() << "current date is" << current << " is Expire is " << expires << " expired is " << expired << endl;
-    runQuery("UPDATE Messages set expires=?", {expired});
-
-}
 Storage::~Storage()
 {
     Instance = nullptr;

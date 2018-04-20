@@ -148,16 +148,18 @@ unsigned SessionItem::loadMessages()
     auto fast = 0;
 
     QDateTime latest = contact->contactUpdated;
+    QDateTime current = QDateTime::currentDateTime();
     int sequence = 0;
 
     if(loaded || contact == nullptr)
         return count;
 
+    // auto expires = Desktop::expires();
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
     Q_ASSERT(messageModel != nullptr);
 
-    auto query = storage->getRecords("SELECT * FROM Messages WHERE sid=? ORDER BY posted DESC, seqid DESC;", {contact->uid});
+    auto query = storage->getRecords("SELECT * FROM Messages WHERE (sid=?) AND (expires > ?) ORDER BY posted DESC, seqid DESC;", {contact->uid, current});
 
     while(query.isActive() && query.next()) {
         auto msg = new MessageItem(query.record());

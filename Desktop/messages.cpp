@@ -322,15 +322,18 @@ void MessageItem::save()
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
 
-    auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext) "
-                      "VALUES(?,?,?,?,?,?,?);", {
+    auto expires = dateTime.addSecs(Desktop::instance()->expiration());
+
+    auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext, expires) "
+                      "VALUES(?,?,?,?,?,?,?,?);", {
                           msgFrom->uid,
                           msgTo->uid,
                           session->contact->uid,
                           dateSequence,
                           dateTime,
                           "TEXT",
-                          msgBody
+                          msgBody,
+                          expires,
     });
     if(!mid.isValid())
         saved = false;
