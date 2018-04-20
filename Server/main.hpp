@@ -24,6 +24,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QThread>
+#include <QProcess>
 #include <QHash>
 #include <QDir>
 

@@ -29,10 +29,14 @@
 #include <QIODevice>
 #include <QHostInfo>
 #include <QUuid>
+#include <QProcess>
 
 using namespace std;
 
-Main::Main(Server *server)
+static QString command = "none";
+static int exitcode = -1;
+
+Main::Main(Server *server) : QObject()
 {
     connect(server, &Server::started, this, &Main::onStartup);
     connect(server, &Server::finished, this, &Main::onShutdown);
@@ -42,6 +46,31 @@ void Main::onStartup()
 {
     debug() << "Control manager startup";
     Context::start(QThread::HighPriority);
+
+#ifndef QT_NO_DEBUG_OUTPUT
+    if(command == "none")
+        return;
+
+    QTimer::singleShot(1200, this, [=] {
+        auto proc = new QProcess;
+        connect(proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), [=](int code, QProcess::ExitStatus status) {
+            Q_UNUSED(status);
+            qDebug() << "Finished" << command << code;
+            exitcode = code;
+            Server::shutdown(exitcode);
+        });
+        connect(proc, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
+            Q_UNUSED(error);
+            qDebug() << "Failed" << command;
+            exitcode = -1;
+            Server::shutdown(-1);
+        });
+        qDebug() << "Start" << command;
+        proc->setStandardOutputFile("test.out");
+        proc->setStandardErrorFile("test.err");
+        proc->start(command);
+    });
+#endif
 }
 
 void Main::onShutdown()
@@ -52,8 +81,6 @@ void Main::onShutdown()
 
 int main(int argc, char **argv)
 {
-    int exitcode = 0;
-
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
     QCoreApplication::setApplicationName("sipwitchqt");
     QCoreApplication::setOrganizationDomain("tychosoft.com");
@@ -73,6 +100,9 @@ int main(int argc, char **argv)
         {{"c", "config"}, "Specify config file", "file", SERVICE_CONF},
         {{"d", "detached"}, "Run as detached background daemon"},
         {{"f", "foreground"}, "Run as foreground daemon"},
+#ifndef QT_NO_DEBUG_OUTPUT
+        {{"t", "test"}, "Specify testing command", "command", "none"},
+#endif
         {{"x", "debug"}, "Enable debug output"},
 #ifndef QT_NO_DEBUG_OUTPUT
         {{"z", "zeroconfig"}, "Enable zeroconfig in debug"},
@@ -99,6 +129,11 @@ int main(int argc, char **argv)
         {DEFAULT_ADDRESS,   "any"},
         {DEFAULT_NETWORK,   Util::localDomain()},
     });
+
+#ifndef QT_NO_DEBUG_OUTPUT
+    if(args.isSet("test"))
+        command = args.value("test");
+#endif
 
     output() << "Config: " << server[SERVER_CONFIG];
 
@@ -138,13 +173,14 @@ int main(int argc, char **argv)
     Manager::init(2);
     Database::init(3);
 
-    auto dbdriver = server[CURRENT_DATABASE].toLower();
-    if(dbdriver == "sqlite" || dbdriver == "qsqlite" || dbdriver == "sqlite3" || dbdriver == "qsqlite3")
+    if(Util::dbIsFile(server[CURRENT_DATABASE].toUpper()))
         Authorize::init(0);
     else
         Authorize::init(6);
 
-    exitcode = server.start();
+    auto result = server.start();
+    if(exitcode == -1)
+        exitcode = result;
 
     //config.sync();
     debug() << "Exiting " << QCoreApplication::applicationName();
