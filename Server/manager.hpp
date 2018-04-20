@@ -77,6 +77,7 @@ signals:
     void updateProfile(const Event& ev, const UString& authorized);
     void changeAuthorize(const Event& ev);
     void sendPending(const Event& ev, qlonglong endpoint);
+    void lastAccess(qlonglong endpoint, const QDateTime& timestamp);
 
 public slots:
     void sendMessage(qlonglong endpoint, const QVariantHash& data);

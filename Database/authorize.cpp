@@ -39,6 +39,7 @@ QObject(), db(nullptr)
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(database, &Database::updateAuthorize, this, &Authorize::activate);
     connect(this, &Authorize::copyOutboxes, database, &Database::copyOutbox);
+    connect(this, &Authorize::syncOutbox, database, &Database::syncOutbox);
 
     // future connections for quick aync between manager and auth
     Manager *manager = Manager::instance();
@@ -111,8 +112,12 @@ void Authorize::findEndpoint(const Event& event)
             auto origin = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label='NONE')", {number});
             emit copyOutboxes(origin.value("endpoint").toLongLong(), endpoint.value("endpoint").toLongLong());
         }
+        else {
+            warning() << "Syncing database for " << number << " with label " << label;
+            emit syncOutbox(endpoint.value("endpoint").toLongLong());
+        }
     }
-    else if(endpoint.count() < 1) {
+    else  if(endpoint.count() < 1) {
         warning() << "Cannot authorize " << number << "; invalid label " << label;
         Context::reply(event, SIP_FORBIDDEN);
         return;

@@ -21,6 +21,7 @@
 #include "server.hpp"
 #include "output.hpp"
 #include "manager.hpp"
+#include "zeroconf.hpp"
 #include "main.hpp"
 
 #include <iostream>
@@ -73,6 +74,9 @@ int main(int argc, char **argv)
         {{"d", "detached"}, "Run as detached background daemon"},
         {{"f", "foreground"}, "Run as foreground daemon"},
         {{"x", "debug"}, "Enable debug output"},
+#ifndef QT_NO_DEBUG_OUTPUT
+        {{"z", "zeroconfig"}, "Enable zeroconfig in debug"},
+#endif
         {{"show-cache"}, "Show config cache"},
     });
 
@@ -108,9 +112,18 @@ int main(int argc, char **argv)
         crit(95) << "no valid interfaces specified";
 
     // create controller, load settings..
+    auto zeroPort = port;
+
+#ifndef QT_NO_DEBUG_OUTPUT
+    if(!args.isSet("zeroconfig"))
+        zeroPort = 0;
+#endif
 
     Main controller(&server);
+    Zeroconfig zeroconf(&server, zeroPort);
+
     Q_UNUSED(controller);
+    Q_UNUSED(zeroconf);
 
     if(Server::isDetached() && CrashHandler::corefiles())
             CrashHandler::installHandlers();

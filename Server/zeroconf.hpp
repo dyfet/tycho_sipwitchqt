@@ -15,32 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LOGIN_HPP_
-#define	LOGIN_HPP_
+#ifndef ZEROCONF_HPP_
+#define ZEROCONF_HPP_
 
-#include <QWidget>
-#include <QVariantHash>
+#include "server.hpp"
+#include <QThread>
 
-class Desktop;
-
-class Login : public QWidget
+class Zeroconfig final : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(Login)
+    Q_DISABLE_COPY(Zeroconfig)
 
 public:
-    Login(Desktop *main);
+    Zeroconfig(Server *server, quint16 port);
 
-    void enter();
-    void badIdentity();
-    void badPassword();
-    void badLabel();
+    static bool enabled();
 
-    QVariantHash credentials();     // gathers local ones...
-
-private:
-    Desktop *desktop;
+public slots:
+    void onStartup();
+    void onShutdown();
+    
 };
 
 #endif
-

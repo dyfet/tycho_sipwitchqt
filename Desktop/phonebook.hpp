@@ -53,6 +53,10 @@ public:
         return extensionNumber;
     }
 
+    int id() const {
+        return uid;
+    }
+
     UString display() const {
         return displayName;
     }

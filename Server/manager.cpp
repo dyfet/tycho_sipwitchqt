@@ -19,7 +19,19 @@
 #include "server.hpp"
 #include "output.hpp"
 #include "manager.hpp"
+#include "zeroconf.hpp"
 #include "main.hpp"
+
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#include <cstdlib>
+#include <climits>
+#include <cstring>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+#endif
 
 #include <QUuid>
 #include <QJsonObject>
@@ -90,6 +102,16 @@ void Manager::applyConfig(const QVariantHash& config)
     if(ServerNames.count() < 1) {               // auto add localhost for * case
         ServerNames << "127.0.0.1";
         ServerNames << "localhost";
+#ifdef Q_OS_UNIX
+        if(Zeroconfig::enabled())   // avahi published hostname for any client
+            ServerNames << "_sipwitchqt.local";
+        char localName[HOST_NAME_MAX + 64];
+        if(!gethostname(localName, sizeof(localName)-1)) {
+            strncat(localName, ".local", sizeof(localName)-1);
+            localName[sizeof(localName) - 1] = '\0';
+            ServerNames << localName;
+        }
+#endif
     }
     if(!config["banner"].toString().isEmpty())
         ServerBanner = config["banner"].toString();
@@ -342,8 +364,11 @@ void Manager::refreshRegistration(const Event &ev)
         if(!ev.authorization())
             Context::challenge(ev, reg);
         else {
+            auto context = reg->context();
             auto result = reg->authorize(ev);
             if(result == SIP_OK) {
+                if(!context)
+                    emit lastAccess(reg->endpoint(), ev.timestamp());
                 UString xdp;
                 if(ev.label() != "NONE") {
                     auto range = Database::range();

@@ -34,7 +34,7 @@ QWidget(), desktop(control)
     connect(ui.secret, &QLineEdit::returnPressed, desktop, &Desktop::initial);
 
 #ifdef QT_NO_DEBUG_OUTPUT
-    ui.server->setText(desktop->config("login/server", QString("")).toString());
+    ui.server->setText(desktop->config("login/server", QString("sip:_sipwitchqt.local")).toString());
 #else
     ui.server->setText(desktop->config("login/server", QString("sip:127.0.0.1:4060")).toString());
 #endif
@@ -54,7 +54,7 @@ void Login::enter()
     Toolbar::search()->setPlaceholderText(tr("Disabled"));
     Toolbar::search()->setEnabled(false);
 
-// can pre-stuff default testing extension in testdata/settings.cfg this way...
+    // can pre-stuff default testing extension in testdata/settings.cfg this way...
 
     setEnabled(true);
     ui.secret->setText("");

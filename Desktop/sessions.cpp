@@ -820,6 +820,13 @@ void Sessions::changeConnector(Connector *connected)
                     receiveText(from, to, text, timestamp, sequence, subject);
                 }
             }
+            auto storage = Storage::instance();
+            foreach(auto session, sessions) {
+                auto uid = session->contact->id();
+                if(storage)
+                    storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;",
+                        {session->mostRecent, session->lastSequence, uid});
+            }
             connector->ackPending();    // let server know we processed...
         }, Qt::QueuedConnection);
 
@@ -841,12 +848,12 @@ void Sessions::createMessage()
     auto target = activeItem->contact->uri();
 
     if(!connector) {
-        desktop->errorMessage("not online");
+        desktop->errorMessage(tr("Not online"));
         return;
     }
 
     if(!connector->sendText(target, ui.input->text().toUtf8())) {
-        desktop->errorMessage("Send failed");
+        desktop->errorMessage(tr("Send failed"));
         return;
     }
 

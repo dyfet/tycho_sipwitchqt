@@ -86,6 +86,7 @@ QObject()
     connect(manager, &Manager::sendPending, this, &Database::sendPending);
     connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
+    connect(manager, &Manager::lastAccess, this, &Database::lastAccess);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
 }
 
@@ -409,6 +410,17 @@ void Database::copyOutbox(qlonglong source, qlonglong target)
         ++count;
     }
     qDebug() << "Copied" << count << "outboxes from" << source << "to" << target;
+}
+
+void Database::syncOutbox(qlonglong endpoint)
+{
+    qDebug() << "Sync outbox" << endpoint;
+    runQuery("UPDATE Outboxes SET msgstatus = 0 WHERE endpoint=?;", {endpoint});
+}
+
+void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp)
+{
+    runQuery("UPDATE Endpoints SET lastaccess=? WHERE endpoint=?;", {timestamp, endpoint});
 }
 
 void Database::sendDeviceList(const Event& event)

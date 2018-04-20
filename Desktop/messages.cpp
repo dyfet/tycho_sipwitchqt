@@ -87,6 +87,13 @@ session(sid)
     else
         inbox = true;
 
+    if(sid->mostRecent < dateTime) {
+        sid->mostRecent = dateTime;
+        sid->lastSequence = sequence;
+    }
+    else if(sid->mostRecent == dateTime && sid->lastSequence < sequence)
+        sid->lastSequence = sequence;
+
     findFormats();
     save();
 }

@@ -127,6 +127,8 @@ private:
     QList<MessageItem *> messages;
     QList<MessageItem *> filtered;
     MessageModel *messageModel;
+    QDateTime mostRecent;                       // most recent message
+    int lastSequence;                           // highest sequence
     QString inputText;                          // current input buffer
     QString callDisplay;                        // transitory call name
     QString currentTopic;                       // can be set...
