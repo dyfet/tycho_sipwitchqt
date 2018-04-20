@@ -42,8 +42,23 @@ QWidget(), desktop(control)
     connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
     connect(ui.pickfontbutton, &QPushButton::clicked, this, &Options::fontDialog);
     connect(ui.resetFont, &QPushButton::clicked , control , &Desktop::resetFont);
-    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex){
+    connect(ui.confirm, &QLineEdit::textChanged, this, &Options::secretChanged);
+    connect(ui.secret, & QLineEdit::textChanged, this, &Options::secretChanged);
+    connect(ui.changeSecret, &QPushButton::clicked, this, &Options::changePassword);
 
+    connect(ui.secret, &QLineEdit::returnPressed, this, []{
+        if(!ui.secret->text().isEmpty())
+            ui.confirm->setFocus();
+    });
+
+    connect(ui.confirm, &QLineEdit::returnPressed, this, [this] {
+        if(ui.confirm->text().isEmpty() || ui.confirm->text() != ui.secret->text())
+            ui.secret->setFocus();
+        else
+            changePassword();
+    });
+
+    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex){
 
         int expiration = 86400;
         if (expiresIndex == "3 min")
@@ -92,8 +107,6 @@ QWidget(), desktop(control)
     } );
 }
 
-
-
 void Options::enter()
 {
     Toolbar::setTitle("");
@@ -108,7 +121,7 @@ void Options::enter()
     ui.appearance->setCurrentText(desktop->appearance());
 
     auto creds = storage->credentials();
-    ui.server->setText(creds["host"].toString());
+    ui.confirm->setText("");
     ui.secret->setText("");
 
     /* Need explanation I think we are removing this not functional
@@ -135,4 +148,30 @@ void Options::fontDialog()
     } else {
        desktop->getCurrentFont() ;
     }
+}
+
+void Options::secretChanged(const QString& text)
+{
+    if(ui.secret->text() == ui.confirm->text())
+        ui.confirm->setStyleSheet("background: white; padding: 1px;");
+    else
+        ui.confirm->setStyleSheet("color: red; background: white; padding: 1px");
+}
+
+void Options::changePassword()
+{
+    Desktop *desktop = Desktop::instance();
+
+    if(ui.secret->text() != ui.confirm->text()) {
+        desktop->errorMessage(tr("Password doesn't match"));
+        return;
+    }
+    if(ui.secret->text().isEmpty()) {
+        desktop->errorMessage(tr("No password entered"));
+        return;
+    }
+
+    desktop->changePassword(ui.secret->text());
+    ui.secret->setText("");
+    ui.confirm->setText("");
 }

@@ -36,8 +36,9 @@ private:
     Desktop *desktop;
     QDialog *dialog;
 
-public slots:
-
+private slots:
+    void secretChanged(const QString& text);
+    void changePassword();
 
 };
 
