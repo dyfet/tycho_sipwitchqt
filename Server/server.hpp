@@ -49,7 +49,7 @@ public:
     using Symbol = QByteArray;  // convenience type for env symbol string
 
     Server(int& argc, char **argv, QCommandLineParser &args, const QVariantHash &keypairs);
-    ~Server();
+    ~Server() final;
 
     inline const Symbol& operator[](const QString& key) const {
         return Env[key];

@@ -491,7 +491,7 @@ void Context::challenge(const Event &event, Registry* registry, bool reuse)
     osip_message_set_header(msg, "Expires", expires);
 
     // part of sipwitchqt client first trust/initial contact setup
-    if(event.initialize() == "label")
+    if(event.initialize() == "label" || event.initialize() == "user")
         osip_message_set_header(msg, "X-Authorize", user);
 
     eXosip_message_send_answer(context, tid, SIP_UNAUTHORIZED, msg);
