@@ -1,5 +1,11 @@
 v0.2.2
 * Change password support
+* Simple markdown support
+* Zeroconfg support
+* Message sync for existing extensions
+* Functional testing support
+* Improved adduser ui
+* Expiration marking on client
 
 v0.2.1
 * Fix for crash sending offline messages
