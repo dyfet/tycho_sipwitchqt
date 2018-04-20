@@ -23,6 +23,8 @@
 #include "../Dialogs/adduser.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
+#include <QCryptographicHash>
+#include <QJsonObject>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -159,6 +161,18 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
 #endif
 
 static Ui::MainWindow ui;
+
+static QHash<UString, QCryptographicHash::Algorithm> digests = {
+    {"MD5",     QCryptographicHash::Md5},
+    {"SHA",     QCryptographicHash::Sha1},
+    {"SHA1",    QCryptographicHash::Sha1},
+    {"SHA2",    QCryptographicHash::Sha256},
+    {"SHA256",  QCryptographicHash::Sha256},
+    {"SHA512",  QCryptographicHash::Sha512},
+    {"SHA-1",   QCryptographicHash::Sha1},
+    {"SHA-256", QCryptographicHash::Sha256},
+    {"SHA-512", QCryptographicHash::Sha512},
+};
 
 Desktop *Desktop::Instance = nullptr;
 Desktop::state_t Desktop::State = Desktop::INITIAL;
@@ -586,14 +600,53 @@ void Desktop::clearMessage()
     ui.statusBar->clearMessage();
 }
 
-
-
 void Desktop::changeExpiration(int expires)
 {
     storage->updateExpiration(expires);
     currentExpiration = expires;
     settings.setValue("expires", expires);
     qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
+}
+
+void Desktop::changePassword(const QString& password)
+{
+    if(password == Credentials["secret"]) {
+        errorMessage(tr("Password unchanged"));
+        return;
+    }
+
+    if(!connector) {
+        errorMessage(tr("Cannot change password offline"));
+        return;
+    }
+
+    auto realm = Credentials["realm"].toString();
+    auto user = Credentials["user"].toString();
+    auto digest = Credentials["algorithm"].toString().toUpper();
+    qDebug() << "Change password for" << user << "," << realm << digest;
+    auto ha1 = user + ":" + realm + ":" + password;
+    auto secret = QCryptographicHash::hash(ha1.toUtf8(), digests[digest]).toHex();
+    qDebug() << "Secret" << secret;
+
+    QJsonObject json = {
+        {"s", QString::fromUtf8(secret)},
+        {"n", Phonebook::self()->number()},
+    };
+    QJsonDocument jdoc(json);
+    auto body = jdoc.toJson(QJsonDocument::Compact);
+
+    connector->sendProfile(Phonebook::self()->uri(), body);
+    showSessions();
+    setEnabled(false);
+    offline();
+    Credentials["secret"] = password;
+    statusMessage(tr("Changing password..."), 2500);
+
+    QTimer::singleShot(2400, this, [this]{
+        if(!connector && !listener)
+            listen(Credentials);
+        setEnabled(true);
+    });
 }
 
 void Desktop::changeAppearance(const QString& appearance)

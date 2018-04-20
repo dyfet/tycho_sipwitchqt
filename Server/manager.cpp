@@ -163,6 +163,13 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
     }
 }
 
+void Manager::dropEndpoint(qlonglong endpoint)
+{
+    auto *reg = Registry::find(endpoint);
+    if(reg)
+        delete reg;
+}
+
 void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
 {
     auto *reg = Registry::find(endpoint);
@@ -329,7 +336,7 @@ void Manager::requestProfile(const Event& ev)
         return;
     }
 
-    emit updateProfile(ev, reg->user());
+    emit changeProfile(ev, reg->user(), reg->endpoint());
 }
 
 void Manager::requestRoster(const Event& ev)

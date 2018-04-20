@@ -81,13 +81,14 @@ QObject()
 
     Manager *manager = Manager::instance();
     connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
-    connect(manager, &Manager::updateProfile, this, &Database::sendProfile);
+    connect(manager, &Manager::changeProfile, this, &Database::sendProfile);
     connect(manager, &Manager::sendDevlist, this, &Database::sendDeviceList);
     connect(manager, &Manager::sendPending, this, &Database::sendPending);
     connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
     connect(manager, &Manager::lastAccess, this, &Database::lastAccess);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
+    connect(this, &Database::disconnectEndpoint, manager, &Manager::dropEndpoint);
 }
 
 Database::~Database()
@@ -727,7 +728,7 @@ void Database::changeAuthorize(const Event& event)
     Context::reply(event, SIP_OK);
 }
 
-void Database::sendProfile(const Event& event, const UString& authuser)
+void Database::sendProfile(const Event& event, const UString& authuser, qlonglong endpoint)
 {
     int target = atoi(event.message()->to->url->username);
     qDebug() << "Seeking profile for" << target;
@@ -754,6 +755,7 @@ void Database::sendProfile(const Event& event, const UString& authuser)
     auto uri = event.uriTo(record.value("extnbr").toString());
     auto email = record.value("email").toString();
     auto userid = record.value("authname").toString();
+    auto secret = record.value("secret").toString();
     QString info, puburi;
     if(access == "REMOTE")
         puburi = userid + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
@@ -812,6 +814,7 @@ void Database::sendProfile(const Event& event, const UString& authuser)
         auto display = json["d"].toString();
         auto email = json["e"].toString();
         auto changedAccess = json["a"].toString().toUpper();
+        auto changedSecret = json["s"].toString();
 
         if(!changedAccess.isEmpty() && !admin) {
             Context::reply(event, SIP_FORBIDDEN);
@@ -849,8 +852,14 @@ void Database::sendProfile(const Event& event, const UString& authuser)
             email = profile["e"].toString();
         }
 
+        if(changedSecret.length() == secret.length()) {
+            emit disconnectEndpoint(endpoint);
+            secret = changedSecret;
+        }
+
         runQuery("UPDATE Extensions SET display=? WHERE extnbr=?;", {display, target});
-        runQuery("UPDATE Authorize SET email=?, authaccess=? WHERE authname=?;", {email, access, userid});
+        runQuery("UPDATE Authorize SET email=?, authaccess=?, secret=? WHERE authname=?;", {email, access, secret, userid});
+
         Manager::updateRoster();
     }
 

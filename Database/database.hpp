@@ -104,6 +104,7 @@ private:
 signals:
     void updateAuthorize(const QVariantHash& config, bool active);
     void sendMessage(qlonglong endpoint, const QVariantHash& data);
+    void disconnectEndpoint(qlonglong endpoint);
 
 public slots:
     void localMessage(const Event& ev);
@@ -113,7 +114,7 @@ public slots:
 
 private slots:
     void sendRoster(const Event& ev);
-    void sendProfile(const Event& ev, const UString& auth);
+    void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);

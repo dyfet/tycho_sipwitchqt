@@ -74,7 +74,7 @@ signals:
     void findEndpoint(const Event& ev);
     void sendRoster(const Event& ev);
     void sendDevlist(const Event& ev);
-    void updateProfile(const Event& ev, const UString& authorized);
+    void changeProfile(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void sendPending(const Event& ev, qlonglong endpoint);
     void lastAccess(qlonglong endpoint, const QDateTime& timestamp);
@@ -89,6 +89,7 @@ public slots:
     void requestAuthorize(const Event& ev);
     void refreshRegistration(const Event& ev);
     void createRegistration(const Event& ev, const QVariantHash& endpoint);
+    void dropEndpoint(qlonglong endpoint);
 
     void applyConfig(const QVariantHash& config);
 

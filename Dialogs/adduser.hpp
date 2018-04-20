@@ -42,6 +42,7 @@ signals:
 private slots:
     void changeConnector(Connector *connection);
     void changedAuth(const QString& text);
+    void secretChanged(const QString& text);
     void add();
 };
 

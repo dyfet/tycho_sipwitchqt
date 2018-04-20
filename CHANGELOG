@@ -1,3 +1,6 @@
+v0.2.2
+* Change password support
+
 v0.2.1
 * Fix for crash sending offline messages
 * Visual styling improvements and optimizations

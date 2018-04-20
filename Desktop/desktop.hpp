@@ -254,6 +254,7 @@ public slots:
     void exportDb();
     void importDb();
 
+    void changePassword(const QString& password);
     void changeAppearance(const QString& appearance);
     void changeExpiration(int expire);
     void resetFont();

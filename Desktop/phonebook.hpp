@@ -183,7 +183,6 @@ class Phonebook final : public QWidget
     Q_OBJECT
 public:
     Phonebook(Desktop *main, Sessions* sessionsPage);
-    ~Phonebook() final = default;
 
     void enter();
     void setWidth(int width);

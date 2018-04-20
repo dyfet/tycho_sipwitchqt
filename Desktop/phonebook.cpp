@@ -24,7 +24,7 @@
 #include <QJsonArray>
 
 static Ui::PhonebookWindow ui;
-static int highest = -1, me = -1;
+static int highest = 699, me = -1;
 static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
@@ -68,7 +68,6 @@ void ContactItem::add()
     Q_ASSERT(!added);
     added = true;
     // the subset of contacts that have active sessions at load time...
-    qDebug() << "***** UPDATED" << contactUpdated << contactUpdated.isValid();
     if(contactUpdated.isValid()) {
         if(contactType == "GROUP") {
             group = true;
@@ -104,9 +103,6 @@ void ContactItem::add()
         return;
 
     contactFilter = (textNumber + "\n" + displayName).toLower();
-    if(extensionNumber > highest)
-        highest = extensionNumber;
-
     local[extensionNumber] = this;
 }
 
@@ -124,7 +120,6 @@ void ContactItem::purge()
     grpAuths.clear();
     index.clear();
     memset(local, 0, sizeof(local));
-    highest = -1;
     me = -1;
 
     grpAuths << "anonymous";
@@ -241,7 +236,6 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     auto puburi = json["p"].toString();
     auto mailto = json["e"].toString();
     auto info = json["i"].toString();
-    auto insert = false;
     auto item = local[number];
 
     if(item && !status.isEmpty()) {
@@ -260,12 +254,6 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
             }
             ui.profileStack->setCurrentWidget(ui.adminPage);
         }
-    }
-
-    if(number > highest) {
-        insert = true;
-        beginInsertRows(QModelIndex(), highest, number);
-        highest = number;
     }
 
     if(!item) {
@@ -303,10 +291,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
             Desktop::instance()->setSelf(QString::fromUtf8(item->displayName));
     }
 
-    if(insert)
-        endInsertRows();
-    else
-        dataChanged(index(number), index(number));
+    dataChanged(index(number), index(number));
     return item;
 }
 
