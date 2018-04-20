@@ -602,7 +602,11 @@ void Desktop::clearMessage()
 
 void Desktop::changeExpiration(int expires)
 {
-    storage->updateExpiration(expires);
+    auto erase = QDateTime::currentDateTime().addSecs(expires);
+//    if(storage)
+//        storage->runQuery("UPDATE Messages set expires=DateTime(posted, 'LocalTime', '+? seconds'", {expires});
+    if(storage)
+        storage->runQuery("UPDATE Messages set expires=?", {erase});
     currentExpiration = expires;
     settings.setValue("expires", expires);
     qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
