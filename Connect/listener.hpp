@@ -98,4 +98,18 @@ private slots:
  * \file listener.hpp
  */
 
+/*!
+ * \class Listener
+ * \brief Provides client real-time sip connection to your SipWitchQt server.
+ * This is created to form a connection and deleted to terminate it.  The
+ * Listener is typically used for server registration, realtime short messages,
+ * to manage call sessions, and for realtime server status notifications.
+ *
+ * The Listener operates in it's own detached thread that receives eXosip
+ * events and emits processed requests as signals.  A context lock is used
+ * to support calling methods that invoke server operations from the ui thread
+ * context.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
+
 #endif

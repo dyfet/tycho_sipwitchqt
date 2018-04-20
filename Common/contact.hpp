@@ -68,7 +68,7 @@ public:
     }
 
     void refresh(const Contact& from) {
-        if(from == *this && from.expiration > 0)
+        if(from != *this && from.expiration > 0)
             expiration = from.expiration;
     }
 
@@ -121,6 +121,65 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
  * host address so that the actual dns resolution happens in the eXosip2
  * library using the c-ares resolver.
  * \author David Sugar <tychosoft@gmail.com>
+ *
+ * \fn Contact::Contact(const UString& address, quint16 port, const UString& user, int duration)
+ * Construct a uri contact for a designated endpoint and optional user identity.
+ * \param address Endpoint ip address or hostname.
+ * \param port Endpoint ip port number or 0 for default (5060).
+ * \param user Identity or QString() if not associated with a user identity.
+ * \param duration Expiration of contact, -1 for never expires.
+ *
+ * \fn Contact::Contact(const QString uri, QString server)
+ * Converts a string user id or full uri into a sip contact object.
+ * \param uri A partial or full sip uri (such as sip:id@server:port), or
+ * just a user id.
+ * \param server A server uri to apply if the uri is just a user id.
+ *
+ * \fn Contact::Contact(osip_contact_t *contact)
+ * Converts an osip contact structure into a sip contact object.
+ * \param contact A contact defined in osip library.
+ *
+ * \fn Contact::Contact(const osip_uri_t *uri)
+ * Converts an osip uri into a sip contact object.
+ * \param uri A uri defined in osio library.
+ *
+ * \fn Contact::Contact()
+ * Create an empty contact object that points to no endpoint.
+ *
+ * \fn Contact::expires()
+ * Time this contact expires.
+ * \return time_t of time expected to expire.
+ *
+ * \fn Contact::refresh(const Contact& from)
+ * Replace expiration time based on another contacts expiration.
+ * \param from Contact to get expiration from.
+ *
+ * \fn Contact::refresh(int seconds)
+ * Refresh by adding additional time to contact expiration.
+ * \param seconds Number of seconds to add.
+ *
+ * \fn Contact::hasUser()
+ * Test if contact endpoint includes a user id.
+ * \return true if includes user.
+ *
+ * \fn Contact::hasExpired()
+ * Test if contact has already expired.
+ * \return true if contact expires and past expiration time.
+ *
+ * \fn Contact::clear()
+ * Creates an empty contact record, removing all previous data.
+ *
+ * \fn Contact::user()
+ * Get user identity associated with this contact endpoint.
+ * \return Identity or empty string.
+ *
+ * \fn Contact::host()
+ * Get host address/name associated with this contact endpoint.
+ * \return Host or empty string if not set.
+ *
+ * \fn Contact::port()
+ * Get port number associated with this contact endpoint.
+ * \return internet port number for contact.
  */
 
 /*!

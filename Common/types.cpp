@@ -135,26 +135,6 @@ UString UString::uri(const UString& schema, const UString& server, quint16 port)
     return prefix + host + suffix;
 }
 
-UString UString::address(const UString& schema, const UString& server, quint16 port)
-{
-    auto prefix = schema.toLower();
-    auto host = server.unquote("[]");
-
-    if(prefix == "sip:" && port == 5060)
-        port = 0;
-    if(prefix == "sips:" && port == 5061)
-        port = 0;
-
-    UString suffix = "";
-    if(port > 0)
-        suffix = ":" + UString::number(port);
-
-    if(host.indexOf(":") > -1)
-        host = "[" + host + "]";
-
-    return host + suffix;
-}
-
 UString UString::uri(const UString& schema, const UString& id, const UString& server, quint16 port)
 {
     auto prefix = schema.toLower();
@@ -175,4 +155,3 @@ UString UString::uri(const UString& schema, const UString& id, const UString& se
     return prefix + id + "@" + host + suffix;
 }
 
-//static UString uri(const UString& schema, const UString& id, const UString& server, quint16 port);

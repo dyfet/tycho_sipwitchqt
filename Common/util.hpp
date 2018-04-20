@@ -48,38 +48,38 @@ namespace Util {
  */
 
 /*!
- * \fn portNumber(const char *cp)
+ * \fn Util::portNumber(const char *cp)
  * Converts a text string into a valid ip port number.
  * \param cp text string for port number.
  * \return 0 if fails, else port number.
  *
- * \fn localDomain()
+ * \fn Util::localDomain()
  * Return effective local domain of your machine.
  * \return domain name string.
  *
- * \fn bindAddress(const QString& hostId)
+ * \fn Util::bindAddress(const QString& hostId)
  * Create a list of possible interface bind addresses for a given hostname
  * or wildcard string.
  * \param hostId Name of host or "*"
  * \return list of interface addresses possible.
  *
- * \fn hostAddress(const QString& hostId)
+ * \fn Util::hostAddress(const QString& hostId)
  * Return list of possible addresses for a host:port style host string.
  * \param hostId Name of host (and :port)
  * \return list of contact addresses possible.
  *
- * \fn hostPort(const QString& hostId)
+ * \fn Util::hostPort(const QString& hostId)
  * Returns port number of a host:port style host id.
  * \param hostId Name of host (and :port)
  * \return port address or 0 if none.
  *
- * \fn currentDay(const QDateTime& when)
+ * \fn Util::currentDay(const QDateTime& when)
  * Returns the current day number since the epoch based on current timezone.
  * This is often used to determine if two timestamps are from the same day.
  * \param when Timestamp to get day from.
  * \return number of days since the "epoch".
  *
- * \fn untilTomorrow(const QDateTime& when)
+ * \fn Util::untilTomorrow(const QDateTime& when)
  * Returns number of seconds remaining until midnight rollover to the next
  * day, for current timezone.  Sometimes used to determine timer wakeups.
  * \param when Timestap to check.

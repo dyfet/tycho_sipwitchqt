@@ -25,7 +25,6 @@ class CrashHandler
 {
     Q_DISABLE_COPY(CrashHandler)
 public:
-    CrashHandler();
     virtual ~CrashHandler() = default;
 
     static bool corefiles();
@@ -33,6 +32,8 @@ public:
     NORETURN static void processHandlers();
     
 protected:
+    CrashHandler();
+
     virtual void crashHandler() = 0;
 
 private:
@@ -42,8 +43,33 @@ private:
 };
 
 /*!
- * Crash handler support for service daemons.
+ * Crash handler support.
  * \file crashhandler.hpp
+ */
+
+/*!
+ * \class CrashHandler
+ * \brief Provides a daisy-chain linked list of handlers to call when a crash
+ * occurs.  These might include things that save or upload core dumps, or
+ * other features to log and process failed application termination.  This is
+ * meant to be used as a base class for a specific handler, creating an
+ * instance of the class attaches it to the call chain for abnormal
+ * termination.
+ * \author David Sugar <tychosoft@gmail.com>
+ *
+ * \fn CrashHandler::CrashHandler()
+ * Create and attach a derived class to the termination callback list.
+ *
+ * \fn CrashHandler::crashHandler()
+ * Derived function to actually handle application termination events.
+ *
+ * \fn CrashHandler::installHandlers()
+ * Activates all created crash handler objects for callback on application
+ * crash.
+ *
+ * \fn CrashHandler::corefiles()
+ * Enables core files to be saved for this executable if otherwise disabled
+ * system-wide.
  */
 
 #endif
