@@ -120,7 +120,7 @@ private:
     bool dateHint, userHint, timeHint;  // hinting for time header & user change
     bool saved;                         // for dup/failed save killing
     double dateHeight, userHeight, textHeight, leadHeight;
-    int textFormats;
+    int textFormats, textFonts;
     int textUnderline;
     int lineHint;
     bool userUnderline;

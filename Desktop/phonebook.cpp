@@ -86,8 +86,6 @@ void ContactItem::add()
         groups.insert(0, this);
     }
 
-    qDebug() << "NUMBER" << textNumber << "NAME" << displayName << "URI" << contactUri << "TYPE" << contactType << group;
-
     if(!isExtension() || extensionNumber > 999) {
         contactType = "FOREIGN";
         foreign[contactUri] = this;
