@@ -25,7 +25,12 @@
 #include <QTextOption>
 #include <QRegularExpression>
 
+enum class TextFormat {
+    bold, italic, mono
+};
+
 static QFont textFont;                      // default message text font
+static QFont textMono;
 static QFont timeFont;
 static QFont userFont;
 static QFont lineFont;
@@ -46,12 +51,16 @@ static QColor urlColor(0, 0, 240);
 static QColor mapColor(0, 0, 244);
 static QColor nbrColor(240, 120, 0);
 static QColor tinted(255, 255, 223);
+static QRegularExpression findBold(R"(\*\*(\w*?)\*\*)");
+static QRegularExpression findItalic(R"(_(\w*?)_)");
+static QRegularExpression findMono(R"(`(\w*?)`)");
 static QRegularExpression findGroup(R"([\#]\d\d\d)");
 static QRegularExpression findUser(R"([\@]\d\d\d)");
 static QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
 static QRegularExpression findMap(R"([-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?))");
 static QRegularExpression findDialing(R"(\+(?:[0-9] ?){6,14}[0-9])");
 static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}, {findMap, mapColor}, {findDialing, nbrColor}};
+static QList<QPair<QRegularExpression, TextFormat>> fontMatches = {{findBold, TextFormat::bold}, {findItalic, TextFormat::italic}, {findMono, TextFormat::mono}};
 static int dynamicLine;
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
@@ -180,24 +189,54 @@ session(nullptr), saved(false)
 
 void MessageItem::findFormats()
 {
-    textFormats = 0;
+    textFormats = textFonts = 0;
     textUnderline = -1;
     userUnderline = false;
 
-    foreach(auto search, findMatches) {
-        auto match = search.first.match(msgBody);
-        auto pos = 0;
-        for(;;) {
-            auto start = match.capturedStart(pos);
+    foreach(auto search, fontMatches) {
+        auto matches = search.first.globalMatch(msgBody);
+        while(matches.hasNext()) {
+            auto match = matches.next();
+            auto start = match.capturedStart(0);
             if(start < 0)
                 break;
             QTextLayout::FormatRange range;
             range.start = start;
-            range.length = match.capturedLength(pos++);
-            range.format.setForeground(search.second);
-            range.format.setBackground(tinted);
+            range.length = match.capturedLength(0);
+            switch(search.second) {
+            case TextFormat::bold:
+                range.format.setFontWeight(75);
+                break;
+            case TextFormat::italic:
+                range.format.setFontItalic(true);
+                break;
+            case TextFormat::mono:
+                range.format.setFont(textMono);
+                break;
+            }
             formats << range;
             ++textFormats;
+            ++textFonts;
+        }
+    }
+
+    foreach(auto search, findMatches) {
+        auto matches = search.first.globalMatch(msgBody);
+        while(matches.hasNext()) {
+            auto match = matches.next();
+            auto pos = 0;
+            for(;;) {
+                auto start = match.capturedStart(pos);
+                if(start < 0)
+                    break;
+                QTextLayout::FormatRange range;
+                range.start = start;
+                range.length = match.capturedLength(pos++);
+                range.format.setForeground(search.second);
+                range.format.setBackground(tinted);
+                formats << range;
+                ++textFormats;
+            }
         }
     }
 }
@@ -259,7 +298,7 @@ bool MessageItem::hover(const QPoint& pos)
             auto textPos = textLines[count].xToCursor(pos.x(), QTextLine::CursorOnCharacter);
             auto entry = 0;
             foreach(auto format, formats) {
-                if(textPos >= format.start && textPos < format.start + format.length) {
+                if(textPos >= format.start && textPos < format.start + format.length && entry >= textFonts) {
                     textUnderline = entry;
                     break;
                 }
@@ -563,6 +602,8 @@ QStyledItemDelegate(parent)
     boldFont.setBold(true);
 
     monoFont = QFont("monospace");
+    textMono = monoFont;
+    textMono.setPointSize(textFont.pointSize() - 1);
     if(!QFontInfo(monoFont).fixedPitch()) {
         monoFont.setStyleHint(QFont::Monospace);
         if(!QFontInfo(monoFont).fixedPitch()) {
