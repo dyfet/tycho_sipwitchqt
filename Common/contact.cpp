@@ -129,7 +129,8 @@ hostPort(0), expiration(0)
 {
 }
 
-const UString Contact::toString() const {
+const UString Contact::toString() const
+{
     if(!hostPort)
         return "invalid";
     UString port = ":" + UString::number(hostPort);
@@ -138,14 +139,16 @@ const UString Contact::toString() const {
     return hostName + port;
 }
 
-void Contact::clear() {
+void Contact::clear()
+{
     hostPort = 0;
     hostName.clear();
     userName.clear();
     expiration = 0;
 }
 
-bool Contact::hasExpired() const {
+bool Contact::hasExpired() const
+{
     if(!expiration)
         return false;
     time_t now;
@@ -155,7 +158,8 @@ bool Contact::hasExpired() const {
     return false;
 }
 
-void Contact::refresh(int seconds) {
+void Contact::refresh(int seconds)
+{
     if(seconds < 0) {
         expiration = 0;
         return;

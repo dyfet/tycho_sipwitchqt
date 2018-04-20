@@ -44,7 +44,7 @@ namespace Util {
  */
 
 /*!
- * \fn clampRange(const T& value, const T& min, const T& max)
+ * \fn Util::clampRange(const T& value, const T& min, const T& max)
  * Clamp the range of the value so if <min, it becomes min, and >max then
  * it becomes max.
  * \param value The value to be clamped.
@@ -52,7 +52,7 @@ namespace Util {
  * \param max The maximum value permitted.
  * \return value within min/max range.
  *
- * \fn inRange(const T& value, const T& min, const T& max)
+ * \fn Util::inRange(const T& value, const T& min, const T& max)
  * Determine if value is within clamped range.
  * \param value The value to test.
  * \param min The minimum value permitted.

@@ -95,4 +95,18 @@ private slots:
  * \file connector.hpp
  */
 
+/*!
+ * \class Connector
+ * \brief Provides a connection service for query-response operations that
+ * may generate longer responses from the server than the real-time Listener
+ * can handle.  The connector is used for operations like rosters, profiles,
+ * and message syncing.  It will also be used for extended content messages.
+ *
+ * The Connector operates in it's own detached thread that receives eXosip
+ * events and emits server responses as signals.  A context lock is used
+ * to support calling methods that invoke server operations from the ui thread
+ * context.
+ * \author David Sugar <tychosoft@gmail.com>
+ */
+
 #endif
