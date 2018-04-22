@@ -22,14 +22,10 @@
 	make \
 	cmake \
 	ninja-build \
-
 	&& apt-get clean
 
 	#We install documentation
-	RUN apt-get install -y --no-install-recommends texlive-base \
-
-	\
-	texlive-latex-base doxygen && apt-get clean
+	RUN apt-get install -y --no-install-recommends texlive-base texlive-latex-base graphviz doxygen && apt-get clean
 
 #install the repository and the gitlab-ci
 		RUN curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash && \
@@ -45,5 +41,5 @@
   --run-untagged \
   --registration-token S6yboJN2yQSexj_vNpp5 \
   --executor docker \
-  --description "My gitlabqt documentation" \
+  --description "My gitlabqt document" \
   --docker-image "in1t3r/gitlabqt:documentation"
