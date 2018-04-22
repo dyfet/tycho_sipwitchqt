@@ -14,7 +14,7 @@ CREATE TABLE Authorize (
     authname VARCHAR(32),                     -- authorizing user or group id
     authtype VARCHAR(8) DEFAULT 'USER',       -- group type
     authdigest VARCHAR(8) DEFAULT 'NONE',     -- digest format of secret
-    created DATETME DEFAULT CURRENT_TIMESTAMP,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP,
     realm VARCHAR(128),                   -- realm used for secret
     secret VARCHAR(128),                  -- secret to use
     authaccess VARCHAR(8) DEFAULT 'LOCAL',    -- type of access allowed (local, remote, all)
