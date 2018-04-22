@@ -47,8 +47,7 @@ elseif(APPLE)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
     find_library(APPKIT_LIBRARY AppKit)
-    set(system_libs ${IOKIT_LIBRARY} ${CORE_LIBRARY})
-    set(desktop_libs ${APPKIT_LIBRARY})
+    set(system_libs ${IOKIT_LIBRARY} ${CORE_LIBRARY} ${APPKIT_LIBRARY})
     include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include")
     link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib")
     find_path(MACDEPLOYQT_PATH macdeployqt PATH_SUFFIXES bin)
@@ -147,6 +146,7 @@ add_custom_target(translations SOURCES ${desktop_ts}
 if(APPLE)
     set_source_files_properties(${DESKTOP_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     set(desktop_mm Desktop/macos.mm)
+    set(server_mm Server/macos.mm)
 endif()
 
 set(voip_libs eXosip2 osip2 osipparser2)
@@ -155,7 +155,7 @@ add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${c
 target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
 set_target_properties(desktop-app PROPERTIES OUTPUT_NAME "${DESKTOP_NAME}")
 
-add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_rc})
+add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc})
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 

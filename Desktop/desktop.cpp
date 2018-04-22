@@ -61,6 +61,7 @@ static void signal_handler(int signo)
 
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const UString& text);
+void disable_nap();
 
 static io_connect_t ioroot = 0;
 static io_object_t iopobj;
@@ -1146,6 +1147,10 @@ int main(int argc, char *argv[])
 #endif
     ::signal(SIGINT, signal_handler);
     ::signal(SIGTERM, signal_handler);
+
+#ifdef Q_OS_MAC
+    disable_nap();
+#endif
 
     args.process(app);
     Desktop w(args);

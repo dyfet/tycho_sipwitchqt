@@ -78,7 +78,6 @@ static QStringList sqliteTables = {
     "CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);",
 
     "CREATE TABLE Deletes ("
-        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
         "authname VARCHAR(32),"
         "delstatus INTEGER DEFAULT 0,"
         "endpoint INTEGER,"
@@ -98,7 +97,6 @@ static QStringList sqliteTables = {
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Calling ("
-        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
         "authname VARCHAR(32),"                     // group hunt is part of
         "extnbr INTEGER,"                       // extension # to ring
         "extpriority INTEGER DEFAULT 0,"           // hunt group priority order
@@ -108,7 +106,6 @@ static QStringList sqliteTables = {
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Admin ("
-        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
         "authname VARCHAR(32),"                     // group permission is for
         "extnbr INTEGER,"                       // extension with permission
         "FOREIGN KEY (authname) REFERENCES Authorize(authname) "

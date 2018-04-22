@@ -31,6 +31,14 @@
 #include <QUuid>
 #include <QProcess>
 
+#ifdef Q_OS_MAC
+void disable_nap();
+#else
+void disable_nap()
+{
+}
+#endif
+
 using namespace std;
 
 static QString command = "none";
@@ -164,6 +172,7 @@ int main(int argc, char **argv)
             CrashHandler::installHandlers();
 
     // setup our contexts...allow registration
+    disable_nap();
 
     unsigned mask = Context::UDP | Context::TCP | Context::Allow::REGISTRY | Context::Allow::REMOTE;
 

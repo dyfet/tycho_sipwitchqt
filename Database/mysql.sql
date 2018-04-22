@@ -60,7 +60,6 @@ CREATE TABLE Speeds (
         ON DELETE CASCADE);
 
 CREATE TABLE Calling (
-    aid BIGINT PRIMARY KEY AUTO_INCREMENT,
     authname VARCHAR(32),                     -- group hunt is part of
     extnbr INTEGER,                       -- extension # to ring
     extpriority INTEGER DEFAULT 0,           -- hunt group priority order
@@ -70,7 +69,6 @@ CREATE TABLE Calling (
         ON DELETE CASCADE);
 
 CREATE TABLE Admin (
-    aid BIGINT PRIMARY KEY AUTO_INCREMENT,
     authname VARCHAR(32),                     -- group permission is for
     extnbr INTEGER,                       -- extension with permission
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
@@ -109,7 +107,6 @@ CREATE TABLE Messages (
     msgtext TEXT);
 
 CREATE TABLE Deletes (
-    aid BIGINT PRIMARY KEY AUTO_INCREMENT,
     authname VARCHAR(32),
     delstatus INTEGER DEFAULT 0,
     endpoint INTEGER,

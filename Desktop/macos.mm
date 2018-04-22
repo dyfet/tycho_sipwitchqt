@@ -4,6 +4,7 @@
 #include <AppKit/NSApplication.h>
 #include <AppKit/NSImage.h>
 #include <Foundation/NSString.h>
+#include <Foundation/NSProcessInfo.h>
 #include "../Common/types.hpp"
 
 void set_dock_label(const UString& text)
@@ -22,4 +23,10 @@ void set_dock_icon(const QIcon& icon)
     [NSApp setApplicationIconImage: image];
 }
 
-
+void disable_nap()
+{
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) &&  MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+    if ([[NSProcessInfo processInfo] respondsToSelector:@selector(beginActivityWithOptions:reason:)])
+        [[NSProcessInfo processInfo ] beginActivityWithOptions: NSActivityUserInitiatedAllowingIdleSystemSleep reason:@"SipWitchQt Desktop"];
+#endif
+}
