@@ -69,7 +69,7 @@ private:
     int serverFirst, serverLast;
 
     eXosip_t *context;
-    time_t expiresTimeout, refreshTimeout;
+    time_t expiresTimeout, refreshTimeout, refreshTimeout1;
     int family, tls;
     int rid;
 

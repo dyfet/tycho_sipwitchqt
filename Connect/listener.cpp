@@ -128,7 +128,7 @@ void Listener::send_registration(osip_message_t *msg, bool auth)
         serverInit = "";
 
     eXosip_register_send_register(context, rid, msg);
-    refreshTimeout = 0;
+    refreshTimeout = refreshTimeout1 = 0;
 }
 
 void Listener::reauthorize(const QVariantHash& update)
@@ -249,6 +249,18 @@ void Listener::run()
                 qDebug() << "Failed to send registration";
         }
 
+        if(refreshTimeout1 && now > refreshTimeout1) {
+            refreshTimeout1 = 0;
+            osip_message_t *msg = nullptr;
+            Locker lock(context);
+            qDebug() << "Refreshing registration (2)...";
+            eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
+            if(msg)
+                send_registration(msg);
+            else
+                qDebug() << "Failed to send registration";
+        }
+
         // timeout...
         if(!event) {
             Locker lock(context);
@@ -308,6 +320,7 @@ void Listener::run()
             else
                 expiresTimeout += AGENT_EXPIRES;
             refreshTimeout = expiresTimeout - 30;
+            refreshTimeout1 = expiresTimeout - 25;
             registered = true;
 
             qDebug() << "Authorizing for" << expiresTimeout - now;

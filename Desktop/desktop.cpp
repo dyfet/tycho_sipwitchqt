@@ -1010,13 +1010,13 @@ void Desktop::listen(const QVariantHash& cred)
 
     connect(listener, &Listener::changeBanner, this, [this](const QString& banner) {
         setWindowTitle(banner);
-    });
+    }, Qt::QueuedConnection);
 
     connect(listener, &Listener::updateRoster, this, [this]() {
         if(!updateRoster && connector)
             connector->requestRoster();
         updateRoster = true;
-    });
+    }, Qt::QueuedConnection);
 
     sessions->listen(listener);
     listener->start();

@@ -105,9 +105,9 @@ void Manager::applyConfig(const QVariantHash& config)
 #ifdef Q_OS_UNIX
         if(Zeroconfig::enabled())   // avahi published hostname for any client
             ServerNames << "_sipwitchqt.local";
-        char localName[HOST_NAME_MAX + 64];
+        char localName[HOST_NAME_MAX];
         if(!gethostname(localName, sizeof(localName)-1)) {
-            strncat(localName, ".local", sizeof(localName)-1);
+            strncat(localName, ".local", sizeof(localName) - strlen(localName) - 1);
             localName[sizeof(localName) - 1] = '\0';
             ServerNames << localName;
         }

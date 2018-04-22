@@ -141,12 +141,12 @@ static void client_running()
     }
     if(avahi_entry_group_is_empty(hostGroup)) {
         notice() << "Zeroconfig creating host group";
-        char localName[HOST_NAME_MAX+64] = ".";
+        char localName[HOST_NAME_MAX] = ".";
         if(gethostname(&localName[1], sizeof(localName)-1) < 0) {
             error() << "Zeroconfig failure; cannot determine hostname";
             return;
         }
-        strncat(localName, ".local", sizeof(localName) -1);
+        strncat(localName, ".local", sizeof(localName) - strlen(localName) - 1);
         localName[sizeof(localName) - 1] = '\0';
 
         auto len = strlen(localName) - 1;
