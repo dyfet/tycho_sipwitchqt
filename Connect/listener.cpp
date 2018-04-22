@@ -128,7 +128,6 @@ void Listener::send_registration(osip_message_t *msg, bool auth)
         serverInit = "";
 
     eXosip_register_send_register(context, rid, msg);
-    refreshTimeout = refreshTimeout1 = 0;
 }
 
 void Listener::reauthorize(const QVariantHash& update)
@@ -143,7 +142,7 @@ void Listener::reauthorize(const QVariantHash& update)
     osip_message_t *msg = nullptr;
     eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
     if(msg) {
-        expiresTimeout = 0;
+        expiresTimeout = refreshTimeout = refreshTimeout1 = 0;
         send_registration(msg);
     }
     else
@@ -231,12 +230,6 @@ void Listener::run()
             break;
 
         time(&now);
-        if(expiresTimeout && now > expiresTimeout) {
-            qDebug() << "Registration timeout";
-            active = false;
-            break;
-        }
-
         if(refreshTimeout && now > refreshTimeout) {
             refreshTimeout = 0;
             osip_message_t *msg = nullptr;
@@ -263,6 +256,11 @@ void Listener::run()
 
         // timeout...
         if(!event) {
+            if(expiresTimeout && now > expiresTimeout) {
+                qDebug() << "Registration timeout";
+                active = false;
+                break;
+            }
             Locker lock(context);
             if(rid < 0) {
                 osip_message_t *msg = nullptr;
@@ -274,8 +272,10 @@ void Listener::run()
                 qDebug() << "Connecting as" << uriFrom;
 
                 rid = eXosip_register_build_initial_register(context, uriFrom, uriRoute, nullptr, AGENT_EXPIRES, &msg);
-                if(msg && rid > -1)
+                if(msg && rid > -1) {
                     send_registration(msg);
+                    refreshTimeout = refreshTimeout1 = 0;
+                }
                 else {
                     active = false;
                     break;
