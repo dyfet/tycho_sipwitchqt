@@ -114,6 +114,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "display VARCHAR(64) DEFAULT NULL,"
             "mailto VARCHAR(128) DEFAULT '',"
             "puburi VARCHAR(128) DEFAULT '',"
+            "sync DATETIME DEFAULT 0,"              // used for deletion sync
             "last DATETIME DEFAULT 0,"
             "info TEXT DEFAULT '',"
             "coverage INTEGER DEFAULT -1,"
@@ -138,6 +139,8 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "status Integer Default 0,"             // add status of message 0 for active 1 for expired
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"                         // depends on type...
+            "msgjson TEXT DEFAULT NULL,"            // for json control docs
+            "msgdata BLOB DEFAULT NULL,"            // attached binary
             "CONSTRAINT byDate PRIMARY KEY (sid, posted DESC, seqid DESC),"
             "FOREIGN KEY (sid) REFERENCES Contacts(uid));",
 

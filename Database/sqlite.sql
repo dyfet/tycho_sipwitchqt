@@ -14,6 +14,7 @@ CREATE TABLE Authorize (
     authname VARCHAR(32),                     -- authorizing user or group id
     authtype VARCHAR(8) DEFAULT 'USER',       -- group type
     authdigest VARCHAR(8) DEFAULT 'NONE',     -- digest format of secret
+    created DATETIME DEFAULT CURRENT_TIMESTAMP,
     realm VARCHAR(128),                   -- realm used for secret
     secret VARCHAR(128),                  -- secret to use
     authaccess VARCHAR(8) DEFAULT 'LOCAL',    -- type of access allowed (local, remote, all)
@@ -59,6 +60,7 @@ CREATE TABLE Speeds (
         ON DELETE CASCADE);
 
 CREATE TABLE Calling (
+    aid INTEGER PRIMARY KEY AUTOINCREMENT,
     authname VARCHAR(32),                     -- group hunt is part of
     extnbr INTEGER,                       -- extension # to ring
     extpriority INTEGER DEFAULT 0,           -- hunt group priority order
@@ -68,6 +70,7 @@ CREATE TABLE Calling (
         ON DELETE CASCADE);
 
 CREATE TABLE Admin (
+    aid INTEGER PRIMARY KEY AUTOINCREMENT,
     authname VARCHAR(32),                     -- group permission is for
     extnbr INTEGER,                       -- extension with permission
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
@@ -104,6 +107,15 @@ CREATE TABLE Messages (
     expires TIMESTAMP,                    -- estimated expiration
     msgtype VARCHAR(8),
     msgtext TEXT);
+
+CREATE TABLE Deletes (
+    aid INTEGER PRIMARY KEY AUTOINCREMENT,
+    authname VARCHAR(32),
+    delstatus INTEGER DEFAULT 0,
+    endpoint INTEGER,
+    created DATETIME,
+    FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint)
+        ON DELETE CASCADE);
 
 CREATE TABLE Outboxes (
     mid INTEGER,

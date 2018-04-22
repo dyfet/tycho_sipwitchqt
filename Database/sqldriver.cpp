@@ -44,6 +44,7 @@ static QStringList sqliteTables = {
         "authname VARCHAR(32),"                     // authorizing user or group id
         "authtype VARCHAR(8) DEFAULT 'USER',"       // group type
         "authdigest VARCHAR(8) DEFAULT 'NONE',"     // digest format of secret
+        "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "realm VARCHAR(128),"                   // realm used for secret
         "secret VARCHAR(128),"                  // secret to use
         "authaccess VARCHAR(8) DEFAULT 'LOCAL',"    // type of access allowed (local, remote, all)
@@ -76,6 +77,15 @@ static QStringList sqliteTables = {
             "ON DELETE CASCADE);",
     "CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);",
 
+    "CREATE TABLE Deletes ("
+        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "authname VARCHAR(32),"
+        "delstatus INTEGER DEFAULT 0,"
+        "endpoint INTEGER,"
+        "created DATETIME,"
+        "FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint) "
+            "ON DELETE CASCADE);",
+
     // the "system" speed dialing is system group 10-99
     // per extension group personal speed dials 01-09 (#1-#9)
 
@@ -88,6 +98,7 @@ static QStringList sqliteTables = {
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Calling ("
+        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
         "authname VARCHAR(32),"                     // group hunt is part of
         "extnbr INTEGER,"                       // extension # to ring
         "extpriority INTEGER DEFAULT 0,"           // hunt group priority order
@@ -97,6 +108,7 @@ static QStringList sqliteTables = {
             "ON DELETE CASCADE);",
 
     "CREATE TABLE Admin ("
+        "aid INTEGER PRIMARY KEY AUTOINCREMENT,"
         "authname VARCHAR(32),"                     // group permission is for
         "extnbr INTEGER,"                       // extension with permission
         "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
