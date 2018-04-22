@@ -446,6 +446,7 @@ void Connector::ackPending()
 
 void Connector::stop(bool flag)
 {
+    qDebug() << "Stop connector" << flag;
     exiting = flag;
     active = false;
 }

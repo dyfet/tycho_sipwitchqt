@@ -232,6 +232,7 @@ void Listener::run()
 
         time(&now);
         if(expiresTimeout && now > expiresTimeout) {
+            qDebug() << "Registration timeout";
             active = false;
             break;
         }
@@ -244,6 +245,8 @@ void Listener::run()
             eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
             if(msg)
                 send_registration(msg);
+            else
+                qDebug() << "Failed to send registration";
         }
 
         // timeout...
@@ -287,6 +290,7 @@ void Listener::run()
             if(event->response)
                 osip_message_header_get_byname(event->response, "expires", 0, &header);
             else {
+                qDebug() << "Registration response incomplete; terminating";
                 active = false;
                 break;
             }

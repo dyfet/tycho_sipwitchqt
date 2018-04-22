@@ -901,6 +901,7 @@ void Desktop::offline()
     if(!listener)
         return;
 
+    qDebug() << "Going offline";
     // could return from authorizing to offline...
     ui.trayAway->setText(tr("Connect"));
     ui.trayAway->setEnabled(!isLogin());
