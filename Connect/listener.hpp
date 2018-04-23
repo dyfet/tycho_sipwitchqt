@@ -40,7 +40,6 @@ public:
         thread()->start(QThread::HighPriority);
     }
 
-    void reauthorize(const QVariantHash& update = QVariantHash());
     void stop(bool shutdown = false);
 
 private:
@@ -69,7 +68,6 @@ private:
     int serverFirst, serverLast;
 
     eXosip_t *context;
-    time_t expiresTimeout, refreshTimeout, refreshTimeout1;
     int family, tls;
     int rid;
 

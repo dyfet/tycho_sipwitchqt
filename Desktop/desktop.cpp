@@ -188,6 +188,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     front = true;
     powerReconnect = false;
     updateRoster = true;
+    offlineMode = true;
 
     // for now, just this...
     baseFont = getBasicFont();
@@ -499,6 +500,7 @@ void Desktop::eraseLogout()
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
+    offlineMode = true;
     settings.setValue("database", "");
     emit changeStorage(nullptr);
     closeDialog();
@@ -519,6 +521,7 @@ void Desktop::closeLogout()
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
+    offlineMode = true;
     settings.setValue("database", "");
     emit changeStorage(nullptr);
     closeDialog();
@@ -643,6 +646,7 @@ void Desktop::changePassword(const QString& password)
     connector->sendProfile(Phonebook::self()->uri(), body);
     showSessions();
     setEnabled(false);
+    offlineMode = true;
     offline();
     Credentials["secret"] = password;
     statusMessage(tr("Changing password..."), 2500);
@@ -666,6 +670,10 @@ void Desktop::appState(Qt::ApplicationState state)
     // Actve, Inactive related to front/back...
     switch(state) {
     case Qt::ApplicationActive:
+        if(storage != nullptr && listener == nullptr && !front && !offlineMode) {
+            qDebug() << "Going online on activation";
+            listen(storage->credentials());
+        }
         QTimer::singleShot(200, this, [=] {
             front = true;
         });
@@ -719,6 +727,7 @@ void Desktop::powerSuspend()
         closeDialog();
         setEnabled(false);
         statusMessage(tr("suspending..."));
+        offlineMode = true;
         offline();
         powerReconnect = true;
     }
@@ -746,6 +755,7 @@ void Desktop::powerResume()
 void Desktop::trayAway()
 {
     if(connector) {
+        offlineMode = true;
         statusMessage(tr("disconnect"));
         offline();
     }
@@ -822,7 +832,7 @@ void Desktop::failed(int error_code)
     switch(error_code) {
     case SIP_CONFLICT:
         FOR_DEBUG(
-            qDebug() << "Label already used: SIP_CONFLICT" << endl;
+            qDebug() << "Label already used: SIP_CONFLICT";
             errorMessage(tr("Label already used ") + "SIP_CONFLICT");
         )
         FOR_RELEASE(
@@ -833,7 +843,7 @@ void Desktop::failed(int error_code)
         break;
     case SIP_DOES_NOT_EXIST_ANYWHERE:
         FOR_DEBUG(
-            qDebug() << "Extension number is invalid: SIP_DOES_NOT_EXIST_ANYWHERE" << endl;
+            qDebug() << "Extension number is invalid: SIP_DOES_NOT_EXIST_ANYWHERE";
             errorMessage(tr("Extension number is invalid ") + "SIP_DOES_NOT_EXIST_ANYWHERE");
         )
         FOR_RELEASE(
@@ -844,7 +854,7 @@ void Desktop::failed(int error_code)
         break;
     case SIP_NOT_FOUND:
         FOR_DEBUG(
-            qDebug() << "Extension not found: SIP_NOT_FOUND" << endl;
+            qDebug() << "Extension not found: SIP_NOT_FOUND";
             errorMessage(tr("Extension not found ") + "SIP_NOT_FOUND");
         )
         FOR_RELEASE(
@@ -856,7 +866,7 @@ void Desktop::failed(int error_code)
     case SIP_FORBIDDEN:
     case SIP_UNAUTHORIZED:
         FOR_DEBUG(
-            qDebug() << "Authorizartion denied: SIP_UNAUTHORIZED" << endl;
+            qDebug() << "Authorizartion denied: SIP_UNAUTHORIZED";
             errorMessage(tr("Authorizartion denied ") + "SIP_UNAUTHORIZED");
         )
         FOR_RELEASE(
@@ -867,7 +877,7 @@ void Desktop::failed(int error_code)
         break;
     case SIP_METHOD_NOT_ALLOWED:
         FOR_DEBUG(
-            qDebug() << "Registration not allowed: SIP_METHOD_NOT_ALLOWED" << endl;
+            qDebug() << "Registration not allowed: SIP_METHOD_NOT_ALLOWED";
             errorMessage(tr("Registration not allowed ") + "SIP_METHOD_NOT_ALLOWED");
         )
         FOR_RELEASE(
@@ -879,11 +889,11 @@ void Desktop::failed(int error_code)
     case SIP_INTERNAL_SERVER_ERROR:
     case 666:
         FOR_DEBUG(
-            qDebug() << "Cannot reach server: SIP_INTERNAL_SERVER_ERROR" << endl;
+            qDebug() << "Cannot reach server: SIP_INTERNAL_SERVER_ERROR" << error_code << QDateTime::currentDateTime();
             errorMessage(tr("Cannot reach server ") + "SIP_INTERNAL_SERVER_ERROR");
         )
         FOR_RELEASE(
-            errorMessage(tr("Label already used"));
+            errorMessage(tr("Cannot reach server"));
         )
         if(isLogin())
             login->badIdentity();
@@ -946,6 +956,7 @@ void Desktop::authorized(const QVariantHash& creds)
 {
     Credentials = creds;
     Credentials["initialize"] = ""; // only exists for signin...
+    offlineMode = false;
 
     // apply or update credentials only after successfull authorization
     if(storage)
@@ -1058,6 +1069,7 @@ void Desktop::importDb()
 
     emit changeStorage(nullptr);
     warningMessage(tr("logging out..."));
+    offlineMode = true;
     offline();
     delete storage;
     storage = nullptr;

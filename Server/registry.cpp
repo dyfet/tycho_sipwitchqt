@@ -100,7 +100,7 @@ Registry::~Registry()
     if(!serverContext)
         qDebug() << "Abandoning" << number << userLabel;
     else {
-        qDebug() << "Releasing" << number << userLabel;
+        qDebug() << "Releasing" << number << userLabel << QDateTime::currentDateTime();
         // may later kill active calls, etc...
     }
 
@@ -244,7 +244,7 @@ int Registry::authorize(const Event& ev)
         return SIP_OK;
     }
 
-    qDebug() << "REGISTERING WITH " << ev.did() << ev.cid() << ev.tid();
+    qDebug() << "REGISTERING WITH " << ev.did() << ev.cid() << ev.tid() << QDateTime::currentDateTime();
 
     if(!serverContext)
         qDebug() << "Registering" << ev.number() << ev.label() << "for" << timeout / 1000l;

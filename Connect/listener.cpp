@@ -85,7 +85,6 @@ QObject(), active(true), connected(false), registered(false), authenticated(fals
     family = AF_INET;
     tls = 0;
     rid = -1;
-    expiresTimeout = refreshTimeout = 0;
 
     if(!cert.isNull()) {
         serverSchema = "sips:";
@@ -128,25 +127,6 @@ void Listener::send_registration(osip_message_t *msg, bool auth)
         serverInit = "";
 
     eXosip_register_send_register(context, rid, msg);
-}
-
-void Listener::reauthorize(const QVariantHash& update)
-{
-    Locker lock(context);
-    foreach(auto key, update.keys())
-        serverCreds[key] = update[key];
-
-    if(rid < 0 || !active)
-        return;
-
-    osip_message_t *msg = nullptr;
-    eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
-    if(msg) {
-        expiresTimeout = refreshTimeout = refreshTimeout1 = 0;
-        send_registration(msg);
-    }
-    else
-        active = false;
 }
 
 bool Listener::get_authentication(eXosip_event_t *event)
@@ -194,6 +174,7 @@ void Listener::add_authentication()
 
     Locker lock(context);
     eXosip_add_authentication_info(context, serverId, user, secret, algo, realm);
+    qDebug() << "Adding authentication" << QDateTime::currentDateTime();
     authenticated = true;
 }
 
@@ -221,7 +202,7 @@ void Listener::run()
 
     int s = EVENT_TIMER / 1000l;
     int ms = EVENT_TIMER % 1000l;
-    int error;
+    int error, expires;
     time_t now, last = 0;
 
     while(active) {
@@ -229,38 +210,8 @@ void Listener::run()
         if(!active)
             break;
 
-        time(&now);
-        if(refreshTimeout && now > refreshTimeout) {
-            refreshTimeout = 0;
-            osip_message_t *msg = nullptr;
-            Locker lock(context);
-            qDebug() << "Refreshing registration...";
-            eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
-            if(msg)
-                send_registration(msg);
-            else
-                qDebug() << "Failed to send registration";
-        }
-
-        if(refreshTimeout1 && now > refreshTimeout1) {
-            refreshTimeout1 = 0;
-            osip_message_t *msg = nullptr;
-            Locker lock(context);
-            qDebug() << "Refreshing registration (2)...";
-            eXosip_register_build_register(context, rid, AGENT_EXPIRES, &msg);
-            if(msg)
-                send_registration(msg);
-            else
-                qDebug() << "Failed to send registration";
-        }
-
         // timeout...
         if(!event) {
-            if(expiresTimeout && now > expiresTimeout) {
-                qDebug() << "Registration timeout";
-                active = false;
-                break;
-            }
             Locker lock(context);
             if(rid < 0) {
                 osip_message_t *msg = nullptr;
@@ -274,7 +225,6 @@ void Listener::run()
                 rid = eXosip_register_build_initial_register(context, uriFrom, uriRoute, nullptr, AGENT_EXPIRES, &msg);
                 if(msg && rid > -1) {
                     send_registration(msg);
-                    refreshTimeout = refreshTimeout1 = 0;
                 }
                 else {
                     active = false;
@@ -314,16 +264,12 @@ void Listener::run()
                 bitmaps = parseXdp(body->body);
             }
 
-            time(&expiresTimeout);
+            expires = AGENT_EXPIRES;
             if(header)
-                expiresTimeout += atoi(header->hvalue);
-            else
-                expiresTimeout += AGENT_EXPIRES;
-            refreshTimeout = expiresTimeout - 30;
-            refreshTimeout1 = expiresTimeout - 25;
+                expires = atoi(header->hvalue);
             registered = true;
 
-            qDebug() << "Authorizing for" << expiresTimeout - now;
+            qDebug() << "Authorizing for" << expires;
             emit authorize(serverCreds);
             if(bitmaps.count() > 0) {
                 auto bitmap = bitmaps["a"].toByteArray();
@@ -349,8 +295,7 @@ void Listener::run()
 
             if(get_authentication(event) && !authenticated) {
                 add_authentication();
-                eXosip_event_free(event);
-                continue;
+                break;
             }
             active = false;
             emit failure(SIP_FORBIDDEN);
@@ -382,13 +327,13 @@ void Listener::run()
         }
         if(active) {
             Locker lock(context);
-            eXosip_default_action(context, event);
-
             // even on high load we get automatic operations in...
             if(last != now) {
                 eXosip_automatic_action(context);
                 last = now;
             }
+
+            eXosip_default_action(context, event);
         }
         eXosip_event_free(event);
     }
@@ -396,6 +341,7 @@ void Listener::run()
     // de-register if we are ending the session while registered
     if(registered) {
         osip_message_t *msg = nullptr;
+
         Locker lock(context);
         eXosip_register_build_register(context, rid, 0, &msg);
         if(msg)
