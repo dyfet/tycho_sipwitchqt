@@ -214,6 +214,7 @@ private:
     QString dbName;
     bool powerReconnect;
     bool updateRoster;
+    bool offlineMode;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
