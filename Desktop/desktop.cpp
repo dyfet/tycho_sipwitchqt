@@ -606,13 +606,31 @@ void Desktop::clearMessage()
 
 void Desktop::changeExpiration(int expires)
 {
-    auto erase = QDateTime::currentDateTime().addSecs(expires);
-//    if(storage)
-//        storage->runQuery("UPDATE Messages set expires=DateTime(posted, 'LocalTime', '+? seconds'", {expires});
-    if(storage)
-        storage->runQuery("UPDATE Messages set expires=?", {erase});
+
     currentExpiration = expires;
     settings.setValue("expires", expires);
+//    if(storage)
+//        storage->runQuery("UPDATE Messages set expires=DateTime(posted, 'LocalTime', '+? seconds'", {expires});
+    if(storage){
+        auto lastRecord = storage->getRecord("Select count(*) from Messages;");
+        qDebug() << "Last record value is " << lastRecord;
+        auto query = storage->getRecords("SELECT posted, rowid FROM Messages");
+        while(query.isActive() && query.next()) {
+            auto record = query.record();
+            auto posted = record.value("posted").toDateTime();
+            auto erase = posted.addSecs(expires);
+            auto id = record.value("rowid").toLongLong();
+
+            auto result = storage->runQuery("UPDATE Messages set expires=? where rowid=?;", {erase, id});
+            if (result)
+            {
+//                qDebug() << "Posted is " << posted << " changed expires to " << erase << " for message with id " << id << endl ;
+            }
+           else {
+               qDebug() << "Failed to update the record check your source code" << endl;
+           }
+        }
+    }
     qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
 }
 

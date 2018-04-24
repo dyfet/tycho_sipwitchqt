@@ -59,7 +59,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
     Instance = this;
 
     existing = exists(dbName);
-    
+
     db = QSqlDatabase::addDatabase("QSQLITE", "default");
     if(!db.isValid())
         return;
@@ -69,7 +69,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
     if(!db.isOpen())
         return;
 
-    runQuery({
+    runQueries({
          "PRAGMA locking_mode = EXCLUSIVE;",
          "PRAGMA synchronous = OFF;",
          "PRAGMA temp_store = MEMORY;",
@@ -80,7 +80,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
         return;
     }
 
-    runQuery({
+    runQueries({
 
         // This is a master config table.
 
@@ -211,7 +211,7 @@ QSqlQuery Storage::getRecords(const QString& request, const QVariantList& parms)
     return query;
 }
 
-int Storage::runQuery(const QStringList& list)
+int Storage::runQueries(const QStringList& list)
 {
     int count = 0;
 
