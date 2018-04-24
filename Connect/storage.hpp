@@ -75,7 +75,7 @@ public:
 
     QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
     bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
-    int runQuery(const QStringList& list);
+    int runQueries(const QStringList& list);
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     int copyDb(const QString& dbName);
