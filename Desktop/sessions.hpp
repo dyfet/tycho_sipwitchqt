@@ -102,6 +102,12 @@ public:
         return contact->isGroup();
     }
 
+    bool isHidden() const {
+        if(!contact)
+            return false;
+        return contact->isHidden();
+    }
+
     void setText(const QString& text) {
         inputText = text;
     }
@@ -118,6 +124,7 @@ public:
 
     void addMessage(MessageItem *item);
     void clearUnread();
+    void clearMessages();
     void addUnread();
     unsigned loadMessages();
     QString title();
@@ -169,6 +176,7 @@ public:
     }
 
     static void purge();
+    static void clear();
     static void update(SessionItem *session);
 
 private:
@@ -226,12 +234,14 @@ public slots:
     void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
     void activateSession(SessionItem *item);
     void activateContact(ContactItem *item);
+    void clearSessions();
     void activateSelf();
     void refreshFont();
 
 private slots:
     void search();
     void selectSelf();
+    void expireMessages();
     void selectSession(const QModelIndex& index);
     void changeStorage(Storage *storage);
     void changeConnector(Connector *connector);

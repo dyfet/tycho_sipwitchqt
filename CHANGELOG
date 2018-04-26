@@ -1,5 +1,6 @@
 v0.2.3
 * Schema changes
+* Message expiration
 
 v0.2.2
 * Change password support

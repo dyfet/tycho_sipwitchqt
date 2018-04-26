@@ -97,7 +97,7 @@ Database::~Database()
     close();
 }
 
-int Database::runQuery(const QStringList& list)
+int Database::runQueries(const QStringList& list)
 {
     int count = 0;
 
@@ -294,7 +294,7 @@ bool Database::reopen()
         return false;
     }
 
-    runQuery(Util::pragmaQuery(dbDriver));
+    runQueries(Util::pragmaQuery(dbDriver));
 
     debug() << "Database(OPEN)";
     dbTimer.setInterval(interval);
@@ -317,7 +317,7 @@ bool Database::create()
     info() << "Loaded database driver " << dbDriver;
 
     if(init) {                                  // init is kept for now, later ipl...
-        runQuery(Util::createQuery(dbDriver));
+        runQueries(Util::createQuery(dbDriver));
         runQuery("INSERT INTO Config(realm) VALUES(?);", {dbRealm});
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {
                      dbUuid, PROJECT_VERSION});
@@ -331,7 +331,7 @@ bool Database::create()
                      "operators", "SYSTEM", "PILOT"});
         runQuery("INSERT INTO Extensions(extnbr, authname, display) VALUES (?,?,?);", {
                      0, "operators", "Operators"});
-        runQuery(Util::preloadConfig(dbDriver));
+        runQueries(Util::preloadConfig(dbDriver));
     }
     else if(Util::dbIsFile(dbDriver)) {       // sqlite special case...
         runQuery("UPDATE Config SET realm=? WHERE id=1;", {dbRealm});
@@ -426,7 +426,7 @@ void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp)
 
 void Database::sendDeviceList(const Event& event)
 {
-    qDebug() << "Seeking device list" << endl;
+    qDebug() << "Seeking device list";
 
     auto query = getRecords("SELECT * FROM Endpoints WHERE extnbr=?;", {event.number()});
 

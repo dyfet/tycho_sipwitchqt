@@ -44,8 +44,7 @@ QSet<QString> ContactItem::grpAuths;
 ContactItem::ContactItem(const QSqlRecord& record)
 {
     session = nullptr;
-    group = false;
-    added = false;
+    group = added = hidden = false;
 
     extensionNumber = record.value("extension").toInt();
     contactUpdated = record.value("last").toDateTime();
@@ -280,7 +279,10 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         item->authUserId = user.toLower();
         storage->runQuery("UPDATE Contacts SET display=?, user=?, uri=?, mailto=?, puburi=?, info=? WHERE extension=?;", {
                               display, user, uri, mailto, puburi, info, number});
-        if(old == item->displayName)
+
+        if(item->hidden)
+            item->hidden = false;
+        else if(old == item->displayName)
             return item;
 
         if(item->session)
@@ -307,7 +309,7 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
         return {0, 0};
 
     auto item = local[row];
-    if(item == nullptr || item->display().isEmpty())
+    if(item == nullptr || item->display().isEmpty() || item->isHidden())
         return {0, 0};
 
     auto filter = item->filter();

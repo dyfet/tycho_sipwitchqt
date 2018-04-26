@@ -609,8 +609,6 @@ void Desktop::changeExpiration(int expires)
 
     currentExpiration = expires;
     settings.setValue("expires", expires);
-//    if(storage)
-//        storage->runQuery("UPDATE Messages set expires=DateTime(posted, 'LocalTime', '+? seconds'", {expires});
     if(storage){
         auto lastRecord = storage->getRecord("Select count(*) from Messages;");
         qDebug() << "Last record value is " << lastRecord;
@@ -630,6 +628,7 @@ void Desktop::changeExpiration(int expires)
                qDebug() << "Failed to update the record check your source code" << endl;
            }
         }
+        sessions->clearSessions();
     }
     qDebug() << "Expiration changed to " << currentExpiration << " in seconds." << endl;
 }

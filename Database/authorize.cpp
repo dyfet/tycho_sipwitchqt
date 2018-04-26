@@ -240,22 +240,6 @@ void Authorize::activate(const QVariantHash& config, bool opened)
         thread()->setPriority(QThread::NormalPriority);
 }
 
-int Authorize::runQuery(const QStringList& list)
-{
-    int count = 0;
-
-    if(list.count() < 1)
-        return 0;
-
-    foreach(auto request, list) {
-        if(!runQuery(request))
-            break;
-        ++count;
-    }
-    qDebug() << "Performed" << count << "of" << list.count() << "auth queries";
-    return count;
-}
-
 bool Authorize::resume()
 {
     if(failed || &local != db)
