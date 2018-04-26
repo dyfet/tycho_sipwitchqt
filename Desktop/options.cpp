@@ -127,7 +127,31 @@ void Options::enter()
     /* Need explanation I think we are removing this not functional
     // part of code later as we will have different expiration options
     // that will work*/
+    int expireValue = 60;
+    int currentExpiration = desktop->expiration();
+    switch (currentExpiration / expireValue) {
+    case 3:
+        ui.expires->setCurrentIndex(0);
+        break;
+    case 10:
+        ui.expires->setCurrentIndex(1);
+        break;
+    case 1440:
+        ui.expires->setCurrentIndex(2);
+        break;
+    case 10080:
+        ui.expires->setCurrentIndex(3);
+        break;
+    case 20160:
+        ui.expires->setCurrentIndex(4);
+        break;
+    case 43200:
+        ui.expires->setCurrentIndex(5);
+        break;
+    default:
+        break;
 
+}
 //    QString expires = QString (desktop->expiration());
 //    desktop->changeExpiration(expires);
 
