@@ -90,7 +90,7 @@ private:
     int getCount(const QString& id);
 
     bool runQuery(const QString& string, const QVariantList &parms = QVariantList());
-    int runQuery(const QStringList& list);
+    int runQueries(const QStringList& list);
     QVariant insert(const QString& request, const QVariantList &parms = QVariantList());
     QSqlRecord getRecord(const QString& request, const QVariantList &parms = QVariantList());
     QSqlQuery getRecords(const QString& request, const QVariantList& parms = QVariantList());

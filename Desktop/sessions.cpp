@@ -40,6 +40,7 @@ static QPen onlineUser("green"), offlineUser("black"), busyUser("yellow");
 static bool mousePressed = false;
 static QPoint mousePosition;
 static int cellHeight, cellLift = 3;
+static QTimer expiration;
 
 Sessions *Sessions::Instance = nullptr;
 SessionModel *SessionModel::Instance = nullptr;
@@ -98,6 +99,22 @@ SessionItem::~SessionItem()
     }
 }
 
+void SessionItem::clearMessages()
+{
+    if(messageModel)
+        delete messageModel;
+
+    foreach(auto msg, messages) {
+        delete msg;
+    }
+
+    loaded = false;
+    unreadCount = 0;
+    messageModel = new MessageModel(this);
+    messages.clear();
+    filtered.clear();
+}
+
 void SessionItem::clearUnread()
 {
     if(!unreadCount)
@@ -151,13 +168,16 @@ unsigned SessionItem::loadMessages()
     QDateTime current = QDateTime::currentDateTime();
     int sequence = 0;
 
+    Q_ASSERT(messageModel != nullptr);
+    auto expires = messageModel->checkExpiration();
+    if(expires)
+        expiration.start(expires);
+
     if(loaded || contact == nullptr)
         return count;
 
-    // auto expires = Desktop::expires();
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
-    Q_ASSERT(messageModel != nullptr);
 
     auto query = storage->getRecords("SELECT * FROM Messages WHERE (sid=?) AND (expires > ?) ORDER BY posted DESC, seqid DESC;", {contact->uid, current});
 
@@ -190,9 +210,11 @@ QList <MessageItem *> Sessions::searchMessages(const QString& searchTerm){
     QList <MessageItem *> result = {};
     foreach (auto singleMessage, activeItem->messages) {
         singleMessage->clearSearch();
-        int len = searchTerm.length();
+        if(singleMessage->isExpired() || singleMessage->isHidden())
+            continue;
+        auto len = searchTerm.length();
         if (QString::fromUtf8(singleMessage->body()).contains(searchTerm)) {
-            int pos = 0;
+            auto pos = 0;
             while((pos =  singleMessage->body().indexOf(searchTerm, pos)) > -1 ) {
                 singleMessage->addSearch(pos, len);
                 ++pos;
@@ -271,8 +293,10 @@ QVariant SessionModel::data(const QModelIndex& index, int role) const
 void SessionModel::purge()
 {
     ui.messages->setModel(nullptr);
+    expiration.stop();
     activeItem = nullptr;
     SessionItem::totalUnread = 0;
+    mousePressed = false;
 
     if(activeMessage) {
         delete activeMessage;
@@ -287,6 +311,28 @@ void SessionModel::purge()
     sessions.clear();
     groups.clear();
     Desktop::setUnread(0);
+    Toolbar::search()->setFocus();
+}
+
+void SessionModel::clear()
+{
+    ui.messages->setModel(nullptr);
+    expiration.stop();
+    activeItem = nullptr;
+    SessionItem::totalUnread = 0;
+    mousePressed = false;
+
+    if(activeMessage) {
+        delete activeMessage;
+        activeMessage = nullptr;
+    }
+
+    memset(local, 0, sizeof(local));
+    foreach(auto session, sessions) {
+        session->clearMessages();
+    }
+    Desktop::setUnread(0);
+    Toolbar::search()->setFocus();
 }
 
 void SessionModel::update(SessionItem *session)
@@ -351,7 +397,7 @@ QSize SessionDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     auto spacing = 0;
     auto item = sessions[row];
     auto contact = item->contact;
-    if(contact == nullptr || item->display().isEmpty())
+    if(contact == nullptr || item->display().isEmpty() || item->isHidden())
         return {0, 0};
 
     if(row == groups.size())
@@ -428,6 +474,7 @@ QWidget(), desktop(control), model(nullptr)
     Q_ASSERT(Instance == nullptr);
     Instance = this;
     cellHeight = QFontInfo(desktop->getBasicFont()).pixelSize() + 5;
+    expiration.setSingleShot(true);
 
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Sessions::search);
     connect(desktop, &Desktop::changeStorage, this, &Sessions::changeStorage);
@@ -438,6 +485,7 @@ QWidget(), desktop(control), model(nullptr)
     connect(ui.input, &QLineEdit::returnPressed, this, &Sessions::createMessage);
     connect(ui.input, &QLineEdit::textChanged, this, &Sessions::checkInput);
     connect(desktop ,&Desktop::changeFont,this,&Sessions::refreshFont);
+    connect(&expiration, &QTimer::timeout, this, &Sessions::expireMessages);
 
     connect(ui.bottom, &QPushButton::pressed, this, [this]() {
         scrollToBottom();
@@ -630,7 +678,6 @@ void Sessions::search()
     }
     else{
         activeItem->filtered = searchMessages(QString::fromUtf8(text));
-        qDebug() << searchMessages(QString::fromUtf8(text)) << endl;
         activeItem->model()->changeLayout();
     }
 
@@ -661,6 +708,8 @@ void Sessions::activateContact(ContactItem* contact)
 
 void Sessions::activateSession(SessionItem* item)
 {
+    expiration.stop();
+
     if(!item) {
         activateSelf();
         return;
@@ -710,6 +759,7 @@ void Sessions::activateSelf()
     if(activeItem)
         activeItem->setText(ui.input->text());
 
+    expiration.stop();
     activeItem = nullptr;
     Toolbar::setTitle("");
     Toolbar::search()->setFocus();
@@ -737,6 +787,13 @@ void Sessions::selectSelf()
         else
             ui.status->setStyleSheet("color: black; border: none; outline: none; margin: 0px; padding: 0px; text-align:left; background: white;");
     });
+}
+
+void Sessions::clearSessions()
+{
+    activateSession(nullptr);
+    if(model)
+        model->clear();
 }
 
 void Sessions::changeStorage(Storage *storage)
@@ -978,8 +1035,18 @@ void Sessions::finishInput(const QString& error, const QDateTime& timestamp, int
         ui.messages->setFocus();
 }
 
+void Sessions::expireMessages()
+{
+    expiration.stop();
+    if(!activeItem)
+        return;
+    auto model = activeItem->messageModel;
+    if(!model)
+        return;
 
-
-
+    auto expires = model->checkExpiration();
+    if(expires)
+        expiration.start(expires);
+}
 
 

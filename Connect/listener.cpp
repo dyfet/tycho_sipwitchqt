@@ -210,6 +210,8 @@ void Listener::run()
         if(!active)
             break;
 
+        time(&now);
+
         // timeout...
         if(!event) {
             Locker lock(context);

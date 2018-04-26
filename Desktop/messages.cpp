@@ -71,6 +71,7 @@ session(sid)
     else
         dateTime = QDateTime::currentDateTime();
 
+    expires = dateTime.addSecs(Desktop::instance()->expiration());
     dayNumber = Util::currentDay(dateTime);
     dateSequence = sequence;
     msgType = TEXT_MESSAGE;
@@ -78,6 +79,7 @@ session(sid)
     msgBody = text;
     msgFrom = from;
     msgTo = to;
+    hidden = false;
 
     if(msgFrom->isGroup()) {
         itemColor = groupColor;
@@ -115,6 +117,7 @@ session(sid)
     else
         dateTime = QDateTime::currentDateTime();
 
+    expires = dateTime.addSecs(Desktop::instance()->expiration());
     dayNumber = Util::currentDay(dateTime);
     dateSequence = sequence;
     msgType = TEXT_MESSAGE;
@@ -125,7 +128,7 @@ session(sid)
     itemColor = selfColor;
     userString = "@" + msgFrom->textNumber;
     textString = text;
-    inbox = false;
+    inbox = hidden = false;
 
     findFormats();
     save();
@@ -157,10 +160,12 @@ session(nullptr), saved(false)
 
     msgBody = record.value("msgtext").toByteArray();
     dateTime = record.value("posted").toDateTime();
+    expires = record.value("expires").toDateTime();
     dateSequence = record.value("seqid").toInt();
     msgSubject = record.value("subject").toString().toUtf8();
     dayNumber = Util::currentDay(dateTime);
     saved = true;
+    hidden = false;
 
     auto type = record.value("msgtype").toString();
     if(type == "TEXT") {
@@ -322,8 +327,6 @@ void MessageItem::save()
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
 
-    auto expires = dateTime.addSecs(Desktop::instance()->expiration());
-
     auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext, expires) "
                       "VALUES(?,?,?,?,?,?,?,?);", {
                           msgFrom->uid,
@@ -416,6 +419,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         textTimestamp.setText(dateTime.time().toString(Qt::DefaultLocaleShortDate).toLower().replace(QString(" "), QString()));
         textStatus.setText(status + msgFrom->textNumber);
         textDisplay.setText(msgFrom->textDisplay);
+        textDisplay.setTextWidth(width - dynamicLine - 24);
         textDisplay.setTextFormat(Qt::RichText);
         userHeight = QFontInfo(userFont).pixelSize() + 4;
         if(!dateHint)
@@ -487,6 +491,32 @@ QVariant MessageModel::data(const QModelIndex& index, int role) const
         return QVariant();
 
     return item->msgBody;
+}
+
+int MessageModel::checkExpiration()
+{
+    auto now = QDateTime::currentDateTime();
+    int row = 0, changed = 0, result = 0;
+    QDateTime latest;
+
+    foreach(auto msg, session->filtered) {
+        auto hide = msg->expires < now;
+        if(!hide && (!latest.isValid() || latest > msg->expires))
+            latest = msg->expires;
+        std::swap(hide, msg->hidden);
+        if(hide != msg->hidden) {
+            ++changed;
+            dataChanged(index(row), index(row));
+        }
+        ++row;
+    }
+    if(latest.isValid()) {
+        auto diff = latest.toMSecsSinceEpoch() - now.toMSecsSinceEpoch();
+        if(diff < 1000l * 3600l * 24l * 7l) // cannot be longer than week
+            result = static_cast<int>(diff);
+    }
+    qDebug() << "Changed visibility for" << changed << "of" << row << "latest" << result / 1000l << latest;
+    return result;
 }
 
 void MessageModel::fastUpdate(int count)
@@ -670,7 +700,7 @@ QSize MessageDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelI
     auto item = session->filtered[row];
 
     // kills dups and invalids
-    if(!item->saved)
+    if(!item->saved || item->hidden)
         return {0, 0};
 
 //    if(item->lastHint.width() == style.rect.width())

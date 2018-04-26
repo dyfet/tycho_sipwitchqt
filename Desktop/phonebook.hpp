@@ -105,6 +105,10 @@ public:
         return group;
     }
 
+    bool isHidden() const {
+        return hidden;
+    }
+
     SessionItem *getSession() const {
         return session;
     }
@@ -137,7 +141,7 @@ private:
     QString contactFilter, textDisplay, textNumber, authUserId;
     QString extendedInfo;
     QDateTime contactUpdated;
-    bool group, added;
+    bool group, added, hidden;
     int extensionNumber;
     int uid;
 

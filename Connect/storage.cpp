@@ -325,9 +325,9 @@ int Storage::copyDb(const QString &dbName){
     QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});
     auto ext = extlab["extension"].toString();
     auto lab = extlab["label"].toString();
-    qDebug() << "Extension is " << ext << " and label is " << lab << endl;
+    qDebug() << "Extension is " << ext << " and label is " << lab;
     QString backupfilename = ext + "-" + lab + "-" + "backup.db";
-    qDebug() << "Backup filename " << backupfilename <<  endl;
+    qDebug() << "Backup filename " << backupfilename;
 
     FOR_DEBUG(
     QString fullpath = QString(DESKTOP_PREFIX) + "/" +backupfilename;

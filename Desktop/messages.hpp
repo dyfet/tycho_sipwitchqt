@@ -82,6 +82,16 @@ public:
         return session != nullptr && saved;
     }
 
+    bool isExpired() const {
+        if(!expires.isValid())
+            return false;
+        return expires < QDateTime::currentDateTime();
+    }
+
+    bool isHidden() const {
+        return hidden;
+    }
+
     QDateTime posted() const {
         return dateTime;
     }
@@ -107,6 +117,7 @@ private:
     int dateSequence;                   // used to help unique sorting
     unsigned dayNumber;                 // used to determine day message is for
     QDateTime dateTime;                 // date and time message was created
+    QDateTime expires;                  // date and time message expires
     SessionItem *session;               // session back pointer
     bool inbox;
     type_t msgType;
@@ -119,6 +130,7 @@ private:
     QSize textHint;                     // area of text...
     bool dateHint, userHint, timeHint;  // hinting for time header & user change
     bool saved;                         // for dup/failed save killing
+    bool hidden;
     double dateHeight, userHeight, textHeight, leadHeight;
     int textFormats, textFonts;
     int textUnderline;
@@ -148,6 +160,7 @@ public:
     QModelIndex last();
 
     void changeLayout();
+    int checkExpiration();
 
 private:
     SessionItem *session;
@@ -161,7 +174,7 @@ class MessageDelegate final : public QStyledItemDelegate
 {
 public:
     MessageDelegate(QWidget *parent);
-    ~MessageDelegate();
+    ~MessageDelegate() final;
 
 private:
     QListView *listView;
