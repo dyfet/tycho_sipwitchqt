@@ -32,15 +32,17 @@ CREATE TABLE Extensions (
     callaccess INTEGER DEFAULT 0,         -- outgoing restrictions
     extlocation VARCHAR(64),              -- location info
     display VARCHAR(64),                  -- can override group display
+    pubkey VARBINARY(512) DEFAULT NULL,   -- public key to verify signed hashes
     PRIMARY KEY (extnbr),
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
         ON DELETE CASCADE);
 
 CREATE TABLE Endpoints (
     endpoint INTEGER PRIMARY KEY AUTO_INCREMENT,
-    extnbr INTEGER NOT NULL,               -- extension of endpoint
-    label VARCHAR(32) DEFAULT 'NONE',      -- label id
-    agent VARCHAR(64),                    -- agent id
+    extnbr INTEGER NOT NULL,                -- extension of endpoint
+    label VARCHAR(32) DEFAULT 'NONE',       -- label id
+    agent VARCHAR(64),                      -- agent id
+    devkey VARBINARY(512) DEFAULT NULL,     -- devices public key
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     lastaccess DATETIME DEFAULT 0,
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)

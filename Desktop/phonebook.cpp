@@ -58,6 +58,7 @@ ContactItem::ContactItem(const QSqlRecord& record)
     textDisplay = record.value("display").toString();
     authUserId = record.value("user").toString().toLower();
     extendedInfo = record.value("info").toString();
+    publicKey = record.value("pubkey").toByteArray();
     uid = record.value("uid").toInt();
     index[uid] = this;
 }

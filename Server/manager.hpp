@@ -23,6 +23,7 @@
 #include "invite.hpp"
 #include <QMutex>
 #include <QCryptographicHash>
+#include <atomic>
 
 class Manager final : public QObject
 {
