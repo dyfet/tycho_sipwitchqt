@@ -38,6 +38,14 @@ class Storage;
 class SessionItem;
 class Sessions;
 
+enum class KeyVerification : int
+{
+    Unkeyed = 0,    // user has no key
+    Initial,        // first trust state, unverified
+    Changed,        // key changed, need new verify
+    Verified,       // key currently verified
+};
+
 class ContactItem final
 {
     friend class LocalDelegate;
@@ -83,6 +91,14 @@ public:
 
     UString timestamp() const {
         return contactTimestamp;
+    }
+
+    QByteArray key() const {
+        return publicKey;
+    }
+
+    KeyVerification verify() const {
+        return keyVerify;
     }
 
     QString info() const {
@@ -141,6 +157,8 @@ private:
     QString contactFilter, textDisplay, textNumber, authUserId;
     QString extendedInfo;
     QDateTime contactUpdated;
+    QByteArray publicKey;
+    KeyVerification keyVerify;
     bool group, added, hidden;
     int extensionNumber;
     int uid;

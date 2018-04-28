@@ -97,6 +97,9 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
              "port INTEGER DEFAULT 0,"              // server port
              "realm VARCHAR(128) NOT NULL,"         // remote realm
              "type VARCHAR(16) NOT NULL,"           // algorithm used
+             "privkey BLOB DEFAULT NULL,"           // user's key
+             "pubkey BLOB DEFAULT NULL,"            // user's public key
+             "devkey BLOB DEFAULT NULL,"            // devices private key
              "series INTEGER DEFAULT 9);",          // site db series
 
         // Contacts generally do not delete, but they are modified with
@@ -117,6 +120,8 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "sync DATETIME DEFAULT 0,"              // used for deletion sync
             "last DATETIME DEFAULT 0,"
             "info TEXT DEFAULT '',"
+            "pubkey BLOB DEFAULT NULL,"
+            "verify INTEGER DEFAULT 0,"             // key verification state
             "coverage INTEGER DEFAULT -1,"
             "answering INTEGER DEFAULT 0);",
         "CREATE INDEX ByContact ON Contacts(last DESC, sequence DESC);",

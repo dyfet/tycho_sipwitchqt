@@ -62,6 +62,7 @@ static QStringList sqliteTables = {
         "callaccess INTEGER DEFAULT 0,"         // outgoing restrictions
         "extlocation VARCHAR(64),"              // location info
         "display VARCHAR(64),"                  // can override group display
+        "pubkey BLOB DEFAULT NULL,"             // public key to verify signed hashes
         "PRIMARY KEY (extnbr),"
         "FOREIGN KEY (authname) REFERENCES Authorize(authname) "
             "ON DELETE CASCADE);",
@@ -71,6 +72,7 @@ static QStringList sqliteTables = {
         "extnbr INTEGER NOT NULL,"               // extension of endpoint
         "label VARCHAR(32) DEFAULT 'NONE',"      // label id
         "agent VARCHAR(64),"                    // agent id
+        "devkey BLOB DEFAULT NULL,"             // devices public key
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "lastaccess DATETIME DEFAULT 0,"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
