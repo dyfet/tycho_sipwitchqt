@@ -97,9 +97,10 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
              "port INTEGER DEFAULT 0,"              // server port
              "realm VARCHAR(128) NOT NULL,"         // remote realm
              "type VARCHAR(16) NOT NULL,"           // algorithm used
-             "privkey BLOB DEFAULT NULL,"           // user's key
-             "pubkey BLOB DEFAULT NULL,"            // user's public key
-             "devkey BLOB DEFAULT NULL,"            // devices private key
+             "privkey BLOB DEFAULT NULL,"           // extensions private key
+             "pubkey BLOB DEFAULT NULL,"            // exensions public key
+             "rootkey BLOB DEFAULT NULL,"           // devices private key
+             "devkey BLOB DEFAULT NULL,"            // devices public key
              "series INTEGER DEFAULT 9);",          // site db series
 
         // Contacts generally do not delete, but they are modified with
@@ -305,7 +306,7 @@ bool Storage::exists(const QString& dbName)
 void Storage::remove(const QString& dbName)
 {
     QFile file(storagePath(dbName));
-	file.remove();
+    file.remove();
 }
 
 QVariantHash Storage::next(QSqlQuery& query)
