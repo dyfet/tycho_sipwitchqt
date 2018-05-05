@@ -55,7 +55,9 @@
 #define HAVE_TIME_H 1
 #define HAVE_STDARG_H 1
 
+#if _MSC_VER < 1900
 #define snprintf _snprintf
+#endif
 
 /* use win32 crypto routines for random number generation */
 /* only use for vs .net (compiler v. 1300) or greater */
