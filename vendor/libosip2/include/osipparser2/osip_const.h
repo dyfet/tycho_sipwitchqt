@@ -26,9 +26,9 @@
 #endif
 
 #define CRLF "\r\n\0"
-#define CR   "\r\0"
+/* #define CR   "\r\0"
 #define LF   "\n\0"
-#define SP   " \0"
+#define SP   " \0" */
 
 
 #define ACCEPT			"accept"

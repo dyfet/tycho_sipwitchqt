@@ -11,17 +11,15 @@ Development of this project is managed from https://gitlab.com/tychosoft/sipwitc
 
 ## Dependencies
 
-SipWitchQt clients and servers require libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, you can still enable bootstrap by modifying the project file, though it is recommended instead to package newer libraries for these.  For Fedora (and eventually Redhat), which also has very old versions of libeXosip2, I currently maintain copr repos.  For current fedora distros you can use: 
+SipWitchQt should build with any Qt version later than 5.5.  Official binary installers will be built from latest LTS (currently 5.9).  SipWitchQt clients and servers also require libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos (and this includes the latest Fedora), we locally build libeXosip2 from the vendor/ directory.  For server zeroconfig support you should install libavahi-client-dev.  For systems using systemd, you should install libsystemd-dev.
 
-``dnf copr enable dyfet/develop``
-
-For macOS support you can use homebrew.  The libraries are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To install libeXosip2 with homebrew, simply do:
+For building on MacOS you can use homebrew.  The libraries are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To install libeXosip2 with homebrew, simply do:
 
 ``brew install libexosip``
 
-This should pull in all other required dependencies (openssl, libosip, etc) on macOS.
+This should pull in all other required dependencies (openssl, libosip, etc) on MacOS.  You can also build using the homebrew version of Qt.
 
-For windows and mobile development a bootstrap project was created to build and maintain necessary dependencies.  This will be made available as a git submodule and will likely be hosted at gitlab.
+For building on Microsoft Windows, the repo contains all required build dependencies as vendor/ packages, including openssl 1.1 and a lightly modified eXosip2.  To build openssl 1.1, you need to have ActivePerl, nasm for assembler optimizations, and the ActivePerl Text-Template perl package installed.  The current repo has been tested building native with either Visual Studio 2013, or the latest 2017.  The release builds can also automatically create an installer for Microsoft Windows using inno setup and the stage target.
 
 ## Deploy
 
