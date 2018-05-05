@@ -59,10 +59,13 @@ elseif(APPLE)
 
     set(DESKTOP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.icns")
     set(DESKTOP_NAME  "SipWitchQt Desktop")
+    set(MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/desktop.plist")
     set(MACOSX_BUNDLE_ICON_FILE "logo.icns")
     set(MACOSX_BUNDLE_DISPLAY_NAME "SipWitchQt Desktop")
     set(MACOSX_BUNDLE_INFO_STRING "SipWitchQt Desktop - Version ${PROJECT_VERSION}")
-    set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}-${PROJECT_RELEASE}")
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
     set(MACOSX_BUNDLE_BUNDLE_NAME "SipWitchQt Desktop")
     set(MACOSX_BUNDLE_COPYRIGHT "Copyright ${PROJECT_COPYRIGHT} Tycho Softworks.")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.tychosoft.sipwitchqt")
@@ -173,7 +176,10 @@ set(voip_libs eXosip2 osip2 osipparser2)
 
 add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_src} ${dialogs_hdr} ${dialogs_uic} ${desktop_mm} ${desktop_qm} ${desktop_rc} Resources/desktop.qrc)
 target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
-set_target_properties(desktop-app PROPERTIES OUTPUT_NAME "${DESKTOP_NAME}")
+set_target_properties(desktop-app PROPERTIES
+    OUTPUT_NAME "${DESKTOP_NAME}"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/desktop.plist.in"
+)
 
 add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc})
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
@@ -202,7 +208,7 @@ if(BOOTSTRAP_EXTERNAL)
     add_dependencies(eXosip2 openssl)
 endif()
 
-add_custom_target(support-files SOURCES sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
+add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -242,18 +248,14 @@ install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${
 # staging releases; we do not stage debug because it uses testdata...
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(APPLE AND UNIX)
-        add_custom_target(stage
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            DEPENDS desktop-app
-            COMMAND rm -rf stage
-            COMMAND mkdir -p stage
-            COMMAND cp -a "${DESKTOP_NAME}.app" stage/
-            COMMAND dsymutil "stage/${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
-            COMMAND mv "stage/${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}.dSYM" stage/
-            COMMAND mkdir -p "stage/${DESKTOP_NAME}.app/Contents/Translations"
-            COMMAND cp -a "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen/sipwitchqt-desktop_*.qm" "stage/${DESKTOP_NAME}.app/Contents/Translations"
-            COMMAND "${MACDEPLOYQT_PATH}/macdeployqt" "stage/${DESKTOP_NAME}.app" -appstore-compliant ${APPSTORE_SIGN}
+    if(APPLE)
+        add_custom_command(TARGET desktop-app POST_BUILD
+            COMMAND dsymutil "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
+            COMMAND rm -rf "${DESKTOP_NAME}.dSYM"
+            COMMAND mv "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}.dSYM" "${DESKTOP_NAME}.dSYM"
+            COMMAND mkdir -p "${DESKTOP_NAME}.app/Contents/Translations"
+            COMMAND cp -a "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen/sipwitchqt-desktop_*.qm" "${DESKTOP_NAME}.app/Contents/Translations"
+            COMMAND "${MACDEPLOYQT_PATH}/macdeployqt" "${DESKTOP_NAME}.app" -always-overwrite -appstore-compliant ${APPSTORE_SIGN}
         )
     endif()
 
