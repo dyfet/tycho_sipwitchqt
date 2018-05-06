@@ -22,7 +22,7 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 5.5.1 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
 find_package(Qt5LinguistTools)
 
 set(CMAKE_AUTOMOC ON)
