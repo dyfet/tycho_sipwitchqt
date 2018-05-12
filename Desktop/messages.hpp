@@ -28,6 +28,8 @@
 #include "../Common/types.hpp"
 #include "phonebook.hpp"
 
+#define SUBJECT_ADMIN "X-Admin"
+
 class SessionItem;
 
 enum ClickedItem {
@@ -48,6 +50,7 @@ class MessageItem final
 public:
     enum type_t {
         TEXT_MESSAGE,
+        ADMIN_MESSAGE,
     };
 
     MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence);
@@ -157,6 +160,7 @@ public:
     bool hover(const QModelIndex& index, const QPoint &pos);
     void fastUpdate(int count = 1);
     bool add(MessageItem *item);
+    void remove(ContactItem *item);
     QModelIndex last();
 
     void changeLayout();

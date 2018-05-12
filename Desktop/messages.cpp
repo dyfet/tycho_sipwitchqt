@@ -81,6 +81,11 @@ session(sid)
     msgTo = to;
     hidden = false;
 
+    if(subject == SUBJECT_ADMIN) {
+        msgSubject = "Admin";
+        msgType = ADMIN_MESSAGE;
+    }
+
     if(msgFrom->isGroup()) {
         itemColor = groupColor;
         userString = "#" + msgFrom->textNumber;
@@ -168,7 +173,11 @@ session(nullptr), saved(false)
     hidden = false;
 
     auto type = record.value("msgtype").toString();
-    if(type == "TEXT") {
+    if(type == "ADMIN") {
+        msgType = ADMIN_MESSAGE;
+        textString = QString::fromUtf8(msgBody);
+    }
+    else {
         msgType = TEXT_MESSAGE;
         textString = QString::fromUtf8(msgBody);
     }
@@ -327,6 +336,15 @@ void MessageItem::save()
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
 
+    QString type = "TEXT";
+    switch(msgType) {
+    case ADMIN_MESSAGE:
+        type = "ADMIN";
+        break;
+    default:
+        break;
+    }
+
     auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext, expires) "
                       "VALUES(?,?,?,?,?,?,?,?);", {
                           msgFrom->uid,
@@ -334,7 +352,7 @@ void MessageItem::save()
                           session->contact->uid,
                           dateSequence,
                           dateTime,
-                          "TEXT",
+                          type,
                           msgBody,
                           expires,
     });
@@ -352,13 +370,15 @@ void MessageItem::addSearch(int pos, int len)
 }
 
 QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrollHint)
-{   
+{
     if(row == 0 || session->filtered[row - 1]->dayNumber != dayNumber)
         dateHint = true;
     else
         dateHint = scrollHint;
 
-    if(row == 0 || session->filtered[row-1]->msgFrom != msgFrom)
+    if(msgType == ADMIN_MESSAGE)
+        userHint = false;
+    else if(row == 0 || session->filtered[row-1]->msgFrom != msgFrom)
         userHint = true;
     else
         userHint = dateHint;
@@ -440,7 +460,10 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     textLayout.setText(textString);
     textLayout.setCacheEnabled(true);
     textLayout.setTextOption(textOptions);
-    textLayout.setFont(textFont);
+    if(msgType == ADMIN_MESSAGE)
+        textLayout.setFont(monoFont);
+    else
+        textLayout.setFont(textFont);
     textLayout.beginLayout();
 
     lineHint = height;
@@ -464,6 +487,9 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         lastHint = QSize(width, height);
     else
         lastHint = QSize(0, 0);
+
+    if(msgType == ADMIN_MESSAGE)
+        height += 4;
 
     return lastHint;
 }
@@ -493,6 +519,37 @@ QVariant MessageModel::data(const QModelIndex& index, int role) const
     return item->msgBody;
 }
 
+void MessageModel::remove(ContactItem *item)
+{
+    int row = 0;
+    // find any filtered messages attached to a deleted user
+    QList<int> removes;
+    foreach(auto msg, session->filtered) {
+        if(msg->msgFrom == item || msg->msgTo == item) {
+            msg->saved = false;
+            removes.prepend(row);   // reverse order...
+        }
+        ++row;
+    }
+
+    foreach(row, removes) {
+        beginRemoveRows(QModelIndex(), row, row);
+        session->filtered.takeAt(row);
+        endRemoveRows();
+    }
+
+    // get any that are outside the filter...
+    removes.clear();
+    foreach(auto msg, session->messages) {
+        if(msg->msgFrom == item || msg->msgTo == item) {
+            msg->saved = false;
+            removes.prepend(row);
+        }
+    }
+    foreach(row, removes)
+        session->messages.takeAt(row);
+}
+
 int MessageModel::checkExpiration()
 {
     auto now = QDateTime::currentDateTime();
@@ -503,12 +560,22 @@ int MessageModel::checkExpiration()
         auto hide = msg->expires < now;
         if(!hide && (!latest.isValid() || latest > msg->expires))
             latest = msg->expires;
+
         std::swap(hide, msg->hidden);
         if(hide != msg->hidden) {
             ++changed;
             dataChanged(index(row), index(row));
         }
         ++row;
+    }
+    foreach(auto msg, session->messages) {
+        if(msg->hidden)
+            continue;
+        auto hide = msg->expires < now;
+        if(!hide && (!latest.isValid() || latest > msg->expires))
+            latest = msg->expires;
+        if(hide)
+            msg->hidden = hide;
     }
     if(latest.isValid()) {
         auto diff = latest.toMSecsSinceEpoch() - now.toMSecsSinceEpoch();
@@ -582,6 +649,8 @@ bool MessageModel::add(MessageItem *item)
         beginInsertRows(QModelIndex(), rowFiltered, rowFiltered);
 
     session->messages.insert(rowMessages, item);
+    if(item->subject() != "None" && item->subject() != "Admin")
+        session->topics << item->subject();
     if(!filtered)
         session->filtered.insert(rowFiltered, item);
     if(!fast && rowFiltered < session->filtered.count() - 1)
@@ -720,7 +789,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         return;
 
     auto item = session->filtered[row];
-    if(!item)
+    if(!item || !item->saved || item->hidden)
         return;
 
     if(item->leadHeight > 0.)
@@ -770,10 +839,16 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     }
 
 //    QLine line;
+    auto pen = painter->pen();
     painter->setFont(textFont);
     position.setX(style.rect.left());
+    if(item->msgType == MessageItem::ADMIN_MESSAGE) {
+        position.ry() += 2;
+        painter->setPen(QColor("gray"));
+    }
     item->textLayout.draw(painter, position);
     painter->setFont(style.font);
+    painter->setPen(pen);
 //    painter->drawLine();
 
     // TODO: Force paint a top line in view if no headers visible...

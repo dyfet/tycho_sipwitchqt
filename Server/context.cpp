@@ -38,6 +38,9 @@
 #define MSG_IS_PROFILE(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-PROFILE"))
 
+#define MSG_IS_MEMBERSHIP(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-MEMBERSHIP"))
+
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-DEVLIST"))
 
@@ -46,6 +49,9 @@
 
 #define MSG_IS_AUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-AUTHORIZE"))
+
+#define MSG_IS_DEAUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-DEAUTHORIZE"))
 
 #define MSG_IS_ACK_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "A-PENDING"))
@@ -79,14 +85,14 @@ private:
     eXosip_t *context;
 };
 
-static void dump(osip_message_t *msg)
+void Context::dump(const osip_message_t *msg)
 {
     if(!msg)
         return;
 
     char *data = nullptr;
     size_t len;
-    osip_message_to_str(msg, &data, &len);
+    osip_message_to_str(const_cast<osip_message_t*>(msg), &data, &len);
     if(data) {
         data[len] = 0;
         qDebug() << "MSG" << data;
@@ -201,6 +207,8 @@ void Context::run()
         connect(this, &Context::REQUEST_DEVLIST, stack, &Manager::requestDevlist);
         connect(this, &Context::REQUEST_PENDING, stack, &Manager::requestPending);
         connect(this, &Context::REQUEST_AUTHORIZE, stack, &Manager::requestAuthorize);
+        connect(this, &Context::REQUEST_DEAUTHORIZE, stack, &Manager::requestDeauthorize);
+        connect(this, &Context::REQUEST_MEMBERSHIP, stack, &Manager::requestMembership);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
     }
 
@@ -299,7 +307,6 @@ bool Context::process(const Event& ev)
             break;
         }
 
-
         if(MSG_IS_REGISTER(ev.message())) {
             if(!(allow & Allow::REGISTRY))
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
@@ -323,7 +330,7 @@ bool Context::process(const Event& ev)
             auto to = ev.message()->to;
             if(!to || !to->url || !to->url->username)
                 return reply(ev, SIP_ADDRESS_INCOMPLETE);
-            if(ev.number() < 1 && !ev.toLocal())
+            if(ev.number() < 1 || !ev.toLocal())
                 return reply(ev, SIP_FORBIDDEN);
             if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
@@ -333,10 +340,36 @@ bool Context::process(const Event& ev)
             return false;
         }
 
+        if(MSG_IS_MEMBERSHIP(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(ev.body().size() > 0)
+                return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
+            emit REQUEST_MEMBERSHIP(ev);
+            return false;
+        }
+
         if(MSG_IS_DEVLIST(ev.message())) {
             if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_DEVLIST(ev);
+            return false;
+        }
+
+        if(MSG_IS_DEAUTHORIZE(ev.message())) {
+            auto to = ev.message()->to;
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(!ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            emit REQUEST_DEAUTHORIZE(ev);
             return false;
         }
 
@@ -401,7 +434,7 @@ bool Context::process(const Event& ev)
             }
         }
 
-        break;
+        return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
     default:
         break;
     }

@@ -228,12 +228,12 @@ private:
 
 signals:
     void changeConnector(Connector *connector);
+    void changeListener(Listener *listener);
     void changeStorage(Storage *state);
     void changeSelf(const QString& text);
     void changeFont();
 
 public slots:
-    void closeDeviceList();
     void openDeviceList();
 
     void initial();
@@ -248,6 +248,8 @@ public slots:
     void openAbout();
     void openLogout();
     void openAddUser();
+    void openNewGroup();
+    void openDelAuth(const UString& id);
 
     void showOptions();
     void showSessions();
@@ -258,6 +260,7 @@ public slots:
     void changePassword(const QString& password);
     void changeAppearance(const QString& appearance);
     void changeExpiration(int expire);
+    void removeUser(const QString& user);   // callback from listener notify
     void resetFont();
 
 

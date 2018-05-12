@@ -73,7 +73,7 @@ private:
 
 signals:
     void statusResult(int status, const QString& text);
-    void changeStatus(const QByteArray bitmap, int first, int last);
+    void changeStatus(const QByteArray& bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void messageResult(int status);
     void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject);

@@ -28,12 +28,14 @@
 
 #define EVENT_TIMER 400l    // 400ms...
 
-#define X_ROSTER    "X-ROSTER"
-#define X_PROFILE   "X-PROFILE"
-#define X_DEVLIST   "X-DEVLIST"
-#define X_PENDING   "X-PENDING"
-#define A_PENDING   "A-PENDING"
-#define X_AUTHORIZE "X-AUTHORIZE"
+#define X_ROSTER        "X-ROSTER"
+#define X_PROFILE       "X-PROFILE"
+#define X_DEVLIST       "X-DEVLIST"
+#define X_PENDING       "X-PENDING"
+#define A_PENDING       "A-PENDING"
+#define X_AUTHORIZE     "X-AUTHORIZE"
+#define X_DEAUTHORIZE   "X-DEAUTHORIZE"
+#define X_MEMBERSHIP    "X-MEMBERSHIP"
 
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_ROSTER))
@@ -49,6 +51,12 @@
 
 #define MSG_IS_AUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_AUTHORIZE))
+
+#define MSG_IS_DEAUTHORIZE(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_DEAUTHORIZE))
+
+#define MSG_IS_MEMBERSHIP(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_MEMBERSHIP))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -143,6 +151,20 @@ void Connector::add_authentication()
     eXosip_add_authentication_info(context, serverId, user, secret, algo, realm);
 }
 
+void Connector::requestDeauthorize(const UString& to)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + UString::uri(serverSchema, to, serverHost, serverPort) + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_DEAUTHORIZE, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
 void Connector::createAuthorize(const UString& to, const QByteArray& body)
 {
     osip_message_t *msg = nullptr;
@@ -158,6 +180,24 @@ void Connector::createAuthorize(const UString& to, const QByteArray& body)
         osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
         osip_message_set_content_type(msg, "authorize/json");
     }
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeMemebership(const UString& to, const UString& list, const UString& admin, const UString& notify, const UString& reason)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_MEMBERSHIP, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-Group-Member", list);
+    osip_message_set_header(msg, "X-Group-Admin", admin);
+    osip_message_set_header(msg, "X-Notify", notify);
+    osip_message_set_header(msg, "X-Reason", reason.escape());
     eXosip_message_send_request(context, msg);
 }
 
@@ -301,7 +341,7 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
-                else if(MSG_IS_PROFILE(event->request))
+                else if(MSG_IS_PROFILE(event->request) || MSG_IS_MEMBERSHIP(event->request))
                     processProfile(event);
                 else if(MSG_IS_AUTHORIZE(event->request)) {
                     emit statusResult(SIP_OK, "");
@@ -313,6 +353,8 @@ void Connector::run()
                         requestProfile(target);
                     }
                 }
+                else if(MSG_IS_DEAUTHORIZE(event->request))
+                    processDeauthorize(event);
                 else if(MSG_IS_DEVLIST(event->request))
                     processDeviceList(event);
                 else if(MSG_IS_PENDING(event->request))
@@ -382,6 +424,13 @@ void Connector::processPending(eXosip_event_t *event)
         QByteArray json(body->body, static_cast<int>(body->length));
         emit syncPending(json);
     }
+}
+
+void Connector::processDeauthorize(eXosip_event_t *event)
+{
+    auto msg = event->request;
+    if(msg && msg->to && msg->to->url && msg->to->url->username)
+        emit deauthorizeUser(UString(msg->to->url->username).unquote());
 }
 
 void Connector::processDeviceList(eXosip_event_t *event)

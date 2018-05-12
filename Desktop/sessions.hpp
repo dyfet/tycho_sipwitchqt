@@ -108,6 +108,18 @@ public:
         return contact->isHidden();
     }
 
+    bool isOnline() const {
+        if(!contact)
+            return true;
+        return contact->isOnline();
+    }
+
+    bool isSuspended() const {
+        if(!contact)
+            return false;
+        return contact->isSuspended();
+    }
+
     void setText(const QString& text) {
         inputText = text;
     }
@@ -116,6 +128,12 @@ public:
         foreach(auto msg, filtered) {
             msg->clearSearch();
         }
+    }
+
+    QStringList topicList() {
+        auto list = topics.toList();
+        list.sort();
+        return list;
     }
 
     unsigned unread() {
@@ -127,8 +145,8 @@ public:
     void clearMessages();
     void addUnread();
     unsigned loadMessages();
+    void close();
     QString title();
-    bool setOnline(bool flag);
 
 private:
     QList<MessageItem *> messages;
@@ -139,6 +157,7 @@ private:
     QString inputText;                          // current input buffer
     QString callDisplay;                        // transitory call name
     QString currentTopic;                       // can be set...
+    QSet<QString> topics;
     int cid, did;                               // exosip call info
     bool saved;                                 // whether uses database...
     unsigned unreadCount;                       // unread message count
@@ -169,6 +188,8 @@ public:
     }
 
     void add(SessionItem *item);
+    void remove(SessionItem *item);
+    void latest(SessionItem *item);
     void clickSession(int row);
 
     static SessionModel *instance() {
@@ -207,17 +228,22 @@ public:
     QList<MessageItem *> searchMessages(const QString &searchTerm);
     void clickedText(const QString& text, enum ClickedItem);
     void setWidth(int width);
+    void remove(ContactItem *item);
 
-    static SessionItem *active();
-    static QModelIndex top();
     static Sessions *instance() {
         return Instance;
     }
+
+    static SessionItem *active();
+    static SessionItem *current();
+    static QModelIndex top();
 
 private:
     Desktop *desktop;
     Connector *connector;
     SessionModel *model;
+    QString selfName;
+    int elideWidth;
 
     static Sessions *Instance;
 
@@ -234,12 +260,14 @@ public slots:
     void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
     void activateSession(SessionItem *item);
     void activateContact(ContactItem *item);
+    void closeSession();
     void clearSessions();
     void activateSelf();
     void refreshFont();
 
 private slots:
     void search();
+    void setSelf(const QString& text);
     void selectSelf();
     void expireMessages();
     void selectSession(const QModelIndex& index);

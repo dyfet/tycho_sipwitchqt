@@ -10,6 +10,8 @@
 <qresource prefix="/icons">
 	<file>clear.png</file>
 	<file>clear@2x.png</file>
+	<file>cancel.png</file>
+	<file>cancel@2x.png</file>
 	<file>color_idle.png</file>
 	<file>color_idle@2x.png</file>
 	<file>color_offline.png</file>
@@ -34,6 +36,8 @@
 	<file>phone@2x.png</file>
 	<file>group.png</file>
 	<file>group@2x.png</file>
+	<file>newgroup.png</file>
+	<file>newgroup@2x.png</file>
 	<file>locked.png</file>
 	<file>locked@2x.png</file>
 	<file>unlocked.png</file>
@@ -54,6 +58,8 @@
 	<file>del@2x.png</file>
 	<file>burger.png</file>
 	<file>burger@2x.png</file>
+	<file>session.png</file>
+	<file>session@2x.png</file>
 </qresource>
 <qresource prefix="/styles">
 	<file>desktop.css</file>

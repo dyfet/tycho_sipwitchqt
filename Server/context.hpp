@@ -107,6 +107,7 @@ public:
     static bool authorize(const Event& event, const Registry* registry, const UString &xdp);
     static void start(QThread::Priority priority = QThread::InheritPriority);
     static void shutdown();
+    static void dump(const osip_message_t *msg);
 
 private:
     ~Context() final;
@@ -138,6 +139,8 @@ signals:
     void REQUEST_PENDING(const Event& ev);
     void REQUEST_PROFILE(const Event& ev);
     void REQUEST_AUTHORIZE(const Event& ev);
+    void REQUEST_MEMBERSHIP(const Event& ev);
+    void REQUEST_DEAUTHORIZE(const Event& ev);
     void ACK_PENDING(const Event& ev);
     void SEND_MESSAGE(const Event& ev);
     void CALL_INVITE(const Event& ev);

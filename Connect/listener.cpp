@@ -27,6 +27,7 @@
 #endif
 
 #define EVENT_TIMER 200l    // 200ms...
+#define SUBJECT_ADMIN   "X-Admin"
 
 static const char *eid(eXosip_event_type ev);
 
@@ -455,9 +456,7 @@ void Listener::receiveMessage(eXosip_event_t *event)
     else
         msgType = UString(type->type);
 
-    qDebug() << "***** DIALED" << sipTo << sipFrom << msgType;
-
-    if(msgType != "text/plain") {
+    if(msgType != "text/plain" && msgType != "text/admin") {
         status = SIP_NOT_ACCEPTABLE_HERE;
         goto error;
     }
@@ -481,6 +480,9 @@ void Listener::receiveMessage(eXosip_event_t *event)
     osip_message_header_get_byname(msg, "subject", 0, &header);
     if(header && header->hvalue)
         subject = header->hvalue;
+
+    if(msgType == "text/admin")
+        subject = SUBJECT_ADMIN;
 
     emit receiveText(sipFrom, sipTo, UString(QByteArray(body->body, static_cast<int>(body->length))), timestamp, sequence, subject);
 

@@ -33,6 +33,7 @@ namespace Util {
     int hostPort(const QString& hostId);
     unsigned currentDay(const QDateTime& when = QDateTime::currentDateTime());
     unsigned untilTomorrow(const QDateTime& when = QDateTime::currentDateTime());
+    qlonglong timestampKey(const QDateTime& when, unsigned sequence);
 }
 
 /*!
@@ -84,5 +85,14 @@ namespace Util {
  * day, for current timezone.  Sometimes used to determine timer wakeups.
  * \param when Timestap to check.
  * \return number of seconds until next day.
+ *
+ * \fn Util::timestampKey(const QDateTime& when, unsigned sequence)
+ * Produces a unique message key based on the server timestamp and sequence
+ * id as issued uniquely for each message sent.  This can be used to identify
+ * matching messages between remote devices, such as to send edited updates,
+ * or to request bodies for extended message objects.
+ * \param timestamp as originally issued by the server.
+ * \param sequence number as originally issued by the server.
+ * \return unique large integer key.
  */
 #endif

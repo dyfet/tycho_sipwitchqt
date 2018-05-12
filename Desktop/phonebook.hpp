@@ -48,6 +48,8 @@ enum class KeyVerification : int
 
 class ContactItem final
 {
+    friend class MemberDelegate;
+    friend class MemberModel;
     friend class LocalDelegate;
     friend class LocalContacts;
     friend class MessageDelegate;
@@ -113,8 +115,20 @@ public:
         return contactUpdated;
     }
 
+    QDateTime sync() const {
+        return contactCreated;
+    }
+
+    int sequence() const {
+        return contactSequence;
+    }
+
     bool isExtension() const {
         return extensionNumber > -1;
+    }
+
+    bool isAdmin() const {
+        return admin;
     }
 
     bool isGroup() const {
@@ -125,15 +139,34 @@ public:
         return hidden;
     }
 
+    bool isOnline() const {
+        return online;
+    }
+
+    bool isSuspended() const {
+        return suspended;
+    }
+
     SessionItem *getSession() const {
         return session;
+    }
+
+    ContactItem *groupAdmin() const {
+        if(!isGroup())
+            return nullptr;
+        return contactLeader;
     }
 
     QString filter() const {
         return contactFilter;
     }
 
+    QList<ContactItem*> membership() {
+        return contactMembers;
+    }
+
     void add();
+    void removeMember(ContactItem *item);
 
     static QList<ContactItem*> sessions() {
         return groups + users;
@@ -143,11 +176,18 @@ public:
         return index[uid];
     }
 
+    static void deauthorize(const QString& id) {
+        usrAuths.remove(id);
+        grpAuths.remove(id);
+    }
+
     static QStringList allUsers();
     static QStringList allGroups();
+    static QList<ContactItem*>findAuth(const QString& auth);
     static ContactItem *findText(const QString& text);
     static ContactItem *findExtension(int number);
     static ContactItem *find(const UString& who);
+    static void removeIndex(ContactItem *item);
     static void purge();
 
 private:
@@ -156,10 +196,13 @@ private:
     UString contactPublic, contactEmail;
     QString contactFilter, textDisplay, textNumber, authUserId;
     QString extendedInfo;
-    QDateTime contactUpdated;
+    QDateTime contactCreated, contactUpdated;
+    int contactSequence;
     QByteArray publicKey;
     KeyVerification keyVerify;
-    bool group, added, hidden;
+    bool group, added, hidden, admin, online, suspended;
+    QList<ContactItem *> contactMembers;
+    ContactItem *contactLeader;
     int extensionNumber;
     int uid;
 
@@ -168,6 +211,50 @@ private:
     static QHash<int,ContactItem *> index;
     static QSet<QString> usrAuths;
     static QSet<QString> grpAuths;
+};
+
+class MemberModel final : public QAbstractListModel
+{
+    friend class memberDelegate;
+
+public:
+    enum {
+        DisplayNumber = Qt::UserRole + 1,
+        DisplayName,
+        DisplayOnline,
+        DisplaySuspended,
+        DisplaySeparator,
+        DisplayMembers,
+    };
+
+    MemberModel(ContactItem *item);
+
+    bool isAdmin() const {
+        return admin;
+    }
+
+    bool isMember(const QModelIndex& index) const {
+        if(index.row() >= membership.count())
+            return false;
+        return true;
+    }
+
+    bool isSeparator(const QModelIndex& index) const {
+        if(index.row() > 0 && index.row() == membership.count())
+            return true;
+        return false;
+    }
+
+    void updateOnline(ContactItem *item);
+    void remove(ContactItem *item);
+
+private:
+    QList<ContactItem *> membership;
+    QList<ContactItem *> nonmembers;
+    bool admin;
+
+    int rowCount(const QModelIndex& parent) const final;
+    QVariant data(const QModelIndex& index, int role) const final;
 };
 
 class LocalContacts final : public QAbstractListModel
@@ -185,9 +272,23 @@ public:
         layoutChanged();
     }
 
+    void changeOnline(int number, bool status);
+    void remove(int number);
+
 private:
     int rowCount(const QModelIndex& parent) const final;
     QVariant data(const QModelIndex& index, int role) const final;
+};
+
+class MemberDelegate final : public QStyledItemDelegate
+{
+public:
+    MemberDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+
+private:
+    QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    void paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    bool eventFilter(QObject *list, QEvent *event) final;
 };
 
 class LocalDelegate final : public QStyledItemDelegate
@@ -203,22 +304,27 @@ private:
 class Phonebook final : public QWidget
 {
     Q_OBJECT
+
+    friend class MemberDelegate;
 public:
     Phonebook(Desktop *main, Sessions* sessionsPage);
 
     void enter();
     void setWidth(int width);
+    void remove(ContactItem *item);
 
     static Phonebook *instance() {
         return Instance;
     }
 
     static ContactItem *self();
+    static ContactItem *find(int extension);
 
 private:
     Desktop *desktop;
     LocalDelegate *localPainter;
     LocalContacts *localModel;
+    MemberDelegate *memberPainter;
     bool requestPending;
     Connector *connector;
     QTimer refreshRoster;
@@ -227,15 +333,20 @@ private:
 
     bool event(QEvent *event) final;
     void updateProfile(ContactItem *item);
+    void clearGroup();
+    void updateGroup();
+    void changeMembership(ContactItem *item, const UString& members, const UString& notify, const UString& reason);
 
 signals:
      void changeSessions(Storage *storage, const QList<ContactItem *>& contacts);
      void changeWidth(int width);
+     void removeSelf();
 
 private slots:
     void search();
     void filterView(const QString& selected);
     void selectContact(const QModelIndex& index);
+    void changeStatus(const QByteArray& bitmap, int first, int last);
     void changeConnector(Connector *connector);
     void changeStorage(Storage *storage);
     void changeProfile();

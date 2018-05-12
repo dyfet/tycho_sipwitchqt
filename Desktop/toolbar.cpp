@@ -24,6 +24,7 @@ static Ui::Toolbar ui;
 
 Toolbar *Toolbar::Instance = nullptr;
 QLineEdit *Toolbar::Search = nullptr;
+QPushButton *Toolbar::Close = nullptr;
 
 Toolbar::Toolbar(QWidget *parent, QToolBar *bar, QMenuBar *mp) :
 QWidget(parent)
@@ -39,12 +40,22 @@ QWidget(parent)
 
     ui.setupUi(this);
     ui.searchText->setAttribute(Qt::WA_MacShowFocusRect, false);
+    ui.searchButton->setVisible(false);
     Search = ui.searchText;
+    Close = ui.closeButton;
+
+    connect(ui.searchButton, &QPushButton::pressed, this, &Toolbar::showSearch);
 }
 
 void Toolbar::setTitle(const QString& text)
 {
     ui.title->setText(text);
+    setStyle("color: black;");
+}
+
+void Toolbar::setStyle(const QString& style)
+{
+    ui.title->setStyleSheet(style);
 }
 
 void Toolbar::clearSearch()
@@ -63,6 +74,36 @@ void Toolbar::disableSearch()
 {
     ui.searchText->clear();
     ui.searchText->setEnabled(false);
+}
+
+void Toolbar::showSearch()
+{
+    ui.searchFrame->setVisible(true);
+    ui.searchButton->setEnabled(false);
+    ui.searchButton->setVisible(false);
+}
+
+void Toolbar::hideSearch()
+{
+    ui.searchFrame->setVisible(false);
+    ui.searchButton->setVisible(true);
+    ui.searchButton->setEnabled(true);
+}
+
+void Toolbar::noSearch()
+{
+    ui.searchFrame->setVisible(false);
+    ui.searchButton->setVisible(false);
+}
+
+void Toolbar::noSession()
+{
+    ui.closeButton->setVisible(false);
+}
+
+void Toolbar::showSession()
+{
+    ui.closeButton->setVisible(true);
 }
 
 QString Toolbar::searching()

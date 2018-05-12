@@ -238,6 +238,31 @@ void Manager::ackPending(const Event& ev)
     emit changePending(reg->endpoint());
 }
 
+void Manager::requestDeauthorize(const Event& ev)
+{
+    qDebug() << "REQUESTING DEAUTHORIZE FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND DEAUTHORIZE REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit removeAuthorize(ev);
+}
+
 void Manager::requestAuthorize(const Event& ev)
 {
     qDebug() << "REQUESTING AUTHORIZE FROM" << ev.number();
@@ -314,6 +339,31 @@ void Manager::requestDevlist(const Event& ev)
     emit sendDevlist(ev);
 }
 
+void Manager::requestMembership(const Event& ev)
+{
+    qDebug() << "REQUESTING MEMBERSHIP FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND MEMBERSHIP REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeMembership(ev, reg->user(), reg->endpoint());
+}
+
 void Manager::requestProfile(const Event& ev)
 {
     qDebug() << "REQUESTING PROFILE FROM" << ev.number();
@@ -361,7 +411,7 @@ void Manager::requestRoster(const Event& ev)
         return;
     }
 
-    emit sendRoster(ev);
+    emit sendRoster(ev, reg->endpoint());
 }
 
 void Manager::refreshRegistration(const Event &ev)
@@ -386,7 +436,7 @@ void Manager::refreshRegistration(const Event &ev)
                     xdp += "f=" + UString::number(range.first) + "\n";
                     xdp += "l=" + UString::number(range.second) + "\n";
                     xdp += "r=" + UString::number(static_cast<int>(checkRoster())) + "\n";
-                    xdp += "s=" + UString::number(Database::sequence());
+                    xdp += "s=" + UString::number(Database::sequence()) + "\n";
                     xdp += "a=" + Registry::bitmask() + "\n";
                 }
                 Context::authorize(ev, reg, xdp);

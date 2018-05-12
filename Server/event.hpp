@@ -247,6 +247,8 @@ public:
         return d->timestamp;
     }
 
+    int nextSequence() const;
+
     const UString uriTo(const UString& id) const;
     const UString protocol() const;
     const UString toString() const;

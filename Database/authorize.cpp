@@ -44,6 +44,7 @@ QObject(), db(nullptr)
     // future connections for quick aync between manager and auth
     Manager *manager = Manager::instance();
     connect(manager, &Manager::findEndpoint, this, &Authorize::findEndpoint);
+    connect(manager, &Manager::removeAuthorize, this, &Authorize::removeAuthorization);
     connect(this, &Authorize::createEndpoint, manager, &Manager::createRegistration);
 }
 
@@ -361,4 +362,45 @@ retry:
     }
     else
         return database->getRecord(request, parms);
+}
+
+void Authorize::removeAuthorization(const Event& ev)
+{
+    auto user = UString(ev.message()->to->url->username).unquote();
+    auto auth = QString::fromUtf8(user);
+    qDebug() << "Deauthorizing " << user;
+
+    auto admin = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {ev.number()});
+    if(admin.count() < 1) {
+        Context::reply(ev, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto authinfo = getRecord("SELECT * FROM Authorize WHERE (authname=?);", {auth});
+    if(authinfo.count() < 1) {
+        Context::reply(ev, SIP_NOT_FOUND);
+        return;
+    }
+
+    auto type = authinfo.value("authtype").toString().toUpper();
+    if(type == "SYSTEM") {
+        Context::reply(ev, SIP_FORBIDDEN);
+        return;
+    }
+
+    // early reply for client in case db delete operation is slow...
+    Context::reply(ev, SIP_OK);
+
+    auto created = authinfo.value("created").toDateTime();
+    runQuery("DELETE FROM Authorize WHERE (authname=?);", {auth});
+
+    auto query = getRecords("SELECT * FROM Endpoints;");
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto endpoint = record.value("endpoint").toLongLong();
+
+        runQuery("INSERT INTO Deletes(authname, endpoint, created) VALUES(?,?,?);", {auth, endpoint, created});
+    }
+
+    Manager::updateRoster();
 }

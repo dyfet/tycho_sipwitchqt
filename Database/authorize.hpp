@@ -60,6 +60,9 @@ signals:
 protected slots:
     virtual void activate(const QVariantHash& config, bool isOpen);
     virtual void findEndpoint(const Event& event);
+
+private slots:
+    void removeAuthorization(const Event& ev);
 };
 
 /*!
