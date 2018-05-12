@@ -108,14 +108,16 @@ signals:
 
 public slots:
     void localMessage(const Event& ev);
+    bool adminMessage(const Event& ev, int to, const QString& text, int from = 0, const QString &display = QString("system"), int expires = 0);
     void copyOutbox(qlonglong source, qlonglong target);
     void syncOutbox(qlonglong endpoint);
     void messageResponse(const QByteArray& mid, const QByteArray &ep, int status);
 
 private slots:
-    void sendRoster(const Event& ev);
+    void sendRoster(const Event& ev, qlonglong endpoint);
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
+    void changeMembership(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);
     void changePending(qlonglong endpoint);

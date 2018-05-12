@@ -148,7 +148,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "msgjson TEXT DEFAULT NULL,"            // for json control docs
             "msgdata BLOB DEFAULT NULL,"            // attached binary
             "CONSTRAINT byDate PRIMARY KEY (sid, posted DESC, seqid DESC),"
-            "FOREIGN KEY (sid) REFERENCES Contacts(uid));",
+            "FOREIGN KEY (sid) REFERENCES Contacts(uid) ON DELETE CASCADE);",
 
     });
 

@@ -60,7 +60,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     connect(ui.addButton, &QPushButton::pressed, this, &AddUser::add);
     connect(ui.confirm, &QLineEdit::textChanged, this, &AddUser::secretChanged);
     connect(ui.secret, &QLineEdit::textChanged, this, &AddUser::secretChanged);
-    
+
     connect(ui.secret, &QLineEdit::returnPressed, this, []{
         if(!ui.secret->text().isEmpty())
             ui.confirm->setFocus();
@@ -74,6 +74,13 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     connect(ui.extension, &QLineEdit::returnPressed, this, []{
         if(!ui.extension->text().isEmpty())
             ui.type->setFocus();
+    });
+
+    connect(parent, &Desktop::changeConnector, [=](Connector *connection) {
+        if(!connection)
+            parent->closeDialog();
+        else
+            connector = connection;
     });
 
     show();
@@ -99,14 +106,6 @@ void AddUser::changedAuth(const QString& text)
         ui.confirm->setEnabled(true);
         ui.fullName->setEnabled(true);
     }
-}
-
-void AddUser::changeConnector(Connector *connection)
-{
-    if(!connection)
-        Desktop::instance()->closeDialog();
-    else
-        connector = connection;
 }
 
 void AddUser::secretChanged(const QString& text)

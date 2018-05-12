@@ -16,8 +16,8 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
         connector->requestDeviceList();
 
         connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
-                    auto jdoc = QJsonDocument::fromJson(json);
-                    auto list = jdoc.array();
+            auto jdoc = QJsonDocument::fromJson(json);
+            auto list = jdoc.array();
             ui.table->setColumnCount(6);
             int totalCol = ui.table->columnCount();
             ui.table->setRowCount(1);
@@ -27,28 +27,26 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
             ui.table->setSizeAdjustPolicy(QTableWidget::AdjustToContents);
             foreach(auto profile, list) {
-
-                        auto json = profile.toObject();
-                        auto endpoint = json.value("e").toString();
-                        auto number = json.value("n").toString();
-                        auto label = json.value("u").toString();
-                        auto lastOnline = json.value("o").toString();
-                        auto registered = json.value("r").toString();
-                        auto agent = json.value("a").toString();
-                        QStringList strArr = {endpoint, number,label,agent, registered, lastOnline};
-                        for (column = 0; column < totalCol; column++){
-                            ui.table->setItem(row,column, new QTableWidgetItem(strArr[column]));
-                        }
-                        ui.table->setRowCount(ui.table->rowCount() + 1);
-                        row++;
-                    }
+                auto json = profile.toObject();
+                auto endpoint = json.value("e").toString();
+                auto number = json.value("n").toString();
+                auto label = json.value("u").toString();
+                auto lastOnline = json.value("o").toString();
+                auto registered = json.value("r").toString();
+                auto agent = json.value("a").toString();
+                QStringList strArr = {endpoint, number,label,agent, registered, lastOnline};
+                for (column = 0; column < totalCol; column++){
+                    ui.table->setItem(row,column, new QTableWidgetItem(strArr[column]));
+                }
+                ui.table->setRowCount(ui.table->rowCount() + 1);
+                row++;
+            }
             ui.table->removeRow(ui.table->rowCount() - 1);
 //            auto count = ui.table->rowCount();
             ui.connectedDevices->setText(QString::number(ui.table->rowCount()));
-            });
-}
-
-    connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDeviceList);
+        });
+    }
+    connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
     show();
 }
 

@@ -21,6 +21,8 @@
 #include "../Dialogs/devicelist.hpp"
 #include "../Dialogs/logout.hpp"
 #include "../Dialogs/adduser.hpp"
+#include "../Dialogs/newgroup.hpp"
+#include "../Dialogs/delauth.hpp"
 #include "desktop.hpp"
 #include "ui_desktop.h"
 #include <QCryptographicHash>
@@ -208,6 +210,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setIconSize(QSize(16, 16));
 
+    // Settings have to be extracted from config before options ui is created
     currentExpiration = settings.value("expires", 7 * 86400).toInt();
     currentAppearance = settings.value("appearance", "Vibrant").toString();
 
@@ -288,6 +291,7 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connect(ui.actionContacts, &QAction::triggered, this, &Desktop::showPhonebook);
     connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown);
     connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState);
+    connect(phonebook, &Phonebook::removeSelf, this, &Desktop::eraseLogout, Qt::QueuedConnection);
 
     connect(sessions, &Sessions::changeWidth, [=](int width) {
         settings.setValue("width", width);
@@ -470,6 +474,28 @@ void Desktop::setState(state_t state)
 #endif
 }
 
+void Desktop::openDelAuth(const UString& id)
+{
+    closeDialog();
+    setEnabled(false);
+    auto obj = new DelAuth(this, connector, id);
+    dialog = obj;
+    connect(obj, &DelAuth::error, this, [=](const QString& msg) {
+        errorMessage(msg);
+    });
+}
+
+void Desktop::openNewGroup()
+{
+    closeDialog();
+    setEnabled(false);
+    auto obj = new NewGroup(this, connector);
+    dialog = obj;
+    connect(obj, &NewGroup::error, this, [=](const QString& msg) {
+        errorMessage(msg);
+    });
+}
+
 void Desktop::openAddUser()
 {
     closeDialog();
@@ -552,32 +578,27 @@ void Desktop::openDeviceList()
     dialog = new DeviceList(this, connector);
 }
 
-void Desktop::closeDeviceList()
-{
-    Q_ASSERT(dialog != nullptr);
-
-
-    if(dialog) {
-        dialog->deleteLater();
-        setEnabled(true);
-        dialog = nullptr;
-    }
-}
 void Desktop::showOptions()
 {
     ui.pagerStack->setCurrentWidget(options);
+    toolbar->noSearch();
+    toolbar->noSession();
     options->enter();
 }
 
 void Desktop::showSessions()
 {
     ui.pagerStack->setCurrentWidget(sessions);
+    toolbar->showSearch();
+    toolbar->noSession();
     sessions->enter();
 }
 
 void Desktop::showPhonebook()
 {
     ui.pagerStack->setCurrentWidget(phonebook);
+    toolbar->showSearch();
+    toolbar->noSession();
     phonebook->enter();
 }
 
@@ -1020,6 +1041,7 @@ void Desktop::authorized(const QVariantHash& creds)
         statusMessage(tr("online"));
         connect(connector, &Connector::failure, this, &Desktop::failed);
         connect(connector, &Connector::statusResult, this, &Desktop::statusResult);
+        connect(connector, &Connector::deauthorizeUser, this, &Desktop::removeUser);
     }
     setState(ONLINE);
 }
@@ -1033,7 +1055,6 @@ void Desktop::listen(const QVariantHash& cred)
     connect(listener, &Listener::starting, this, &Desktop::authorizing);
     connect(listener, &Listener::finished, this, &Desktop::offline);
     connect(listener, &Listener::failure, this, &Desktop::failed);
-    //connect(listener, &Listener::changeBanner, this, &Desktop::setBanner);
     connect(listener, &Listener::statusResult, this, &Desktop::statusResult);
 
     connect(listener, &Listener::changeBanner, this, [this](const QString& banner) {
@@ -1048,6 +1069,7 @@ void Desktop::listen(const QVariantHash& cred)
 
     sessions->listen(listener);
     listener->start();
+    emit changeListener(listener);
     authorizing();
 }
 
@@ -1121,6 +1143,37 @@ void Desktop::importDb()
 void Desktop::resetFont() {
     setTheFont(getBasicFont());
     sessions->refreshFont();
+}
+
+void Desktop::removeUser(const QString &id)
+{
+    // kickback function to remove after de-authorization accepted by server
+
+    if(!storage)
+        return;
+
+    qDebug() << "ID!" << id;
+
+    auto list = ContactItem::findAuth(id);
+    if(list.count() < 1) {
+        errorMessage(tr("No users to remove"));
+        return;
+    }
+
+    warningMessage(tr("Removing ") + QString::number(list.count()) + tr(" extensions..."));
+    qDebug() << "Removing" << id << "for" << list.count();
+
+    foreach(auto item, list) {
+        // make sure gone from database before possible crash...
+        // if crashed, will pick up changes from the roster sync.
+
+        storage->runQuery("DELETE FROM Messages WHERE sid=?;", {item->id()});
+        storage->runQuery("DELETE FROM Contacts WHERE uid=?;", {item->id()});
+
+        sessions->remove(item);
+        phonebook->remove(item);
+    }
+    ContactItem::deauthorize(id);
 }
 
 int main(int argc, char *argv[])

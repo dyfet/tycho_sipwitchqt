@@ -28,6 +28,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     ui.setupUi(static_cast<QDialog*>(this));
     ui.labelVersion->setText(tr("Version: ") + PROJECT_VERSION);
     ui.labelCopyright->setText(tr("Copyright (C) ") + PROJECT_COPYRIGHT + " Tycho Softworks");
+    ui.logoButton->setVisible(false);
     setWindowTitle(tr("About SipWitchQt Desktop"));
 
     connect(ui.aboutButton, &QToolButton::clicked, this, &About::aboutProject);

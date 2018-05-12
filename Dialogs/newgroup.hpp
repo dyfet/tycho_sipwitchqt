@@ -15,20 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADDUSER_HPP_
-#define ADDUSER_HPP_
+#ifndef NEWGROUP_HPP_
+#define NEWGROUP_HPP_
 
 #include <QDialog>
 
 #include "../Desktop/desktop.hpp"
 
-class AddUser final : public QDialog
+class NewGroup final : public QDialog
 {
     Q_OBJECT
-    Q_DISABLE_COPY(AddUser)
+    Q_DISABLE_COPY(NewGroup)
 
 public:
-    AddUser(Desktop *parent, Connector *connection);
+    NewGroup(Desktop *parent, Connector *connection);
 
 private:
     QString realm, digest;
@@ -40,20 +40,18 @@ signals:
     void error(const QString& text);
 
 private slots:
-    void changedAuth(const QString& text);
-    void secretChanged(const QString& text);
     void add();
 };
 
 /*!
- * Ui AddUser dialog.
- * \file AddUser.hpp
+ * Ui NewGroup dialog.
+ * \file NewGroup.hpp
  */
 
 /*!
- * \class AddUser
- * \brief implements creating user and extension.
- * This is used to create a new user on the server.
+ * \class NewGroup
+ * \brief implements creating a new group.
+ * This is used to create a new group on the server.
  * \author David Sugar <tychosoft@gmail.com>
  */
 

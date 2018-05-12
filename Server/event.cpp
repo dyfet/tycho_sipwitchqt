@@ -23,6 +23,8 @@
 #define SESSION_EXPIRES "session-expires"
 #endif
 
+static std::atomic<unsigned> atomicSequence;
+
 Event::Data::Data() :
 number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), sequenceOrder(0)
 {
@@ -266,13 +268,16 @@ Event::Event()
 
 Event::Event(eXosip_event_t *evt, Context *ctx)
 {
-    static std::atomic<unsigned> sequence;
-
     auto next = 0;
     if(evt)
-        next = sequence.fetch_add(1, std::memory_order_relaxed) % 10000;
+        next = atomicSequence.fetch_add(1, std::memory_order_relaxed) % 10000;
 
     d = new Event::Data(evt, ctx, next);
+}
+
+int Event::nextSequence() const
+{
+    return atomicSequence.fetch_add(1, std::memory_order_relaxed) % 10000;
 }
 
 const UString Event::text() const

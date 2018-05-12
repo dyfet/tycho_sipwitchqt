@@ -36,8 +36,12 @@ public:
     Toolbar(QWidget *parent, QToolBar *bar, QMenuBar *mp = nullptr);
 
     void clearSearch();
-    void disableSearch();
     void enableSearch();
+    void disableSearch();
+    void hideSearch();
+    void noSearch();
+    void showSession();
+    void noSession();
     QString searching();
 
     static inline Toolbar *instance() {
@@ -48,7 +52,12 @@ public:
         return Search;
     }
 
+    static inline QPushButton *close() {
+        return Close;
+    }
+
     static void setTitle(const QString& text);
+    static void setStyle(const QString& text);
 
 private:
     QPoint mpos;
@@ -57,11 +66,13 @@ private:
 
     static Toolbar *Instance;
     static QLineEdit *Search;
+    static QPushButton *Close;
 
     bool eventFilter(QObject *obj, QEvent *evt) final;
 
 public slots:
     void onRefocus();
+    void showSearch();
 };
 
 /*!

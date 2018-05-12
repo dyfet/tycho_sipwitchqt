@@ -35,6 +35,39 @@
       <number>0</number>
      </property>
      <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QToolButton" name="logoButton">
+         <property name="styleSheet">
+          <string notr="true">border: none;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="logoText">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
       <widget class="QListView" name="contacts">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -250,10 +283,20 @@
                 </property>
                </spacer>
               </item>
+              <item>
+               <widget class="QLabel" name="since">
+                <property name="text">
+                 <string>Since</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="spacing">
+               <number>-1</number>
+              </property>
               <item>
                <widget class="QLabel" name="label_2">
                 <property name="minimumSize">
@@ -278,9 +321,15 @@
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="maximumSize">
                  <size>
-                  <width>160</width>
+                  <width>16777215</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -294,38 +343,38 @@
               </item>
               <item>
                <widget class="QPushButton" name="sessionButton">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
-                  <width>80</width>
-                  <height>0</height>
+                  <width>32</width>
+                  <height>22</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>80</width>
-                  <height>16777215</height>
+                  <width>32</width>
+                  <height>22</height>
                  </size>
                 </property>
                 <property name="toolTip">
                  <string>Connect to session</string>
                 </property>
                 <property name="text">
-                 <string>Session</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="../Resources/desktop.qrc">
+                  <normaloff>:/icons/session.png</normaloff>:/icons/session.png</iconset>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
                 </property>
                </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>0</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </item>
@@ -369,9 +418,12 @@
         <item>
          <widget class="QStackedWidget" name="profileStack">
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="blankPage">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
            <layout class="QVBoxLayout" name="verticalLayout_2"/>
           </widget>
           <widget class="QWidget" name="adminPage">
@@ -460,7 +512,7 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="label_11">
                  <property name="text">
-                  <string>Permenantly remove user</string>
+                  <string>Permenantly remove authorization</string>
                  </property>
                 </widget>
                </item>
@@ -474,6 +526,91 @@
                  </property>
                  <property name="text">
                   <string>Remove</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="memberPage">
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Membership:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListView" name="memberList">
+              <property name="mouseTracking">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="groupAdmin">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Permanently remove authorization</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="removeGroup">
+                 <property name="maximumSize">
+                  <size>
+                   <width>96</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Remove</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Select Alternate Administrator</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="comboBox">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>16777215</height>
+                  </size>
                  </property>
                 </widget>
                </item>

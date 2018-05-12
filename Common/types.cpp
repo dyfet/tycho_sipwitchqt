@@ -65,6 +65,32 @@ bool UString::isQuoted(const char *qc) const
     return startsWith(q1) && endsWith(q2); // NOLINT
 }
 
+UString UString::unescape() const
+{
+    UString result;
+    char digits[3];
+    auto cp = constData();
+    while(cp && *cp) {
+        if(*cp == '%') {
+            digits[0] = *(++cp);
+            if(!digits[0])
+                break;
+            digits[1] = *(++cp);
+            if(!digits[1])
+                break;
+            digits[2] = 0;
+            UString value(digits);
+            char code = value.toInt(nullptr, 16);
+            result.append(code);
+            ++cp;
+        }
+        else
+            result.append(*(cp++));
+
+    }
+    return result;
+}
+
 UString UString::escape() const
 {
     UString result;

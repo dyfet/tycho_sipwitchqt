@@ -24,7 +24,7 @@
 #include <QJsonArray>
 
 static Ui::PhonebookWindow ui;
-static int highest = 699, me = -1;
+static int highest = 699, me = -1, removes = 0;
 static ContactItem *local[1000];
 static UString searching;
 static ContactItem *activeItem = nullptr;
@@ -32,6 +32,8 @@ static ContactItem *clickedItem = nullptr;
 static bool mousePressed = false;
 static QPoint mousePosition;
 static int cellHeight, cellLift = 3;
+static QIcon addIcon, delIcon, newIcon;
+static MemberModel *memberModel = nullptr;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -44,11 +46,13 @@ QSet<QString> ContactItem::grpAuths;
 ContactItem::ContactItem(const QSqlRecord& record)
 {
     session = nullptr;
-    group = added = hidden = false;
+    group = added = hidden = admin = online = suspended = false;
 
     extensionNumber = record.value("extension").toInt();
+    contactCreated = record.value("sync").toDateTime();
     contactUpdated = record.value("last").toDateTime();
     contactTimestamp = contactUpdated.toString(Qt::ISODate);
+    contactSequence = record.value("sequence").toInt();
     contactType = record.value("type").toString();
     contactUri = record.value("uri").toString().toUtf8();
     contactPublic = record.value("puburi").toString().toUtf8();
@@ -69,7 +73,7 @@ void ContactItem::add()
     added = true;
     // the subset of contacts that have active sessions at load time...
     if(contactUpdated.isValid()) {
-        if(contactType == "GROUP") {
+        if(contactType == "GROUP" || contactType == "PILOT") {
             group = true;
             groups << this;
         }
@@ -78,7 +82,7 @@ void ContactItem::add()
         }
     }
 
-    if(contactType == "GROUP")
+    if(contactType == "GROUP" || contactType == "PILOT")
         group = true;
 
     if(contactType == "SYSTEM" && extensionNumber == 0) {
@@ -104,9 +108,60 @@ void ContactItem::add()
     local[extensionNumber] = this;
 }
 
+QList<ContactItem *> ContactItem::findAuth(const QString& id)
+{
+    QList<ContactItem *> list;
+
+    for(auto pos = 1; pos <= highest; ++pos) {
+        auto item = local[pos];
+        if(!item)
+            continue;
+        if(item->user() != id)
+            continue;
+        list << item;
+    }
+
+    return list;
+}
+
+void ContactItem::removeMember(ContactItem *item)
+{
+    if(contactLeader == item)
+        contactLeader = nullptr;
+    auto pos = contactMembers.indexOf(item);
+    if(pos > -1)
+        contactMembers.takeAt(pos);
+}
+
+void ContactItem::removeIndex(ContactItem *item)
+{
+    auto number = item->number();
+    if(number < 1 || number > 999)
+        return;
+    auto pos = groups.indexOf(item);
+    if(pos > -1)
+        groups.takeAt(pos);
+    pos = users.indexOf(item);
+    if(pos > -1)
+        users.takeAt(pos);
+    local[number] = nullptr;
+    index.remove(item->uid);
+
+    for(auto pos = 0; pos <= highest; ++pos) {
+        auto entry = local[pos];
+        if(entry)
+            entry->removeMember(item);
+    }
+    delete item;
+}
+
 void ContactItem::purge()
 {
     foreach(auto item, index.values()) {
+        // We can get a null key in the index if we do a lookup of a uid
+        // that doesn't actually exist, such as from an un-attached message.
+        if(!item)
+            continue;
         Q_ASSERT(item->added);
         delete item;
     }
@@ -178,13 +233,124 @@ ContactItem *ContactItem::findText(const QString& text)
     return found;
 }
 
+MemberModel::MemberModel(ContactItem *item) :
+QAbstractListModel()
+{
+    membership = item->contactMembers;
+    admin = item->admin;
+    if(!admin)
+        return;
+
+    for(auto index = 0; index < 999; ++index) {
+        item = local[index];
+        if(!item)
+            continue;
+        if(item->isGroup())
+            continue;
+        if(membership.indexOf(item) > -1)
+            continue;
+        nonmembers << item;
+    }
+}
+
+int MemberModel::rowCount(const QModelIndex& parent) const
+{
+    Q_UNUSED(parent);
+    if(admin)
+        return membership.count() + nonmembers.count();
+    else
+        return membership.count();
+}
+
+QVariant MemberModel::data(const QModelIndex& index, int role) const
+{
+    int row = index.row();
+    ContactItem *item = nullptr;
+    bool separator = false;
+    QStringList list;
+
+    if(row < 0)
+        return QVariant();
+
+    if(row < membership.count())
+        item = membership[row];
+    else {
+        if(row == membership.count() && row > 0)
+            separator = true;
+        row -= membership.count();
+        if(row < nonmembers.count())
+            item = nonmembers[row];
+    }
+    if(!item)
+        return QVariant();
+
+    switch(role) {
+    case DisplayNumber:
+        return QString::number(item->number());
+    case DisplayName:
+        return item->display();
+    case DisplayOnline:
+        return item->isOnline();
+    case DisplaySuspended:
+        return item->isSuspended();
+    case DisplaySeparator:
+        return separator;
+    case DisplayMembers:
+        foreach(auto member, membership)
+            list << QString::number(member->number());
+        return list;
+    case Qt::DisplayRole:
+        return QString::number(item->number()) + " " + item->display();
+    default:
+        return QVariant();
+    }
+}
+
+void MemberModel::remove(ContactItem *item)
+{
+    Q_ASSERT(item != nullptr);
+    auto pos = membership.indexOf(item);
+    if(pos > -1) {
+        beginRemoveRows(QModelIndex(), pos, pos);
+        membership.takeAt(pos);
+        endRemoveRows();
+        return;
+    }
+    pos = nonmembers.indexOf(item);
+    if(pos > -1) {
+        auto row = pos + membership.count();
+        beginRemoveRows(QModelIndex(), row, row);
+        nonmembers.takeAt(pos);
+        endRemoveRows();
+    }
+}
+
+void MemberModel::updateOnline(ContactItem *item)
+{
+    if(!item)
+        return;
+    auto pos = membership.indexOf(item);
+    if(pos >= 0) {
+        emit dataChanged(index(pos), index(pos));
+        return;
+    }
+}
+
+void LocalContacts::remove(int number)
+{
+    if(number > highest || number < 0)
+        return;
+    local[number] = nullptr;
+    dataChanged(index(number), index(number));
+}
+
 int LocalContacts::rowCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent);
     if(highest < 0)
         return 0;
 
-    return highest + 2;
+    return highest + 3;
 }
 
 QVariant LocalContacts::data(const QModelIndex& index, int role) const
@@ -216,28 +382,67 @@ void LocalContacts::clickContact(int row)
     dataChanged(index(row), index(row));
 }
 
+void LocalContacts::changeOnline(int number, bool status)
+{
+    if(number < 0 || number > 1000)
+        return;
+
+    auto item = local[number];
+    if(!item)
+        return;
+
+    if(status == item->online)
+        return;
+
+    item->online = status;
+    dataChanged(index(number), index(number));
+    if(item->session && item != Phonebook::self())
+        SessionModel::update(item->session);
+}
+
 ContactItem *LocalContacts::updateContact(const QJsonObject& json)
 {
-    auto number = json["n"].toInt();
-    if(number < 0 || number > 1000)
-        return nullptr;
-
     auto storage = Storage::instance();
     if(!storage)
         return nullptr;
 
     auto status = json["s"].toString();
+    auto sync = QDateTime::fromString(json["c"].toString(), Qt::ISODate);
+    auto user = json["a"].toString();
+
+    if(status == "remove" && removes > -1) {
+        auto list = ContactItem::findAuth(user);
+        if(list.count() < 1)
+            return nullptr;
+
+        foreach(auto item, list) {
+            if(item == Phonebook::self()) {
+                removes = -1;
+                return nullptr;
+            }
+        }
+
+        auto desktop = Desktop::instance();
+        desktop->removeUser(user);
+        return nullptr;
+    }
+
+    auto number = json["n"].toInt();
+    if(number < 0 || number > 1000)
+        return nullptr;
+
+    auto group = json["g"].toString();
     auto type = json["t"].toString();
     auto display = json["d"].toString();
     auto uri = json["u"].toString();
-    auto user = json["a"].toString();
     auto puburi = json["p"].toString();
     auto mailto = json["e"].toString();
     auto info = json["i"].toString();
+    auto members = json["m"].toString();
     auto item = local[number];
 
     if(item && !status.isEmpty()) {
-        if((type == "USER" || type == "DEVICE") && Desktop::isAdmin() && item != Phonebook::self()) {
+        if((type == "USER" || type == "DEVICE") && Desktop::isAdmin() && item != Phonebook::self() && item->user() != Phonebook::self()->user()) {
             if(status == "sysadmin")
                 ui.adminButton->setText(tr("Disable"));
             else
@@ -254,9 +459,32 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         }
     }
 
+    if(item && (Desktop::isAdmin() || group != "none") && (number == 0 || type == "GROUP" || type == "PILOT")) {
+        item->admin = Desktop::isAdmin();
+        item->contactLeader = nullptr;
+        if(group == "admin") {
+            item->contactLeader = Phonebook::self();
+            item->admin = true;
+        }
+        else {
+            auto lead = group.toInt();
+            if(lead > 1 && lead < 999) {
+                auto leader = local[lead];
+                if(leader && !leader->isGroup())
+                    item->contactLeader = leader;
+            }
+        }
+        ui.profileStack->setCurrentWidget(ui.memberPage);
+        ui.memberPage->setEnabled(true);
+        if(Desktop::isAdmin())
+            ui.groupAdmin->setVisible(true);
+        else
+            ui.groupAdmin->setVisible(false);
+    }
+
     if(!item) {
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi, info) VALUES(?,?,?,?,?,?,?,?,?);", {
-                              number, QString::number(number), type, display, user, uri, mailto, puburi, info});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi, sync, info) VALUES(?,?,?,?,?,?,?,?,?,?);", {
+                              number, QString::number(number), type, display, user, uri, mailto, puburi, sync, info});
         auto query = storage->getRecords("SELECT * FROM Contacts WHERE extension=?;", {
                                              number});
         if(query.isActive() && query.next()) {
@@ -278,8 +506,29 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         item->contactUri = uri.toUtf8();
         item->contactPublic = puburi.toUtf8();
         item->authUserId = user.toLower();
-        storage->runQuery("UPDATE Contacts SET display=?, user=?, uri=?, mailto=?, puburi=?, info=? WHERE extension=?;", {
-                              display, user, uri, mailto, puburi, info, number});
+        item->contactType = type;
+        item->contactCreated = sync;
+
+        storage->runQuery("UPDATE Contacts SET display=?, user=?, type=?, uri=?, mailto=?, puburi=?, sync=?, info=? WHERE (extension=?);", {
+                              display, user, type, uri, mailto, puburi, sync, info, number});
+
+        if(type == "GROUP" || type == "PILOT" || number == 0)
+            item->group = true;
+        else
+            item->group = false;
+
+        item->contactMembers.clear();
+        if(item->group && !members.isEmpty()) {
+            auto list = members.split(",");
+            foreach(auto member, list) {
+                int mid = member.toInt();
+                if(mid < 1 || mid > 999)
+                    continue;
+                auto contact = local[mid];
+                if(contact  && !contact->hidden)
+                    item->contactMembers << contact;
+            }
+        }
 
         if(item->hidden)
             item->hidden = false;
@@ -296,6 +545,120 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     return item;
 }
 
+bool MemberDelegate::eventFilter(QObject *list, QEvent *event)
+{
+    switch(event->type()) {
+    case QEvent::MouseButtonRelease: {
+        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto index = ui.memberList->indexAt(mpos);
+        auto number = index.data(MemberModel::DisplayNumber).toInt();
+        auto extension = index.data(MemberModel::DisplayNumber).toString();
+        auto separator = index.data(MemberModel::DisplaySeparator).toBool();
+        UString reason;
+
+        if(!ui.memberList->isEnabled())
+            break;
+
+        if(number < 1 || number > 999 || local[number] == nullptr || local[number]->isGroup())
+            break;
+
+        auto item = local[number];
+        auto height = ui.memberList->visualRect(index).height();
+        if(separator) {
+            mpos.ry() -= 8;
+            height -= 8;
+        }
+        auto image = QRect(0, 0, height, height);
+        mpos -= ui.memberList->visualRect(index).topLeft();
+        if(!image.contains(mpos))
+            break;
+
+        auto members = index.data(MemberModel::DisplayMembers).toStringList();
+        auto notify = members;
+        auto phonebook = Phonebook::instance();
+        int pos = members.indexOf(extension);
+        if(pos > -1) {
+            members.takeAt(pos);
+            reason = "removing @" + UString::number(number) + " " + item->display() + " from group";
+        }
+        else {
+            notify << extension;
+            members << extension;
+            reason = "adding @" + UString::number(number) + " " + item->display() + " to group";
+        }
+        qDebug() << "GROUP MEMBER" << members.join(",");
+        phonebook->changeMembership(activeItem, members.join(","), notify.join(","), reason);
+        ui.memberPage->setEnabled(false);
+        break;
+    }
+    default:
+        break;
+    }
+    return QStyledItemDelegate::eventFilter(list, event);
+}
+
+
+QSize MemberDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
+{
+    auto extension = index.data(MemberModel::DisplayNumber).toString();
+    auto separator = index.data(MemberModel::DisplaySeparator).toBool();
+
+    if(extension.isEmpty())
+        return {0, 0};
+    auto offset = 0;
+    if(separator)
+        offset += 8;
+    return {style.rect.width(), cellHeight + offset};
+}
+
+void MemberDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
+{
+    auto extension = index.data(MemberModel::DisplayNumber).toString();
+    auto display = index.data(MemberModel::DisplayName).toString();
+    auto online = index.data(MemberModel::DisplayOnline).toBool();
+    auto suspended = index.data(MemberModel::DisplaySuspended).toBool();
+    auto pos = style.rect.bottomLeft();
+    auto model = dynamic_cast<const MemberModel*>(index.model());
+    auto width = style.rect.width() - 32;
+
+    if(model->isAdmin()) {
+        auto pen = painter->pen();
+        auto render = painter->renderHints();
+        QRect image = style.rect;
+        if(model->isSeparator(index))
+            image.setY(image.y() + 8);
+
+        image.setTop(image.top() + 4);
+        image.setLeft(image.left() + 4);
+        image.setHeight(image.height() - 4);
+        image.setWidth(image.height());
+        painter->setPen(QColor("gray"));
+        painter->setRenderHint(QPainter::Antialiasing);
+        if(model->isMember(index))
+            delIcon.paint(painter, image);
+        else
+            addIcon.paint(painter, image);
+        painter->drawEllipse(image);
+        pos.rx() += 20;
+        width -= 20;
+        painter->setPen(pen);
+        painter->setRenderHints(render);
+    }
+
+    pos.ry() -= cellLift;
+    auto pen = painter->pen();
+    if(suspended)
+        painter->setPen(QColor("red"));
+    else if(online)
+        painter->setPen(QColor("green"));
+    painter->drawText(pos, extension);
+    painter->setPen(pen);
+    pos.rx() += 32;
+    auto metrics = painter->fontMetrics();
+    auto text = metrics.elidedText(display, Qt::ElideRight, width);
+    painter->drawText(pos, text);
+}
+
 QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     Q_UNUSED(style);
@@ -303,7 +666,7 @@ QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelInd
     auto row = index.row();
     auto rows = highest + 1;
 
-    if(row == highest + 1 && Desktop::isAdmin())
+    if(row > highest && Desktop::isAdmin())
         return {ui.contacts->width(), cellHeight - cellLift};
 
     if(row < 0 || row >= rows)
@@ -329,24 +692,38 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
 
     auto item = local[index.row()];
     auto pos = style.rect.bottomLeft();
+    auto row = index.row();
 
     if(item && item == clickedItem && index.row()) {
         painter->fillRect(style.rect, QColor(CONST_CLICKCOLOR));
         clickedItem = nullptr;
     }
 
-    if(index.row() == highest + 1) {
+    if(row == highest + 1) {
         QRect image = style.rect;
         image.setTop(image.top() + 3);
         image.setWidth(image.height());
-        auto icon = QIcon(":/icons/add.png");
-        icon.paint(painter, image);
+        addIcon.paint(painter, image);
         pos.rx() += 32;
         painter->drawText(pos, tr("Add..."));
     }
+    else if(row == highest + 2) {
+        QRect image = style.rect;
+        image.setTop(image.top() + 3);
+        image.setWidth(image.height());
+        newIcon.paint(painter, image);
+        pos.rx() += 32;
+        painter->drawText(pos, tr("Add Group..."));
+    }
     else if(item) {
         pos.ry() -= cellLift;  // off bottom
+        auto pen = painter->pen();
+        if(item->suspended)
+            painter->setPen(QColor("red"));
+        else if(item->online)
+            painter->setPen(QColor("green"));
         painter->drawText(pos, item->textNumber);
+        painter->setPen(pen);
         pos.rx() += 32;
         int width = style.rect.width() - 32;
         auto metrics = painter->fontMetrics();
@@ -366,6 +743,12 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     ui.setupUi(static_cast<QWidget *>(this));
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.contact->setVisible(false);
+    ui.logoButton->setVisible(false);
+    ui.logoText->setVisible(false);
+
+    addIcon = QIcon(":/icons/add.png");
+    delIcon = QIcon(":/icons/del.png");
+    newIcon = QIcon(":/icons/newgroup.png");
 
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Phonebook::search);
     connect(Toolbar::search(), &QLineEdit::textEdited, this, &Phonebook::filterView);
@@ -378,7 +761,19 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     connect(ui.noworld, &QPushButton::pressed, this, &Phonebook::demoteLocal);
     connect(this, &Phonebook::changeSessions, sessions, &Sessions::changeSessions);
 
-    connect(ui.contacts, &QListView::doubleClicked, this, [=](const QModelIndex& index){
+    connect(ui.removeGroup, &QPushButton::pressed, this, [=] {
+       if(!activeItem)
+           return;
+       control->openDelAuth(activeItem->user());
+    });
+
+    connect(ui.removeButton, &QPushButton::pressed, this, [=] {
+        if(!activeItem)
+            return;
+        control->openDelAuth(activeItem->user());
+    });
+
+    connect(ui.contacts, &QListView::doubleClicked, this, [=](const QModelIndex& index) {
         auto row = index.row();
         if(row < 0 || row > highest)
             return;
@@ -387,7 +782,14 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
         if(!item)
             return;
 
-        sessions->activateContact(item);
+        QTimer::singleShot(CONST_CLICKTIME, this, [=] {
+            sessions->activateContact(item);
+        });
+    });
+
+    connect(desktop, &Desktop::changeListener, this, [this](Listener *listener) {
+        Q_ASSERT(listener != nullptr);
+        connect(listener, &Listener::changeStatus, this, &Phonebook::changeStatus);
     });
 
     connect(ui.sessionButton, &QPushButton::pressed, this, [=] {
@@ -402,7 +804,10 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
 
     ContactItem::purge();
     localPainter = new LocalDelegate(this);
+    memberPainter = new MemberDelegate(this);
     ui.contacts->setItemDelegate(localPainter);
+    ui.memberList->setItemDelegate(memberPainter);
+    ui.memberList->viewport()->installEventFilter(memberPainter);
 }
 
 void Phonebook::setWidth(int width)
@@ -446,6 +851,18 @@ void Phonebook::filterView(const QString& selected)
     ui.contacts->scrollToTop();
 }
 
+void Phonebook::changeMembership(ContactItem *item, const UString& members, const UString& notify, const UString& reason)
+{
+    if(!item || !connector)
+        return;
+
+    auto admin = item->groupAdmin();
+    if(admin)
+        connector->changeMemebership(item->uri(), members, UString::number(admin->number()), notify, reason);
+    else
+        connector->changeMemebership(item->uri(), members, "", notify, reason);
+}
+
 void Phonebook::promoteRemote()
 {
     if(!activeItem)
@@ -478,6 +895,7 @@ void Phonebook::promoteRemote()
     ui.behaviorGroup->setEnabled(false);
     ui.forwardGroup->setEnabled(false);
     ui.profileStack->setEnabled(false);
+    clearGroup();
 }
 
 void Phonebook::demoteLocal()
@@ -512,6 +930,7 @@ void Phonebook::demoteLocal()
     ui.behaviorGroup->setEnabled(false);
     ui.forwardGroup->setEnabled(false);
     ui.profileStack->setEnabled(false);
+    clearGroup();
 }
 
 void Phonebook::changeProfile()
@@ -523,6 +942,7 @@ void Phonebook::changeProfile()
         desktop->errorMessage(tr("Cannot modify this contact"));
         ui.displayName->setText(activeItem->display());
         ui.emailAddress->setText(activeItem->mailTo());
+        ui.since->setText(activeItem->sync().date().toString(Qt::DefaultLocaleShortDate));
         return;
     }
 
@@ -548,6 +968,7 @@ void Phonebook::changeProfile()
     ui.behaviorGroup->setEnabled(false);
     ui.forwardGroup->setEnabled(false);
     ui.profileStack->setEnabled(false);
+    clearGroup();
 }
 
 void Phonebook::updateProfile(ContactItem *item)
@@ -558,6 +979,7 @@ void Phonebook::updateProfile(ContactItem *item)
     auto type = item->type().toLower();
     ui.displayName->setText(item->display());
     ui.emailAddress->setText(item->mailTo());
+    ui.since->setText(activeItem->sync().date().toString(Qt::DefaultLocaleShortDate));
     if(type == "group" || type == "system")
         ui.avatarButton->setIcon(QIcon(":/icons/group.png"));
     else if(type == "device" || type == "phone")
@@ -606,19 +1028,30 @@ void Phonebook::updateProfile(ContactItem *item)
     }
 
     ui.profileStack->setEnabled(true);
-    if(item == self())
+    if(item == self() || item->isGroup()) {
+        ui.behaviorGroup->setVisible(false);
         ui.behaviorGroup->setEnabled(false);
-    else
+    }
+    else {
+        ui.behaviorGroup->setVisible(true);
         ui.behaviorGroup->setEnabled(true);
+    }
 }
 
 void Phonebook::selectContact(const QModelIndex& index)
 {
     ui.profileStack->setCurrentWidget(ui.blankPage);
+    clearGroup();
+
     auto row = index.row();
 
     if(row == highest + 1) {
         Desktop::instance()->openAddUser();
+        return;
+    }
+
+    if(row == highest + 2) {
+        Desktop::instance()->openNewGroup();
         return;
     }
 
@@ -630,10 +1063,24 @@ void Phonebook::selectContact(const QModelIndex& index)
     if(!item)
         return;
 
+    if(item == self() || item->isGroup())
+        ui.behaviorGroup->setVisible(false);
+    else
+        ui.behaviorGroup->setEnabled(true);
+
+    if(connector) {
+        ui.behaviorGroup->setEnabled(true);
+        ui.forwardGroup->setEnabled(true);
+    }
+    else {
+        ui.behaviorGroup->setEnabled(false);
+        ui.forwardGroup->setEnabled(false);
+    }
+
     activeItem = clickedItem = item;
     updateProfile(item);
     localModel->clickContact(row);
-    if(connector && activeItem->number() > 0) {
+    if(connector && activeItem->number() > -1) {
         // make sure we have current profile...
         desktop->statusMessage(tr("Updating profile"));
         connector->requestProfile(activeItem->uri());
@@ -659,6 +1106,8 @@ void Phonebook::selectContact(const QModelIndex& index)
                 Toolbar::setTitle("#" + number + " \"" + user + "\"");
             else
                 Toolbar::setTitle("@" + number + " \"" + user + "\"");
+            if(activeItem->isOnline())
+                Toolbar::setStyle("color: green;");
         }
     });
 }
@@ -671,12 +1120,53 @@ ContactItem *Phonebook::self()
     return local[me];
 }
 
+ContactItem *Phonebook::find(int extension)
+{
+    if(extension < 0 || extension > 999)
+        return nullptr;
+
+    return local[extension];
+}
+
+void Phonebook::changeStatus(const QByteArray& status, int first, int last)
+{
+    unsigned pos = 0, mask = 1;
+    auto count = first;
+    auto *cp = reinterpret_cast<const unsigned char *>(status.constData());
+    while(count < last) {
+        auto online = (cp[pos] & mask) != 0;
+        if(localModel)
+            localModel->changeOnline(count, online);
+        if(memberModel)
+            memberModel->updateOnline(local[count]);
+
+        if((mask <<= 1) > 128) {
+            mask = 1;
+            ++pos;
+        }
+        ++count;
+    }
+    auto item = activeItem;
+    if(!desktop->isCurrent(this))
+        item = nullptr;
+    if(!item && Sessions::current())
+        item = Sessions::current()->contactItem();
+    if(!item)
+        return;
+    if(item->isOnline())
+        Toolbar::setStyle("color: green;");
+    else
+        Toolbar::setStyle("color: black;");
+}
+
 void Phonebook::changeConnector(Connector *connected)
 {
     connector = connected;
     requestPending = false;
 
     if(connector) {
+        ui.behaviorGroup->setEnabled(true);
+        ui.forwardGroup->setEnabled(true);
         requestPending = true;
         connect(connector, &Connector::changeProfile, this, [=](const QByteArray& json) {
             if(!connector)
@@ -685,6 +1175,7 @@ void Phonebook::changeConnector(Connector *connected)
             auto jdoc = QJsonDocument::fromJson(json);
             desktop->clearMessage();
             updateProfile(localModel->updateContact(jdoc.object()));
+            updateGroup();
         }, Qt::QueuedConnection);
 
         connect(connector, &Connector::changeRoster, this, [=](const QByteArray& json) {
@@ -696,12 +1187,30 @@ void Phonebook::changeConnector(Connector *connected)
 
             auto jdoc = QJsonDocument::fromJson(json);
             auto list = jdoc.array();
+            auto number = 0;
 
+            if(activeItem)
+                number = activeItem->number();
+
+            removes = 0;
             foreach(auto profile, list) {
                 updateProfile(localModel->updateContact(profile.toObject()));
+
+                // cleaner way to get do self remove
+                if(removes < 0) {
+                    emit removeSelf();
+                    return;
+                }
             }
 
-            if(requestPending) {
+            // if active item deleted, reset...
+            if(number > 1 && number <= highest && local[number] == nullptr) {
+                activeItem = nullptr;
+                enter();
+            }
+            updateGroup();
+
+            if(removes || requestPending) {
                 connector->requestPending();
                 requestPending = false;
             }
@@ -720,17 +1229,46 @@ void Phonebook::changeConnector(Connector *connected)
                     connector->requestPending();
             });
         }
+
+        if(activeItem)
+            connector->requestProfile(activeItem->uri());
     }
     else {
         ui.profileStack->setCurrentWidget(ui.blankPage);
+        clearGroup();
         refreshRoster.stop();
+        QByteArray status(((highest - 100) / 8) + 1, 0);
+        changeStatus(status, 100, highest);
+        ui.behaviorGroup->setEnabled(false);
+        ui.forwardGroup->setEnabled(false);
     }
     if(localModel)
         localModel->changeLayout();
 }
 
+void Phonebook::updateGroup()
+{
+    if(ui.profileStack->currentWidget() != ui.memberPage || !activeItem || !activeItem->isGroup()) {
+        clearGroup();
+        return;
+    }
+    memberModel = new MemberModel(activeItem);
+    ui.memberList->setModel(memberModel);
+}
+
+void Phonebook::clearGroup()
+{
+    if(memberModel) {
+        ui.memberList->setModel(nullptr);
+        delete memberModel;
+        memberModel = nullptr;
+    }
+}
+
 void Phonebook::changeStorage(Storage *storage)
 {
+    clearGroup();
+
     if(localModel) {
         delete localModel;
         localModel = nullptr;
@@ -755,6 +1293,19 @@ void Phonebook::changeStorage(Storage *storage)
     }
 
     ui.contacts->setModel(localModel);
+}
+
+void Phonebook::remove(ContactItem *item)
+{
+    Q_ASSERT(item != nullptr);
+    auto number = item->number();
+    if(number > 0) {
+        if(memberModel)
+            memberModel->remove(item);
+    }
+    if(localModel)
+        localModel->remove(number);
+    ContactItem::removeIndex(item);
 }
 
 bool Phonebook::event(QEvent *event)
@@ -802,5 +1353,4 @@ bool Phonebook::event(QEvent *event)
     }
     return QWidget::event(event);
 }
-
 

@@ -130,3 +130,10 @@ unsigned Util::untilTomorrow(const QDateTime& when)
     return static_cast<unsigned>(86400 - (secs % 86400l));
 }
 
+qlonglong Util::timestampKey(const QDateTime& when, unsigned sequence)
+{
+    auto secs = when.toMSecsSinceEpoch() / 1000l;
+    secs *= 10000;
+    secs += (sequence % 10000);
+    return secs;
+}

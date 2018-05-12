@@ -15,45 +15,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADDUSER_HPP_
-#define ADDUSER_HPP_
+#ifndef DELAUTH_HPP_
+#define DELAUTH_HPP_
 
 #include <QDialog>
 
 #include "../Desktop/desktop.hpp"
 
-class AddUser final : public QDialog
+class DelAuth final : public QDialog
 {
     Q_OBJECT
-    Q_DISABLE_COPY(AddUser)
+    Q_DISABLE_COPY(DelAuth)
 
 public:
-    AddUser(Desktop *parent, Connector *connection);
+    DelAuth(Desktop *desktop, Connector *connection, const QString &id);
 
 private:
-    QString realm, digest;
     Connector *connector;
 
     void closeEvent(QCloseEvent *event) final;
 
 signals:
     void error(const QString& text);
-
-private slots:
-    void changedAuth(const QString& text);
-    void secretChanged(const QString& text);
-    void add();
 };
 
 /*!
- * Ui AddUser dialog.
- * \file AddUser.hpp
+ * Ui Delete authorization dialog.
+ * \file delauth.hpp
  */
 
 /*!
- * \class AddUser
- * \brief implements creating user and extension.
- * This is used to create a new user on the server.
+ * \class DelAuth
+ * \brief implements delete authorization dialog
+ * This is used to delete an authorizing id on the client and server.
  * \author David Sugar <tychosoft@gmail.com>
  */
 

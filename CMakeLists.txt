@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(SipWitchQt VERSION 0.2.3 LANGUAGES CXX)
+project(SipWitchQt VERSION 0.2.4 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017")
 

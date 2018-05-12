@@ -33,10 +33,33 @@ Options::Options(Desktop *control) :
 QWidget(), desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
+    ui.appearance->setCurrentText(desktop->appearance());
 
-//    connect(ui.resetButton, &QPushButton::pressed, control, &Desktop::doTheLogout);
+    int expireValue = 60;
+    int currentExpiration = desktop->expiration();
+    switch (currentExpiration / expireValue) {
+    case 3:
+        ui.expires->setCurrentIndex(0);
+        break;
+    case 10:
+        ui.expires->setCurrentIndex(1);
+        break;
+    case 1440:
+        ui.expires->setCurrentIndex(2);
+        break;
+    case 10080:
+        ui.expires->setCurrentIndex(3);
+        break;
+    case 20160:
+        ui.expires->setCurrentIndex(4);
+        break;
+    case 43200:
+        ui.expires->setCurrentIndex(5);
+        break;
+    default:
+        break;
+    }
 
-//    connect(ui.fontSize, &QComboBox::currentTextChanged, control, &Desktop::changeFontValue);
     connect(ui.listDevices, &QPushButton::clicked, control, &Desktop::openDeviceList);
     connect(ui.ExportDb,&QPushButton::clicked,control,&Desktop::exportDb);
     connect(ui.ImportDb,&QPushButton::clicked,control,&Desktop::importDb);
@@ -45,6 +68,7 @@ QWidget(), desktop(control)
     connect(ui.confirm, &QLineEdit::textChanged, this, &Options::secretChanged);
     connect(ui.secret, & QLineEdit::textChanged, this, &Options::secretChanged);
     connect(ui.changeSecret, &QPushButton::clicked, this, &Options::changePassword);
+    connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
 
     connect(ui.secret, &QLineEdit::returnPressed, this, []{
         if(!ui.secret->text().isEmpty())
@@ -58,8 +82,7 @@ QWidget(), desktop(control)
             changePassword();
     });
 
-    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex){
-
+    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex) {
         int expiration = 86400;
         if (expiresIndex == "3 min")
         {
@@ -87,6 +110,9 @@ QWidget(), desktop(control)
             desktop->changeExpiration(expiration);
         }
 
+        auto toolbar = Toolbar::instance();
+        toolbar->noSearch();
+        toolbar->noSession();
     });
 
     connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind){
@@ -118,48 +144,9 @@ void Options::enter()
     auto storage = Storage::instance();
     Q_ASSERT(storage != nullptr);
 
-    ui.appearance->setCurrentText(desktop->appearance());
-
     auto creds = storage->credentials();
     ui.confirm->setText("");
     ui.secret->setText("");
-
-    /* Need explanation I think we are removing this not functional
-    // part of code later as we will have different expiration options
-    // that will work*/
-    int expireValue = 60;
-    int currentExpiration = desktop->expiration();
-    switch (currentExpiration / expireValue) {
-    case 3:
-        ui.expires->setCurrentIndex(0);
-        break;
-    case 10:
-        ui.expires->setCurrentIndex(1);
-        break;
-    case 1440:
-        ui.expires->setCurrentIndex(2);
-        break;
-    case 10080:
-        ui.expires->setCurrentIndex(3);
-        break;
-    case 20160:
-        ui.expires->setCurrentIndex(4);
-        break;
-    case 43200:
-        ui.expires->setCurrentIndex(5);
-        break;
-    default:
-        break;
-
-}
-//    QString expires = QString (desktop->expiration());
-//    desktop->changeExpiration(expires);
-
-//    ui.expires->setCurrentIndex(expiresIndex);
-
-    connect(ui.appearance, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeAppearance);
-
-//    connect(ui.expires, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), desktop, &Desktop::changeExpiration);
 }
 
 void Options::fontDialog()

@@ -59,6 +59,7 @@ public:
     UString unquote(const char *qc = "\"") const;
     UString quote(const char *qc = "\"") const;
     UString escape() const;
+    UString unescape() const;
     bool isQuoted(const char *qc = "\"") const;
 
     static UString number(int num, int base = 10) {

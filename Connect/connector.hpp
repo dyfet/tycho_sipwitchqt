@@ -47,7 +47,9 @@ public:
     void requestRoster();
     void requestPending();
     void requestDeviceList();
+    void requestDeauthorize(const UString& to);
     void createAuthorize(const UString& to, const QByteArray& body);
+    void changeMemebership(const UString& to, const UString& members, const UString& admin, const UString& notify, const UString& reason);
     void sendProfile(const UString& to, const QByteArray& body);
     bool sendText(const UString& to, const UString& body, const UString &subject = "None");
 
@@ -71,6 +73,7 @@ private:
     void processProfile(eXosip_event_t *event);
     void processPending(eXosip_event_t *event);
     void processDeviceList(eXosip_event_t *event);
+    void processDeauthorize(eXosip_event_t *event);
 
 signals:
     void starting();
@@ -83,6 +86,7 @@ signals:
     void changeRoster(const QByteArray& json);
     void changeProfile(const QByteArray& json);
     void changeDeviceList(const QByteArray& json);
+    void deauthorizeUser(const UString& id);
 
 private slots:
 	void run();
