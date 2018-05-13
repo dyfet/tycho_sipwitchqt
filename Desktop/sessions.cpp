@@ -502,7 +502,6 @@ void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     painter->setPen(QColor("red"));
     painter->drawText(pos, unreadText);
     painter->setPen(pen);
-
 }
 
 Sessions::Sessions(Desktop *control) :
@@ -611,7 +610,6 @@ void Sessions::setWidth(int width)
 
     ui.sessions->setMaximumWidth(width);
     elideWidth = width - 20;
-    qDebug() << "SELF NAME" << selfName;
     setSelf(selfName);
 }
 

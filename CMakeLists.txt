@@ -59,7 +59,7 @@ elseif(APPLE)
 
     set(DESKTOP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.icns")
     set(DESKTOP_NAME  "SipWitchQt Desktop")
-    set(MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/desktop.plist")
+    set(DESKTOP_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/desktop.plist.in")
     set(MACOSX_BUNDLE_ICON_FILE "logo.icns")
     set(MACOSX_BUNDLE_DISPLAY_NAME "SipWitchQt Desktop")
     set(MACOSX_BUNDLE_INFO_STRING "SipWitchQt Desktop - Version ${PROJECT_VERSION}")
@@ -178,7 +178,7 @@ add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${c
 target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
 set_target_properties(desktop-app PROPERTIES
     OUTPUT_NAME "${DESKTOP_NAME}"
-    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/desktop.plist.in"
+    MACOSX_BUNDLE_INFO_PLIST "${DESKTOP_PLIST}"
 )
 
 add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc})
