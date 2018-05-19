@@ -318,6 +318,7 @@ public:
     }
 
     static ContactItem *self();
+    static ContactItem *oper();
     static ContactItem *find(int extension);
 
 private:

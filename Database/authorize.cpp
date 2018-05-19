@@ -394,7 +394,7 @@ void Authorize::removeAuthorization(const Event& ev)
     auto created = authinfo.value("created").toDateTime();
     runQuery("DELETE FROM Authorize WHERE (authname=?);", {auth});
 
-    auto query = getRecords("SELECT * FROM Endpoints;");
+    auto query = getRecords("SELECT * FROM Endpoints WHERE label != 'NONE';");
     while(query.isActive() && query.next()) {
         auto record = query.record();
         auto endpoint = record.value("endpoint").toLongLong();

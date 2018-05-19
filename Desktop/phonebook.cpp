@@ -761,6 +761,10 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     connect(ui.noworld, &QPushButton::pressed, this, &Phonebook::demoteLocal);
     connect(this, &Phonebook::changeSessions, sessions, &Sessions::changeSessions);
 
+    connect(desktop, &Desktop::logout, this, [this] {
+        activeItem = clickedItem = nullptr;
+    });
+
     connect(ui.removeGroup, &QPushButton::pressed, this, [=] {
        if(!activeItem)
            return;
@@ -1110,6 +1114,11 @@ void Phonebook::selectContact(const QModelIndex& index)
                 Toolbar::setStyle("color: green;");
         }
     });
+}
+
+ContactItem *Phonebook::oper()
+{
+    return local[0];
 }
 
 ContactItem *Phonebook::self()

@@ -232,6 +232,7 @@ signals:
     void changeStorage(Storage *state);
     void changeSelf(const QString& text);
     void changeFont();
+    void logout();
 
 public slots:
     void openDeviceList();

@@ -44,7 +44,7 @@ static QList<QString> dayOfWeek;
 static QList<QString> monthOfYear;
 static QString dayToday, dayYesterday;
 static QColor userColor(120, 0, 120);
-static QColor selfColor(16, 120, 64);
+static QColor selfColor(16, 0, 192);
 static QColor groupColor(0, 64, 120);
 static QColor searchColor(240, 240, 0);
 static QColor urlColor(0, 0, 240);

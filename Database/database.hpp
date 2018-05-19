@@ -67,6 +67,7 @@ public:
 private:
     static const int interval = 10000;
 
+    QString operatorPolicy, operatorDisplay;
     QSqlDatabase db;
     QSqlRecord dbConfig;
     QTimer dbTimer;
