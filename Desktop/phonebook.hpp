@@ -107,6 +107,10 @@ public:
         return extendedInfo;
     }
 
+    QString topic() const {
+        return contactTopic;
+    }
+
     QString dialed() const {
         return textNumber;
     }
@@ -194,10 +198,10 @@ private:
     SessionItem *session;
     UString displayName, contactUri, contactTimestamp, contactType;
     UString contactPublic, contactEmail;
-    QString contactFilter, textDisplay, textNumber, authUserId;
+    QString contactFilter, contactTopic, textDisplay, textNumber, authUserId;
     QString extendedInfo;
-    QDateTime contactCreated, contactUpdated;
-    int contactSequence;
+    QDateTime contactCreated, contactUpdated, topicUpdated;
+    int contactSequence, topicSequence;
     QByteArray publicKey;
     KeyVerification keyVerify;
     bool group, added, hidden, admin, online, suspended;

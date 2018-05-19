@@ -119,6 +119,7 @@ private slots:
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& auth, qlonglong endpoint);
+    void changeTopic(const Event& ev);
     void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);
     void changePending(qlonglong endpoint);

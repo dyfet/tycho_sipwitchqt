@@ -76,6 +76,7 @@ signals:
     void sendRoster(const Event& ev, qlonglong endpoint);
     void sendDevlist(const Event& ev);
     void changeProfile(const Event& ev, const UString& authorized, qlonglong endpoint);
+    void changeTopic(const Event& ev);
     void changeMembership(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void removeAuthorize(const Event& ev);
@@ -85,6 +86,7 @@ signals:
 public slots:
     void sendMessage(qlonglong endpoint, const QVariantHash& data);
     void ackPending(const Event& ev);
+    void requestTopic(const Event& ev);
     void requestRoster(const Event& ev);
     void requestProfile(const Event& ev);
     void requestDevlist(const Event& ev);

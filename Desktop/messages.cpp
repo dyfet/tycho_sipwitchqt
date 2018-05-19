@@ -63,7 +63,7 @@ static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userCo
 static QList<QPair<QRegularExpression, TextFormat>> fontMatches = {{findBold, TextFormat::bold}, {findItalic, TextFormat::italic}, {findMono, TextFormat::mono}};
 static int dynamicLine;
 
-MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject) :
+MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject, const QString& type) :
 session(sid)
 {
     if(timestamp.isValid())
@@ -81,10 +81,8 @@ session(sid)
     msgTo = to;
     hidden = false;
 
-    if(subject == SUBJECT_ADMIN) {
-        msgSubject = "Admin";
+    if(type == "text/admin")
         msgType = ADMIN_MESSAGE;
-    }
 
     if(msgFrom->isGroup()) {
         itemColor = groupColor;
@@ -345,8 +343,8 @@ void MessageItem::save()
         break;
     }
 
-    auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext, expires) "
-                      "VALUES(?,?,?,?,?,?,?,?);", {
+    auto mid = storage->insert("INSERT INTO Messages(msgfrom, msgto, sid, seqid, posted, msgtype, msgtext, subject, expires) "
+                      "VALUES(?,?,?,?,?,?,?,?,?);", {
                           msgFrom->uid,
                           msgTo->uid,
                           session->contact->uid,
@@ -354,6 +352,7 @@ void MessageItem::save()
                           dateTime,
                           type,
                           msgBody,
+                          QString::fromUtf8(msgSubject),
                           expires,
     });
     if(!mid.isValid())
@@ -649,8 +648,9 @@ bool MessageModel::add(MessageItem *item)
         beginInsertRows(QModelIndex(), rowFiltered, rowFiltered);
 
     session->messages.insert(rowMessages, item);
-    if(item->subject() != "None" && item->subject() != "Admin")
-        session->topics << item->subject();
+    if(item->type() == MessageItem::ADMIN_MESSAGE && !item->subject().isEmpty()) {
+        session->setTopic(item->subject(), item->posted(), item->sequence());
+    }
     if(!filtered)
         session->filtered.insert(rowFiltered, item);
     if(!fast && rowFiltered < session->filtered.count() - 1)

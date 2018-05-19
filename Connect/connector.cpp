@@ -33,6 +33,7 @@
 #define X_DEVLIST       "X-DEVLIST"
 #define X_PENDING       "X-PENDING"
 #define A_PENDING       "A-PENDING"
+#define X_TOPIC         "X-TOPIC"
 #define X_AUTHORIZE     "X-AUTHORIZE"
 #define X_DEAUTHORIZE   "X-DEAUTHORIZE"
 #define X_MEMBERSHIP    "X-MEMBERSHIP"
@@ -57,6 +58,9 @@
 
 #define MSG_IS_MEMBERSHIP(msg)  (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_MEMBERSHIP))
+
+#define MSG_IS_TOPIC(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_TOPIC))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -183,7 +187,26 @@ void Connector::createAuthorize(const UString& to, const QByteArray& body)
     eXosip_message_send_request(context, msg);
 }
 
-void Connector::changeMemebership(const UString& to, const UString& list, const UString& admin, const UString& notify, const UString& reason)
+void Connector::changeTopic(const UString& to, const UString& subject, const UString& body)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_TOPIC, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "Subject", subject);
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    if(body.size() > 0) {
+        osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
+        osip_message_set_content_type(msg, "text/plain");
+    }
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeMemebership(const UString& to, const UString& subject, const UString& list, const UString& admin, const UString& notify, const UString& reason)
 {
     osip_message_t *msg = nullptr;
     UString sipTo = "<" + to + ">";
@@ -193,6 +216,7 @@ void Connector::changeMemebership(const UString& to, const UString& list, const 
     if(!msg)
         return;
 
+    osip_message_set_header(msg, "Subject", subject);
     osip_message_set_header(msg, "X-Label", serverLabel);
     osip_message_set_header(msg, "X-Group-Member", list);
     osip_message_set_header(msg, "X-Group-Admin", admin);
@@ -325,6 +349,8 @@ void Connector::run()
                 error = event->response->status_code;
             if(event->response && event->response->status_code != SIP_UNAUTHORIZED)
                 qDebug() << "*** REQUEST FAILURE" << event->response->status_code;
+            if(MSG_IS_TOPIC(event->request))
+                emit topicFailed();
             if(MSG_IS_MESSAGE(event->request))
                 emit messageResult(error, QDateTime(), 0);
             if(error != SIP_UNAUTHORIZED) {
@@ -375,6 +401,8 @@ void Connector::run()
                 }
                 break;
             default:
+                if(MSG_IS_TOPIC(event->request))
+                    emit topicFailed();
                 emit statusResult(event->response->status_code, "");
                 qDebug() << "*** ANSWER FAILURE" << event->response->status_code;
                 break;

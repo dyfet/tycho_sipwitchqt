@@ -44,6 +44,12 @@ public:
     SessionItem(ContactItem *contactItem, bool active = false);
     ~SessionItem();
 
+    int number() const {
+        if(!contact)
+            return -1;
+        return contact->number();
+    }
+
     QString display() const {
         if(!contact)
             return callDisplay;
@@ -85,7 +91,9 @@ public:
     }
 
     UString topic() const {
-        return currentTopic;
+        if(contact)
+            return contact->topic();
+        return "None";
     }
 
     QModelIndex lastMessage() const {
@@ -131,6 +139,7 @@ public:
     }
 
     QStringList topicList() {
+        topics.remove("");
         auto list = topics.toList();
         list.sort();
         return list;
@@ -140,6 +149,7 @@ public:
         return unreadCount;
     }
 
+    void setTopic(const QString& topic, const QDateTime& changed = QDateTime::currentDateTime(), int sequence = 0);
     void addMessage(MessageItem *item);
     void clearUnread();
     void clearMessages();
@@ -156,7 +166,6 @@ private:
     int lastSequence;                           // highest sequence
     QString inputText;                          // current input buffer
     QString callDisplay;                        // transitory call name
-    QString currentTopic;                       // can be set...
     QSet<QString> topics;
     int cid, did;                               // exosip call info
     bool saved;                                 // whether uses database...
@@ -260,6 +269,7 @@ public slots:
     void changeSessions(Storage *storage, const QList<ContactItem*>& contacts);
     void activateSession(SessionItem *item);
     void activateContact(ContactItem *item);
+    void changeTopic(const QString& topic);
     void closeSession();
     void clearSessions();
     void activateSelf();
@@ -275,7 +285,7 @@ private slots:
     void changeConnector(Connector *connector);
     void createMessage();
     void checkInput(const QString& text);
-    void receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime &timestamp, int sequence, const UString &subject);
+    void receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime &timestamp, int sequence, const UString &subject, const UString &type);
 };
 
 #endif

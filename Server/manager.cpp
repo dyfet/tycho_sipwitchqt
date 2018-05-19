@@ -179,11 +179,23 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
         return;
     }
     auto context = reg->context();
+    UString type = data["c"].toByteArray();
     UString from = data["f"].toByteArray();
     UString to = data["t"].toByteArray();
     UString route = context->prefix() + reg->route();
     UString display = data["d"].toByteArray();
+    UString topic = data["s"].toByteArray();
     UString label = reg->label();
+
+    if(label == "NONE" && type == "text/admin") {
+        type = "text/plain";
+        topic = "X-Admin";
+    }
+
+    if(label == "NONE" && type != "text/plain") {
+        return;
+    }
+
     // adjusts message from and to based on registering entity delivery
     // context-> message(registry, data)...
 
@@ -201,7 +213,7 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
     to = "<" + to + ">";
 
     QList<QPair<UString,UString>> headers = {
-        {"Subject", data["s"].toByteArray()},
+        {"Subject", topic},
         {"X-MID", data["r"].toString()},
         {"X-EP", QString::number(reg->endpoint())},
         {"X-TS", data["p"].toDateTime().toString(Qt::ISODate)},
@@ -209,7 +221,7 @@ void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
     };
 
     qDebug() << "Sending Message FROM" << from << "TO" << to << "VIA" << route;
-    context->message(from, to, route, headers, data["c"].toByteArray(), data["b"].toByteArray());
+    context->message(from, to, route, headers, type, data["b"].toByteArray());
 }
 
 void Manager::ackPending(const Event& ev)
@@ -337,6 +349,31 @@ void Manager::requestDevlist(const Event& ev)
     }
 
     emit sendDevlist(ev);
+}
+
+void Manager::requestTopic(const Event& ev)
+{
+    qDebug() << "REQUESTING TOPIC FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND TOPIC REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeTopic(ev);
 }
 
 void Manager::requestMembership(const Event& ev)
