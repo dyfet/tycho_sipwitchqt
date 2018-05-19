@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
-project(SipWitchQt VERSION 0.2.4 LANGUAGES CXX)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
+endif()
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.4 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017")
 
@@ -36,7 +39,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(DESKTOP_NAME "sipwitchqt-desktop")
 
 if(WIN32)
-    set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt")
+    set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt${CUSTOM_SUFFIX}")
     set(BOOTSTRAP_VENDOR_EXOSIP true)
     set(BOOTSTRAP_EXTERNAL true)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -99,6 +102,28 @@ else()
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(system_libs "${system_libs}" -ltcmalloc_minimal)
     endif()
+endif()
+
+if(CUSTOM_NAME)
+    set(DESKTOP_NAME "${CUSTOM_NAME}")
+    set(PLIST_DISPLAY_NAME "${CUSTOM_NAME}")
+    set(PLIST_BUNDLE_ID "${CUSTOM_ID}")
+    set(CUSTOM_DESKTOP_RESOURCES "Custom/custom.qrc")
+    set(TRANSLATIONS_OUTPUT_DIRECTORY "${PROJECT_ARCHIVE}")
+    set(XDG "Custom")
+    set(ETC "Custom")
+    set(LOGO "Custom/logo.png")
+    add_definitions("-DCUSTOMIZE_DESKTOP")
+else()
+    set(APPLICATION_NAME "${PROJECT_NAME} Desktop")
+    set(APPLICATION_DOMAIN "tychosoft.com")
+    set(APPLICATION_ORG "Tycho Softworks")
+    set(TRANSLATIONS_OUTPUT_DIRECTORY "translations")
+    set(PLIST_DISPLAY_NAME "SipWitchQt Desktop")
+    set(PLIST_BUNDLE_ID "com.tychosoft.sipwitchqt")
+    set(LOGO "Resources/logo.png")
+    set(ETC "etc")
+    set(XDG "xdg")
 endif()
 
 # Debug builds always run in repeatable pre-set configurations for testing
@@ -174,14 +199,14 @@ endif()
 
 set(voip_libs eXosip2 osip2 osipparser2)
 
-add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_src} ${dialogs_hdr} ${dialogs_uic} ${desktop_mm} ${desktop_qm} ${desktop_rc} Resources/desktop.qrc)
+add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_src} ${dialogs_hdr} ${dialogs_uic} ${desktop_mm} ${desktop_qm} ${desktop_rc} ${CUSTOM_DESKTOP_RESOURCES} Resources/desktop.qrc)
 target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
 set_target_properties(desktop-app PROPERTIES
     OUTPUT_NAME "${DESKTOP_NAME}"
     MACOSX_BUNDLE_INFO_PLIST "${DESKTOP_PLIST}"
 )
 
-add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc})
+add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc} ${CUSTOM_SERVER_RESOURCES})
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
 set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
 
@@ -208,7 +233,7 @@ if(BOOTSTRAP_EXTERNAL)
     add_dependencies(eXosip2 openssl)
 endif()
 
-add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in xdg/sipwitchqt.desktop xdg/sipwitchqt.appdata.xml LICENSE ${markdown} etc/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
+add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -224,7 +249,7 @@ endif()
 install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
 install(TARGETS desktop-app DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt.conf"
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
 )
 
@@ -232,12 +257,12 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
-install(FILES ${desktop_qm} DESTINATION "${CMAKE_INSTALL_DATADIR}/translations")
+install(FILES ${desktop_qm} DESTINATION "${CMAKE_INSTALL_DATADIR}/${TRANSLATIONS_OUTPUT_DIRECTORY}")
 
 if(UNIX AND NOT APPLE)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/xdg/sipwitchqt.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.png" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${LOGO}" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
 endif()
