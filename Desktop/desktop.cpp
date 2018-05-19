@@ -526,6 +526,8 @@ void Desktop::eraseLogout()
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
 
+    emit logout();
+
     offlineMode = true;
     settings.setValue("database", "");
     emit changeStorage(nullptr);
@@ -546,6 +548,8 @@ void Desktop::closeLogout()
 {
     Q_ASSERT(dialog != nullptr);
     Q_ASSERT(storage != nullptr);
+
+    emit logout();
 
     offlineMode = true;
     settings.setValue("database", "");

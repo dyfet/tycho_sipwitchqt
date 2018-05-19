@@ -58,7 +58,9 @@ private:
 
 DatabaseEvent::~DatabaseEvent() = default;
 
-static bool failed = false;
+namespace {
+    bool failed = false;
+}
 
 Database *Database::Instance = nullptr;
 
@@ -66,6 +68,7 @@ Database::Database(unsigned order) :
 QObject()
 {
     firstNumber = lastNumber = -1;
+    operatorPolicy = "system";
     dbSequence = 0;
 
     expiresNat = 80;
@@ -548,7 +551,7 @@ void Database::localMessage(const Event& ev)
     qlonglong self = -1, none = -1;
 
     UString to = msg->to->url->username;
-    QList<qlonglong> sendList;  // local endpoints to send to
+    QSet<qlonglong> sendList;  // local endpoints to send to
     QList<int> targets;         // target extension #'s
 
     // if from local extenion, validate it has endpoints, find outbox sync
@@ -606,11 +609,19 @@ void Database::localMessage(const Event& ev)
         return;
     }
 
-    // now convert targets to an endpoint send list...
-    foreach(auto target, targets) {
-        auto query = getRecords("SELECT endpoint FROM Endpoints WHERE extnbr=?;", {target});
+    // if public lobby send to all labelled entities...
+    if(targets.count() == 1 && targets[0] == 0 && operatorPolicy == "public") {
+        auto query = getRecords("SELECT endpoint FROM Endpoints WHERE label != 'NONE';");
         while(query.isActive() && query.next())
             sendList << query.record().value("endpoint").toLongLong();
+    }
+    else {
+        // otherwise convert targets to an endpoint send list...
+        foreach(auto target, targets) {
+            auto query = getRecords("SELECT endpoint FROM Endpoints WHERE extnbr=?;", {target});
+            while(query.isActive() && query.next())
+                sendList << query.record().value("endpoint").toLongLong();
+        }
     }
 
     qDebug() << "*** ENDPOINTS TO PROCESS" << sendList;
@@ -1003,6 +1014,9 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
             }
         }
     }
+    // operators are special...
+    if(target == 0)
+        display = operatorDisplay;
 
     QJsonObject profile {
         {"a", userid},
@@ -1126,6 +1140,7 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
     auto query = getRecords("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname ORDER BY Extensions.extnbr");
     while(query.isActive() && query.next()) {
         auto record = query.record();
+        auto number = record.value("extnbr").toInt();
         auto name = record.value("authname").toString();
         if(name == "anonymous") // skip anon for roster
             continue;
@@ -1140,6 +1155,14 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
         if(display.isEmpty())
             display = record.value("authname").toString();
 
+        // operators are special
+        if(number == 0) {
+            if(operatorPolicy == "public")
+                display = "Lobby";
+            else
+                display = "Operators";
+        }
+
         QString puburi;
         if(record.value("authaccess").toString() == "REMOTE")
             puburi = name + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
@@ -1148,7 +1171,7 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
         QJsonObject profile {
             {"a", name},
             {"c", created},
-            {"n", record.value("extnbr").toInt()},
+            {"n", number},
             {"u", QString::fromUtf8(uri)},
             {"d", display},
             {"t", record.value("authtype").toString()},
@@ -1173,6 +1196,7 @@ void Database::onTimeout()
 
 void Database::applyConfig(const QVariantHash& config)
 {
+    operatorPolicy = config["operators"].toString().toLower();
     dbRealm = config["realm"].toString();
     dbName = config["database/name"].toString();
     dbHost = config["database/host"].toString();
@@ -1182,6 +1206,16 @@ void Database::applyConfig(const QVariantHash& config)
     dbDriver = config["database"].toString();
     dbUuid = Server::uuid();
     failed = false;
+
+    if(operatorPolicy == "private") {
+        operatorDisplay = tr("Foyer");
+        operatorPolicy = "public";
+    }
+    else if(operatorPolicy == "public") {
+        operatorDisplay = tr("Lobby");
+    }
+    else
+        operatorDisplay = tr("Operators");
 
     if(dbUser.isEmpty())
         dbUser = config["database/user"].toString();

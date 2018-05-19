@@ -18,31 +18,28 @@
 #include "storage.hpp"
 #include <QFileInfo>
 #include <QDebug>
+#include <QStandardPaths>
 #include <QCryptographicHash>
 #include <QDateTime>
 //#include <QSettings>
 
+namespace {
 #ifdef DESKTOP_PREFIX
-
-static QString storagePath(const QString& dbName)
-{
-    return QString(DESKTOP_PREFIX) + "/" + dbName + ".db";
-}
-
+    QString storagePath(const QString& dbName)
+    {
+        return QString(DESKTOP_PREFIX) + "/" + dbName + ".db";
+    }
 #else
+    QString storagePath(const QString& dbName)
+    {
+        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+        if(path.isEmpty())
+            return dbName + ".db";
 
-#include <QStandardPaths>
-
-static QString storagePath(const QString& dbName)
-{
-    auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-    if(path.isEmpty())
-        return dbName + ".db";
-
-    return path + "/" + dbName + ".db";
-}
-
+        return path + "/" + dbName + ".db";
+    }
 #endif
+}
 //#if defined(DESKTOP_PREFIX)
 //#define CONFIG_FROM DESKTOP_PREFIX "/settings.cfg", QSettings::IniFormat
 //#endif
@@ -121,6 +118,9 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "sync DATETIME DEFAULT 0,"              // used for deletion sync
             "last DATETIME DEFAULT 0,"
             "info TEXT DEFAULT '',"
+            "topic VARCHAR(64) DEFAULT 'None',"       // current topic in session
+            "tsync DATETIME DEFAULT 0,"              // when topic last changed
+            "tseq INTEGER DEFAULT 0,"               // sequence of topic change
             "pubkey BLOB DEFAULT NULL,"
             "verify INTEGER DEFAULT 0,"             // key verification state
             "coverage INTEGER DEFAULT -1,"

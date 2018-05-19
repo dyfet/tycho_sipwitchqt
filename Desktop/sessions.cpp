@@ -647,6 +647,10 @@ void Sessions::enter()
     Toolbar::search()->setEnabled(true);
     mousePressed = false;
     ui.separator->setStyleSheet(QString());
+    auto oper = Phonebook::oper();
+
+    if(!activeItem && oper && oper->display() == "Lobby")
+        activateContact(oper);
 
     if(activeItem) {
         auto toolbar = Toolbar::instance();
@@ -790,6 +794,7 @@ void Sessions::activateSession(SessionItem* item)
     activeItem = item;
     ui.messages->setModel(item->model());
     ui.inputFrame->setVisible(true);
+    ui.toolFrame->setVisible(false);
     ui.input->setText(item->text());
     ui.input->setFocus();
     activeItem->filtered = activeItem->messages;
