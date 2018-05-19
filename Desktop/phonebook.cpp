@@ -53,6 +53,7 @@ ContactItem::ContactItem(const QSqlRecord& record)
     contactUpdated = record.value("last").toDateTime();
     contactTimestamp = contactUpdated.toString(Qt::ISODate);
     contactSequence = record.value("sequence").toInt();
+    contactTopic = record.value("topic").toString();
     contactType = record.value("type").toString();
     contactUri = record.value("uri").toString().toUtf8();
     contactPublic = record.value("puburi").toString().toUtf8();
@@ -63,6 +64,8 @@ ContactItem::ContactItem(const QSqlRecord& record)
     authUserId = record.value("user").toString().toLower();
     extendedInfo = record.value("info").toString();
     publicKey = record.value("pubkey").toByteArray();
+    topicUpdated = record.value("tsync").toDateTime();
+    topicSequence = record.value("tseq").toInt();
     uid = record.value("uid").toInt();
     index[uid] = this;
 }
@@ -750,6 +753,8 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     delIcon = QIcon(":/icons/del.png");
     newIcon = QIcon(":/icons/newgroup.png");
 
+    connector = nullptr;
+
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Phonebook::search);
     connect(Toolbar::search(), &QLineEdit::textEdited, this, &Phonebook::filterView);
     connect(desktop, &Desktop::changeStorage, this, &Phonebook::changeStorage);
@@ -862,9 +867,9 @@ void Phonebook::changeMembership(ContactItem *item, const UString& members, cons
 
     auto admin = item->groupAdmin();
     if(admin)
-        connector->changeMemebership(item->uri(), members, UString::number(admin->number()), notify, reason);
+        connector->changeMemebership(item->uri(), item->topic().toUtf8(), members, UString::number(admin->number()), notify, reason);
     else
-        connector->changeMemebership(item->uri(), members, "", notify, reason);
+        connector->changeMemebership(item->uri(), item->topic().toUtf8(), members, "", notify, reason);
 }
 
 void Phonebook::promoteRemote()

@@ -41,6 +41,9 @@
 #define MSG_IS_MEMBERSHIP(msg)  (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-MEMBERSHIP"))
 
+#define MSG_IS_TOPIC(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-TOPIC"))
+
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-DEVLIST"))
 
@@ -209,6 +212,7 @@ void Context::run()
         connect(this, &Context::REQUEST_AUTHORIZE, stack, &Manager::requestAuthorize);
         connect(this, &Context::REQUEST_DEAUTHORIZE, stack, &Manager::requestDeauthorize);
         connect(this, &Context::REQUEST_MEMBERSHIP, stack, &Manager::requestMembership);
+        connect(this, &Context::REQUEST_TOPIC, stack, &Manager::requestTopic);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
     }
 
@@ -351,6 +355,18 @@ bool Context::process(const Event& ev)
             if(ev.body().size() > 0)
                 return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
             emit REQUEST_MEMBERSHIP(ev);
+            return false;
+        }
+
+        if(MSG_IS_TOPIC(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_TOPIC(ev);
             return false;
         }
 

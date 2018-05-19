@@ -92,6 +92,7 @@ QObject()
     connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
     connect(manager, &Manager::changeMembership, this, &Database::changeMembership);
+    connect(manager, &Manager::changeTopic, this, &Database::changeTopic);
     connect(manager, &Manager::lastAccess, this, &Database::lastAccess);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
     connect(this, &Database::disconnectEndpoint, manager, &Manager::dropEndpoint);
@@ -487,7 +488,7 @@ bool Database::adminMessage(const Event& event, int to, const QString& msgText, 
     // create datatypes for msg table insertion...
     auto msgFrom = QString::number(from);
     auto msgTo = QString::number(to);
-    auto msgSubject = QString("X-Admin");
+    auto msgSubject = event.subject();
     auto msgType = "admin";
     auto msgPosted = event.timestamp();
     auto msgExpires = event.timestamp();
@@ -520,7 +521,7 @@ bool Database::adminMessage(const Event& event, int to, const QString& msgText, 
     data["f"] = msgFrom.toUtf8();
     data["t"] = to;
     data["d"] = msgDisplay;
-    data["c"] = "text/plain";
+    data["c"] = "text/admin";
     data["b"] = msgText;
     data["s"] = msgSubject;
     data["p"] = msgPosted;
@@ -826,6 +827,68 @@ void Database::changeAuthorize(const Event& event)
         Manager::updateRoster();
     }
     Context::reply(event, SIP_OK);
+}
+
+void Database::changeTopic(const Event& event)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "Changing topic for" << target;
+    if(target < firstNumber || target > lastNumber) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    // find target user...
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+
+    UString text;
+    UString body = event.body();
+    if(body.size() > 0)
+        text = "--- " + body;
+    else
+        text = "--- changing topic to \"" + event.subject() + "\"";
+
+    auto msg = event.sent();
+    if(!msg) {
+        Context::reply(event, SIP_AMBIGUOUS);
+        return;
+    }
+
+    // see if private connection changing topic...
+    auto type = record.value("authtype").toString();
+    if(type != "GROUP" && type != "PILOT") {
+        auto display = record.value("display").toString();
+        auto altDisplay = record.value("fullname").toString();
+        if(altDisplay.isEmpty())
+            altDisplay = record.value("authname").toString();
+        if(display.isEmpty())
+            display = record.value("fullname").toString();
+        if(display.isEmpty())
+            display = record.value("authname").toString();
+        Context::reply(event, SIP_OK);
+        adminMessage(event, target, text, event.number(), display);
+        adminMessage(event, event.number(), text, target, event.display());
+        return;
+    }
+
+    // must be member of group to change topic...
+    auto member = getRecord("SELECT * FROM Groups WHERE (grpnbr=?) AND (extnbr=?);", {target, event.number()});
+    if(member.count() < 1) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    Context::reply(event, SIP_OK);
+    auto members = getRecords("SELECT extnbr FROM Groups WHERE grpnbr=?;", {target});
+    while(members.isActive() && members.next()) {
+        auto record = members.record();
+        auto to = record.value("extnbr").toInt();
+        adminMessage(event, to, text, target, event.display());
+    }
 }
 
 void Database::changeMembership(const Event& event, const UString& authuser, qlonglong endpoint)

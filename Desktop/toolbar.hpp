@@ -35,13 +35,22 @@ class Toolbar final : public QWidget
 public:
     Toolbar(QWidget *parent, QToolBar *bar, QMenuBar *mp = nullptr);
 
+    QString topic() const {
+        return currentTopic;
+    }
+
     void clearSearch();
     void enableSearch();
     void disableSearch();
+    void disableTopics();
+    void enableTopics();
     void hideSearch();
     void noSearch();
     void showSession();
     void noSession();
+    void setOperators();
+    void setTopics(const QString& topic, const QStringList& topics);
+    void newTopics(const QString& topic, const QStringList& topics);
     QString searching();
 
     static inline Toolbar *instance() {
@@ -52,10 +61,6 @@ public:
         return Search;
     }
 
-    static inline QPushButton *close() {
-        return Close;
-    }
-
     static void setTitle(const QString& text);
     static void setStyle(const QString& text);
 
@@ -63,12 +68,16 @@ private:
     QPoint mpos;
     bool moving;
     QMenuBar *menu;
+    QString currentTopic;
 
     static Toolbar *Instance;
     static QLineEdit *Search;
-    static QPushButton *Close;
 
     bool eventFilter(QObject *obj, QEvent *evt) final;
+
+signals:
+    void closeSession();
+    void changeTopic(const QString& text);
 
 public slots:
     void onRefocus();

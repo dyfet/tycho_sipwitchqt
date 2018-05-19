@@ -49,7 +49,8 @@ public:
     void requestDeviceList();
     void requestDeauthorize(const UString& to);
     void createAuthorize(const UString& to, const QByteArray& body);
-    void changeMemebership(const UString& to, const UString& members, const UString& admin, const UString& notify, const UString& reason);
+    void changeTopic(const UString& to, const UString& subject, const UString& body = {});
+    void changeMemebership(const UString& to, const UString& subject, const UString& members, const UString& admin, const UString& notify, const UString& reason);
     void sendProfile(const UString& to, const QByteArray& body);
     bool sendText(const UString& to, const UString& body, const UString &subject = "None");
 
@@ -79,6 +80,7 @@ signals:
     void starting();
 	void finished();
     void failure(int code);
+    void topicFailed();
 
     void statusResult(int status, const QString& text);
     void messageResult(int status, const QDateTime& timestamp, int sequence);

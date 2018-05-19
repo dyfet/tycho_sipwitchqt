@@ -19,12 +19,57 @@
 #include "ui_toolbar.h"
 
 #include <QToolBar>
+#include <QValidator>
 
-static Ui::Toolbar ui;
+namespace {
+
+class ValidateTopic final : public QValidator
+{
+    Q_DISABLE_COPY(ValidateTopic)
+
+public:
+    ValidateTopic(QObject *parent) : QValidator(parent) {}
+
+    State validate(QString& input, int& pos) const final {
+        if(input.length() < 1)
+            return Intermediate;
+
+        if(pos < 0)
+            pos = 0;
+
+        if(pos > input.length() + 1)
+            return Invalid;
+
+        QChar first = input[0], last = input[pos];
+        auto desktop = Desktop::instance();
+        if(pos > 0)
+            last = input[pos - 1];
+
+        if(!first.isLetterOrNumber()) {
+            desktop->warningMessage(tr("Invalid start to topic"), 2000);
+            return Invalid;
+        }
+
+        if(last.isLetterOrNumber()) {
+            desktop->clearMessage();
+            return Acceptable;
+        }
+
+        if(last.isSpace()) {
+            desktop->clearMessage();
+            return Acceptable;
+        }
+
+        desktop->warningMessage(tr("Invalid text in topic"), 2000);
+        return Invalid;
+    }
+};
+
+Ui::Toolbar ui;
+};
 
 Toolbar *Toolbar::Instance = nullptr;
 QLineEdit *Toolbar::Search = nullptr;
-QPushButton *Toolbar::Close = nullptr;
 
 Toolbar::Toolbar(QWidget *parent, QToolBar *bar, QMenuBar *mp) :
 QWidget(parent)
@@ -42,9 +87,84 @@ QWidget(parent)
     ui.searchText->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.searchButton->setVisible(false);
     Search = ui.searchText;
-    Close = ui.closeButton;
 
-    connect(ui.searchButton, &QPushButton::pressed, this, &Toolbar::showSearch);
+    auto topic_validator = new ValidateTopic(this);
+    ui.topicList->setValidator(topic_validator);
+
+    connect(ui.topicList, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), this, [this](const QString& text) {
+        if(ui.topicList->isEnabled() && ui.topicList->isVisible() && !text.isEmpty()) {
+            emit changeTopic(text);
+            ui.topicList->setEnabled(false);
+        }
+    });
+
+    connect(ui.searchButton, &QPushButton::pressed, this, [this] {
+        QTimer::singleShot(CONST_CLICKTIME, this, [this] {
+            showSearch();
+        });
+    });
+
+    connect(ui.topicButton, &QPushButton::pressed, this, [this] {
+        QTimer::singleShot(CONST_CLICKTIME, this, [this] {
+            hideSearch();
+        });
+    });
+
+    connect(ui.closeButton, &QPushButton::pressed, this, [this] {
+        QTimer::singleShot(CONST_CLICKTIME, this, [this] {
+            emit closeSession();
+        });
+    });
+}
+
+void Toolbar::setOperators()
+{
+    ui.topicList->setEnabled(false);
+    ui.topicList->clear();
+    ui.topicList->setVisible(false);
+    showSession();
+    hideSearch();
+}
+
+void Toolbar::setTopics(const QString& topic, const QStringList& topics)
+{
+    ui.topicList->setEnabled(false);
+    ui.topicList->clear();
+    ui.topicList->addItems(topics);
+    int pos = topics.indexOf(topic);
+    if(pos > -1)
+        ui.topicList->setCurrentIndex(pos);
+    else
+        ui.topicList->setCurrentText(topic);
+    currentTopic = topic;
+
+    ui.topicList->setVisible(true);
+    ui.topicList->setEnabled(true);
+    showSession();
+    hideSearch();
+}
+
+void Toolbar::disableTopics()
+{
+    if(ui.topicList->isVisible())
+        ui.topicList->setEnabled(false);
+}
+
+void Toolbar::enableTopics()
+{
+    if(ui.topicList->isVisible())
+        ui.topicList->setEnabled(true);
+}
+
+void Toolbar::newTopics(const QString& topic, const QStringList& topics)
+{
+    if(topic.isEmpty())
+        return;
+
+    if(topic == currentTopic)
+        return;
+
+    setTopics(topic, topics);
 }
 
 void Toolbar::setTitle(const QString& text)
@@ -81,6 +201,8 @@ void Toolbar::showSearch()
     ui.searchFrame->setVisible(true);
     ui.searchButton->setEnabled(false);
     ui.searchButton->setVisible(false);
+    ui.topicButton->setVisible(true);
+    ui.topicList->setVisible(false);
 }
 
 void Toolbar::hideSearch()
@@ -88,6 +210,9 @@ void Toolbar::hideSearch()
     ui.searchFrame->setVisible(false);
     ui.searchButton->setVisible(true);
     ui.searchButton->setEnabled(true);
+    ui.topicButton->setVisible(false);
+    if(ui.topicList->count() > 0)
+        ui.topicList->setVisible(true);
 }
 
 void Toolbar::noSearch()
@@ -98,12 +223,12 @@ void Toolbar::noSearch()
 
 void Toolbar::noSession()
 {
-    ui.closeButton->setVisible(false);
+    ui.sessionFrame->setVisible(false);
 }
 
 void Toolbar::showSession()
 {
-    ui.closeButton->setVisible(true);
+    ui.sessionFrame->setVisible(true);
 }
 
 QString Toolbar::searching()

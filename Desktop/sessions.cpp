@@ -62,6 +62,7 @@ messageModel(nullptr)
     cid = did = -1;
     saved = true;
     unreadCount = 0;
+    topics << "None" << contactItem->topic();    // list seed...
 
     auto number = contactItem->number();
     if(number > -1 && number < 1000)
@@ -134,8 +135,17 @@ void SessionItem::addMessage(MessageItem *msg)
     if(messageModel->add(msg))
         messageModel->fastUpdate();
 
+    if(msg->type() == MessageItem::ADMIN_MESSAGE)
+        setTopic(msg->subject(), msg->posted(), msg->sequence());
+
+    if(!contact)
+        return;
+
     // if fill-in, we can just post and finish...
     if(contact->contactUpdated > msg->posted())
+        return;
+
+    if(contact->contactUpdated == msg->posted() && contact->contactSequence > msg->sequence())
         return;
 
     contact->contactUpdated = msg->posted();
@@ -146,6 +156,30 @@ void SessionItem::addMessage(MessageItem *msg)
     Q_ASSERT(storage != nullptr);
     storage->runQuery("UPDATE Contacts SET last=?, sequence=? WHERE uid=?;", {
                           msg->posted(), msg->sequence(), contact->uid});
+}
+
+void SessionItem::setTopic(const QString& topic, const QDateTime& posted, int sequence)
+{
+    topics << topic;
+    if(!contact)
+        return;
+
+    if(posted < contact->topicUpdated)
+        return;
+
+    if(posted == contact->topicUpdated && sequence <= contact->topicSequence)
+        return;
+
+    contact->contactTopic = topic;
+    contact->topicUpdated = posted;
+    contact->topicSequence = sequence;
+
+    auto storage = Storage::instance();
+    if(!storage)
+        return;
+
+    storage->runQuery("UPDATE Contacts SET topic=?, tsync=?, tseq=? WHERE uid=?;", {
+                      topic, posted, sequence, contact->uid});
 }
 
 void SessionItem::close()
@@ -519,6 +553,8 @@ QWidget(), desktop(control), model(nullptr), selfName("self")
     cellHeight = QFontInfo(desktop->getBasicFont()).pixelSize() + 5;
     expiration.setSingleShot(true);
 
+    connector = nullptr;
+
     connect(Toolbar::search(), &QLineEdit::returnPressed, this, &Sessions::search);
     connect(desktop, &Desktop::changeStorage, this, &Sessions::changeStorage);
     connect(desktop, &Desktop::changeConnector, this, &Sessions::changeConnector);
@@ -529,7 +565,8 @@ QWidget(), desktop(control), model(nullptr), selfName("self")
     connect(ui.input, &QLineEdit::textChanged, this, &Sessions::checkInput);
     connect(desktop ,&Desktop::changeFont,this,&Sessions::refreshFont);
     connect(&expiration, &QTimer::timeout, this, &Sessions::expireMessages);
-    connect(Toolbar::instance()->close(), &QPushButton::pressed, this, &Sessions::closeSession);
+    connect(Toolbar::instance(), &Toolbar::closeSession, this, &Sessions::closeSession);
+    connect(Toolbar::instance(), &Toolbar::changeTopic, this, &Sessions::changeTopic);
     connect(control, &Desktop::changeSelf, this, &Sessions::setSelf);
 
     connect(ui.bottom, &QPushButton::pressed, this, [this]() {
@@ -656,6 +693,12 @@ void Sessions::enter()
         auto toolbar = Toolbar::instance();
         toolbar->showSession();
         toolbar->hideSearch();
+        if(activeItem->number() == 0)
+            toolbar->setOperators();
+        else
+            toolbar->setTopics(activeItem->topic(), activeItem->topicList());
+        if(!connector)
+            toolbar->disableTopics();
         Toolbar::setTitle(activeItem->title());
         if(activeItem->isOnline())
             Toolbar::setStyle("color: green;");
@@ -669,7 +712,8 @@ void Sessions::enter()
 
 void Sessions::listen(Listener *listener)
 {
-    connect(listener, &Listener::receiveText, this, &Sessions::receiveText);
+    if(listener)
+        connect(listener, &Listener::receiveText, this, &Sessions::receiveText);
 }
 
 void Sessions::clickedText(const QString& text, enum ClickedItem type)
@@ -787,10 +831,6 @@ void Sessions::activateSession(SessionItem* item)
     if(activeItem)
         activeItem->setText(ui.input->text());
 
-    auto toolbar = Toolbar::instance();
-    toolbar->showSession();
-    toolbar->hideSearch();
-
     activeItem = item;
     ui.messages->setModel(item->model());
     ui.inputFrame->setVisible(true);
@@ -806,6 +846,15 @@ void Sessions::activateSession(SessionItem* item)
     item->loadMessages();
     item->clearUnread();
     scrollToBottom();
+
+    auto toolbar = Toolbar::instance();
+    if(activeItem->number() == 0)
+        toolbar->setOperators();
+    else {
+        toolbar->setTopics(activeItem->topic(), activeItem->topicList());
+        if(!connector)
+            toolbar->disableTopics();
+    }
 }
 
 void Sessions::refreshFont()
@@ -869,17 +918,34 @@ void Sessions::selectSelf()
     });
 }
 
+void Sessions::changeTopic(const QString& topic)
+{
+    auto toolbar = Toolbar::instance();
+    if(topic.isEmpty() || !activeItem) {
+        if(connector)
+            toolbar->enableTopics();
+        return;
+    }
+
+    if(!connector) {
+        if(!toolbar || !desktop)
+            return;
+        toolbar->setTopics(activeItem->topic(), activeItem->topicList());
+        toolbar->disableTopics();
+        desktop->errorMessage(tr("Cannot change topic offline"), 3000);
+        return;
+    }
+
+    connector->changeTopic(activeItem->uri(), topic, tr("changing topic to \"") + topic + "\"");
+}
+
 void Sessions::closeSession()
 {
     if(!activeItem || !model || !desktop->isCurrent(this))
         return;
 
-    QTimer::singleShot(CONST_CLICKTIME, this, [this]{
-        if(!activeItem)
-            return;
-        model->remove(activeItem);
-        activateSelf();
-    });
+    model->remove(activeItem);
+    activateSelf();
 }
 
 void Sessions::clearSessions()
@@ -940,12 +1006,15 @@ void Sessions::changeSessions(Storage* storage, const QList<ContactItem *>& cont
 void Sessions::changeConnector(Connector *connected)
 {
     connector = connected;
+    auto toolbar = Toolbar::instance();
+
     if(connector) {
         // if we connect/reconnect, input editing is enabled.
         ui.input->setEnabled(true);
         if(ui.inputFrame->isVisible())
             ui.input->setFocus();
         ui.status->setStyleSheet("color: green; border: 0px; margin: 0px; padding: 0px; text-align: left; background: white;");
+        toolbar->enableTopics();
 
         connect(connector, &Connector::messageResult, this, [this](int error, const QDateTime &timestamp, int sequence) {
             if(!inputItem)
@@ -957,6 +1026,13 @@ void Sessions::changeConnector(Connector *connected)
                 finishInput(tr("Failed to send"));
         }, Qt::QueuedConnection);
 
+        connect(connector, &Connector::topicFailed, this, [this]{
+            if(activeItem) {
+                auto toolbar = Toolbar::instance();
+                toolbar->setTopics(activeItem->topic(), activeItem->topicList());
+            }
+        }, Qt::QueuedConnection);
+
         connect(connector, &Connector::syncPending, this, [this](const QByteArray& json) {
             auto jdoc = QJsonDocument::fromJson(json);
             auto list = jdoc.array();
@@ -965,11 +1041,12 @@ void Sessions::changeConnector(Connector *connected)
                 UString from = msg["f"].toString().toUtf8();
                 UString to = msg["t"].toString().toUtf8();
                 UString subject = msg["s"].toString().toUtf8();
+                UString type = "text/" + msg["c"].toString();
                 auto timestamp = QDateTime::fromString(msg["p"].toString(), Qt::ISODate);
                 auto sequence = msg["u"].toInt();
                 if(msg["c"] == "text" || msg["c"] == "admin") {
                     UString text = msg["b"].toString().toUtf8();
-                    receiveText(from, to, text, timestamp, sequence, subject);
+                    receiveText(from, to, text, timestamp, sequence, subject, type);
                 }
             }
             auto storage = Storage::instance();
@@ -985,6 +1062,7 @@ void Sessions::changeConnector(Connector *connected)
     }
     else {
         // if we loose connection, we clear any pending send, and disable further input.
+        toolbar->disableTopics();
         activeMessage = nullptr;
         ui.input->setEnabled(false);
         ui.status->setStyleSheet("color: black; border: 0px; margin: 0px; padding: 0px; text-align:left; background: white;");
@@ -996,15 +1074,21 @@ void Sessions::createMessage()
     if(ui.input->text().isEmpty())
         return;
 
+    if(!activeItem->contact) {
+        desktop->errorMessage(tr("No contact to send thru"));
+        return;
+    }
+
     // get what we need to send message...
     auto target = activeItem->contact->uri();
+    auto subject = activeItem->contact->topic().toUtf8();
 
     if(!connector) {
         desktop->errorMessage(tr("Not online"));
         return;
     }
 
-    if(!connector->sendText(target, ui.input->text().toUtf8())) {
+    if(!connector->sendText(target, ui.input->text().toUtf8(), subject)) {
         desktop->errorMessage(tr("Send failed"));
         return;
     }
@@ -1016,7 +1100,7 @@ void Sessions::createMessage()
     ui.messages->setFocus();
 }
 
-void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject)
+void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject, const UString& type)
 {
     qDebug() << "*** MESSAGE FROM" << sipFrom << "TO" << sipTo << "TEXT" << text << "SYNC" << timestamp << sequence;
 
@@ -1043,7 +1127,7 @@ void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const U
         model->add(session);
     }
 
-    auto msg = new MessageItem(session, from, to, text, timestamp, sequence, subject);
+    auto msg = new MessageItem(session, from, to, text, timestamp, sequence, subject, type);
     if(!msg->isValid()) {
         qDebug() << "Probably duplicate message";
         delete msg;
@@ -1059,6 +1143,11 @@ void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const U
         delete msg;
 
     if(activeItem == session) {
+        if(msg->type() == MessageItem::ADMIN_MESSAGE) {
+            auto toolbar = Toolbar::instance();
+            toolbar->newTopics(activeItem->topic(), activeItem->topicList());
+        }
+
         bool bottom = true;
         auto scroll = ui.messages->verticalScrollBar();
         if(scroll && scroll->value() != scroll->maximum())

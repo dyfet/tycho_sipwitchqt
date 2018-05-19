@@ -138,6 +138,7 @@ signals:
     void REQUEST_DEVLIST(const Event& ev);
     void REQUEST_PENDING(const Event& ev);
     void REQUEST_PROFILE(const Event& ev);
+    void REQUEST_TOPIC(const Event& ev);
     void REQUEST_AUTHORIZE(const Event& ev);
     void REQUEST_MEMBERSHIP(const Event& ev);
     void REQUEST_DEAUTHORIZE(const Event& ev);

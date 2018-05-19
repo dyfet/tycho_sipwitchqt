@@ -28,8 +28,6 @@
 #include "../Common/types.hpp"
 #include "phonebook.hpp"
 
-#define SUBJECT_ADMIN "X-Admin"
-
 class SessionItem;
 
 enum ClickedItem {
@@ -54,7 +52,7 @@ public:
     };
 
     MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence);
-    MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString &text, const QDateTime& timestamp, int sequence, const UString &subject);
+    MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString &text, const QDateTime& timestamp, int sequence, const UString &subject, const QString &type);
     MessageItem(const QSqlRecord& record);      // database load...
 
     type_t type() const {

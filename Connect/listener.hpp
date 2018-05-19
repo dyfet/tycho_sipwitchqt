@@ -76,7 +76,7 @@ signals:
     void changeStatus(const QByteArray& bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void messageResult(int status);
-    void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject);
+    void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject, const UString& type);
     void authorize(const QVariantHash& creds);
     void updateRoster();
     void failure(int code);
