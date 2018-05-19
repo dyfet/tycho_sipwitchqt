@@ -21,7 +21,7 @@ BEGIN
             VALUE "InternalName", "sipwitchqt-server"
             VALUE "LegalCopyright", "(C) 2017 Tycho Softworks"
             VALUE "OriginalFilename", "sipwitchqt-server.exe"
-            VALUE "ProductName", "SipWitchQt Server"
+            VALUE "ProductName", "${PROJECT_NAME}"
             VALUE "ProductVersion", "${PROJECT_VERSION}"
         END
     END

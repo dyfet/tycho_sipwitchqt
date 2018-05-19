@@ -1179,14 +1179,18 @@ void Desktop::removeUser(const QString &id)
 int main(int argc, char *argv[])
 {
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
-    QCoreApplication::setOrganizationName("Tycho Softworks");
-    QCoreApplication::setOrganizationDomain("tychosoft.com");
-    QCoreApplication::setApplicationName("SipWitchQt-Desktop");
+    QCoreApplication::setOrganizationName(APPLICATION_ORG);
+    QCoreApplication::setOrganizationDomain(APPLICATION_DOMAIN);
+    QCoreApplication::setApplicationName(APPLICATION_NAME);
     QTranslator localize;
 
     QApplication app(argc, argv);
     QCommandLineParser args;
     Q_INIT_RESOURCE(desktop);
+
+#ifdef CUSTOMIZE_DESKTOP
+    Q_INIT_RESOURCE(custom);
+#endif
 
 #if defined(DEBUG_TRANSLATIONS)
     localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
@@ -1199,7 +1203,7 @@ int main(int argc, char *argv[])
         Args::exePath("./Translations"));
 #else
     localize.load(QLocale::system().name(), "sipwitchqt-desktop", "_",
-        Args::exePath("../share/translations"));
+        Args::exePath("../share/" TRANSLATIONS_OUTPUT_DIRECTORY));
 #endif
     if(!localize.isEmpty())
         app.installTranslator(&localize);

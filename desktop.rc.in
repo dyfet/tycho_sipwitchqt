@@ -18,10 +18,10 @@ BEGIN
             VALUE "CompanyName", "Tycho Softworks"
             VALUE "FileDescription", "Desktop client for SipWitchQt server"
             VALUE "FileVersion", "${PROJECT_VERSION}"
-            VALUE "InternalName", "sipwitchqt-desktop"
+            VALUE "InternalName", "${DESKTOP_NAME}"
             VALUE "LegalCopyright", "(C) 2017 Tycho Softworks"
-            VALUE "OriginalFilename", "sipwitchqt-desktop.exe"
-            VALUE "ProductName", "SipWitchQt Desktop"
+            VALUE "OriginalFilename", "${DESKTOP_NAME}.exe"
+            VALUE "ProductName", "${PROJECT_NAME}"
             VALUE "ProductVersion", "${PROJECT_VERSION}"
         END
     END

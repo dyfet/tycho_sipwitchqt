@@ -54,7 +54,6 @@ doc/
 
 .DS_Store
 .ninja*
-Custom.cmake
 CMakeCache.txt
 install_manifest.txt
 Makefile
