@@ -1,3 +1,8 @@
+v0.2.5
+* Customization at build time
+* Topic management in sessions
+* Policy setting for main public room
+
 v0.2.4
 * Session/state based toolbar management
 * Online status of all extensions shown

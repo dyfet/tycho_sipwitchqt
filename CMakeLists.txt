@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
     include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
 endif()
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.4 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.5 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017")
 
