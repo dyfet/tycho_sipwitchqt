@@ -13,11 +13,13 @@ Release/
 *.qm
 *.o
 *.a
+*.dmg
 *.rpm
 *.deb
 *.dsc
 *.changes
 *.buildinfo
+*.upload
 *.key
 *.pem
 *.cfg
