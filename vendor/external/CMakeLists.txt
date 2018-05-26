@@ -17,7 +17,15 @@ execute_process(
     COMMAND cmake -E make_directory ${CMAKE_INSTALL_PREFIX}/include
 )
 
-if(WIN32)
+if(UNIX)
+    ExternalProject_add(openssl
+        URL "https://www.openssl.org/source/openssl-${OSSL_VERSION}.tar.gz"
+        CONFIGURE_COMMAND ./config no-shared enable-static-engine --prefix=${CMAKE_INSTALL_PREFIX} --openssldir=/var/lib/sipwitchqt/certs
+        BUILD_COMMAND make
+        INSTALL_COMMAND make install_dev
+        BUILD_IN_SOURCE 1
+    )
+elseif(WIN32)
     if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
         set(BOOTSTRAP_DEVARCH "amd64")
         set(BOOTSTRAP_WIN64 true)
@@ -43,7 +51,5 @@ if(WIN32)
             BUILD_IN_SOURCE 1
         )
     endif()
-
-
 endif()
 
