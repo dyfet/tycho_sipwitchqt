@@ -359,49 +359,6 @@
          <number>4</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>Reset font to default</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="resetFont">
-            <property name="minimumSize">
-             <size>
-              <width>96</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>96</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>default</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="Userfont">
           <property name="sizeConstraint">
            <enum>QLayout::SetMaximumSize</enum>
@@ -414,29 +371,19 @@
           </property>
           <item>
            <widget class="QLabel" name="label_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
-             <string>Pick a font</string>
+             <string>Pick display font</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pickfontbutton">
-            <property name="minimumSize">
-             <size>
-              <width>96</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>96</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Pick font</string>
-            </property>
-           </widget>
+           <widget class="QFontComboBox" name="fontPicker"/>
           </item>
          </layout>
         </item>
@@ -445,7 +392,7 @@
           <item>
            <widget class="QLabel" name="label_21">
             <property name="text">
-             <string>Font size</string>
+             <string>Choose font size</string>
             </property>
            </widget>
           </item>
@@ -493,7 +440,7 @@
             </item>
             <item>
              <property name="text">
-              <string>Not normal</string>
+              <string>Large</string>
              </property>
             </item>
            </widget>
@@ -525,21 +472,6 @@
             </property>
             <item>
              <property name="text">
-              <string>3 min</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>10 min</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
               <string>7</string>
              </property>
             </item>
@@ -551,6 +483,16 @@
             <item>
              <property name="text">
               <string>30</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>90</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Forever</string>
              </property>
             </item>
            </widget>
@@ -573,7 +515,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="horizontalSlider_2">
+           <widget class="QSlider" name="desktopNotify">
             <property name="maximumSize">
              <size>
               <width>42</width>
@@ -612,7 +554,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="horizontalSlider">
+           <widget class="QSlider" name="audioNotify">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -662,6 +604,55 @@
         <property name="bottomMargin">
          <number>4</number>
         </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Delay Ringing</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="delayRinging">
+            <property name="maximumSize">
+             <size>
+              <width>96</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>Forever</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>No</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1 Ring</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2 Rings</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3 Rings</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
@@ -761,7 +752,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="horizontalSlider_3">
+           <widget class="QSlider" name="autoAnswer">
             <property name="maximumSize">
              <size>
               <width>42</width>
@@ -794,7 +785,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="horizontalSlider_4">
+           <widget class="QSlider" name="startAtLogin">
             <property name="maximumSize">
              <size>
               <width>42</width>
@@ -993,16 +984,14 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>resetFont</tabstop>
-  <tabstop>pickfontbutton</tabstop>
   <tabstop>fontSize</tabstop>
   <tabstop>expires</tabstop>
-  <tabstop>horizontalSlider_2</tabstop>
-  <tabstop>horizontalSlider</tabstop>
+  <tabstop>desktopNotify</tabstop>
+  <tabstop>audioNotify</tabstop>
   <tabstop>appearance</tabstop>
   <tabstop>comboBox_2</tabstop>
-  <tabstop>horizontalSlider_3</tabstop>
-  <tabstop>horizontalSlider_4</tabstop>
+  <tabstop>autoAnswer</tabstop>
+  <tabstop>startAtLogin</tabstop>
   <tabstop>secret</tabstop>
   <tabstop>confirm</tabstop>
   <tabstop>changeSecret</tabstop>

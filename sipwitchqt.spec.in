@@ -8,10 +8,11 @@ URL:     https://gitlab.com/tychosoft/sipwitchqt
 Source0: https:///pub.cherokeesofidaho.org/tarballs/%{name}-%{version}.tar.gz
 Group:	 system/telephony
 
+# redhat-land is qt5-qtbase-devel, qt5-linguist, openssl-devel >= 1.1.0
 BuildRequires: cmake >= 3.1.0
 BuildRequires: libqt5-qtbase-devel, libqt5-linguist-devel, gcc-c++
 BuildRequires: libosip2-devel, libeXosip2-devel >= 4.0.0
-BuildRequires: gperftools-devel, systemd-devel
+BuildRequires: gperftools-devel, systemd-devel, libavahi-devel
 BuildRequires: systemd-rpm-macros
 
 %package server
@@ -75,8 +76,8 @@ SipWitchQt desktop client.
 %{_sysconfdir}/sv/sipwitchqt/run
 %{_datadir}/schemas/sipwitch-*.sql
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
-%attr(0664,root,root) %{_libdir}/systemd/system/sipwitchd.service
-%attr(0750,root,root) %{_libdir}/systemd/system-sleep/sipwqt-sleep.sh
+%attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
+%attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh
 
 %files utils
 %defattr(-,root,root)
@@ -89,6 +90,7 @@ SipWitchQt desktop client.
 %defattr(-,root,root)
 %{_bindir}/sipwitchqt-desktop
 %{_datadir}/applications/sipwitchqt.desktop
+%{_datadir}/translations/*.qm
 %{_datadir}/appdata/sipwitchqt.appdata.xml
 %{_datadir}/pixmaps/sipwitchqt.png
 

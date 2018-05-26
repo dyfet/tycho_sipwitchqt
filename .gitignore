@@ -12,7 +12,12 @@ Release/
 *.autosave
 *.qm
 *.o
+*.a
 *.rpm
+*.deb
+*.dsc
+*.changes
+*.buildinfo
 *.key
 *.pem
 *.cfg

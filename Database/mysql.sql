@@ -17,6 +17,7 @@ CREATE TABLE Authorize (
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     realm VARCHAR(128),                   -- realm used for secret
     secret VARCHAR(128),                  -- secret to use
+    pinaccess VARCHAR(8),                   -- voicemail pin
     authaccess VARCHAR(8) DEFAULT 'LOCAL',    -- type of access allowed (local, remote, all)
     email VARCHAR(128),                   -- email contact to use (avatar, etc)
     fullname VARCHAR(64),                 -- display name
@@ -81,7 +82,7 @@ CREATE TABLE Admin (
 CREATE TABLE Groups (
     grpnbr INTEGER,                       -- group tied to
     extnbr INTEGER,                       -- group member extension
-    extpriority INTEGER DEFAULT -1,          -- coverage priority
+    extpriority INTEGER DEFAULT 0,        -- coverage priority
     CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),
     FOREIGN KEY (grpnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE,
@@ -125,3 +126,4 @@ CREATE TABLE Outboxes (
         ON DELETE CASCADE,
     FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint)
         ON DELETE CASCADE);
+

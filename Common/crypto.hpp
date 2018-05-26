@@ -28,6 +28,7 @@
 namespace Crypto {
     const QByteArray random(int size);
     bool random(quint8 *bytes, int size);
+    QPair<QByteArray, QByteArray> keypair(bool compressed = true);
 }
 
 /*!

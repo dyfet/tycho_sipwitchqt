@@ -10,6 +10,12 @@
     <height>515</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -418,7 +424,7 @@
         <item>
          <widget class="QStackedWidget" name="profileStack">
           <property name="currentIndex">
-           <number>2</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="blankPage">
            <property name="styleSheet">
@@ -619,6 +625,20 @@
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="voicePage">
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="title">
+               <string>Voice Messaging and Video</string>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
         <item>
@@ -635,74 +655,13 @@
           <item>
            <widget class="QGroupBox" name="behaviorGroup">
             <property name="title">
-             <string>Behaviors</string>
+             <string>Behavior with You</string>
             </property>
             <property name="flat">
              <bool>true</bool>
             </property>
             <layout class="QGridLayout" name="gridLayout">
-             <item row="0" column="1">
-              <widget class="QComboBox" name="coveragePriority">
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Never</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>0</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>1</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>2</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>3</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_3">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Coverage</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Auto Answer</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
+             <item row="1" column="2">
               <widget class="QSlider" name="autoAnswer">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -736,6 +695,67 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Auto Answer</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="coverageLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Call Coverage</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QComboBox" name="coverage">
+               <property name="maximumSize">
+                <size>
+                 <width>80</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Never</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Always</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>1 Ring</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2 Rings</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3 Rings</string>
+                </property>
+               </item>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -748,7 +768,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Forwarding by User</string>
+             <string>Forwarding this Authorization</string>
             </property>
             <property name="flat">
              <bool>true</bool>
@@ -779,44 +799,16 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLineEdit" name="lineNoAnswer">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_8">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>64</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="lineAway">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>64</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="readOnly">
-                <bool>false</bool>
+               <property name="text">
+                <string>No Answer</string>
                </property>
               </widget>
              </item>
@@ -833,113 +825,33 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_8">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>No Answer</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="lineBusy">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
+             <item row="0" column="2">
+              <widget class="QComboBox" name="fwdAway">
                <property name="maximumSize">
                 <size>
-                 <width>64</width>
+                 <width>80</width>
                  <height>16777215</height>
                 </size>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <widget class="QPushButton" name="pushButton_2">
-               <property name="maximumSize">
-                <size>
-                 <width>20</width>
-                 <height>20</height>
-                </size>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="../Resources/desktop.qrc">
-                 <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>16</width>
-                 <height>16</height>
-                </size>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="2">
-              <widget class="QPushButton" name="pushButton_3">
+              <widget class="QComboBox" name="fwdBusy">
                <property name="maximumSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>80</width>
+                 <height>16777215</height>
                 </size>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="../Resources/desktop.qrc">
-                 <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>16</width>
-                 <height>16</height>
-                </size>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
                </property>
               </widget>
              </item>
              <item row="2" column="2">
-              <widget class="QPushButton" name="pushButton_4">
+              <widget class="QComboBox" name="fwdNoAnswer">
                <property name="maximumSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>80</width>
+                 <height>16777215</height>
                 </size>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="../Resources/desktop.qrc">
-                 <normaloff>:/icons/person.png</normaloff>:/icons/person.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>16</width>
-                 <height>16</height>
-                </size>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -972,13 +884,7 @@
   <tabstop>displayName</tabstop>
   <tabstop>sessionButton</tabstop>
   <tabstop>emailAddress</tabstop>
-  <tabstop>lineAway</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>lineBusy</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>lineNoAnswer</tabstop>
-  <tabstop>pushButton_4</tabstop>
-  <tabstop>coveragePriority</tabstop>
+  <tabstop>coverage</tabstop>
   <tabstop>autoAnswer</tabstop>
   <tabstop>avatarButton</tabstop>
   <tabstop>world</tabstop>

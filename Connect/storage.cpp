@@ -21,7 +21,7 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <QDateTime>
-//#include <QSettings>
+#include "../Common/crypto.hpp"
 
 namespace {
 #ifdef DESKTOP_PREFIX
@@ -118,6 +118,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "sync DATETIME DEFAULT 0,"              // used for deletion sync
             "last DATETIME DEFAULT 0,"
             "info TEXT DEFAULT '',"
+            "answer INTEGER DEFAULT 0,"             // auto answer this contact
             "topic VARCHAR(64) DEFAULT 'None',"       // current topic in session
             "tsync DATETIME DEFAULT 0,"              // when topic last changed
             "tseq INTEGER DEFAULT 0,"               // sequence of topic change
@@ -156,6 +157,8 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
     ServerAddress = UString::uri(cred["schema"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));
     runQuery("INSERT INTO Credentials(extension, user, display, label, secret, server, schema, host, port, type, realm) VALUES(?,?,?,?,?,?,?,?,?,?,?);",
         {cred["extension"], cred["user"], cred["display"], cred["label"], cred["secret"], QString::fromUtf8(ServerAddress), cred["schema"], cred["host"], cred["port"], cred["type"], cred["realm"]});
+    QVariantHash tmp;
+    createKeys(tmp);
 }
 
 Storage::~Storage()
@@ -276,6 +279,17 @@ QVariant Storage::insert(const QString& request, const QVariantList &parms)
     return query.lastInsertId();
 }
 
+void Storage::createKeys(QVariantHash& creds)
+{
+    if(creds["rootkey"].isNull() || creds["devkey"].isNull()) {
+        auto pair = Crypto::keypair();
+        runQuery("UPDATE Credentials SET devkey=?, rootkey=? WHERE id=1;", {pair.first, pair.second});
+        creds["devkey"] = pair.first;
+        creds["rootkey"] = pair.second;
+        qDebug() << "Generated device key";
+    }
+}
+
 void Storage::updateSelf(const QString& text)
 {
     runQuery("UPDATE Credentials SET display=? WHERE id=1;", {text});
@@ -287,6 +301,7 @@ void Storage::updateCredentials(const QVariantHash &update)
         return;
 
     auto cred = credentials();
+    createKeys(cred);
     foreach(auto key, update.keys())
         cred[key] = update[key];
 

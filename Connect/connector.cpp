@@ -37,6 +37,8 @@
 #define X_AUTHORIZE     "X-AUTHORIZE"
 #define X_DEAUTHORIZE   "X-DEAUTHORIZE"
 #define X_MEMBERSHIP    "X-MEMBERSHIP"
+#define X_COVERAGE      "X-COVERAGE"
+#define X_FORWARDING    "X-FORWARDING"
 
 #define MSG_IS_ROSTER(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_ROSTER))
@@ -61,6 +63,12 @@
 
 #define MSG_IS_TOPIC(msg)  (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_TOPIC))
+
+#define MSG_IS_COVERAGE(msg) (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_COVERAGE))
+
+#define MSG_IS_FORWARDING(msg) (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_FORWARDING))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -203,6 +211,56 @@ void Connector::changeTopic(const UString& to, const UString& subject, const USt
         osip_message_set_body(msg, body.constData(), static_cast<size_t>(body.length()));
         osip_message_set_content_type(msg, "text/plain");
     }
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeForwarding(const UString& to, Forwarding type, int target)
+{
+    UString destination = "NONE";
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    if(target > -1)
+        destination = UString::number(target);
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_FORWARDING, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    switch(type) {
+    case Forwarding::NA:
+        osip_message_set_header(msg, "Subject", "NA");
+        break;
+    case Forwarding::BUSY:
+        osip_message_set_header(msg, "Subject", "BUSY");
+        break;
+    case Forwarding::AWAY:
+        osip_message_set_header(msg, "Subject", "AWAY");
+        break;
+    }
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-Destination", destination);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeCoverage(const UString& to, int priority)
+{
+    UString coverage = "never";
+    if(priority >= 0)
+        coverage = UString::number(priority);
+
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_COVERAGE, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-Priority", coverage);
     eXosip_message_send_request(context, msg);
 }
 
@@ -367,7 +425,7 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
-                else if(MSG_IS_PROFILE(event->request) || MSG_IS_MEMBERSHIP(event->request))
+                else if(MSG_IS_PROFILE(event->request) || MSG_IS_COVERAGE(event->request) || MSG_IS_MEMBERSHIP(event->request) || MSG_IS_FORWARDING(event->request))
                     processProfile(event);
                 else if(MSG_IS_AUTHORIZE(event->request)) {
                     emit statusResult(SIP_OK, "");

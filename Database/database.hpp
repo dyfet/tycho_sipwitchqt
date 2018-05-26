@@ -119,11 +119,13 @@ private slots:
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& auth, qlonglong endpoint);
+    void changeCoverage(const Event& ev, const UString& auth, qlonglong endpoint);
+    void changeForwarding(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeTopic(const Event& ev);
     void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);
     void changePending(qlonglong endpoint);
-    void lastAccess(qlonglong endpoint, const QDateTime& timestamp);
+    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray &deviceKey);
     void applyConfig(const QVariantHash& config);
     void onTimeout();
 };

@@ -123,6 +123,13 @@ void Listener::send_registration(osip_message_t *msg, bool auth)
     if(!serverInit.isEmpty())
         osip_message_set_header(msg, "X-Initialize", serverInit);
 
+    // device key as part of outgoing registration...
+    if(serverCreds["devkey"].isValid()) {
+        UString key = serverCreds["devkey"].toByteArray().toHex();
+        osip_message_set_header(msg, "X-Device", key);
+    }
+
+
     if(auth)
         serverInit = "";
 

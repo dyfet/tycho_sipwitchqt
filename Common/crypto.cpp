@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../Common/compiler.hpp"
 #include "crypto.hpp"
 
 #include <QCryptographicHash>
@@ -22,11 +23,15 @@
 #ifdef Q_OS_MAC
 #include <CommonCrypto/CommonCryptor.h>
 #include <CommonCrypto/CommonRandom.h>
-
-
 #else
 #include <openssl/rand.h>
 #endif
+
+#include <openssl/bn.h>
+#include <openssl/ec.h>
+#include <openssl/hmac.h>
+#include <openssl/ecdsa.h>
+#include <openssl/obj_mac.h>
 
 static quint8 *bytePointer(const char *cp)
 {
@@ -58,6 +63,57 @@ bool Crypto::random(quint8 *cp, int size)
         return false;
 #endif
     return true;
+}
+
+QPair<QByteArray,QByteArray> Crypto::keypair(bool compressed)
+{
+    auto pair = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if(!pair)
+        return {};
+
+    quint8 buffer[32];
+    random(buffer, sizeof(buffer));
+    auto privKey = BN_bin2bn(buffer, sizeof(buffer), nullptr);
+    EC_KEY_set_private_key(pair, privKey);
+    auto ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+    auto grp = EC_KEY_get0_group(pair);
+    auto pubKey = EC_POINT_new(grp);
+    EC_POINT_mul(grp, pubKey, privKey, nullptr, nullptr, ctx);
+    EC_KEY_set_public_key(pair, pubKey);
+
+    EC_POINT_free(pubKey);
+    BN_CTX_end(ctx);
+    BN_CTX_free(ctx);
+    BN_clear_free(privKey);
+
+    QByteArray priv, pub;
+    char pubOut[65], privOut[320];
+    auto pubPtr = reinterpret_cast<unsigned char *>(pubOut);
+    auto privPtr = reinterpret_cast<unsigned char *>(privOut);
+    auto bufPtr = reinterpret_cast<char *>(buffer);
+
+    if(compressed)
+        EC_KEY_set_conv_form(pair, POINT_CONVERSION_COMPRESSED);
+    else {
+        EC_KEY_set_conv_form(pair, POINT_CONVERSION_UNCOMPRESSED);
+        EC_KEY_set_asn1_flag(pair, OPENSSL_EC_NAMED_CURVE);
+    }
+
+    int privLen = 32;
+    int pubLen = i2o_ECPublicKey(pair, nullptr);
+    Q_ASSERT(pubLen <= static_cast<int>(sizeof(pubOut)));
+    i2o_ECPublicKey(pair, &pubPtr);
+
+    if(!compressed) {
+        bufPtr = privOut;
+        privLen = i2d_ECPrivateKey(pair, nullptr);
+        Q_ASSERT(privLen <= static_cast<int>(sizeof(privOut)));
+        i2d_ECPrivateKey(pair, &privPtr);
+    }
+
+    EC_KEY_free(pair);
+    return {QByteArray(pubOut, pubLen), QByteArray(bufPtr, privLen)};
 }
 
 

@@ -190,6 +190,10 @@ void Event::Data::parseMessage(osip_message_t *msg)
     if(header && header->hvalue)
         initialize = UString(header->hvalue).toLower();
 
+    osip_message_header_get_byname(msg, "x-device", 0, &header);
+    if(header && header->hvalue)
+        deviceKey = QByteArray::fromHex(header->hvalue);
+
     header = nullptr;
     osip_message_header_get_byname(msg, "subject", 0, &header);
     if(header && header->hvalue)
