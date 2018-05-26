@@ -89,6 +89,8 @@ private:
     static UString ServerAddress;
     static UString FromAddress;
     static Storage *Instance;
+
+    void createKeys(QVariantHash& creds);
 };
 
 /*!

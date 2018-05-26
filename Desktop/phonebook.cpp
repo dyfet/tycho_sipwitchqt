@@ -34,6 +34,7 @@ static QPoint mousePosition;
 static int cellHeight, cellLift = 3;
 static QIcon addIcon, delIcon, newIcon;
 static MemberModel *memberModel = nullptr;
+static bool disableUpdates = false;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -47,6 +48,8 @@ ContactItem::ContactItem(const QSqlRecord& record)
 {
     session = nullptr;
     group = added = hidden = admin = online = suspended = false;
+    callCoverage = -1;
+    delayRinging = 0;
 
     extensionNumber = record.value("extension").toInt();
     contactCreated = record.value("sync").toDateTime();
@@ -67,6 +70,8 @@ ContactItem::ContactItem(const QSqlRecord& record)
     topicUpdated = record.value("tsync").toDateTime();
     topicSequence = record.value("tseq").toInt();
     uid = record.value("uid").toInt();
+    autoAnswer = record.value("answer").toInt() > 0;
+    keyVerify = KeyVerification(record.value("verify").toInt());
     index[uid] = this;
 }
 
@@ -109,6 +114,18 @@ void ContactItem::add()
 
     contactFilter = (textNumber + "\n" + displayName).toLower();
     local[extensionNumber] = this;
+}
+
+void ContactItem::setAutoAnswer(bool enable)
+{
+    Storage *storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+
+    auto value = 0;
+    if(enable)
+        ++value;
+    storage->runQuery("UPDATE Contacts SET answer=? WHERE uid=?;", {value, uid});
+    autoAnswer = (value > 0);
 }
 
 QList<ContactItem *> ContactItem::findAuth(const QString& id)
@@ -412,6 +429,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     auto status = json["s"].toString();
     auto sync = QDateTime::fromString(json["c"].toString(), Qt::ISODate);
     auto user = json["a"].toString();
+    auto key = QByteArray::fromHex(json["k"].toString().toUtf8());
 
     if(status == "remove" && removes > -1) {
         auto list = ContactItem::findAuth(user);
@@ -460,6 +478,11 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
             }
             ui.profileStack->setCurrentWidget(ui.adminPage);
         }
+
+        // future voice mail/video setings...
+        if(item == Phonebook::self()) {
+            ui.profileStack->setCurrentWidget(ui.voicePage);
+        }
     }
 
     if(item && (Desktop::isAdmin() || group != "none") && (number == 0 || type == "GROUP" || type == "PILOT")) {
@@ -486,8 +509,8 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     }
 
     if(!item) {
-        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi, sync, info) VALUES(?,?,?,?,?,?,?,?,?,?);", {
-                              number, QString::number(number), type, display, user, uri, mailto, puburi, sync, info});
+        storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi, sync, info, pubkey) VALUES(?,?,?,?,?,?,?,?,?,?,?);", {
+                              number, QString::number(number), type, display, user, uri, mailto, puburi, sync, info, key});
         auto query = storage->getRecords("SELECT * FROM Contacts WHERE extension=?;", {
                                              number});
         if(query.isActive() && query.next()) {
@@ -497,7 +520,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     }
     else {
         auto old = item->displayName;
-        if(json["i"].isNull())
+        if(json["i"].isUndefined())
             info = item->info();
         else
             item->extendedInfo = info;
@@ -512,8 +535,50 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         item->contactType = type;
         item->contactCreated = sync;
 
-        storage->runQuery("UPDATE Contacts SET display=?, user=?, type=?, uri=?, mailto=?, puburi=?, sync=?, info=? WHERE (extension=?);", {
-                              display, user, type, uri, mailto, puburi, sync, info, number});
+        item->callCoverage = -1;
+        if(!json["cc"].isUndefined())
+            item->callCoverage = json["cc"].toInt();
+
+        item->delayRinging = 0;
+        if(!json["rp"].isUndefined())
+            item->delayRinging = json["rp"].toInt();
+
+        item->forwardAway = "";
+        if(!json["away"].isUndefined()) {
+            auto fwdAway = json["away"].toInt();
+            if(fwdAway > -1)
+                item->forwardAway = UString::number(fwdAway);
+        }
+
+        item->forwardBusy = "";
+        if(!json["busy"].isUndefined()) {
+            auto fwdBusy = json["busy"].toInt();
+            if(fwdBusy > -1)
+                item->forwardBusy = UString::number(fwdBusy);
+        }
+
+        item->forwardNoAnswer = "";
+        if(!json["noanswer"].isUndefined()) {
+            auto fwdNoAnswer = json["noanswer"].toInt();
+            if(fwdNoAnswer > -1)
+                item->forwardNoAnswer = UString::number(fwdNoAnswer);
+        }
+
+        item->speedNumbers.clear();
+        for(int spd = 1; spd < 10; ++spd) {
+            auto key = QString::number(spd);
+            auto target = json[key].toString();
+            if(!target.isEmpty())
+                item->speedNumbers[spd] = target;
+        }
+
+        // kill verification if public key no longer matches
+        auto verify = static_cast<int>(item->keyVerify);
+        if(key.count() == 0 || key != item->publicKey)
+            verify = 0;
+
+        storage->runQuery("UPDATE Contacts SET display=?, user=?, type=?, uri=?, mailto=?, puburi=?, sync=?, info=?, verify=? WHERE (extension=?);", {
+                              display, user, type, uri, mailto, puburi, sync, info, verify, number});
 
         if(type == "GROUP" || type == "PILOT" || number == 0)
             item->group = true;
@@ -764,9 +829,10 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     connect(ui.emailAddress, &QLineEdit::returnPressed, this, &Phonebook::changeProfile);
     connect(ui.world, &QPushButton::pressed, this, &Phonebook::promoteRemote);
     connect(ui.noworld, &QPushButton::pressed, this, &Phonebook::demoteLocal);
+    connect(ui.coverage, static_cast<void (QComboBox::*)(int index)>(&QComboBox::currentIndexChanged), this, &Phonebook::changeCoverage);
     connect(this, &Phonebook::changeSessions, sessions, &Sessions::changeSessions);
 
-    connect(desktop, &Desktop::logout, this, [this] {
+    connect(desktop, &Desktop::logout, this, [] {
         activeItem = clickedItem = nullptr;
     });
 
@@ -811,12 +877,48 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
            connector->requestRoster();
     });
 
+    connect(ui.autoAnswer, &QSlider::valueChanged, this, [this](int value) {
+        if(activeItem && !disableUpdates)
+            activeItem->setAutoAnswer(value > 0);
+    });
+
+    connect(ui.fwdAway,  static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+        sendForwarding(Connector::Forwarding::AWAY, text);
+    });
+
+    connect(ui.fwdBusy, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+        sendForwarding(Connector::Forwarding::BUSY, text);
+    });
+
+    connect(ui.fwdNoAnswer, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+        sendForwarding(Connector::Forwarding::NA, text);
+    });
+
     ContactItem::purge();
     localPainter = new LocalDelegate(this);
     memberPainter = new MemberDelegate(this);
     ui.contacts->setItemDelegate(localPainter);
     ui.memberList->setItemDelegate(memberPainter);
     ui.memberList->viewport()->installEventFilter(memberPainter);
+}
+
+void Phonebook::sendForwarding(Connector::Forwarding type, const QString& text)
+{
+    auto value = -1;
+    if(!text.isEmpty())
+        value = text.toInt();
+
+    if(!activeItem || disableUpdates)
+        return;
+
+    if(!connector) {
+        desktop->errorMessage(tr("Cannot modify while offline"));
+        return;
+    }
+
+    desktop->statusMessage(tr("changing forwarding"));
+    connector->changeForwarding(activeItem->uri(), type, value);
+    changePending();
 }
 
 void Phonebook::setWidth(int width)
@@ -872,6 +974,33 @@ void Phonebook::changeMembership(ContactItem *item, const UString& members, cons
         connector->changeMemebership(item->uri(), item->topic().toUtf8(), members, "", notify, reason);
 }
 
+void Phonebook::changeCoverage(int index)
+{
+    if(!activeItem || disableUpdates)
+        return;
+
+    if(!connector) {
+        desktop->errorMessage(tr("Cannot modify while offline"));
+        return;
+    }
+
+    desktop->statusMessage(tr("changing coverage"));
+    connector->changeCoverage(activeItem->uri(), index - 1);
+    changePending();
+}
+
+void Phonebook::changePending()
+{
+    ui.displayName->setEnabled(false);
+    ui.emailAddress->setEnabled(false);
+    ui.world->setEnabled(false);
+    ui.noworld->setEnabled(false);
+    ui.behaviorGroup->setEnabled(false);
+    ui.forwardGroup->setEnabled(false);
+    ui.profileStack->setEnabled(false);
+    clearGroup();
+}
+
 void Phonebook::promoteRemote()
 {
     if(!activeItem)
@@ -897,14 +1026,7 @@ void Phonebook::promoteRemote()
     auto body = jdoc.toJson(QJsonDocument::Compact);
 
     connector->sendProfile(activeItem->uri(), body);
-    ui.displayName->setEnabled(false);
-    ui.emailAddress->setEnabled(false);
-    ui.world->setEnabled(false);
-    ui.noworld->setEnabled(false);
-    ui.behaviorGroup->setEnabled(false);
-    ui.forwardGroup->setEnabled(false);
-    ui.profileStack->setEnabled(false);
-    clearGroup();
+    changePending();
 }
 
 void Phonebook::demoteLocal()
@@ -932,14 +1054,7 @@ void Phonebook::demoteLocal()
     auto body = jdoc.toJson(QJsonDocument::Compact);
 
     connector->sendProfile(activeItem->uri(), body);
-    ui.displayName->setEnabled(false);
-    ui.emailAddress->setEnabled(false);
-    ui.world->setEnabled(false);
-    ui.noworld->setEnabled(false);
-    ui.behaviorGroup->setEnabled(false);
-    ui.forwardGroup->setEnabled(false);
-    ui.profileStack->setEnabled(false);
-    clearGroup();
+    changePending();
 }
 
 void Phonebook::changeProfile()
@@ -970,14 +1085,7 @@ void Phonebook::changeProfile()
     auto body = jdoc.toJson(QJsonDocument::Compact);
 
     connector->sendProfile(activeItem->uri(), body);
-    ui.displayName->setEnabled(false);
-    ui.emailAddress->setEnabled(false);
-    ui.world->setEnabled(false);
-    ui.noworld->setEnabled(false);
-    ui.behaviorGroup->setEnabled(false);
-    ui.forwardGroup->setEnabled(false);
-    ui.profileStack->setEnabled(false);
-    clearGroup();
+    changePending();
 }
 
 void Phonebook::updateProfile(ContactItem *item)
@@ -1020,7 +1128,10 @@ void Phonebook::updateProfile(ContactItem *item)
         ui.displayName->setEnabled(false);
     if(item == self() || desktop->isAdmin()) {
         ui.emailAddress->setEnabled(true);
-        ui.forwardGroup->setEnabled(true);
+        if(connector)
+            ui.forwardGroup->setEnabled(true);
+        else
+            ui.forwardGroup->setEnabled(false);
     }
     else {
         ui.emailAddress->setEnabled(false);
@@ -1036,15 +1147,42 @@ void Phonebook::updateProfile(ContactItem *item)
         ui.noworld->setEnabled(false);
     }
 
+    QStringList extensions = {""};
+    for(int ext = 0; ext < highest; ++ext) {
+        if(local[ext] != nullptr)
+            extensions << QString::number(ext);
+    }
+
+    disableUpdates = true;
+    if(item != self() && item->user() != self()->user())
+        ui.coverage->setCurrentIndex(item->coverage() + 1);
+    else
+        ui.coverage->setCurrentIndex(1);
+
+    ui.fwdBusy->clear();
+    ui.fwdAway->clear();
+    ui.fwdNoAnswer->clear();
+
+    ui.fwdBusy->addItems(extensions);
+    ui.fwdNoAnswer->addItems(extensions);
+    ui.fwdAway->addItems(extensions);
+
+    ui.fwdBusy->setCurrentText(item->fwdBusy());
+    ui.fwdNoAnswer->setCurrentText(item->fwdNoAnswer());
+    ui.fwdAway->setCurrentText(item->fwdAway());
     ui.profileStack->setEnabled(true);
-    if(item == self() || item->isGroup()) {
-        ui.behaviorGroup->setVisible(false);
+    disableUpdates = false;
+
+    ui.coverage->setEnabled(true);
+    if(item == self())
         ui.behaviorGroup->setEnabled(false);
+    else if(item->user() == self()->user()) {
+        ui.coverage->setEnabled(false);
+        if(!Desktop::isAdmin())
+            ui.forwardGroup->setEnabled(false);
     }
-    else {
-        ui.behaviorGroup->setVisible(true);
+    else
         ui.behaviorGroup->setEnabled(true);
-    }
 }
 
 void Phonebook::selectContact(const QModelIndex& index)
@@ -1072,19 +1210,32 @@ void Phonebook::selectContact(const QModelIndex& index)
     if(!item)
         return;
 
-    if(item == self() || item->isGroup())
-        ui.behaviorGroup->setVisible(false);
+    if(item == self())
+        ui.behaviorGroup->setEnabled(false);
     else
         ui.behaviorGroup->setEnabled(true);
 
     if(connector) {
         ui.behaviorGroup->setEnabled(true);
-        ui.forwardGroup->setEnabled(true);
+        if(activeItem == Phonebook::self() || Desktop::isAdmin())
+            ui.forwardGroup->setEnabled(true);
     }
     else {
         ui.behaviorGroup->setEnabled(false);
         ui.forwardGroup->setEnabled(false);
     }
+
+    disableUpdates = true;
+    ui.fwdAway->clear();
+    ui.fwdBusy->clear();
+    ui.fwdNoAnswer->clear();
+    ui.coverage->setCurrentIndex(0);
+
+    if(item->isAutoAnswer())
+        ui.autoAnswer->setValue(1);
+    else
+        ui.autoAnswer->setValue(0);
+    disableUpdates = false;
 
     activeItem = clickedItem = item;
     updateProfile(item);
@@ -1180,7 +1331,8 @@ void Phonebook::changeConnector(Connector *connected)
 
     if(connector) {
         ui.behaviorGroup->setEnabled(true);
-        ui.forwardGroup->setEnabled(true);
+        if(activeItem == Phonebook::self() || Desktop::isAdmin())
+            ui.forwardGroup->setEnabled(true);
         requestPending = true;
         connect(connector, &Connector::changeProfile, this, [=](const QByteArray& json) {
             if(!connector)

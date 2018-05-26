@@ -92,6 +92,8 @@ QObject()
     connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
     connect(manager, &Manager::changeMembership, this, &Database::changeMembership);
+    connect(manager, &Manager::changeForwarding, this, &Database::changeForwarding);
+    connect(manager, &Manager::changeCoverage, this, &Database::changeCoverage);
     connect(manager, &Manager::changeTopic, this, &Database::changeTopic);
     connect(manager, &Manager::lastAccess, this, &Database::lastAccess);
     connect(this, &Database::sendMessage, manager, &Manager::sendMessage);
@@ -426,9 +428,12 @@ void Database::syncOutbox(qlonglong endpoint)
     runQuery("UPDATE Outboxes SET msgstatus = 0 WHERE endpoint=?;", {endpoint});
 }
 
-void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp)
+void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey)
 {
-    runQuery("UPDATE Endpoints SET lastaccess=? WHERE endpoint=?;", {timestamp, endpoint});
+    if(deviceKey.length() > 0)
+        runQuery("UPDATE Endpoints SET lastaccess=?,devkey=?,agent=? WHERE endpoint=?;", {timestamp, deviceKey, agent, endpoint});
+    else
+        runQuery("UPDATE Endpoints SET lastaccess=?,agent=? WHERE endpoint=?;", {timestamp, agent, endpoint});
 }
 
 void Database::sendDeviceList(const Event& event)
@@ -891,6 +896,126 @@ void Database::changeTopic(const Event& event)
     }
 }
 
+void Database::changeForwarding(const Event& event, const UString& authUser, qlonglong endpoint)
+{
+    auto target = atoi(event.message()->to->url->username);
+    auto number = event.number();
+
+    qDebug() << "Changing forwarding for" << target;
+    if(target != 0 && (target < firstNumber || target > lastNumber)) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+
+    auto type = record.value("authtype").toString();
+    auto user = record.value("authname").toString();
+
+    auto sysadmin = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {event.number()});
+    if(sysadmin.count() < 1) {
+        if(target != 0 && type != "GROUP" && type != "PILOT") {
+            if(target != number) {
+                Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+                return;
+            }
+        }
+        else {
+            auto grpadmin = getRecord("SELECT * FROM Admin WHERE (authname=?) AND (extnbr=?);", {user, number});
+            if(grpadmin.count() < 1) {
+                Context::reply(event, SIP_FORBIDDEN);
+                return;
+            }
+        }
+    }
+
+    auto msg = event.sent();
+    osip_header_t *valueHeader = nullptr;
+    osip_message_header_get_byname(msg, "x-destination", 0, &valueHeader);
+    if(!valueHeader || !valueHeader->hvalue) {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    auto fwdTo = -1;
+    UString destination(valueHeader->hvalue);
+    if(destination.isNumber())
+       fwdTo = destination.toInt();
+
+    if(fwdTo > 0 && (fwdTo < firstNumber || fwdTo > lastNumber)) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    osip_header_t *subject = nullptr;
+    osip_message_header_get_byname(msg, "subject", 0, &subject);
+    if(!subject || !subject->hvalue) {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    UString fwd(subject->hvalue);
+    if(fwd == "NA")
+        runQuery("UPDATE Authorize SET fwdnoanswer=? WHERE authname=?;", {fwdTo, user});
+    else if(fwd == "BUSY")
+        runQuery("UPDATE Authorize SET fwdbusy=? WHERE authname=?;", {fwdTo, user});
+    else if(fwd == "AWAY")
+        runQuery("UPDATE Authorize SET fwdaway=? WHERE authname=?;", {fwdTo, user});
+    else {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    sendProfile(event, authUser, endpoint);
+}
+
+
+void Database::changeCoverage(const Event& event, const UString& authUser, qlonglong endpoint)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "Changing coverage for" << target;
+    if(target != 0 && (target < firstNumber || target > lastNumber)) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+    auto coveringUser = record.value("authname").toString();
+    auto msg = event.sent();
+    osip_header_t *priorityHeader = nullptr;
+    osip_message_header_get_byname(msg, "x-priority", 0, &priorityHeader);
+    if(!priorityHeader || !priorityHeader->hvalue) {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    auto priority = -1;
+    auto number = event.number();
+    UString priorityValue(priorityHeader->hvalue);
+    if(priorityValue.isNumber())
+        priority = priorityValue.toInt();
+
+    if(priority < -1 || priority > 3) {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    if(coveringUser == authUser)
+        runQuery("UPDATE Extensions SET extpriority=? WHERE extnbr=?", {priority, number});
+    else {
+        runQuery("DELETE FROM Calling WHERE (authname=?) AND (extnbr=?);", {coveringUser, number});
+        if(priority > -1)
+            runQuery("INSERT INTO Calling(authname,extnbr, extpriority) VALUES(?,?,?)", {coveringUser, number, priority});
+    }
+    sendProfile(event, authUser, endpoint);
+}
+
 void Database::changeMembership(const Event& event, const UString& authuser, qlonglong endpoint)
 {
     int target = atoi(event.message()->to->url->username);
@@ -994,7 +1119,8 @@ void Database::changeMembership(const Event& event, const UString& authuser, qlo
 
 void Database::sendProfile(const Event& event, const UString& authuser, qlonglong endpoint)
 {
-    int target = atoi(event.message()->to->url->username);
+    auto target = atoi(event.message()->to->url->username);
+    auto number = event.number();
     qDebug() << "Seeking profile for" << target;
     if(target != 0 && (target < firstNumber || target > lastNumber)) {
         Context::reply(event, SIP_FORBIDDEN);
@@ -1022,6 +1148,43 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
     auto email = record.value("email").toString();
     auto userid = record.value("authname").toString();
     auto secret = record.value("secret").toString();
+    auto ringPriority = record.value("extpriority").toInt();
+    auto publicKey = record.value("pubkey").toByteArray();
+
+    auto fwdBusy = record.value("fwdbusy").toInt();
+    auto fwdNoAnswer = record.value("fwdnoanswer").toInt();
+    auto fwdAway = record.value("fwdaway").toInt();
+    auto coverage = -1, groupPriority = -1;
+
+    // what is my call priority in group xxx?
+    if(type == "GROUP" || type == "PILOT" || target == 0) {
+        auto calling = getRecord("SELECT extpriority FROM Groups WHERE (grpnbr=?) and (extnbr=?);", {target, number});
+        if(calling.count() > 0) {
+            if(target == 0)             // operators always do immediate coverage
+                groupPriority = 0;
+            else
+                groupPriority = calling.value("extpriority").toInt();
+        }
+    }
+    auto calling = getRecord("SELECT extpriority FROM Calling WHERE (authname=?) and (extnbr=?);", {userid, number});
+    if(calling.count() > 0)
+        coverage = calling.value("extpriority").toInt();
+
+    if(coverage > 3)
+        coverage = 3;
+    else if(coverage < 0)
+        coverage = -1;
+
+    if(groupPriority > 3)
+        groupPriority = 3;
+    else if(groupPriority < 0)
+        groupPriority = -1;
+
+    if(ringPriority > 3)
+        ringPriority = 3;
+    else if(ringPriority < 0)
+        ringPriority = -1;
+
     QString info, puburi;
     if(access == "REMOTE")
         puburi = userid + "@" + QString::fromUtf8(Server::sym(CURRENT_NETWORK));
@@ -1084,6 +1247,7 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
     QJsonObject profile {
         {"a", userid},
         {"c", created},
+        {"k", QString::fromUtf8(publicKey.toHex())},
         {"n", target},
         {"d", display},
         {"g", groupAccess},
@@ -1094,7 +1258,25 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
         {"p", puburi},
         {"i", info},
         {"s", privs},
+        {"busy", fwdBusy},
+        {"noanswer", fwdNoAnswer},
+        {"away", fwdAway},
+        {"cc", coverage},
+        {"gp", groupPriority},
+        {"rp", ringPriority},
     };
+
+    // self query
+    if(target == event.number()) {
+        auto speeds = getRecords("SELECT extnbr,target FROM Speeds WHERE (authname=?) AND (extnbr < 10);", {userid});
+        while(speeds.isActive() && speeds.next()) {
+            auto record = speeds.record();
+            auto speedDial = record.value("extnbr").toString();
+            if(speedDial < "1")
+                continue;
+            profile[speedDial] = record.value("target").toString();
+        }
+    }
 
     if(event.body().size() > 0) {
         bool allowed = (userid == authuser);
@@ -1213,6 +1395,7 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
         auto dialing = record.value("extnbr").toString();
         auto email = record.value("email").toString();
         auto access = record.value("authaccess").toString();
+        auto publicKey = record.value("pubkey").toByteArray();
         if(display.isEmpty())
             display = record.value("fullname").toString();
         if(display.isEmpty())
@@ -1233,6 +1416,7 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
         UString uri = event.uriTo(dialing);
         QJsonObject profile {
             {"a", name},
+            {"k", QString::fromUtf8(publicKey.toHex())},
             {"c", created},
             {"n", number},
             {"u", QString::fromUtf8(uri)},
@@ -1241,6 +1425,11 @@ void Database::sendRoster(const Event& event, qlonglong endpoint)
             {"e", email},
             {"p", puburi},
         };
+
+        if(number == event.number()) {
+            auto ringPriority = record.value("extpriority").toInt();
+            profile["rp"] = ringPriority;
+        }
 
         // qDebug() << "*** CONTACT" << profile;
         list << profile;

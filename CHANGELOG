@@ -1,3 +1,16 @@
+v0.2.6
+* Simplified expiration handling
+* Re-arranged font selection
+* Introduced desktop & audio notify setting
+* Integrated login auto start behavior
+* Speed dial ui support
+* Call coverage setting support
+* Call forwarding setting support
+* Delay ringing option supported
+* Per user and global auto answer settings
+* Start of integrated voice mail
+* Device keys introduced
+
 v0.2.5
 * Customization at build time
 * Topic management in sessions

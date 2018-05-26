@@ -38,6 +38,12 @@
 #define MSG_IS_PROFILE(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-PROFILE"))
 
+#define MSG_IS_COVERAGE(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-COVERAGE"))
+
+#define MSG_IS_FORWARDING(msg)  (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-FORWARDING"))
+
 #define MSG_IS_MEMBERSHIP(msg)  (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-MEMBERSHIP"))
 
@@ -212,6 +218,8 @@ void Context::run()
         connect(this, &Context::REQUEST_AUTHORIZE, stack, &Manager::requestAuthorize);
         connect(this, &Context::REQUEST_DEAUTHORIZE, stack, &Manager::requestDeauthorize);
         connect(this, &Context::REQUEST_MEMBERSHIP, stack, &Manager::requestMembership);
+        connect(this, &Context::REQUEST_FORWARDING, stack, &Manager::requestForwarding);
+        connect(this, &Context::REQUEST_COVERAGE, stack, &Manager::requestCoverage);
         connect(this, &Context::REQUEST_TOPIC, stack, &Manager::requestTopic);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
     }
@@ -341,6 +349,30 @@ bool Context::process(const Event& ev)
             if(ev.contentType() != "profile/json" && ev.body().size() > 0)
                 return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
             emit REQUEST_PROFILE(ev);
+            return false;
+        }
+
+        if(MSG_IS_COVERAGE(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_COVERAGE(ev);
+            return false;
+        }
+
+        if(MSG_IS_FORWARDING(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_FORWARDING(ev);
             return false;
         }
 

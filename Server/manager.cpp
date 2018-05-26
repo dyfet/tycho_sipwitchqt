@@ -376,6 +376,56 @@ void Manager::requestTopic(const Event& ev)
     emit changeTopic(ev);
 }
 
+void Manager::requestForwarding(const Event& ev)
+{
+    qDebug() << "REQUESTING FORWARDING FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND FORWARDING REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeForwarding(ev, reg->user(), reg->endpoint());
+}
+
+void Manager::requestCoverage(const Event& ev)
+{
+    qDebug() << "REQUESTING COVERAGE FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND COVERAGE REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeCoverage(ev, reg->user(), reg->endpoint());
+}
+
 void Manager::requestMembership(const Event& ev)
 {
     qDebug() << "REQUESTING MEMBERSHIP FROM" << ev.number();
@@ -462,7 +512,7 @@ void Manager::refreshRegistration(const Event &ev)
             auto result = reg->authorize(ev);
             if(result == SIP_OK) {
                 if(!context)
-                    emit lastAccess(reg->endpoint(), ev.timestamp());
+                    emit lastAccess(reg->endpoint(), ev.timestamp(), ev.agent(), ev.deviceKey());
                 UString xdp;
                 if(ev.label() != "NONE") {
                     auto range = Database::range();

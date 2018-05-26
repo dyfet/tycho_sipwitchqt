@@ -40,10 +40,8 @@ class Sessions;
 
 enum class KeyVerification : int
 {
-    Unkeyed = 0,    // user has no key
-    Initial,        // first trust state, unverified
-    Changed,        // key changed, need new verify
-    Verified,       // key currently verified
+    Untrusted = 0,      // user key not trusted or absent
+    Verified = 1,
 };
 
 class ContactItem final
@@ -107,6 +105,22 @@ public:
         return extendedInfo;
     }
 
+    QString speed(int id) const {
+        return speedNumbers[id];
+    }
+
+    UString fwdAway() const {
+        return forwardAway;
+    }
+
+    UString fwdBusy() const {
+        return forwardBusy;
+    }
+
+    UString fwdNoAnswer() const {
+        return forwardNoAnswer;
+    }
+
     QString topic() const {
         return contactTopic;
     }
@@ -127,6 +141,14 @@ public:
         return contactSequence;
     }
 
+    int coverage() const {
+        return callCoverage;
+    }
+
+    int delay() const {
+        return delayRinging;
+    }
+
     bool isExtension() const {
         return extensionNumber > -1;
     }
@@ -145,6 +167,10 @@ public:
 
     bool isOnline() const {
         return online;
+    }
+
+    bool isAutoAnswer() const {
+        return autoAnswer;
     }
 
     bool isSuspended() const {
@@ -169,7 +195,12 @@ public:
         return contactMembers;
     }
 
+    bool isMember(ContactItem *item) const {
+        return contactMembers.contains(item);
+    }
+
     void add();
+    void setAutoAnswer(bool enable);
     void removeMember(ContactItem *item);
 
     static QList<ContactItem*> sessions() {
@@ -198,14 +229,16 @@ private:
     SessionItem *session;
     UString displayName, contactUri, contactTimestamp, contactType;
     UString contactPublic, contactEmail;
+    UString forwardBusy, forwardNoAnswer, forwardAway;
     QString contactFilter, contactTopic, textDisplay, textNumber, authUserId;
     QString extendedInfo;
     QDateTime contactCreated, contactUpdated, topicUpdated;
-    int contactSequence, topicSequence;
+    int contactSequence, topicSequence, callCoverage, delayRinging;
     QByteArray publicKey;
     KeyVerification keyVerify;
-    bool group, added, hidden, admin, online, suspended;
+    bool group, added, hidden, admin, online, suspended, autoAnswer;
     QList<ContactItem *> contactMembers;
+    QHash<int,QString> speedNumbers;
     ContactItem *contactLeader;
     int extensionNumber;
     int uid;
@@ -340,6 +373,7 @@ private:
     void updateProfile(ContactItem *item);
     void clearGroup();
     void updateGroup();
+    void sendForwarding(Connector::Forwarding type, const QString& text);
     void changeMembership(ContactItem *item, const UString& members, const UString& notify, const UString& reason);
 
 signals:
@@ -355,8 +389,10 @@ private slots:
     void changeConnector(Connector *connector);
     void changeStorage(Storage *storage);
     void changeProfile();
+    void changeCoverage(int index);
     void promoteRemote();
     void demoteLocal();
+    void changePending();
 };
 
 #endif

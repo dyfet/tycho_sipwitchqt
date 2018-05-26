@@ -31,6 +31,9 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #include <QAbstractNativeEventFilter>
+#ifndef QT_NO_DEBUG_OUTPUT
+#define STARTUP_MINIMIZED
+#endif
 #endif
 
 #include <QGuiApplication>
@@ -61,6 +64,7 @@ static void signal_handler(int signo)
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
 
+void send_notification(const UString& text, const UString& info);
 void set_dock_icon(const QIcon& icon);
 void set_dock_label(const UString& text);
 void disable_nap();
@@ -213,6 +217,9 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     // Settings have to be extracted from config before options ui is created
     currentExpiration = settings.value("expires", 7 * 86400).toInt();
     currentAppearance = settings.value("appearance", "Vibrant").toString();
+    autoAnswer = settings.value("autoanswer", false).toBool();
+    desktopNotify = settings.value("notify-desktop", true).toBool();
+    audioNotify = settings.value("notify-audio", true).toBool();
 
     control = new Control(this);
 
@@ -344,14 +351,17 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
         emit changeStorage(storage);
         showSessions();
 
-        if(args.isSet("minimize")) {
+#ifndef STARTUP_MINIMIZED
+        if(args.isSet("minimize"))
             hide();
-        }
         else {
             show();
             resize(settings.value("size", size()).toSize());
             move(settings.value("position", pos()).toPoint());
         }
+#else
+        hide();
+#endif
 
         listen(storage->credentials());
     }
@@ -577,6 +587,10 @@ void Desktop::closeDialog()
 
 void Desktop::openDeviceList()
 {
+    if(!connector) {
+        errorMessage(tr("Must be online to get device list"));
+        return;
+    }
     closeDialog();
     setEnabled(false);
     dialog = new DeviceList(this, connector);
@@ -1144,11 +1158,6 @@ void Desktop::importDb()
 
 }
 
-void Desktop::resetFont() {
-    setTheFont(getBasicFont());
-    sessions->refreshFont();
-}
-
 void Desktop::removeUser(const QString &id)
 {
     // kickback function to remove after de-authorization accepted by server
@@ -1179,6 +1188,20 @@ void Desktop::removeUser(const QString &id)
     }
     ContactItem::deauthorize(id);
 }
+
+#ifdef Q_OS_MAC
+void Desktop::notification(const QString& title, const QString& info)
+{
+    if(desktopNotify)
+        send_notification(title.toUtf8(), info.toUtf8());
+}
+#else
+void Desktop::notification(const QString& title, const QString& info)
+{
+    if(trayIcon && desktopNotify)
+        trayIcon->showMessage(title, info);
+}
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -1224,7 +1247,9 @@ int main(int argc, char *argv[])
     Args::add(args, {
         {Args::HelpArgument},
         {Args::VersionArgument},
+#ifndef STARTUP_MINIMIZED
         {{"minimize"}, "Minimize if logged in"},
+#endif
         {{"notray"}, "Disable tray icon"},
         {{"reset"}, "Reset client config"},
     });
@@ -1243,6 +1268,7 @@ int main(int argc, char *argv[])
 #endif
 
     args.process(app);
+
     Desktop w(args);
     int status = app.exec();
     if(!result)

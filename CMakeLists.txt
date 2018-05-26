@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
-    include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake")
-endif()
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.5 LANGUAGES CXX)
+include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.6 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017")
 
@@ -22,11 +20,14 @@ if(UNIX AND (CMAKE_GENERATOR MATCHES "Unix"))
     set(CMAKE_MAINTAINER true)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/Custom.cmake OPTIONAL)
 include(GNUInstallDirs)
 
-find_package(Qt5 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
-find_package(Qt5LinguistTools)
+if(CUSTOM_CONTAINER)
+    find_package(Qt5 COMPONENTS Core Network Sql REQUIRED)
+else()
+    find_package(Qt5 COMPONENTS Core Network Sql Gui Widgets REQUIRED)
+    find_package(Qt5LinguistTools)
+endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -47,6 +48,7 @@ if(WIN32)
     set(system_libs libssl libcrypto advapi32 user32 crypt32 gdi32 ws2_32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
+    find_path(WINDEPLOYQT_PATH windeployqt.exe PATH_SUFFIXES bin)
 elseif(APPLE)    
     if(NOT EXISTS "/usr/local/opt/libexosip")
         message(FATAL_ERROR "*** requires: brew install libexosip")
@@ -55,9 +57,9 @@ elseif(APPLE)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
     find_library(APPKIT_LIBRARY AppKit)
-    set(system_libs ${APPKIT_LIBRARY} ${IOKIT_LIBRARY} ${CORE_LIBRARY})
-    include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include")
-    link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib")
+    set(system_libs ${APPKIT_LIBRARY} ${IOKIT_LIBRARY} ${CORE_LIBRARY} -lcrypto)
+    include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include" "/usr/local/opt/openssl/include")
+    link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib" "/usr/local/opt/openssl/lib")
     find_path(MACDEPLOYQT_PATH macdeployqt PATH_SUFFIXES bin)
 
     set(DESKTOP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.icns")
@@ -89,7 +91,9 @@ else()
         pkg_check_modules(OSIP2 libosip2)
     endif()
     pkg_check_modules(SYSTEMD libsystemd)
-    pkg_check_modules(ZEROCONF avahi-client>=0.3.0)
+    if(NOT CUSTOM_CONTAINER OR CUSTOM_CONTAINER MATCHES "avahi")
+        pkg_check_modules(ZEROCONF avahi-client>=0.3.0)
+    endif()
     if(NOT OSIP2_FOUND AND NOT BOOTSTRAP_VENDOR_EXOSIP)
         message(FATAL_ERROR "*** requires osip2 and eXosip2 installed")
     endif()
@@ -116,6 +120,7 @@ if(CUSTOM_NAME)
     add_definitions("-DCUSTOMIZE_DESKTOP")
 else()
     set(APPLICATION_NAME "${PROJECT_NAME} Desktop")
+    set(APPLICATION_EXEC "${DESKTOP_NAME}")
     set(APPLICATION_DOMAIN "tychosoft.com")
     set(APPLICATION_ORG "Tycho Softworks")
     set(TRANSLATIONS_OUTPUT_DIRECTORY "translations")
@@ -181,15 +186,17 @@ if(BOOTSTRAP_VENDOR_EXOSIP)
     include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libeXosip2/include")
 endif()
 
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
-set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
-qt5_add_translation(desktop_qm ${desktop_ts})
+if(NOT CUSTOM_CONTAINER)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
+    set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
+    qt5_add_translation(desktop_qm ${desktop_ts})
 
-set(ts_desktop ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_hdr} ${dialogs_src} ${dialogs_uic} ${connect_hdr} ${connect_src})
-add_custom_target(translations SOURCES ${desktop_ts}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    COMMAND ${Qt5_LUPDATE_EXECUTABLE} ${ts_desktop} -ts translations/sipwitchqt-desktop_es.ts
-) 
+    set(ts_desktop ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_hdr} ${dialogs_src} ${dialogs_uic} ${connect_hdr} ${connect_src})
+    add_custom_target(translations SOURCES ${desktop_ts}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND ${Qt5_LUPDATE_EXECUTABLE} ${ts_desktop} -ts translations/sipwitchqt-desktop_es.ts
+    ) 
+endif()
 
 if(APPLE)
     set_source_files_properties(${DESKTOP_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
@@ -199,12 +206,14 @@ endif()
 
 set(voip_libs eXosip2 osip2 osipparser2)
 
-add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_src} ${dialogs_hdr} ${dialogs_uic} ${desktop_mm} ${desktop_qm} ${desktop_rc} ${CUSTOM_DESKTOP_RESOURCES} Resources/desktop.qrc)
-target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
-set_target_properties(desktop-app PROPERTIES
-    OUTPUT_NAME "${DESKTOP_NAME}"
-    MACOSX_BUNDLE_INFO_PLIST "${DESKTOP_PLIST}"
-)
+if(NOT CUSTOM_CONTAINER)
+    add_executable(desktop-app WIN32 MACOSX_BUNDLE ${DESKTOP_ICON} ${common_src} ${common_hdr} ${connect_src} ${connect_hdr} ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_src} ${dialogs_hdr} ${dialogs_uic} ${desktop_mm} ${desktop_qm} ${desktop_rc} ${CUSTOM_DESKTOP_RESOURCES} Resources/desktop.qrc)
+    target_link_libraries(desktop-app Qt5::Core Qt5::Network Qt5::Gui Qt5::Widgets Qt5::Sql ${voip_libs} ${desktop_libs} ${system_libs})
+    set_target_properties(desktop-app PROPERTIES
+        OUTPUT_NAME "${DESKTOP_NAME}"
+        MACOSX_BUNDLE_INFO_PLIST "${DESKTOP_PLIST}"
+    )
+endif()
 
 add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc} ${CUSTOM_SERVER_RESOURCES})
 target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
@@ -247,7 +256,6 @@ if(DOXYGEN AND GRAPHVIZ)
 endif()
 
 install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
-install(TARGETS desktop-app DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
@@ -257,22 +265,27 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
-install(FILES ${desktop_qm} DESTINATION "${CMAKE_INSTALL_DATADIR}/${TRANSLATIONS_OUTPUT_DIRECTORY}")
+if(NOT CUSTOM_CONTAINER)
+    install(TARGETS desktop-app DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(FILES ${desktop_qm} DESTINATION "${CMAKE_INSTALL_DATADIR}/${TRANSLATIONS_OUTPUT_DIRECTORY}")
+endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT CUSTOM_CONTAINER)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${LOGO}" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
+endif()
+if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
 endif()
 
-install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
-install(FILES "${CMAKE_CURRENTT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-sqlite.sql)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-sqlite.sql)
 
 # staging releases; we do not stage debug because it uses testdata...
 
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(APPLE)
         add_custom_command(TARGET desktop-app POST_BUILD
             COMMAND dsymutil "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
@@ -280,19 +293,17 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND mv "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}.dSYM" "${DESKTOP_NAME}.dSYM"
             COMMAND mkdir -p "${DESKTOP_NAME}.app/Contents/Translations"
             COMMAND cp -a "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen/sipwitchqt-desktop_*.qm" "${DESKTOP_NAME}.app/Contents/Translations"
-            COMMAND "${MACDEPLOYQT_PATH}/macdeployqt" "${DESKTOP_NAME}.app" -always-overwrite -appstore-compliant ${APPSTORE_SIGN}
+            COMMAND "${MACDEPLOYQT_PATH}/macdeployqt" "${DESKTOP_NAME}.app" -dmg -always-overwrite -appstore-compliant ${APPSTORE_SIGN}
         )
     endif()
 
     if(WIN32)
-        add_custom_target(stage
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            DEPENDS desktop-app server-app
+        add_custom_command(TARGET desktop-app POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E remove Setup.exe
             COMMAND "${CMAKE_COMMAND}" -E remove_directory stage
             COMMAND "${CMAKE_COMMAND}" -E make_directory stage
             COMMAND "${CMAKE_COMMAND}" -E copy sipwitchqt-desktop.exe stage
-            COMMAND windeployqt --release --verbose=0 stage/sipwitchqt-desktop.exe
+            COMMAND "${WINDEPLOYQT_PATH}/windeployqt" --release --verbose=0 stage/sipwitchqt-desktop.exe
             COMMAND xcopy /q "translations_autogen\\*.qm" "stage\\translations" >nul
             COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" stage/COPYING.txt
             COMMAND iscc setup.iss
@@ -302,7 +313,6 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND zip -q stage/Symbols.zip *.pdb
             COMMAND cd stage && zip Setup.zip Setup.exe && cd ..
         )
-        add_dependencies(stage dist)
     endif()
 endif()
 
@@ -334,5 +344,8 @@ if(CMAKE_MAINTAINER)
         COMMAND mv refman.pdf "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}.pdf"
         DEPENDS support-docs
     )
+    
+    # patch in debian support
+    include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
 endif()
 

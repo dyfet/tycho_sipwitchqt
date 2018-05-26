@@ -143,9 +143,50 @@ public:
     void statusMessage(const QString& msg, int timeout = 5000);
     void clearMessage();
 
+    void notification(const QString& title, const QString& body);
+
     void setSelf(const QString& text);
     bool isCurrent(const QWidget *widget) const;
     bool notify(const QString& title, const QString& body, QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information, int timeout = 10000);
+
+    bool isAutoAnswer() const {
+        return autoAnswer;
+    }
+
+    void enableAutoAnswer(bool enable = true) {
+        autoAnswer = enable;
+        settings.setValue("autoanswer", enable);
+    }
+
+    void disableAutoAnswer(bool disable = true) {
+        return enableAutoAnswer(!disable);
+    }
+
+    bool isDesktopNotify() const {
+        return desktopNotify;
+    }
+
+    void enableDesktopNotify(bool enable = true) {
+        desktopNotify = enable;
+        settings.setValue("notify-desktop", enable);
+    }
+
+    void disableDesktopNotify(bool disable = true) {
+        return enableDesktopNotify(!disable);
+    }
+
+    bool isAudioNotify() const {
+        return audioNotify;
+    }
+
+    void enableAudioNotify(bool enable = true) {
+        audioNotify = enable;
+        settings.setValue("notify-audio", enable);
+    }
+
+    void disableAudioNotify(bool disable = true) {
+        return enableAudioNotify(!disable);
+    }
 
     inline QString appearance() const {
         return currentAppearance;
@@ -215,6 +256,8 @@ private:
     bool powerReconnect;
     bool updateRoster;
     bool offlineMode;
+    bool autoAnswer;
+    bool desktopNotify, audioNotify;
 
     void closeEvent(QCloseEvent *event) final;
     QMenu *createPopupMenu() final;
@@ -262,8 +305,6 @@ public slots:
     void changeAppearance(const QString& appearance);
     void changeExpiration(int expire);
     void removeUser(const QString& user);   // callback from listener notify
-    void resetFont();
-
 
 private slots:
     void authorized(const QVariantHash& creds); // server authorized

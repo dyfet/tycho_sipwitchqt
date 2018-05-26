@@ -23,6 +23,7 @@
 #include <QButtonGroup>
 
 class Desktop;
+class Connector;
 
 class Options : public QWidget
 {
@@ -35,11 +36,14 @@ public:
 private:
     Desktop *desktop;
     QDialog *dialog;
+    QString autostartPath;
+    Connector *connector;
 
 private slots:
     void secretChanged(const QString& text);
     void changePassword();
-
+    void changeAutostart(int value);
+    void changeConnector(Connector *connection);
 };
 
 #endif

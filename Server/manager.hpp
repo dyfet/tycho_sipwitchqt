@@ -77,21 +77,25 @@ signals:
     void sendDevlist(const Event& ev);
     void changeProfile(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeTopic(const Event& ev);
+    void changeCoverage(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& authorized, qlonglong endpoint);
+    void changeForwarding(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void removeAuthorize(const Event& ev);
     void sendPending(const Event& ev, qlonglong endpoint);
-    void lastAccess(qlonglong endpoint, const QDateTime& timestamp);
+    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey);
 
 public slots:
     void sendMessage(qlonglong endpoint, const QVariantHash& data);
     void ackPending(const Event& ev);
     void requestTopic(const Event& ev);
     void requestRoster(const Event& ev);
+    void requestCoverage(const Event& ev);
     void requestProfile(const Event& ev);
     void requestDevlist(const Event& ev);
     void requestPending(const Event& ev);
     void requestAuthorize(const Event& ev);
+    void requestForwarding(const Event& ev);
     void requestDeauthorize(const Event& ev);
     void requestMembership(const Event& ev);
     void refreshRegistration(const Event& ev);

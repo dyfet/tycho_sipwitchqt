@@ -32,6 +32,9 @@ class Connector final : public QObject
 	Q_OBJECT
 
 public:
+    enum class Forwarding {
+        NA, BUSY, AWAY};
+
     explicit Connector(const QVariantHash& credentials, const QSslCertificate& cert = QSslCertificate());
 
     inline void start() {
@@ -49,6 +52,8 @@ public:
     void requestDeviceList();
     void requestDeauthorize(const UString& to);
     void createAuthorize(const UString& to, const QByteArray& body);
+    void changeCoverage(const UString& to, int target = -1);
+    void changeForwarding(const UString& to, Forwarding type, int target = -1);
     void changeTopic(const UString& to, const UString& subject, const UString& body = {});
     void changeMemebership(const UString& to, const UString& subject, const UString& members, const UString& admin, const UString& notify, const UString& reason);
     void sendProfile(const UString& to, const QByteArray& body);

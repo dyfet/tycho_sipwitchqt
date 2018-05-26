@@ -247,6 +247,10 @@ public:
         return d->timestamp;
     }
 
+    inline QByteArray deviceKey() const {
+        return d->deviceKey;
+    }
+
     int nextSequence() const;
 
     const UString uriTo(const UString& id) const;
@@ -278,6 +282,7 @@ private:
         QList<Contact> contacts, routes;
         UString agent, method, subject, text, content, realm, reason, initialize;
         UString userid, nonce, digest, algorithm, request, contentType, display;
+        QByteArray deviceKey;      // device public key...
         QString label;
         Contact source;  // if nat, has first nat
         Contact from, to, target;

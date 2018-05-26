@@ -862,7 +862,8 @@ void Sessions::refreshFont()
     auto old = ui.messages->itemDelegate();
     ui.messages->setItemDelegate(new MessageDelegate(ui.messages));
     delete old;
-    activeItem->model()->changeLayout();
+    if(activeItem && activeItem->model())
+        activeItem->model()->changeLayout();
 
 }
 

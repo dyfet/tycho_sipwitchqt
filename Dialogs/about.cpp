@@ -41,6 +41,12 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
         ui.authId->setText(creds["user"].toString());
     }
 
+    auto deviceKey = creds["devkey"].toByteArray().toHex();
+    auto len = deviceKey.count();
+    if(len) {
+        ui.deviceKey1->setText(deviceKey.left(len/2));
+        ui.deviceKey2->setText(deviceKey.mid(len/2));
+    }
     show();
 }
 
