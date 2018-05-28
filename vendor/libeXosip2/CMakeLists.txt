@@ -21,5 +21,7 @@ file(GLOB eXosip2_inc ${CMAKE_CURRENT_SOURCE_DIR}/include/eXosip2/*.h)
 
 add_library(eXosip2 STATIC ${eXosip2_src} ${eXosip2_inc})
 
-install(FILES ${eXosip2_inc} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/eXosip2)
-install(TARGETS eXosip2 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+if(VENDOR_INSTALL)
+    install(FILES ${eXosip2_inc} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/eXosip2)
+    install(TARGETS eXosip2 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
