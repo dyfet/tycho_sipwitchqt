@@ -8,7 +8,6 @@ URL:     https://gitlab.com/tychosoft/sipwitchqt
 Source0: https:///pub.cherokeesofidaho.org/tarballs/%{name}-%{version}.tar.gz
 Group:	 system/telephony
 
-# redhat-land is qt5-qtbase-devel, qt5-linguist, openssl-devel >= 1.1.0
 BuildRequires: cmake >= 3.1.0
 BuildRequires: libqt5-qtbase-devel, libqt5-linguist-devel, gcc-c++
 BuildRequires: libosip2-devel, libeXosip2-devel >= 4.0.0
@@ -38,8 +37,10 @@ A pbx server and desktop client for the sip protocol
 A pbx server for the sip protocol
 
 %description utils
-Extra utility commands and scripts to use with sipwitchqt.  Some may be used stand-alone.
-This includes sqlite3 local db administration support for SipWitchQt. 
+Extra utility commands and scripts to use with sipwitchqt.  This may be
+used stand-alone to initialize mysql databases for sipwitchqt servers.
+This also includes sqlite3 local db administration support for use with
+a server setup with sqlite.
 
 %description desktop
 SipWitchQt desktop client.
@@ -72,19 +73,19 @@ SipWitchQt desktop client.
 %defattr(-,root,root)
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt-server
-%{_sbindir}/ipl-sipwitch
 %{_sysconfdir}/sv/sipwitchqt/run
-%{_datadir}/schemas/sipwitch-*.sql
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
 %attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh
 
 %files utils
 %defattr(-,root,root)
+%{_sbindir}/ipl-*
 %{_sbindir}/swcert-*
 %{_mandir}/man1/swcert-*
 %{_sbindir}/swlite-*
 %{_mandir}/man1/swlite-*
+%{_datadir}/schemas/*.sql
 
 %files desktop
 %defattr(-,root,root)

@@ -348,7 +348,8 @@ if(CMAKE_MAINTAINER)
         DEPENDS support-docs
     )
     
-    # patch in debian support
+    # patch in packaging support
+    include("${CMAKE_CURRENT_SOURCE_DIR}/redhat/include.cmake" OPTIONAL)
     include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
 endif()
 
