@@ -16,25 +16,28 @@ BuildRequires: systemd-rpm-macros
 
 %package server
 Recommends: libQt5Sql5-mysql, libQt5Sql5-sqlite
-Summary: sipwitchqt server
+Summary: pbx and messaging server for the SIP protocol
 Requires(pre): systemd									
 Requires(post): systemd									
 Requires(preun): systemd								
 Requires(postun): systemd
 
 %package utils
-Recommends: sipwitchqt-server, ruby-sqlite3
+Suggests: sipwitchqt-server
 Requires: ruby
-Summary: sipwitchqt utility scripts and commands
+Summary: Utility scripts and commands
 
 %package desktop
-Summary: sipwitchqt desktop client 
+Summary: SIP messaging desktop client
 
 %description
-A pbx server and desktop client for the sip protocol
+Server and desktop client for the sip protocol
 
 %description server
-A pbx server for the sip protocol
+Sip server that focuses on reliable delivery of and support for persistent
+messaging.  The server also tries to maintain inter-operation with existing
+SIP softphones and devices.  Features like calling, video, and a security
+model will also be added in the future.
 
 %description utils
 Extra utility commands and scripts to use with sipwitchqt.  This may be
@@ -43,7 +46,11 @@ This also includes sqlite3 local db administration support for use with
 a server setup with sqlite.
 
 %description desktop
-SipWitchQt desktop client.
+Desktop client specifically adapted for use with a SipWitchQt server.
+This includes support for persistent messaging over SIP, as well as
+automatic management of the server's roster, and the ability to
+administer a sipwitch server directly from the client.  In the future
+this will include sip calling, video, and a session based security model.
 
 %prep
 %setup -q
@@ -83,8 +90,7 @@ SipWitchQt desktop client.
 %{_sbindir}/ipl-*
 %{_sbindir}/swcert-*
 %{_mandir}/man1/swcert-*
-%{_sbindir}/swlite-*
-%{_mandir}/man1/swlite-*
+%{_mandir}/man1/ipl-*
 %{_datadir}/schemas/*.sql
 
 %files desktop

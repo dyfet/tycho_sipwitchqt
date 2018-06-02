@@ -1,4 +1,4 @@
-.\" swlite-list - output list of authorizations
+.\" ipl-sipwtch - generate initial mysql database for sipwitch servers
 .\" Copyright (C) 2018 Tycho Softworks
 .\"
 .\" This manual page is free software; you can redistribute it and/or modify
@@ -17,17 +17,22 @@
 .\"
 .\" This manual page is written especially for Debian GNU/Linux.
 .\"
-.TH swlite-list "1" "January 2018" "SipWitchQt" "Tycho Softworks"
+.TH ipl-sipwitch "1" "January 2018" "SipWitchQt" "Tycho Softworks"
 .SH NAME
-swlite-list \- output list of authorizations
+ipl-sipwitch \- generate initial mysql database for sipwitch servers
 .SH SYNOPSIS
-.B swlite-list
+.B ipl-sipwitch
 .br
 .SH DESCRIPTION
-This utility dumps the sipwitchqt authorized users, teams, pilots, and device
-authorizations.
+This utility is used to create and initially populate a mysql database with
+initial authorization records when deploying a new sipwitch instance.  The
+values needed to create a new database, including initial passwords, are
+prompted for on the command line. The connection information for the mysql
+server is typically read from the servers /etc/sipwitchqt.conf file.  Since the
+utilities can be installed stand-alone on a separate machine, you can instead 
+create a local config file with database connection info using the -c path option.
 .SH AUTHOR
-.B swlite-list
+.B ipl-sipwitch
 was written by David Sugar <tychosoft@gmail.com>.
 .SH "REPORTING BUGS"
 Report bugs to tychosoft@gmail.com.

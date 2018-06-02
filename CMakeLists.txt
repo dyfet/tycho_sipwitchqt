@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.6 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.2.7 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
-set(PROJECT_COPYRIGHT "2017")
+set(PROJECT_COPYRIGHT "2017-2018")
 
 string(TOLOWER "${PROJECT_NAME}" PROJECT_ARCHIVE)
 string(REGEX REPLACE "[.]" "," RC_VERSION ${PROJECT_VERSION})
@@ -264,7 +264,7 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
 )
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
+install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
 )
 
@@ -275,12 +275,12 @@ endif()
 
 if(UNIX AND NOT APPLE AND NOT CUSTOM_CONTAINER)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/appdata")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${PROJECT_ARCHIVE}.appdata.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${LOGO}" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
 endif()
 if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
+    install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
 endif()
 
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
@@ -348,7 +348,12 @@ if(CMAKE_MAINTAINER)
         DEPENDS support-docs
     )
     
-    # patch in packaging support
+    # Patch in packaging support.  These are not part of master, but rather a
+    # packaging branch.  This is done so that we can also overlay different
+    # packaging directory content for custom and special purpose builds, much
+    # like the Custom directory itself.  OS's that redistribute would in any
+    # case maintain their own packaging.  Finally I tend to add things in my
+    # include.cmake specific to my ci environment and where I upload our builds. 
     include("${CMAKE_CURRENT_SOURCE_DIR}/redhat/include.cmake" OPTIONAL)
     include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
 endif()

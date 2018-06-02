@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (C) 2017 Tycho Softworks
+# Copyright (C) 2017-2018 Tycho Softworks
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -12,6 +12,7 @@ database = 'sqlite'
 digest_type = 'MD5'
 first = '100'
 last = '699'
+config = '/nonexist'
 
 Dir.chdir(File.dirname($0))
 
@@ -60,15 +61,22 @@ OptionParser.new do |opts|
   opts.on('-5', '--sha512', 'use sha-512') do
     digest_type = 'SHA-512'
   end
+
+  opts.on('-c', '--config [PATH]', 'set config file') do |path|
+    config = path
+  end
 end.parse!
 abort(opts.banner) if(ARGV.size > 0)
 
-config = '/etc/sipwitchqt.conf'
-config = '../testdata/service.conf' if File.exists?('../testdata/service.conf')
-config = '../userdata/service.conf' if File.exists?('../userdata/service.conf')
-localdb = '/var/lib/sipwitchqt/local.db'
+if !File.exists?(config) 
+  config = '/etc/sipwitchqt.conf'
+  config = '../testdata/service.conf' if File.exists?('../testdata/service.conf')
+  config = '../userdata/service.conf' if File.exists?('../userdata/service.conf')
+  localdb = '/var/lib/sipwitchqt/local.db'
+end
 
 abort("*** ipl-sipwitch: no config") unless File.exists?(config)
+print "config file #{config} used\n"
 
 section = nil
 realm = nil

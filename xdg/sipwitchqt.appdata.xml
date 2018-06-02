@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application>
-    <id type="desktop">sipwitchqt.desktop</id>
+<component type="desktop">
+    <id>sipwitchqt.desktop</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0+ and OpenSSL exception</project_license>
     <name>SipWitchQt Desktop</name>
-    <license>GPL-3.0+</license>
-    <description>
-        <p>A desktop client for a sipwitchqt server</p>
-    </description>
+    <summary>Desktop client for a sipwitchqt server</summary>
+	<description>
+		<p>Desktop client specifically adapted for use with a SipWitchQt server.
+		This includes support for persistent messaging over SIP, as well as
+		automatic management of the server's roster, and the ability to
+		administer a sipwitch server directly from the client.  In the future
+		this will include sip calling, video, and a session based security model</p>
+	</description>
     <screenshots>
         <screenshot type="default">
             <image>https://pub.cherokeesofidaho.org/screenshots/sipwitchqt-desktop.png</image>
         </screenshot>
     </screenshots>
     <url type="homepage">https://www.github.com:tychosoft/sipwitchqt</url>
-    <updatecontact>tychosoft@gmail.com</updatecontact>
-</application>
+    <update_contact>tychosoft@gmail.com</update_contact>
+</component>
 

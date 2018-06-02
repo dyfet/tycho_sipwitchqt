@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Tycho Softworks.
+ * Copyright (C) 2017-2018 Tycho Softworks.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
