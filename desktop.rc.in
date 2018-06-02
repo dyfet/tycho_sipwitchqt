@@ -19,7 +19,7 @@ BEGIN
             VALUE "FileDescription", "Desktop client for SipWitchQt server"
             VALUE "FileVersion", "${PROJECT_VERSION}"
             VALUE "InternalName", "${DESKTOP_NAME}"
-            VALUE "LegalCopyright", "(C) 2017 Tycho Softworks"
+            VALUE "LegalCopyright", "(C) 2017-2018 Tycho Softworks"
             VALUE "OriginalFilename", "${DESKTOP_NAME}.exe"
             VALUE "ProductName", "${PROJECT_NAME}"
             VALUE "ProductVersion", "${PROJECT_VERSION}"
