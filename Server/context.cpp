@@ -53,6 +53,9 @@
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method,"X-DEVLIST"))
 
+#define MSG_IS_DEVKILL(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method,"X-DEVKILL"))
+
 #define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-PENDING"))
 
@@ -222,6 +225,7 @@ void Context::run()
         connect(this, &Context::REQUEST_COVERAGE, stack, &Manager::requestCoverage);
         connect(this, &Context::REQUEST_TOPIC, stack, &Manager::requestTopic);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
+        connect(this, &Context::REQUEST_DEVKILL, stack, &Manager::requestDevkill);
     }
 
     connect(this, &Context::LOCAL_MESSAGE, database, &Database::localMessage);
@@ -406,6 +410,13 @@ bool Context::process(const Event& ev)
             if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_DEVLIST(ev);
+            return false;
+        }
+
+        if(MSG_IS_DEVKILL(ev.message())) {
+            if(ev.number() < 1 || ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            emit REQUEST_DEVKILL(ev);
             return false;
         }
 

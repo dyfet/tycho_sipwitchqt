@@ -136,6 +136,7 @@ signals:
     void REQUEST_OPTIONS(const Event& ev);
     void REQUEST_ROSTER(const Event& ev);
     void REQUEST_DEVLIST(const Event& ev);
+    void REQUEST_DEVKILL(const Event& ev);
     void REQUEST_PENDING(const Event& ev);
     void REQUEST_PROFILE(const Event& ev);
     void REQUEST_TOPIC(const Event& ev);

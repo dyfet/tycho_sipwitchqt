@@ -326,6 +326,32 @@ void Manager::requestPending(const Event& ev)
     emit sendPending(ev, reg->endpoint());
 }
 
+void Manager::requestDevkill(const Event& ev)
+{
+    qDebug() << "REQUESTING DEVKILL FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND DEVKILL REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit removeDevice(ev, reg->user(), reg->endpoint());
+}
+
+
 void Manager::requestDevlist(const Event& ev)
 {
     qDebug() << "REQUESTING DEVLIST FROM" << ev.number();
@@ -508,11 +534,12 @@ void Manager::refreshRegistration(const Event &ev)
         if(!ev.authorization())
             Context::challenge(ev, reg);
         else {
-            auto context = reg->context();
+            auto active = reg->isActive();
             auto result = reg->authorize(ev);
+            auto uri = reg->uri();
             if(result == SIP_OK) {
-                if(!context)
-                    emit lastAccess(reg->endpoint(), ev.timestamp(), ev.agent(), ev.deviceKey());
+                if(!active)
+                    emit lastAccess(reg->endpoint(), ev.timestamp(), ev.agent(), ev.deviceKey(), uri);
                 UString xdp;
                 if(ev.label() != "NONE") {
                     auto range = Database::range();

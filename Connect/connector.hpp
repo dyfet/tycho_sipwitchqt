@@ -52,6 +52,7 @@ public:
     void requestPending();
     void requestDeviceList();
     void requestDeauthorize(const UString& to);
+    void removeDevice(const UString& label);
     void createAuthorize(const UString& to, const QByteArray& body);
     void changeCoverage(const UString& to, int target = -1);
     void changeForwarding(const UString& to, Forwarding type, int target = -1);

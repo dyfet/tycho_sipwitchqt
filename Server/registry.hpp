@@ -97,7 +97,13 @@ public:
     }
 
     bool isActive() const {
-        return serverContext != nullptr;
+        return active;
+    }
+
+    UString uri() const {
+        if(!serverContext || !active)
+            return {"none"};
+        return serverContext->prefix() + address.toString();
     }
 
     bool isLabeled() const {
@@ -127,7 +133,8 @@ public:
 private:
     UString userId, userLabel, userSecret, authRealm, authDigest;
     UString userDisplay, userAgent, userOrigin, userPrivs;
-    int number, rid;
+    int number;
+    bool active;
     qlonglong endpointId;               // endpoint id from database
     qint64 timeout;                     // time till expires
     QByteArray random, prior;           // nounce value

@@ -71,8 +71,6 @@ void Authorize::init(unsigned order)
 void Authorize::findEndpoint(const Event& event)
 {
     qDebug() << "Seeking endpoint" << event.number();
-    //emit createEndpoint(event, QVariantHash());
-    //Context::reply(event, SIP_NOT_FOUND);
 
     if(database->firstNumber < 1 || db == nullptr) {
         Context::reply(event, SIP_INTERNAL_SERVER_ERROR);

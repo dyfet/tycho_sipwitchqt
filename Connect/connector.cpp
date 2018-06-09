@@ -31,6 +31,7 @@
 #define X_ROSTER        "X-ROSTER"
 #define X_PROFILE       "X-PROFILE"
 #define X_DEVLIST       "X-DEVLIST"
+#define X_DEVKILL       "X-DEVKILL"
 #define X_PENDING       "X-PENDING"
 #define A_PENDING       "A-PENDING"
 #define X_TOPIC         "X-TOPIC"
@@ -45,6 +46,9 @@
 
 #define MSG_IS_DEVLIST(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_DEVLIST))
+
+#define MSG_IS_DEVKILL(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_DEVKILL))
 
 #define MSG_IS_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_PENDING))
@@ -174,6 +178,20 @@ void Connector::requestDeauthorize(const UString& to)
         return;
 
     osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::removeDevice(const UString& label)
+{
+    osip_message_t *msg = nullptr;
+    Locker lock(context);
+
+    eXosip_message_build_request(context, &msg, X_DEVKILL, sipFrom, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-Remove", label);
     eXosip_message_send_request(context, msg);
 }
 
@@ -425,7 +443,7 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
-                else if(MSG_IS_PROFILE(event->request) || MSG_IS_COVERAGE(event->request) || MSG_IS_MEMBERSHIP(event->request) || MSG_IS_FORWARDING(event->request))
+                else if(MSG_IS_PROFILE(event->request) || MSG_IS_COVERAGE(event->request) || MSG_IS_MEMBERSHIP(event->request) || MSG_IS_FORWARDING(event->request) || MSG_IS_DEVKILL(event->request))
                     processProfile(event);
                 else if(MSG_IS_AUTHORIZE(event->request)) {
                     emit statusResult(SIP_OK, "");

@@ -26,6 +26,7 @@
 #include <QSqlDatabase>
 #include <QSqlRecord>
 #include <QSqlQuery>
+#include <QJsonArray>
 
 class Storage final : public QObject
 {
@@ -55,6 +56,8 @@ public:
 
     void updateCredentials(const QVariantHash &cred);
     void updateSelf(const QString& text);
+    void verifyDevices(QJsonArray &devices);
+    void verifyDevice(const QString& label, const QByteArray& key, const QString &agent);
 
     static Storage *instance() {
         return Instance;
@@ -72,6 +75,7 @@ public:
     static bool exists(const QString &dbName);
     static void remove(const QString &dbName);
     static QVariantHash next(QSqlQuery& query);
+    static void initialLogin(const QString& dbName, const QString &key, QVariantHash& creds);
 
     QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
     bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
@@ -176,8 +180,16 @@ private:
  * \return true if the database name is found.
  *
  * \fn Storage::remove(const QString& dbname)
- * \param Name of database file to remove.
+ * \param dbname Name of database file to remove.
  * Removes the given named sqlite database.
+ *
+ * \fn Storage::initialLogin(const QString& dbname, const QString& key, QVariantHash& creds)
+ * \param dbname Name of database file to check.
+ * \param key Cipher key for storage.
+ * \param creds User credentials to update.
+ * This is used to initialize credentials with a valid device key before first login.  If
+ * the database already exists then the databases keys and initialization mode are set.
+ * Otherwise a new device key is created for use when the device does successfully login.
  *
  * \fn Storage::getRecord(const QString& query, const QVariantList& params)
  * Used to retrieve a single record based on a query string provided.  The

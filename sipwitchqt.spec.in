@@ -84,6 +84,7 @@ this will include sip calling, video, and a session based security model.
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
 %attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh
+%{_mandir}/man1/sipwitchqt-server.1
 
 %files utils
 %defattr(-,root,root)
@@ -100,4 +101,5 @@ this will include sip calling, video, and a session based security model.
 %{_datadir}/translations/*.qm
 %{_datadir}/appdata/sipwitchqt.appdata.xml
 %{_datadir}/pixmaps/sipwitchqt.png
+%{_mandir}/man1/sipwitchqt-desktop.1
 

@@ -39,6 +39,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     if(!creds["host"].isNull()) {
         ui.authServer->setText(creds["host"].toString());
         ui.authId->setText(creds["user"].toString());
+        ui.authLabel->setText(creds["label"].toString());
     }
 
     auto deviceKey = creds["devkey"].toByteArray().toHex();

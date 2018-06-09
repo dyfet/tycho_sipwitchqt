@@ -250,6 +250,30 @@ private:
     static QSet<QString> grpAuths;
 };
 
+class DeviceModel final : public QAbstractListModel
+{
+    friend class deviceDelegate;
+
+public:
+    enum {
+        DisplayLabel = Qt::UserRole + 1,
+        DisplayAgent,
+        DisplayOnline,
+        DisplayCreated,
+        DisplayAddress,
+        DisplayKey,
+        DisplayVerify,
+    };
+
+    DeviceModel(const QJsonArray& devices);
+
+private:
+    QJsonArray deviceList;
+
+    int rowCount(const QModelIndex& parent) const final;
+    QVariant data(const QModelIndex& index, int role) const final;
+};
+
 class MemberModel final : public QAbstractListModel
 {
     friend class memberDelegate;
@@ -317,6 +341,16 @@ private:
     QVariant data(const QModelIndex& index, int role) const final;
 };
 
+class DeviceDelegate final : public QStyledItemDelegate
+{
+public:
+    DeviceDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+
+private:
+    QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+    void paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const final;
+};
+
 class MemberDelegate final : public QStyledItemDelegate
 {
 public:
@@ -354,6 +388,10 @@ public:
         return Instance;
     }
 
+    static void clickLabel(const QModelIndex& index) {
+        Instance->selectLabel(index);
+    }
+
     static ContactItem *self();
     static ContactItem *oper();
     static ContactItem *find(int extension);
@@ -363,6 +401,7 @@ private:
     LocalDelegate *localPainter;
     LocalContacts *localModel;
     MemberDelegate *memberPainter;
+    DeviceDelegate *devicePainter;
     bool requestPending;
     Connector *connector;
     QTimer refreshRoster;
@@ -390,9 +429,12 @@ private slots:
     void changeStorage(Storage *storage);
     void changeProfile();
     void changeCoverage(int index);
+    void removeDevice();
+    void verifyDevice();
     void promoteRemote();
     void demoteLocal();
     void changePending();
+    void selectLabel(const QModelIndex& index);
 };
 
 #endif

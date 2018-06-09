@@ -87,6 +87,7 @@ QObject()
     Manager *manager = Manager::instance();
     connect(manager, &Manager::sendRoster, this, &Database::sendRoster);
     connect(manager, &Manager::changeProfile, this, &Database::sendProfile);
+    connect(manager, &Manager::removeDevice, this, &Database::removeDevice);
     connect(manager, &Manager::sendDevlist, this, &Database::sendDeviceList);
     connect(manager, &Manager::sendPending, this, &Database::sendPending);
     connect(manager, &Manager::changePending, this, &Database::changePending);
@@ -428,12 +429,12 @@ void Database::syncOutbox(qlonglong endpoint)
     runQuery("UPDATE Outboxes SET msgstatus = 0 WHERE endpoint=?;", {endpoint});
 }
 
-void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey)
+void Database::lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey, const QString &uri)
 {
     if(deviceKey.length() > 0)
-        runQuery("UPDATE Endpoints SET lastaccess=?,devkey=?,agent=? WHERE endpoint=?;", {timestamp, deviceKey, agent, endpoint});
+        runQuery("UPDATE Endpoints SET lastaccess=?,lasturi=?,devkey=?,agent=? WHERE endpoint=?;", {timestamp, uri, deviceKey, agent, endpoint});
     else
-        runQuery("UPDATE Endpoints SET lastaccess=?,agent=? WHERE endpoint=?;", {timestamp, agent, endpoint});
+        runQuery("UPDATE Endpoints SET lastaccess=?,lasturi=?,agent=? WHERE endpoint=?;", {timestamp, uri, agent, endpoint});
 }
 
 void Database::sendDeviceList(const Event& event)
@@ -452,12 +453,14 @@ void Database::sendDeviceList(const Event& event)
         auto agent = record.value("agent").toString();
         auto resgistrated = record.value("created").toString();
         auto lastOnline = record.value("lastaccess").toString();
+        auto lastUri = record.value("lastUri").toString();
 
         QJsonObject profile {
             {"e", endpoint},
             {"n", extension},
             {"u", label},
             {"a", agent},
+            {"l", lastUri},
             {"r", resgistrated},
             {"o", lastOnline},
         };
@@ -1117,6 +1120,48 @@ void Database::changeMembership(const Event& event, const UString& authuser, qlo
     }
 }
 
+void Database::removeDevice(const Event& event, const UString& authuser, qlonglong endpoint)
+{
+    auto number = event.number();
+    auto target = atoi(event.message()->to->url->username);
+    if(target != number || number < firstNumber || number > lastNumber) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto msg = event.sent();
+    if(!msg) {
+        Context::reply(event, SIP_AMBIGUOUS);
+        return;
+    }
+
+    osip_header_t *header = nullptr;
+    osip_message_header_get_byname(msg, "x-remove", 0, &header);
+    if(!header || !header->hvalue) {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+    QString removeLabel(header->hvalue);
+
+    // cannot remove self...
+    if(removeLabel == event.label()) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto record = getRecord("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label=?);", {number, removeLabel});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+
+    // so we have an endpoint to remove...
+    auto removeEndpoint = record.value("endpoint").toLongLong();
+    emit disconnectEndpoint(removeEndpoint);
+    runQuery("DELETE FROM Endpoints WHERE endpoint=?;", {removeEndpoint});
+    sendProfile(event, authuser, endpoint);
+}
+
 void Database::sendProfile(const Event& event, const UString& authuser, qlonglong endpoint)
 {
     auto target = atoi(event.message()->to->url->username);
@@ -1276,6 +1321,32 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
                 continue;
             profile[speedDial] = record.value("target").toString();
         }
+
+        // self device list...
+        QJsonArray devices;
+        auto query = getRecords("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label != 'NONE') AND (label != ?) ORDER BY label;", {event.number(), event.label()});
+        while(query.isActive() && query.next()) {
+            auto record = query.record();
+            auto endpoint = record.value("endpoint").toString();
+            auto label = record.value("label").toString();
+            auto agent = record.value("agent").toString();
+            auto resgistrated = record.value("created").toString();
+            auto lastOnline = record.value("lastaccess").toString();
+            auto lastUri = record.value("lasturi").toString();
+            auto deviceKey = record.value("devkey").toByteArray();
+
+            QJsonObject device {
+                {"e", endpoint},
+                {"k", QString(deviceKey.toHex())},
+                {"u", label},
+                {"a", agent},
+                {"r", resgistrated},
+                {"l", lastUri},
+                {"o", lastOnline},
+            };
+            devices << device;
+        }
+        profile["ep"] = devices;
     }
 
     if(event.body().size() > 0) {
