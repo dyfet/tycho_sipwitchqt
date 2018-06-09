@@ -76,6 +76,7 @@ static QStringList sqliteTables = {
         "devkey BLOB DEFAULT NULL,"             // devices public key
         "created DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "lastaccess DATETIME DEFAULT 0,"
+        "lasturi VARCHAR(96),"
         "FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr) "
             "ON DELETE CASCADE);",
     "CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);",

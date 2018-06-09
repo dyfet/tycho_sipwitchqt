@@ -61,7 +61,7 @@ static void unset(int number)
 // request, and as inactive.  The registration becomes active only when
 // it is updated by an authorized request.
 Registry::Registry(const QVariantHash &ep) :
-timeout(-1), serverContext(nullptr)
+active(false), timeout(-1), serverContext(nullptr)
 {    
     if(!init) {
         range = Database::range();
@@ -218,6 +218,8 @@ int Registry::authorize(const Event& ev)
     UString method = ev.method();
     UString uri = ev.request();
 
+    active = false;
+
     if(ev.authorizingRealm() != authRealm)
         return SIP_FORBIDDEN;
 
@@ -258,6 +260,7 @@ int Registry::authorize(const Event& ev)
         address = ev.contact();
     serverContext = ev.context();
     updated.restart();
+    active = true;
 
     //some testing for core message code...
     //context->message("system", UString::number(number), address.toString(), {{"Subject", "Hello World"}});

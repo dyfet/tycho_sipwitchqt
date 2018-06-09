@@ -82,8 +82,9 @@ signals:
     void changeForwarding(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
     void removeAuthorize(const Event& ev);
+    void removeDevice(const Event& ev, const UString& authorized, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
-    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey);
+    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray& deviceKey, const QString& uri);
 
 public slots:
     void sendMessage(qlonglong endpoint, const QVariantHash& data);
@@ -93,6 +94,7 @@ public slots:
     void requestCoverage(const Event& ev);
     void requestProfile(const Event& ev);
     void requestDevlist(const Event& ev);
+    void requestDevkill(const Event& ev);
     void requestPending(const Event& ev);
     void requestAuthorize(const Event& ev);
     void requestForwarding(const Event& ev);

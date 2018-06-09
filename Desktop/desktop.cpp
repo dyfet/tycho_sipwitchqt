@@ -994,8 +994,8 @@ void Desktop::initial()
         return;
 
     auto dbName = "sipwitchqt-" + Storage::name(Credentials, "desktop");
-    if(Storage::exists(dbName))
-        Credentials["initialize"] = "user";
+    Storage::initialLogin(dbName, "", Credentials);
+
     login->setEnabled(false);
     listen(Credentials);
 }

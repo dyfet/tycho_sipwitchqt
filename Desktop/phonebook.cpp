@@ -35,6 +35,8 @@ static int cellHeight, cellLift = 3;
 static QIcon addIcon, delIcon, newIcon;
 static MemberModel *memberModel = nullptr;
 static bool disableUpdates = false;
+static QString verifyLabel, verifyAgent;
+static QByteArray verifyKey;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -251,6 +253,46 @@ ContactItem *ContactItem::findText(const QString& text)
         ++item;
     }
     return found;
+}
+
+DeviceModel::DeviceModel(const QJsonArray& devices) :
+QAbstractListModel()
+{
+    deviceList = devices;
+}
+
+int DeviceModel::rowCount(const QModelIndex& parent) const
+{
+    Q_UNUSED(parent);
+    return deviceList.count();
+}
+
+QVariant DeviceModel::data(const QModelIndex& index, int role) const
+{
+    int row = index.row();
+
+    if(row < 0 || row >= deviceList.count())
+        return {};
+
+    auto json = deviceList[row].toObject();
+    switch(role) {
+    case DisplayKey:
+        return json["k"].toString();
+    case DisplayOnline:
+        return QDateTime::fromString(json["o"].toString(), Qt::ISODate);
+    case DisplayCreated:
+        return QDateTime::fromString(json["r"].toString(), Qt::ISODate);
+    case DisplayAddress:
+        return json["l"].toString();
+    case DisplayAgent:
+        return json["a"].toString();
+    case DisplayLabel:
+        return json["u"].toString();
+    case DisplayVerify:
+        return json["v"].toInt();
+    default:
+        return {};
+    }
 }
 
 MemberModel::MemberModel(ContactItem *item) :
@@ -479,9 +521,25 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
             ui.profileStack->setCurrentWidget(ui.adminPage);
         }
 
-        // future voice mail/video setings...
+        // device management and verification
         if(item == Phonebook::self()) {
-            ui.profileStack->setCurrentWidget(ui.voicePage);
+            auto devices = json["ep"].toArray();
+            auto model = ui.deviceList->model();
+            if(model)
+                model->deleteLater();
+            storage->verifyDevices(devices);
+            auto devModel = new DeviceModel(devices);
+            ui.profileStack->setCurrentWidget(ui.labelsPage);
+            ui.deviceList->setModel(devModel);
+            ui.deviceList->setFocus();
+            if(devices.count()) {
+                auto index = devModel->index(0, 0);
+                ui.deviceList->setCurrentIndex(index);
+                ui.deviceList->scrollTo(index);
+                Phonebook::clickLabel(index);
+            }
+            else
+                ui.deviceInfo->setEnabled(false);
         }
     }
 
@@ -727,6 +785,43 @@ void MemberDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style,
     painter->drawText(pos, text);
 }
 
+QSize DeviceDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
+{
+    return {style.rect.width(), cellHeight};
+}
+
+void DeviceDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, const QModelIndex& index) const
+{
+    auto label = index.data(DeviceModel::DisplayLabel).toString();
+    auto status = index.data(DeviceModel::DisplayVerify).toInt();
+    auto width = style.rect.width() - 8;
+    auto pen = painter->pen();
+    auto pos = style.rect.bottomLeft();
+    auto metrics = painter->fontMetrics();
+    auto text = metrics.elidedText(label, Qt::ElideRight, width);
+    auto colors = style.widget->palette();
+    auto fill = colors.color(QPalette::Background);
+    if(index.row() == ui.deviceList->currentIndex().row())
+        fill = QColor(CONST_CLICKCOLOR);
+
+    switch(status) {
+    case 1:
+        painter->setPen(QColor("dark cyan"));
+        break;
+    case 2:
+        painter->setPen(QColor("red"));
+        break;
+    default:
+        break;
+    }
+
+    painter->fillRect(style.rect, fill);
+    pos.rx() += 4;
+    pos.ry() -= cellLift;
+    painter->drawText(pos, text);
+    painter->setPen(pen);
+}
+
 QSize LocalDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
     Q_UNUSED(style);
@@ -809,6 +904,7 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     cellHeight = QFontInfo(desktop->getBasicFont()).pixelSize() + 5;
 
     ui.setupUi(static_cast<QWidget *>(this));
+    ui.deviceList->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.contacts->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui.contact->setVisible(false);
     ui.logoButton->setVisible(false);
@@ -829,7 +925,11 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     connect(ui.emailAddress, &QLineEdit::returnPressed, this, &Phonebook::changeProfile);
     connect(ui.world, &QPushButton::pressed, this, &Phonebook::promoteRemote);
     connect(ui.noworld, &QPushButton::pressed, this, &Phonebook::demoteLocal);
+    connect(ui.deviceList, &QAbstractItemView::clicked, this, &Phonebook::selectLabel);
+    connect(ui.deviceList, &QAbstractItemView::activated, this, &Phonebook::selectLabel);
     connect(ui.coverage, static_cast<void (QComboBox::*)(int index)>(&QComboBox::currentIndexChanged), this, &Phonebook::changeCoverage);
+    connect(ui.removeDevice, &QPushButton::pressed, this, &Phonebook::removeDevice);
+    connect(ui.verifyDevice, &QPushButton::pressed, this, &Phonebook::verifyDevice);
     connect(this, &Phonebook::changeSessions, sessions, &Sessions::changeSessions);
 
     connect(desktop, &Desktop::logout, this, [] {
@@ -897,9 +997,11 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
     ContactItem::purge();
     localPainter = new LocalDelegate(this);
     memberPainter = new MemberDelegate(this);
+    devicePainter = new DeviceDelegate(this);
     ui.contacts->setItemDelegate(localPainter);
     ui.memberList->setItemDelegate(memberPainter);
     ui.memberList->viewport()->installEventFilter(memberPainter);
+    ui.deviceList->setItemDelegate(devicePainter);
 }
 
 void Phonebook::sendForwarding(Connector::Forwarding type, const QString& text)
@@ -974,6 +1076,39 @@ void Phonebook::changeMembership(ContactItem *item, const UString& members, cons
         connector->changeMemebership(item->uri(), item->topic().toUtf8(), members, "", notify, reason);
 }
 
+void Phonebook::verifyDevice()
+{
+    if(activeItem != self())
+        return;
+
+    if(!connector) {
+        desktop->errorMessage(tr("Cannot remove while offline"));
+        return;
+    }
+
+    auto storage = Storage::instance();
+    Q_ASSERT(storage != nullptr);
+    storage->verifyDevice(verifyLabel, verifyKey, verifyAgent);
+    desktop->statusMessage(tr("verifying \"") + verifyLabel + "\"");
+    connector->requestProfile(activeItem->uri());
+    changePending();
+}
+
+void Phonebook::removeDevice()
+{
+    if(activeItem != self())
+        return;
+
+    if(!connector) {
+        desktop->errorMessage(tr("Cannot remove while offline"));
+        return;
+    }
+
+    desktop->statusMessage(tr("remove \"") + verifyLabel + "\"");
+    connector->removeDevice(verifyLabel);
+    changePending();
+}
+
 void Phonebook::changeCoverage(int index)
 {
     if(!activeItem || disableUpdates)
@@ -998,6 +1133,7 @@ void Phonebook::changePending()
     ui.behaviorGroup->setEnabled(false);
     ui.forwardGroup->setEnabled(false);
     ui.profileStack->setEnabled(false);
+    ui.deviceInfo->setEnabled(false);
     clearGroup();
 }
 
@@ -1429,6 +1565,39 @@ void Phonebook::clearGroup()
         delete memberModel;
         memberModel = nullptr;
     }
+}
+
+void Phonebook::selectLabel(const QModelIndex& index)
+{
+    ui.deviceInfo->setEnabled(true);
+    ui.deviceInfo->setVisible(true);
+    ui.lastAddress->setText(index.data(DeviceModel::DisplayAddress).toString());
+    ui.agentId->setText(index.data(DeviceModel::DisplayAgent).toString());
+    auto status = index.data(DeviceModel::DisplayVerify).toInt();
+    auto created =  index.data(DeviceModel::DisplayCreated).toDateTime();
+    auto online = index.data(DeviceModel::DisplayOnline).toDateTime();
+    auto deviceKey = index.data(DeviceModel::DisplayKey).toString();
+    auto len = deviceKey.count();
+    if(len > 0) {
+        ui.deviceKey1->setText(deviceKey.left(len / 2));
+        ui.deviceKey2->setText(deviceKey.mid(len / 2));
+        verifyKey = QByteArray::fromHex(deviceKey.toUtf8());
+    }
+    else {
+        ui.deviceKey1->setText("none");
+        ui.deviceKey2->setText("");
+        verifyKey = "";
+    }
+    verifyAgent = index.data(DeviceModel::DisplayAgent).toString();
+    verifyLabel = index.data(DeviceModel::DisplayLabel).toString();
+
+    if(status == 1)
+        ui.verifyDevice->setVisible(false);
+    else
+        ui.verifyDevice->setVisible(true);
+
+    ui.deviceCreated->setText(created.toString(Qt::SystemLocaleLongDate));
+    ui.lastSeen->setText(online.toString(Qt::SystemLocaleLongDate));
 }
 
 void Phonebook::changeStorage(Storage *storage)

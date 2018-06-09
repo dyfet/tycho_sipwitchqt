@@ -3,6 +3,7 @@ v0.2.7
 * Updated copyright notices
 * Utils use stand-alone to init mysql servers
 * De-emphasizing sqlite beyond testing builds
+* Device Management and verification support added 
 
 v0.2.6
 * Simplified expiration handling

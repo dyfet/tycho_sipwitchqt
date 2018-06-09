@@ -118,6 +118,7 @@ private slots:
     void sendRoster(const Event& ev, qlonglong endpoint);
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
+    void removeDevice(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeCoverage(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeForwarding(const Event& ev, const UString& auth, qlonglong endpoint);
@@ -125,7 +126,7 @@ private slots:
     void changeAuthorize(const Event& ev);
     void sendDeviceList(const Event& ev);
     void changePending(qlonglong endpoint);
-    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray &deviceKey);
+    void lastAccess(qlonglong endpoint, const QDateTime& timestamp, const QString& agent, const QByteArray &deviceKey, const QString& uri);
     void applyConfig(const QVariantHash& config);
     void onTimeout();
 };

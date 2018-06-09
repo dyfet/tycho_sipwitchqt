@@ -21,6 +21,7 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QJsonObject>
 #include "../Common/crypto.hpp"
 
 namespace {
@@ -142,7 +143,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "posted TIMESTAMP,"
             "callreason VARCHAR(8) DEFAULT NULL,"   // result of call
             "callduration INTEGER DEFAULT 0,"       // call duration...
-            "expires TIMESTAMP ,"            // carried expires header
+            "expires TIMESTAMP ,"                   // carried expires header
             "status Integer Default 0,"             // add status of message 0 for active 1 for expired
             "msgtype VARCHAR(8),"
             "msgtext TEXT,"                         // depends on type...
@@ -151,14 +152,23 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
             "CONSTRAINT byDate PRIMARY KEY (sid, posted DESC, seqid DESC),"
             "FOREIGN KEY (sid) REFERENCES Contacts(uid) ON DELETE CASCADE);",
 
+        "CREATE TABLE Devices ("
+            "devlabel VARCHAR(32) PRIMARY KEY,"     // label of endpoint
+            "devkey BLOB DEFAULT NULL,"             // public key to match
+            "devagent VARCHAR(64),"                 // to determine type
+            "devstatus INTEGER DEFAULT 0);",        // verification status
     });
 
     FromAddress = UString::uri(cred["schema"].toString(), cred["extension"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));
     ServerAddress = UString::uri(cred["schema"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));
     runQuery("INSERT INTO Credentials(extension, user, display, label, secret, server, schema, host, port, type, realm) VALUES(?,?,?,?,?,?,?,?,?,?,?);",
         {cred["extension"], cred["user"], cred["display"], cred["label"], cred["secret"], QString::fromUtf8(ServerAddress), cred["schema"], cred["host"], cred["port"], cred["type"], cred["realm"]});
-    QVariantHash tmp;
-    createKeys(tmp);
+    if(cred["rootkey"].isNull() || cred["devkey"].isNull()) {
+        QVariantHash tmp;
+        createKeys(tmp);
+    }
+    else
+        runQuery("UPDATE Credentials SET devkey=?, rootkey=? WHERE id=1;", {cred["devkey"], cred["rootkey"]});
 }
 
 Storage::~Storage()
@@ -277,6 +287,81 @@ QVariant Storage::insert(const QString& request, const QVariantList &parms)
     }
 
     return query.lastInsertId();
+}
+
+void Storage::initialLogin(const QString& dbName, const QString& key, QVariantHash& creds)
+{
+    if(exists(dbName)) {
+        creds["initialize"] = "user";
+        Storage tmp(dbName, key, creds);
+        if(!tmp.isActive())
+            return;
+        auto keys = tmp.getRecord("SELECT rootkey,devkey FROM credentials");
+        creds["devkey"] = keys["devkey"];
+        creds["rootkey"] = keys["rootkey"];
+    }
+    if(creds["rootkey"].isNull() || creds["devkey"].isNull()) {
+        auto pair = Crypto::keypair();
+        creds["devkey"] = pair.first;
+        creds["rootkey"] = pair.second;
+        qDebug() << "Initial device key created";
+    }
+}
+
+void Storage::verifyDevice(const QString& label, const QByteArray& key, const QString& agent)
+{
+    runQuery("DELETE FROM Devices WHERE (devlabel=?);", {label});
+    runQuery("INSERT INTO Devices (devlabel, devkey, devagent,devstatus) VALUES(?,?,?,1);",
+        {label, key, agent});
+}
+
+void Storage::verifyDevices(QJsonArray& devices)
+{
+    QHash<QString,QJsonObject> labels;
+    foreach(auto device, devices) {
+        auto json = device.toObject();
+        auto label = json["u"].toString();
+        json["v"] = 0;
+        labels[label] = json;
+    }
+
+    auto query = getRecords("SELECT * From Devices;");
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto label = record.value("devlabel").toString();
+        auto status = record.value("devstatus").toInt();
+        auto json = labels[label];
+        if(json.isEmpty()) {
+            runQuery("DELETE FROM Devices WHERE (devlabel=?);", {label});
+            continue;
+        }
+
+        auto lkey = record.value("devkey").toByteArray();
+        auto rkey = QByteArray::fromHex(json["k"].toString().toUtf8());
+        if(rkey.count() < 1)
+            continue;
+
+        // once verification fails, is marked until verify or removal
+        if(status == 2 || lkey != rkey)
+            json["v"] = 2;
+        else
+            json["v"] = 1;
+
+        runQuery("UPDATE Devices SET devstatus=? WHERE (devlabel=?);",
+            {json["v"].toInt(), label});
+
+        labels[label] = json;
+    }
+
+    auto index = labels.keys();
+    index.sort(Qt::CaseInsensitive);
+    QJsonArray result;
+    foreach(auto label, index) {
+        auto json = labels[label];
+        if(!json.isEmpty())
+            result << json;
+    }
+    devices = result;
 }
 
 void Storage::createKeys(QVariantHash& creds)
