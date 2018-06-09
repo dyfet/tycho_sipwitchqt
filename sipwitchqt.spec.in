@@ -99,7 +99,7 @@ this will include sip calling, video, and a session based security model.
 %{_bindir}/sipwitchqt-desktop
 %{_datadir}/applications/sipwitchqt.desktop
 %{_datadir}/translations/*.qm
-%{_datadir}/appdata/sipwitchqt.appdata.xml
+%{_datadir}/metainfo/sipwitchqt.appdata.xml
 %{_datadir}/pixmaps/sipwitchqt.png
 %{_mandir}/man1/sipwitchqt-desktop.*
 
