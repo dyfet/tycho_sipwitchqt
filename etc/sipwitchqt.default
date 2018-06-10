@@ -1,0 +1,17 @@
+# Default environment for server startup
+
+# Specify database driver
+DATABASE=mysql
+
+# Specify port to bind
+#PORT=5060
+
+# Specify your hostname
+#HOSTNAME=myhost.mydomain.com
+
+# Specify your network or domain
+#NETWORK=mydomain.com
+
+# Specify ip address to bind
+#ADDRESS=any
+

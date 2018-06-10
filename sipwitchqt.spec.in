@@ -81,6 +81,7 @@ this will include sip calling, video, and a session based security model.
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt-server
 %{_sysconfdir}/sv/sipwitchqt/run
+%{_sysconfdir}/default/sipwitchqt
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
 %attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh

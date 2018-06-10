@@ -245,7 +245,7 @@ if(BOOTSTRAP_EXTERNAL)
     add_dependencies(eXosip2 openssl)
 endif()
 
-add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
+add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.default ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -263,6 +263,11 @@ install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
 )
+
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.default"
+    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/default" RENAME "sipwitchqt"
+)
+
 
 install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
     DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
