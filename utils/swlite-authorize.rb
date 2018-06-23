@@ -84,7 +84,7 @@ user = ARGV[0]
 
 begin 
   db = SQLite3::Database.open dbname
-  db.execute("SELECT realm, dialing FROM Config") do |row|
+  db.execute("SELECT realm, dialplan FROM Config") do |row|
     abort("*** swlite-authorize: multiple config entries") unless domain == nil
     domain = row[0]
     dialing = row[1]
@@ -105,25 +105,25 @@ exit if user == nil
 
 begin
   type = 'NONE'
-  db.execute("SELECT name, type, access FROM Authorize WHERE name='#{user}'") do |row|
+  db.execute("SELECT authname, authtype, authaccess FROM Authorize WHERE authname='#{user}'") do |row|
     type = row[1]
     access = row[2]
   end
   if type == 'NONE'
     abort("*** swlite-authorize: #{user}: no such authorization") if create != true or digest == 'DROP'
-    db.execute("INSERT INTO Authorize (name, type, realm, access) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
+    db.execute("INSERT INTO Authorize (authname, authtype, realm, authaccess) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
     type = mode
     print "Created #{user}\n"
   end
   case digest
   when 'NONE'
     print "Suspending authorization #{user}\n"
-    db.execute("UPDATE Authorize set digest='NONE', secret='', realm='#{domain}' WHERE name='#{user}'")
+    db.execute("UPDATE Authorize set authdigest='NONE', secret='', realm='#{domain}' WHERE authname='#{user}'")
   when 'DROP'
     case type
     when 'USER', 'DEVICE', 'TEAM'
       print "Dropping authorization #{user}\n"
-      db.execute("DELETE FROM Authorize WHERE name='#{user}'")
+      db.execute("DELETE FROM Authorize WHERE authname='#{user}'")
     else
       abort("*** swlite-authorize: #{user}: cannot drop authorization as #{type}")
     end
@@ -150,7 +150,7 @@ begin
       else
         secret = Digest::MD5.hexdigest "#{user}:#{domain}:#{pass1}"
       end
-      db.execute("UPDATE Authorize set digest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE name='#{user}'")
+      db.execute("UPDATE Authorize set authdigest='#{digest}', secret='#{secret}', realm='#{domain}' WHERE authname='#{user}'")
     else
       abort("*** swlite-authorize: #{user}: not able to authorize as #{access}")
     end

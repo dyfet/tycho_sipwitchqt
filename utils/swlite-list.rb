@@ -14,7 +14,7 @@ abort("*** swlite-list: no database") unless File.writable?(dbname)
 
 begin
   db = SQLite3::Database.open dbname
-  db.execute("SELECT name, type, access FROM Authorize ORDER BY name") do |row|
+  db.execute("SELECT authname, authtype, authaccess FROM Authorize ORDER BY authname") do |row|
     puts "%-32s %-8s %-8s" % row
   end
 rescue SQLite3::BusyException

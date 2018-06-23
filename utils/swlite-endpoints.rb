@@ -14,8 +14,8 @@ abort("*** swlite-endpoints: no database") unless File.writable?(dbname)
 
 begin
   db = SQLite3::Database.open dbname
-  db.execute("SELECT number, label FROM Endpoints ORDER BY number, label") do |row|
-    puts "%-4s %-8s" % row
+  db.execute("SELECT extnbr, label, created FROM Endpoints ORDER BY extnbr, label") do |row|
+    puts "%-4s %-8s %-16s" % row
   end
 rescue SQLite3::BusyException
   abort("*** swlite-endpoints: database busy; sipwitchqt active")

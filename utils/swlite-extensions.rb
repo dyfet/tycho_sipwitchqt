@@ -14,7 +14,7 @@ abort("*** swlite-extensions: no database") unless File.writable?(dbname)
 
 begin
   db = SQLite3::Database.open dbname
-  db.execute("SELECT number, name, display FROM Extensions ORDER BY number") do |row|
+  db.execute("SELECT extnbr, authname, display FROM Extensions ORDER BY extnbr") do |row|
     puts "%-4s %-32s %s" % row
   end
 rescue SQLite3::BusyException

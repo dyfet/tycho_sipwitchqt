@@ -141,12 +141,6 @@ begin
   abort("*** ipl-sipwitch: passwords do not match") unless pass1 == pass2
   extpass = get_secret(digest_type,user,realm,pass1)
 
-  print "\nEnter a password for new users to register with\n"
-  pass1    = get_pass "Password: "
-  pass2    = get_pass "Verify:   "
-  abort("*** ipl-sipwitch: passwords do not match") unless pass1 == pass2
-  regpass = get_secret(digest_type,'anonymous',realm,pass1)
-  p extpass, regpass
 rescue Interrupt
   abort("^C")
   exit
@@ -159,7 +153,7 @@ ipl << "INSERT INTO Config(realm) VALUES('#{realm}');\n"
 ipl << "\n-- Default system groups and users\n"
 ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('system', 'SYSTEM', 'LOCAL');\n"
 ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('nobody', 'SYSTEM', 'LOCAL');\n"
-ipl << "INSERT INTO Authorize(authname,authtype,authaccess,realm,secret,authdigest) VALUES('anonymous', 'SYSTEM', 'LOCAL','#{realm}','#{regpass}',#{digest_type}');\n"
+ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('anonymous', 'SYSTEM', 'DISABLED');\n"
 ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('operators', 'SYSTEM', 'PILOT');\n"
 ipl << "INSERT INTO Extensions(extnbr,authname,display) VALUES(0, 'operators', 'Operators');\n"
 ipl << "\n-- Facts gathered first/admin user\n"
