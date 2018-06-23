@@ -121,7 +121,7 @@ abort("*** ipl-sipwitch: no schema") unless File.exists?(schema)
 # gather facts for initial config....
 
 begin
-  print "Creating realm \"#{realm}\" for #{database}\n" if realm.size > 0
+  print "Creating realm \"#{realm}\" for #{database}\n" if (realm != nil && realm.size > 0)
   realm   = get_input "Server realm: " if realm === nil
   user    = get_input "Authorizing user: " 
   abort("*** ipl-sipwitch: #{user}: reserved name") if RESERVED_NAMES.include?(user)
