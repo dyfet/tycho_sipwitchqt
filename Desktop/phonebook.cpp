@@ -1087,6 +1087,15 @@ void Phonebook::verifyDevice()
     }
 
     auto storage = Storage::instance();
+    auto creds = storage->credentials();
+    if(creds["pubkey"].toByteArray().count() < 1) {
+        desktop->errorMessage(tr("You must generate extension keys first"));
+        return;
+    }
+    if(creds["privkey"].toByteArray().count() < 1) {
+        desktop->errorMessage(tr("Cannot verify from device without extension key"));
+        return;
+    }
     Q_ASSERT(storage != nullptr);
     storage->verifyDevice(verifyLabel, verifyKey, verifyAgent);
     desktop->statusMessage(tr("verifying \"") + verifyLabel + "\"");
