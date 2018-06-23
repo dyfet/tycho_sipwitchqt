@@ -30,11 +30,15 @@ Summary: Utility scripts and commands
 %package desktop
 Summary: SIP messaging desktop client
 
+%package local
+Requires: ruby, sipwitchqt-server, sipwitchqt-utils, libQt5Sql5-sqlite
+Summary: Complete local sipwitchqt server with sqlite database
+
 %description
 Server and desktop client for the sip protocol
 
 %description server
-Sip server that focuses on reliable delivery of and support for persistent
+SIP server that focuses on reliable delivery of and support for persistent
 messaging.  The server also tries to maintain inter-operation with existing
 SIP softphones and devices.  Features like calling, video, and a security
 model will also be added in the future.
@@ -51,6 +55,11 @@ This includes support for persistent messaging over SIP, as well as
 automatic management of the server's roster, and the ability to
 administer a sipwitch server directly from the client.  In the future
 this will include sip calling, video, and a session based security model.
+
+%description local
+Self contained SIP server that bundles sipwitchqt with a local sqlite 
+database and essential supporting utilities to manipulate the database
+from the command line.
 
 %prep
 %setup -q
@@ -86,6 +95,11 @@ this will include sip calling, video, and a session based security model.
 %attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
 %attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh
 %{_mandir}/man1/sipwitchqt-server.*
+
+%files local
+%defattr(-,root,root)
+${_sbindir}/swlite-*
+%{_mandir}/man1/swlite-*
 
 %files utils
 %defattr(-,root,root)

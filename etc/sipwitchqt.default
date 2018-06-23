@@ -1,5 +1,8 @@
 # Default environment for server startup
 
+# Set to 1 to start server at startup
+START=0
+
 # Specify database driver
 DATABASE=mysql
 

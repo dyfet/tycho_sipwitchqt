@@ -31,6 +31,12 @@
 #include <QUuid>
 #include <QProcess>
 
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#endif
+
 #ifdef Q_OS_MAC
 void disable_nap();
 #else
@@ -118,6 +124,15 @@ int main(int argc, char **argv)
         {{"show-cache"}, "Show config cache"},
     });
 
+#ifdef Q_OS_UNIX
+    // if not root group, then use group perms, else owner ownly...
+    if(getegid())
+        umask(007);
+    else
+        umask(077);
+#endif
+
+    QDir().mkdir(SERVICE_VARPATH);  // make sure we have a service path
     if(!QDir::setCurrent(SERVICE_VARPATH))
         crit(90) << SERVICE_VARPATH << ": cannot access";
 
