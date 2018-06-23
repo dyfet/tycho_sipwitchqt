@@ -24,14 +24,14 @@ Requires(postun): systemd
 
 %package utils
 Suggests: sipwitchqt-server
-Requires: ruby
+Requires: ruby2.1
 Summary: Utility scripts and commands
 
 %package desktop
 Summary: SIP messaging desktop client
 
 %package local
-Requires: ruby, sipwitchqt-server, sipwitchqt-utils, libQt5Sql5-sqlite
+Requires: ruby2.1-rubygem-sqlite3, sipwitchqt-server, sipwitchqt-utils, libQt5Sql5-sqlite
 Summary: Complete local sipwitchqt server with sqlite database
 
 %description
