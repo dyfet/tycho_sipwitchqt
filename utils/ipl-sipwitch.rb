@@ -5,10 +5,10 @@
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-['optparse', 'io/console', 'digest', 'fileutils'].each {|mod| require mod}
+['optparse', 'io/console', 'digest', 'fileutils', 'mysql'].each {|mod| require mod}
 
 RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody']
-database = 'sqlite'
+database = 'mysql'
 digest_type = 'MD5'
 first = '100'
 last = '699'
@@ -65,6 +65,10 @@ OptionParser.new do |opts|
   opts.on('-c', '--config [PATH]', 'set config file') do |path|
     config = path
   end
+
+  opts.on('-e', '--echo', 'echo commands to stdout') do
+    echo_flag = true
+  end
 end.parse!
 abort(opts.banner) if(ARGV.size > 0)
 
@@ -80,11 +84,11 @@ print "config file #{config} used\n"
 
 section = nil
 realm = nil
-db = {:database => 'localhost', :port => '3306', :username => 'sipwitch', :password => nil}
+dbcfg = {:host => '127.0.0.1', :name => 'sipwitch', :port => '3306', :username => 'sipwitch', :password => nil}
 
 File.open(config, 'r') do |infile; line, key, value|
   while(line = infile.gets)
-    line.gsub!(/(^|b)[#].*$/, '')
+    line.gsub!(/(^|\s)[#].*$/, '')
     case line.strip!
     when /^\[.*\]$/
       section = line[1..-2].downcase
@@ -107,7 +111,7 @@ File.open(config, 'r') do |infile; line, key, value|
           end
         end
       when 'database'
-        db[key.to_sym] = value
+        dbcfg[key.to_sym] = value
       end
     end
   end
@@ -146,20 +150,44 @@ rescue Interrupt
   exit
 end
 
-# generate database sql from a ?templated? sql file...to be here...
-ipl = File.open('/tmp/ipl.sql', 'w')
-ipl << "\n-- Facts gathered database config\n"
-ipl << "INSERT INTO Config(realm) VALUES('#{realm}');\n"
-ipl << "\n-- Default system groups and users\n"
-ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('system', 'SYSTEM', 'LOCAL');\n"
-ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('nobody', 'SYSTEM', 'LOCAL');\n"
-ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('anonymous', 'SYSTEM', 'DISABLED');\n"
-ipl << "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('operators', 'SYSTEM', 'PILOT');\n"
-ipl << "INSERT INTO Extensions(extnbr,authname,display) VALUES(0, 'operators', 'Operators');\n"
-ipl << "\n-- Facts gathered first/admin user\n"
-ipl << "INSERT INTO Authorize(authname,authdigest,realm,secret,fullname,authtype,authaccess,email) VALUES('#{user}','#{digest_type}','#{realm}','#{extpass}','#{display}','USER','REMOTE','#{email}');\n"
-ipl << "INSERT INTO Extensions(extnbr,authname) VALUES(#{extnbr},'#{user}');\n"
-ipl << "INSERT INTO Endpoints(extnbr) VALUES(#{extnbr});\n"
-ipl << "INSERT INTO Admin(authname,extnbr) VALUES('#{user}',#{extnbr});\n"
-ipl.close
+IPL_COMMANDS = [
+  "INSERT INTO Config(realm) VALUES('#{realm}');",
+  "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('system', 'SYSTEM', 'LOCAL');",
+  "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('nobody', 'SYSTEM', 'LOCAL');",
+  "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('anonymous', 'SYSTEM', 'DISABLED');",
+  "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('operators', 'SYSTEM', 'PILOT');",
+  "INSERT INTO Extensions(extnbr,authname,display) VALUES(0, 'operators', 'Operators');",
+  "INSERT INTO Authorize(authname,authdigest,realm,secret,fullname,authtype,authaccess,email) VALUES('#{user}','#{digest_type}','#{realm}','#{extpass}','#{display}','USER','REMOTE','#{email}');",
+  "INSERT INTO Extensions(extnbr,authname) VALUES(#{extnbr},'#{user}');",
+  "INSERT INTO Endpoints(extnbr) VALUES(#{extnbr});",
+  "INSERT INTO Admin(authname,extnbr) VALUES('#{user}',#{extnbr});",
+]
+
+create = []
+line = ""
+
+begin
+  db = Mysql.connect(dbcfg[:host],dbcfg[:username],dbcfg[:password],dbcfg[:name])
+  File.open(schema, 'r') do |infile; cmd|
+    while(cmd = infile.gets)
+      cmd.gsub!(/(^|\s)[-][-].*$/, '')
+      case cmd.strip!
+      when /^$/
+        line.strip!
+        print "#{line}\n"
+        line = ""
+      else
+        line = "#{line} #{cmd}"
+      end
+    end
+  end
+  IPL_COMMANDS.each do |cmd|
+    print "#{cmd}\n"
+  end
+rescue Mysql::Error => e
+  puts e.errno
+  puts e.error
+ensure
+  db.close if db
+end
 

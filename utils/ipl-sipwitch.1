@@ -31,6 +31,9 @@ prompted for on the command line. The connection information for the mysql
 server is typically read from the servers /etc/sipwitchqt.conf file.  Since the
 utilities can be installed stand-alone on a separate machine, you can instead 
 create a local config file with database connection info using the -c path option.
+
+On Debian you will have to use ``sudo gem install ruby-mysql`` because debian only
+packages ruby-mysql2, which has a different interface.
 .SH AUTHOR
 .B ipl-sipwitch
 was written by David Sugar <tychosoft@gmail.com>.
