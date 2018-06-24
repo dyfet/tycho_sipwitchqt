@@ -61,9 +61,9 @@ OptionParser.new do |opts|
     digest = 'NONE'
   end
 
-  opts.on('-t', '--team', 'team authorization') do
-    mode = 'TEAM'
-    access = 'TEAM'
+  opts.on('-g', '--group', 'group authorization') do
+    mode = 'GROUP'
+    access = 'GROUP'
   end
 
   opts.on('-2', '--sha256', 'use sha-256') do
@@ -121,7 +121,7 @@ begin
     db.execute("UPDATE Authorize set authdigest='NONE', secret='', realm='#{domain}' WHERE authname='#{user}'")
   when 'DROP'
     case type
-    when 'USER', 'DEVICE', 'TEAM'
+    when 'USER', 'DEVICE', 'GROUP'
       print "Dropping authorization #{user}\n"
       db.execute("DELETE FROM Authorize WHERE authname='#{user}'")
     else
@@ -129,7 +129,7 @@ begin
     end
   else
     case access
-    when 'LOCAL', 'REMOTE', 'TEAM'
+    when 'LOCAL', 'REMOTE', 'GROUP'
       print "Changing password for #{user}\n"
       if password == nil
         pass1 = get_password

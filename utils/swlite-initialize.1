@@ -1,4 +1,4 @@
-.\" swlite-authorize - manage sipwitchqt user authorizations in sqlite backend
+.\" swlite-initialize - create an admin authorization and extension in sqlite backend
 .\" Copyright (C) 2017-2018 Tycho Softworks
 .\"
 .\" This manual page is free software; you can redistribute it and/or modify
@@ -17,24 +17,19 @@
 .\"
 .\" This manual page is written especially for Debian GNU/Linux.
 .\"
-.TH swlite-authorize "1" "December 2017" "SipWitchQt" "Tycho Softworks"
+.TH swlite-initialize "1" "December 2017" "SipWitchQt" "Tycho Softworks"
 .SH NAME
-swlite-authorize \- manage sipwitchqt user authorizations in sqlite backend
+swlite-initialize \- create an admin authorization and extension in sqlite backend
 .SH SYNOPSIS
-.B swlite-authorize
-.RI [ options ]
-.I user
-.br
-.B swlite-authorize
-.br
+.B swlite-initialize
 .SH DESCRIPTION
-The purpose of swlite-authorize is to manage authorization group records for a backend 
-sqlite sipwitchqt database.  This includes both creating and removing (or suspending)
-authorized users, and also setting the SIP digest password.
+The purpose of swlite-initialize is to take a newly created and empty sqlite
+database, such as the one created by default by the server when installed from
+a package, and add a user authorization that has full administration access.
+Using this initial user all other admin tasks, including creating additional
+users, can then be performed from the desktop client.
 
-If used with no options the current authorization realm is shown.  If a userid is given
-then the password to use will be prompted on the console.  Otherwise optios can be
-used to set digest mode, and whether to suspend or drop a user.
+If you are using mysql then you would use the ipl-sipwitch utility instead.
 .SH OPTIONS
 .TP
 .B \-\-sha256
@@ -42,30 +37,8 @@ Use a SHA-256 digest when setting a password (default is MD5).
 .TP
 .B \-\-sha512
 Use a SHA-512 digest when setting a password (default is MD5).
-.TP
-.B \-\-create
-Create (add) the authorization if it does not exist.
-.TP
-.B \-\-drop
-Drop (remove) the authorized user and associated extension record.  Any active calls or
-registrations should also be terminated.
-.TP
-.B \-\-group
-Group authorization.
-.TP
-.B \-\-local
-Local device group authorization.
-.TP
-.BI \-\-password value
-Force setting of password.  Useful for script driven db setup.
-.TP
-.B \-\-remote
-Remote accessible user authorization.
-.TP
-.B \-\-suspend
-Suspend the users account.  Any active calls and registrations should also be cancelled.
 .SH AUTHOR
-.B swlite-authorize
+.B swlite-initialize
 was written by David Sugar <tychosoft@gmail.com>.
 .SH "REPORTING BUGS"
 Report bugs to tychosoft@gmail.com.
