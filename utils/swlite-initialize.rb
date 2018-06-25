@@ -117,7 +117,7 @@ begin
   db.execute("INSERT INTO Authorize(authname,authdigest,realm,secret,fullname,authtype,authaccess,email) VALUES('#{user}','#{digest_type}','#{realm}','#{extpass}','#{display}','USER','REMOTE','#{email}')")
   db.execute("INSERT INTO Extensions(extnbr,authname) VALUES(#{extnbr},'#{user}')")
   db.execute("INSERT INTO Endpoints(extnbr) VALUES(#{extnbr})")
-  db.execute("INSERT INTO Admin(authname,extnbr) VALUES('#{user}',#{extnbr})")
+  db.execute("INSERT INTO Admin(authname,extnbr) VALUES('system',#{extnbr})")
 rescue SQLite3::SQLException
   abort("*** swlite-initialize: cannot initialize #{extnbr}")
 end

@@ -160,7 +160,7 @@ IPL_COMMANDS = [
   "INSERT INTO Authorize(authname,authdigest,realm,secret,fullname,authtype,authaccess,email) VALUES('#{user}','#{digest_type}','#{realm}','#{extpass}','#{display}','USER','REMOTE','#{email}');",
   "INSERT INTO Extensions(extnbr,authname) VALUES(#{extnbr},'#{user}');",
   "INSERT INTO Endpoints(extnbr) VALUES(#{extnbr});",
-  "INSERT INTO Admin(authname,extnbr) VALUES('#{user}',#{extnbr});",
+  "INSERT INTO Admin(authname,extnbr) VALUES('system',#{extnbr});",
 ]
 
 create = []
