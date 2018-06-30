@@ -68,6 +68,12 @@
 #define MSG_IS_ACK_PENDING(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "A-PENDING"))
 
+#define MSG_IS_ADMIN(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-ADMIN"))
+
+#define MSG_IS_DROP(msg)   (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, "X-DROP"))
+
 static bool active = true;
 
 volatile unsigned Context::instanceCount = 0;
@@ -222,6 +228,8 @@ void Context::run()
         connect(this, &Context::REQUEST_DEAUTHORIZE, stack, &Manager::requestDeauthorize);
         connect(this, &Context::REQUEST_MEMBERSHIP, stack, &Manager::requestMembership);
         connect(this, &Context::REQUEST_FORWARDING, stack, &Manager::requestForwarding);
+        connect(this, &Context::REQUEST_ADMIN, stack, &Manager::requestAdmin);
+        connect(this, &Context::REQUEST_DROP, stack, &Manager::requestDrop);
         connect(this, &Context::REQUEST_COVERAGE, stack, &Manager::requestCoverage);
         connect(this, &Context::REQUEST_TOPIC, stack, &Manager::requestTopic);
         connect(this, &Context::ACK_PENDING, stack, &Manager::ackPending);
@@ -377,6 +385,34 @@ bool Context::process(const Event& ev)
             if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
                 return reply(ev, SIP_METHOD_NOT_ALLOWED);
             emit REQUEST_FORWARDING(ev);
+            return false;
+        }
+
+        if(MSG_IS_ADMIN(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(ev.body().size() > 0)
+                return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
+            emit REQUEST_ADMIN(ev);
+            return false;
+        }
+
+        if(MSG_IS_DROP(ev.message())) {
+            auto to = ev.message()->to;
+            if(!to || !to->url || !to->url->username)
+                return reply(ev, SIP_ADDRESS_INCOMPLETE);
+            if(ev.number() < 1 || !ev.toLocal())
+                return reply(ev, SIP_FORBIDDEN);
+            if(ev.label() == "NONE" || netProto != IPPROTO_TCP)
+                return reply(ev, SIP_METHOD_NOT_ALLOWED);
+            if(ev.body().size() > 0)
+                return reply(ev, SIP_NOT_ACCEPTABLE_HERE);
+            emit REQUEST_DROP(ev);
             return false;
         }
 

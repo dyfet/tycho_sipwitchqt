@@ -31,10 +31,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     connector = connection;
     auto creds = parent->credentials();
 
-    connect(ui.cancelButton, &QPushButton::clicked, this, [=] {
-        parent->closeDialog();
-    });
-
+    connect(ui.cancelButton, &QPushButton::clicked, this, &NewGroup::reject);
     connect(ui.addButton, &QPushButton::clicked, this, &NewGroup::add);
     
     connect(ui.identity, &QLineEdit::returnPressed, this, [] {
@@ -69,6 +66,12 @@ void NewGroup::closeEvent(QCloseEvent *event)
 {
     event->ignore();
 //    Desktop::instance()->closeDialog();
+}
+
+void NewGroup::reject()
+{
+    QDialog::reject();
+    Desktop::instance()->closeDialog();
 }
 
 void NewGroup::add()

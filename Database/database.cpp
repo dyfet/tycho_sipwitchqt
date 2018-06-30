@@ -93,6 +93,8 @@ QObject()
     connect(manager, &Manager::changePending, this, &Database::changePending);
     connect(manager, &Manager::changeAuthorize, this, &Database::changeAuthorize);
     connect(manager, &Manager::changeMembership, this, &Database::changeMembership);
+    connect(manager, &Manager::changeAdmin, this, &Database::changeAdmin);
+    connect(manager, &Manager::dropExtension, this, &Database::dropExtension);
     connect(manager, &Manager::changeForwarding, this, &Database::changeForwarding);
     connect(manager, &Manager::changeCoverage, this, &Database::changeCoverage);
     connect(manager, &Manager::changeTopic, this, &Database::changeTopic);
@@ -1017,6 +1019,101 @@ void Database::changeCoverage(const Event& event, const UString& authUser, qlong
             runQuery("INSERT INTO Calling(authname,extnbr, extpriority) VALUES(?,?,?)", {coveringUser, number, priority});
     }
     sendProfile(event, authUser, endpoint);
+}
+
+void Database::dropExtension(const Event& event, const UString& authuser, qlonglong endpoint)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "dropping" << target;
+    if(target != 0 && (target < firstNumber || target > lastNumber)) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+    auto type = record.value("authtype").toString();
+    auto sysadmin = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {event.number()});
+    if(sysadmin.count() < 1) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    if(type != "DEVICE" && type != "USER") {
+        Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+        return;
+    }
+
+    sendProfile(event, authuser, endpoint);
+    auto query = getRecords("SELECT * FROM Endpoints WHERE extnbr=?;", {target});
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto endpoint = record.value("endpoint").toLongLong();
+        emit disconnectEndpoint(endpoint);
+    }
+}
+
+void Database::changeAdmin(const Event& event, const UString& authuser, qlonglong endpoint)
+{
+    int target = atoi(event.message()->to->url->username);
+    qDebug() << "Changing admin for" << target;
+    if(target != 0 && (target < firstNumber || target > lastNumber)) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+    auto record = getRecord("SELECT * FROM Extensions JOIN Authorize ON Extensions.authname = Authorize.authname WHERE Extensions.extnbr=?;", {target});
+    if(record.count() < 1) {
+        Context::reply(event, SIP_NOT_FOUND);
+        return;
+    }
+    auto type = record.value("authtype").toString();
+    auto user = record.value("authname").toString();
+    auto disconnect = false;
+
+    auto sysadmin = getRecord("SELECT * FROM Admin WHERE (authname='system') AND (extnbr=?);", {event.number()});
+    if(sysadmin.count() < 1) {
+        Context::reply(event, SIP_FORBIDDEN);
+        return;
+    }
+
+    auto msg = event.sent();
+    osip_header_t *system = nullptr;
+    osip_header_t *suspend = nullptr;
+    osip_message_header_get_byname(msg, "x-system", 0, &system);
+    osip_message_header_get_byname(msg, "x-suspend", 0, &suspend);
+
+    if(system && system->hvalue) {
+        if(UString(system->hvalue).toBool())
+            runQuery("INSERT INTO Admin(authname,extnbr) VALUES('system',?);", {target});
+        else
+            runQuery("DELETE FROM Admin WHERE (authname='system') AND (extnbr=?);", {target});
+    }
+
+    if(suspend && suspend->hvalue) {
+        if(type != "DEVICE" && type != "USER") {
+            Context::reply(event, SIP_NOT_ACCEPTABLE_HERE);
+            return;
+        }
+        if(UString(suspend->hvalue).toBool()) {
+            disconnect = true;
+            runQuery("UPDATE Authorize SET authaccess='SUSPEND' WHERE authname=?;", {user});
+        }
+        else
+            runQuery("UPDATE Authorize SET authaccess='LOCAL' WHERE authname=?;", {user});
+    }
+
+    sendProfile(event, authuser, endpoint);
+    if(!disconnect)
+        return;
+
+    auto query = getRecords("SELECT * FROM Extensions JOIN Endpoints ON Extensions.extnbr = Endpoints.extnbr WHERE Extensions.authname=?;", {user});
+    while(query.isActive() && query.next()) {
+        auto record = query.record();
+        auto endpoint = record.value("endpoint").toLongLong();
+        emit disconnectEndpoint(endpoint);
+    }
 }
 
 void Database::changeMembership(const Event& event, const UString& authuser, qlonglong endpoint)

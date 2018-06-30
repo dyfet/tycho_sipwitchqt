@@ -36,6 +36,10 @@
 #endif
 #endif
 
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#endif
+
 #include <QGuiApplication>
 #include <QTranslator>
 #include <QFile>
@@ -1235,7 +1239,11 @@ int main(int argc, char *argv[])
     if(!localize.isEmpty())
         app.installTranslator(&localize);
 
+#ifdef Q_OS_MAC
+    QFile style(":/styles/macos.css");
+#else
     QFile style(":/styles/desktop.css");
+#endif
     if(style.exists()) {
         style.open(QFile::ReadOnly);
         QString css = QLatin1String(style.readAll());
@@ -1268,6 +1276,17 @@ int main(int argc, char *argv[])
 #endif
 
     args.process(app);
+
+// This is really for autostart at login, as we need a delay for desktop
+// to finish coming up before we try to add the dbus menu or tray...
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
+#ifdef STARTUP_MINIMIZED
+    ::sleep(3)
+#else
+    if(args.isSet("minimize"))
+        ::sleep(3);
+#endif
+#endif
 
     Desktop w(args);
     int status = app.exec();

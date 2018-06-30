@@ -31,7 +31,7 @@ QDialog(desktop, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     auto items = ContactItem::findAuth(id);
     Q_ASSERT(items.count() > 0);
 
-    connect(ui.cancelButton, &QPushButton::clicked, desktop, &Desktop::closeDialog);
+    connect(ui.cancelButton, &QPushButton::clicked, this, &DelAuth::reject);
 
     connect(ui.acceptButton, &QPushButton::clicked, this, [=] {
         connector->requestDeauthorize(id.toUtf8());
@@ -57,4 +57,10 @@ void DelAuth::closeEvent(QCloseEvent *event)
 {
     event->ignore();
 //    Desktop::instance()->closeDialog();
+}
+
+void DelAuth::reject()
+{
+    QDialog::reject();
+    Desktop::instance()->closeDialog();
 }

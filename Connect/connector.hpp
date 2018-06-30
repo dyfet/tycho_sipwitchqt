@@ -53,6 +53,9 @@ public:
     void requestDeviceList();
     void requestDeauthorize(const UString& to);
     void removeDevice(const UString& label);
+    void disconnectUser(const UString& to);
+    void changeAdmin(const UString& to, bool enable);
+    void changeSuspend(const UString& to, bool suspend);
     void createAuthorize(const UString& to, const QByteArray& body);
     void changeCoverage(const UString& to, int target = -1);
     void changeForwarding(const UString& to, Forwarding type, int target = -1);

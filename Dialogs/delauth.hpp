@@ -34,6 +34,7 @@ private:
     Connector *connector;
 
     void closeEvent(QCloseEvent *event) final;
+    void reject() final;
 
 signals:
     void error(const QString& text);

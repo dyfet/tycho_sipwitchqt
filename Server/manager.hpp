@@ -78,6 +78,8 @@ signals:
     void changeProfile(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeTopic(const Event& ev);
     void changeCoverage(const Event& ev, const UString& authorized, qlonglong endpoint);
+    void dropExtension(const Event& ev, const UString& authorize, qlonglong endpoint);
+    void changeAdmin(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeForwarding(const Event& ev, const UString& authorized, qlonglong endpoint);
     void changeAuthorize(const Event& ev);
@@ -100,6 +102,8 @@ public slots:
     void requestForwarding(const Event& ev);
     void requestDeauthorize(const Event& ev);
     void requestMembership(const Event& ev);
+    void requestAdmin(const Event& ev);
+    void requestDrop(const Event& ev);
     void refreshRegistration(const Event& ev);
     void createRegistration(const Event& ev, const QVariantHash& endpoint);
     void dropEndpoint(qlonglong endpoint);

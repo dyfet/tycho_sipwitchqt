@@ -119,6 +119,8 @@ private slots:
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);
     void removeDevice(const Event& ev, const UString& auth, qlonglong endpoint);
+    void dropExtension(const Event& ev, const UString& auth, qlonglong endpoint);
+    void changeAdmin(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeMembership(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeCoverage(const Event& ev, const UString& auth, qlonglong endpoint);
     void changeForwarding(const Event& ev, const UString& auth, qlonglong endpoint);

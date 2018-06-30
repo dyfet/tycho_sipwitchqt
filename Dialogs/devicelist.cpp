@@ -67,6 +67,12 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     show();
 }
 
+void DeviceList::reject()
+{
+    QDialog::reject();
+    Desktop::instance()->closeDialog();
+}
+
 void DeviceList::closeEvent(QCloseEvent *event)
 {
     event->ignore();

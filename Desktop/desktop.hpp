@@ -119,8 +119,8 @@ public:
     }
 
     inline QFont getCurrentFont() {                                      // get current value from the settings.cfg
-        baseFont.fromString(settings.value("font").toString());         // make fonts persistant across sessions and endpoints
-        if (!(baseFont.fromString(settings.value("font").toString())))  // So font is now client related and persistent
+        auto font = settings.value("font").toString();
+        if (font.isEmpty() || !(baseFont.fromString(font)))  // So font is now client related and persistent
             baseFont = QGuiApplication::font();
         return baseFont;
     }

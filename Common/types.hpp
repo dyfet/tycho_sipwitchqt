@@ -61,6 +61,7 @@ public:
     UString escape() const;
     UString unescape() const;
     bool isQuoted(const char *qc = "\"") const;
+    bool toBool() const;
 
     static UString number(int num, int base = 10) {
         return QByteArray::number(num, base);

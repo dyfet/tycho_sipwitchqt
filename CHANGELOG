@@ -1,6 +1,9 @@
 v0.3.0
 * Improved unit file
 * Added security model checks; no extension keys implemented yet
+* Admin and suspend states and modifications supported
+* Added admin drop/disconnect
+* Various ui improvements
 
 v0.2.7
 * Improved packaging support

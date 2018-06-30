@@ -15,10 +15,6 @@ QDialog, QMainWindow, QStatusBar, QListView, QStackedWidget {
     background: white;
 }
 
-QDialog {
-    border: 1px solid #c0c0c0;
-}
-
 /* special controls... */
 
 QLabel#searchLabel {

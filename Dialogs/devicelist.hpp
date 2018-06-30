@@ -38,6 +38,7 @@ private:
 //    int rows = 1;
 //    int column = 6;
     void closeEvent(QCloseEvent *event) final;
+    void reject() final;
 //    QTableWidget tableWidget;
 };
 
