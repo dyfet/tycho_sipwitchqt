@@ -1027,7 +1027,7 @@ void Sessions::changeConnector(Connector *connected)
                 finishInput(tr("Failed to send"));
         }, Qt::QueuedConnection);
 
-        connect(connector, &Connector::topicFailed, this, [this]{
+        connect(connector, &Connector::topicFailed, this, []{
             if(activeItem) {
                 auto toolbar = Toolbar::instance();
                 toolbar->setTopics(activeItem->topic(), activeItem->topicList());

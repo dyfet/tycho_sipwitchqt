@@ -792,6 +792,7 @@ void MemberDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style,
 
 QSize DeviceDelegate::sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const
 {
+    Q_UNUSED(index);
     return {style.rect.width(), cellHeight};
 }
 
@@ -1000,7 +1001,7 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
            connector->requestRoster();
     });
 
-    connect(ui.autoAnswer, &QSlider::valueChanged, this, [this](int value) {
+    connect(ui.autoAnswer, &QSlider::valueChanged, this, [](int value) {
         if(activeItem && !disableUpdates)
             activeItem->setAutoAnswer(value > 0);
     });

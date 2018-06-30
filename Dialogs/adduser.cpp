@@ -115,6 +115,7 @@ void AddUser::changedAuth(const QString& text)
 
 void AddUser::secretChanged(const QString& text)
 {
+    Q_UNUSED(text);
     if(ui.secret->text() == ui.confirm->text())
         ui.confirm->setStyleSheet("background: white; padding: 1px;");
     else

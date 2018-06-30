@@ -32,6 +32,7 @@ public:
 
 private:
     void closeEvent(QCloseEvent *event) final;
+    void reject() final;
 
 private slots:
     void aboutProject();

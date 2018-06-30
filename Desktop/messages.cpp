@@ -487,9 +487,9 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     else
         lastHint = QSize(0, 0);
 
-    if(msgType == ADMIN_MESSAGE)
+/*    if(msgType == ADMIN_MESSAGE) Maybe earlier???
         height += 4;
-
+*/
     return lastHint;
 }
 

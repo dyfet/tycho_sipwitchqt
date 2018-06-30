@@ -33,7 +33,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
     connect(ui.aboutButton, &QToolButton::clicked, this, &About::aboutProject);
     connect(ui.tribalButton, &QToolButton::clicked, this, &About::aboutTribal);
-    connect(ui.closeButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
+    connect(ui.closeButton, &QPushButton::clicked, this, &About::reject);
 
     auto creds = parent->storageCredentials();
     if(!creds["host"].isNull()) {
@@ -54,6 +54,12 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 void About::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
+    Desktop::instance()->closeDialog();
+}
+
+void About::reject()
+{
+    QDialog::reject();
     Desktop::instance()->closeDialog();
 }
 

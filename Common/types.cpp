@@ -95,7 +95,7 @@ UString UString::unescape() const
                 break;
             digits[2] = 0;
             UString value(digits);
-            char code = value.toInt(nullptr, 16);
+            auto code = static_cast<char>(value.toInt(nullptr, 16));
             result.append(code);
             ++cp;
         }
