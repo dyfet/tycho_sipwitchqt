@@ -91,14 +91,15 @@ from the command line.
 %{_sbindir}/sipwitchqt-server
 %{_sysconfdir}/sv/sipwitchqt/run
 %{_sysconfdir}/default/sipwitchqt
-%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/default/sipwitchqt
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitchqt.conf
 %attr(0664,root,root) %{_prefix}/lib/systemd/system/sipwitchd.service
 %attr(0750,root,root) %{_prefix}/lib/systemd/system-sleep/sipwqt-sleep.sh
 %{_mandir}/man1/sipwitchqt-server.*
 
 %files local
 %defattr(-,root,root)
-${_sbindir}/swlite-*
+%{_sbindir}/swlite-*
 %{_mandir}/man1/swlite-*
 
 %files utils
