@@ -37,6 +37,7 @@ static MemberModel *memberModel = nullptr;
 static bool disableUpdates = false;
 static QString verifyLabel, verifyAgent;
 static QByteArray verifyKey;
+static bool activeSuspend, activeSysop;
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -505,16 +506,20 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
     auto item = local[number];
 
     if(item && !status.isEmpty()) {
+        activeSysop = activeSuspend = false;
         if((type == "USER" || type == "DEVICE") && Desktop::isAdmin() && item != Phonebook::self() && item->user() != Phonebook::self()->user()) {
             if(status == "sysadmin")
                 ui.adminButton->setText(tr("Disable"));
-            else
+            else {
+                activeSysop = true;
                 ui.adminButton->setText(tr("Enable"));
+            }
             if(status == "suspend") {
                 ui.suspendButton->setText(tr("Restore"));
                 ui.adminButton->setEnabled(false);
             }
             else {
+                activeSuspend = true;
                 ui.suspendButton->setText(tr("Suspend"));
                 ui.adminButton->setEnabled(true);
             }
@@ -948,6 +953,24 @@ QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRos
         control->openDelAuth(activeItem->user());
     });
 
+    connect(ui.adminButton, &QPushButton::pressed, this, [=] {
+        if(!connector || !activeItem)
+            return;
+        connector->changeAdmin(activeItem->uri(), activeSysop);
+    });
+
+    connect(ui.suspendButton, &QPushButton::pressed, this, [=] {
+        if(!connector || !activeItem)
+            return;
+        connector->changeSuspend(activeItem->uri(), activeSuspend);
+    });
+
+    connect(ui.dropButton, &QPushButton::pressed, this, [=] {
+        if(!connector || !activeItem)
+            return;
+        connector->disconnectUser(activeItem->uri());
+    });
+
     connect(ui.contacts, &QListView::doubleClicked, this, [=](const QModelIndex& index) {
         auto row = index.row();
         if(row < 0 || row > highest)
@@ -1058,6 +1081,7 @@ void Phonebook::filterView(const QString& selected)
         return;
 
     activeItem = nullptr;
+    activeSysop = activeSuspend = false;
     Toolbar::setTitle("");
     localModel->setFilter(selected);
     ui.contact->setVisible(false);
@@ -1354,6 +1378,8 @@ void Phonebook::selectContact(const QModelIndex& index)
 
     if(!item)
         return;
+
+    activeSysop = activeSuspend = false;
 
     if(item == self())
         ui.behaviorGroup->setEnabled(false);

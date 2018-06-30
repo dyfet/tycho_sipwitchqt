@@ -452,6 +452,56 @@ void Manager::requestCoverage(const Event& ev)
     emit changeCoverage(ev, reg->user(), reg->endpoint());
 }
 
+void Manager::requestDrop(const Event& ev)
+{
+    qDebug() << "REQUESTING DROP FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND DROP REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit dropExtension(ev, reg->user(), reg->endpoint());
+}
+
+void Manager::requestAdmin(const Event& ev)
+{
+    qDebug() << "REQUESTING ADMIN FROM" << ev.number();
+    auto *reg = Registry::find(ev);
+    auto result = SIP_FORBIDDEN;
+
+    if(!reg) {
+        qDebug() << "CANNOT FIND ADMIN REG";
+        Context::reply(ev, result);
+        return;
+    }
+
+    if(!ev.authorization()) {
+        Context::challenge(ev, reg, true);
+        return;
+    }
+
+    if(SIP_OK != (result = reg->authenticate(ev))) {
+        Context::reply(ev, result);
+        return;
+    }
+
+    emit changeAdmin(ev, reg->user(), reg->endpoint());
+}
+
 void Manager::requestMembership(const Event& ev)
 {
     qDebug() << "REQUESTING MEMBERSHIP FROM" << ev.number();

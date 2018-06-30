@@ -19,6 +19,21 @@
 #include "types.hpp"
 #include <cctype>
 
+bool UString::toBool() const
+{
+    auto cp = constData();
+    if(!cp || *cp == 0)
+        return false;
+
+    if(toLower() == "yes" || toLower() == "true")
+        return true;
+
+    if(atoi(cp) > 0)
+        return true;
+
+    return false;
+}
+
 bool UString::isNumber() const
 {
     auto cp = constData();

@@ -29,7 +29,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
     connect(ui.logoutButton, &QPushButton::clicked, parent, &Desktop::closeLogout);
     connect(ui.eraseButton, &QPushButton::clicked, parent, &Desktop::eraseLogout);
-    connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
+    connect(ui.cancelButton, &QPushButton::clicked, this, &Logout::reject);
     show();
 }
 
@@ -37,4 +37,10 @@ void Logout::closeEvent(QCloseEvent *event)
 {
     event->ignore();
 //    Desktop::instance()->closeDialog();
+}
+
+void Logout::reject()
+{
+    QDialog::reject();
+    Desktop::instance()->closeDialog();
 }

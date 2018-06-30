@@ -306,7 +306,7 @@ void Options::changeAutostart(int value)
         QTextStream out(&file);
         out << "[Desktop Entry]\n"
             << "Name=" APPLICATION_NAME "\n"
-            << "Exec=" APPLICATION_EXEC " -minimize\n"
+            << "Exec=" APPLICATION_EXEC " --minimize\n"
             << "Terminal=false\n"
             << "Icon=" APPLICATION_EXEC "\n"
             << "Categories=Network\n"

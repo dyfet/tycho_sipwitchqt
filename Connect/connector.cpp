@@ -31,6 +31,8 @@
 #define X_ROSTER        "X-ROSTER"
 #define X_PROFILE       "X-PROFILE"
 #define X_DEVLIST       "X-DEVLIST"
+#define X_ADMIN         "X-ADMIN"
+#define X_DROP          "X-DROP"
 #define X_DEVKILL       "X-DEVKILL"
 #define X_PENDING       "X-PENDING"
 #define A_PENDING       "A-PENDING"
@@ -73,6 +75,12 @@
 
 #define MSG_IS_FORWARDING(msg) (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, X_FORWARDING))
+
+#define MSG_IS_ADMIN(msg) (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_ADMIN))
+
+#define MSG_IS_DROP(msg) (MSG_IS_REQUEST(msg) && \
+    0==strcmp((msg)->sip_method, X_DROP))
 
 static const char *eid(eXosip_event_type ev);
 
@@ -301,6 +309,58 @@ void Connector::changeMemebership(const UString& to, const UString& subject, con
     eXosip_message_send_request(context, msg);
 }
 
+void Connector::disconnectUser(const UString& to)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_DROP, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeSuspend(const UString& to, bool suspend)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_ADMIN, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    UString value = "1";
+    if(!suspend)
+        value = "0";
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-Suspend", value);
+    eXosip_message_send_request(context, msg);
+}
+
+void Connector::changeAdmin(const UString& to, bool enable)
+{
+    osip_message_t *msg = nullptr;
+    UString sipTo = "<" + to + ">";
+
+    Locker lock(context);
+    eXosip_message_build_request(context, &msg, X_ADMIN, sipTo, sipFrom, uriRoute);
+    if(!msg)
+        return;
+
+    UString value = "1";
+    if(!enable)
+        value = "0";
+
+    osip_message_set_header(msg, "X-Label", serverLabel);
+    osip_message_set_header(msg, "X-System", value);
+    eXosip_message_send_request(context, msg);
+}
+
 void Connector::sendProfile(const UString& to, const QByteArray& body)
 {
     osip_message_t *msg = nullptr;
@@ -443,7 +503,7 @@ void Connector::run()
             case SIP_OK:
                 if(MSG_IS_ROSTER(event->request))
                     processRoster(event);
-                else if(MSG_IS_PROFILE(event->request) || MSG_IS_COVERAGE(event->request) || MSG_IS_MEMBERSHIP(event->request) || MSG_IS_FORWARDING(event->request) || MSG_IS_DEVKILL(event->request))
+                else if(MSG_IS_PROFILE(event->request) || MSG_IS_COVERAGE(event->request) || MSG_IS_MEMBERSHIP(event->request) || MSG_IS_FORWARDING(event->request) || MSG_IS_DEVKILL(event->request) || MSG_IS_ADMIN(event->request) || MSG_IS_DROP(event->request))
                     processProfile(event);
                 else if(MSG_IS_AUTHORIZE(event->request)) {
                     emit statusResult(SIP_OK, "");

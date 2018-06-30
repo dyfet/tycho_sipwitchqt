@@ -55,7 +55,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     realm = creds["realm"].toString();
     digest = creds["algorithm"].toString().toUpper();
 
-    connect(ui.cancelButton, &QPushButton::clicked, parent, &Desktop::closeDialog);
+    connect(ui.cancelButton, &QPushButton::clicked, this, &AddUser::reject);
     connect(ui.authorization, &QComboBox::editTextChanged, this, &AddUser::changedAuth);
     connect(ui.addButton, &QPushButton::pressed, this, &AddUser::add);
     connect(ui.confirm, &QLineEdit::textChanged, this, &AddUser::secretChanged);
@@ -91,7 +91,12 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 void AddUser::closeEvent(QCloseEvent *event)
 {
     event->ignore();
-//    Desktop::instance()->closeDialog();
+}
+
+void AddUser::reject()
+{
+    QDialog::reject();
+    Desktop::instance()->closeDialog();
 }
 
 void AddUser::changedAuth(const QString& text)
