@@ -16,7 +16,7 @@ BuildRequires: systemd-rpm-macros
 
 %package server
 Recommends: libQt5Sql5-mysql, libQt5Sql5-sqlite
-Summary: pbx and messaging server for the SIP protocol
+Summary: PBX and messaging server for the SIP protocol
 Requires(pre): systemd									
 Requires(post): systemd									
 Requires(preun): systemd								
