@@ -14,10 +14,10 @@
 	</description>
     <screenshots>
         <screenshot type="default">
-            <image>https://pub.cherokeesofidaho.org/screenshots/sipwitchqt-desktop.png</image>
+            <image>https://www.cherokeesofidaho.org/public/screenshots/sipwitchqt-desktop.png</image>
         </screenshot>
     </screenshots>
-    <url type="homepage">https://www.github.com:tychosoft/sipwitchqt</url>
+    <url type="homepage">https://www.gitlab.com/tychosoft/sipwitchqt</url>
     <update_contact>tychosoft@gmail.com</update_contact>
 </component>
 
