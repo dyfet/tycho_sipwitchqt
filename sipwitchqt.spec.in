@@ -87,6 +87,8 @@ from the command line.
 
 %files server
 %defattr(-,root,root)
+%dir %{_sysconfdir}/sv
+%dir %{_sysconfdir}/sv/sipwitchqt
 %doc README.md DOCKER.md CONTRIBUTING.md LICENSE CHANGELOG
 %{_sbindir}/sipwitchqt-server
 %{_sysconfdir}/sv/sipwitchqt/run
@@ -104,6 +106,7 @@ from the command line.
 
 %files utils
 %defattr(-,root,root)
+%dir %{_datadir}/schemas
 %{_sbindir}/ipl-*
 %{_sbindir}/swcert-*
 %{_mandir}/man1/swcert-*
@@ -112,6 +115,7 @@ from the command line.
 
 %files desktop
 %defattr(-,root,root)
+%dir %{_datadir}/translations
 %{_bindir}/sipwitchqt-desktop
 %{_datadir}/applications/sipwitchqt.desktop
 %{_datadir}/translations/*.qm

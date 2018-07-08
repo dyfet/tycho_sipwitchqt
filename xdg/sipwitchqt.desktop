@@ -6,6 +6,6 @@ Terminal=false
 GenericName=Sip Connections
 Comment=Desktop client for SipWitchQt server
 Exec=sipwitchqt-desktop
-Categories=Network;
+Categories=Network;Telephony;InstantMessaging;
 Icon=sipwitchqt
 

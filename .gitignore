@@ -5,6 +5,9 @@ CMakeFiles/
 CMakeScripts/
 Debug/
 Release/
+parts/
+prime/
+.snapcraft/
 
 *.user.*
 *.user
