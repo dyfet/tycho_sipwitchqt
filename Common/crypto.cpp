@@ -79,6 +79,35 @@ bool Crypto::random(quint8 *cp, int size)
     return true;
 }
 
+void Crypto::pad(QByteArray& data, int size)
+{
+    Q_ASSERT(size > 0 && size <= 64);
+
+    auto count = data.count();
+    auto offset = count % size;
+
+    if(!offset) {
+        data += random(size - 1) + static_cast<char>(size);
+    }
+    else {
+        size -= offset;
+        if(size > 1)
+            data += random(size - 1);
+        data += static_cast<char>(size);
+    }
+}
+
+void Crypto::unpad(QByteArray& data, int iv)
+{
+    Q_ASSERT(data.count() > iv);
+
+    if(iv)
+        data = data.mid(iv);
+    auto count = data.count();
+    auto cp = data.constData() + count - 1;
+    data.resize(count - *cp);
+}
+
 QPair<QByteArray,QByteArray> Crypto::keypair(bool compressed)
 {
     auto pair = EC_KEY_new_by_curve_name(NID_secp256k1);

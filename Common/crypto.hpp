@@ -43,6 +43,8 @@ namespace Crypto {
     const QByteArray random(int size);
     bool random(quint8 *bytes, int size);
     QPair<QByteArray, QByteArray> keypair(bool compressed = true);
+    void pad(QByteArray &data, int size);
+    void unpad(QByteArray& data, int iv = 0);
 }
 
 /*!
@@ -71,6 +73,21 @@ namespace Crypto {
  * \param bytes Memory location to fill.
  * \param size Number of random bytes requested.
  * \return true if successful.
+ */
+
+/*!
+ * \fn void Crypto::pad(QByteArray& data, int size)
+ * Padds a data block to align data for a cipher.
+ * \param data Binary data to pad
+ * \param size Alignment size of padding for cipher.
+ */
+
+/*!
+ * \fn void Crypto:unpad(QByteArray& data, int iv)
+ * Remove padding that was added for cipher.  This also can be used to
+ * remove a pre-pended iv.
+ * \param data Binary data that was padded.
+ * \param iv Pre-pended iv size.
  */
 
 #endif
