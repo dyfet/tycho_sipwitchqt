@@ -39,15 +39,15 @@ elseif(WIN32)
             URL "https://www.openssl.org/source/openssl-${OSSL_VERSION}.tar.gz"
             CONFIGURE_COMMAND perl Configure VC-WIN64A no-shared enable-static-engine --prefix=${CMAKE_INSTALL_PREFIX} --openssldir=C:\\ProgramData\\SipWitchQt
             BUILD_COMMAND nmake
-            INSTALL_COMMAND nmake install
+            INSTALL_COMMAND nmake install_dev
             BUILD_IN_SOURCE 1
         )
     else()
         ExternalProject_add(openssl
             URL "https://www.openssl.org/source/openssl-${OSSL_VERSION}.tar.gz"
             CONFIGURE_COMMAND perl Configure VC-WIN32 no-shared enable-static-engine --prefix=${CMAKE_INSTALL_PREFIX} --openssldir=C:\\ProgramData\\SipWitchQt
-            BUILD_COMMAND exit nmake
-            INSTALL_COMMAND nmake install
+            BUILD_COMMAND nmake
+            INSTALL_COMMAND nmake install_dev
             BUILD_IN_SOURCE 1
         )
     endif()
