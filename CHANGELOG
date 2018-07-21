@@ -1,3 +1,7 @@
+v0.3.1
+* Fix for freebsd build
+* Improved openssl vendoring
+
 v0.3.0
 * Improved unit file
 * Added security model checks; no extension keys implemented yet

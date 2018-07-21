@@ -24,6 +24,7 @@
 #include <WinSock2.h>
 #else
 #include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 #define EVENT_TIMER 400l    // 400ms...

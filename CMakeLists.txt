@@ -155,7 +155,6 @@ configure_file(config.hpp.in config.hpp)
 configure_file(setup.iss.in setup.iss)
 configure_file(desktop.rc.in desktop.rc)
 configure_file(server.rc.in server.rc)
-configure_file(sipwitchqt.spec.in sipwitchqt.spec)
 
 file(GLOB common_src Common/*.cpp)
 file(GLOB connect_src Connect/*.cpp)
@@ -245,7 +244,7 @@ if(BOOTSTRAP_EXTERNAL)
     add_dependencies(eXosip2 openssl)
 endif()
 
-add_custom_target(support-files SOURCES desktop.plist.in sipwitchqt.spec.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.default ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
+add_custom_target(support-files SOURCES desktop.plist.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.default ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
 add_subdirectory(utils)
 
@@ -340,12 +339,6 @@ if(CMAKE_MAINTAINER)
         COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_SOURCE_DIR}/testdata/*.db"
         COMMAND "${CMAKE_COMMAND}" -E remove -F "*.pdf"
         COMMAND "${CMAKE_COMMAND}" -E remove_directory "doc"
-    )
-
-    add_custom_target(srpm
-        DEPENDS dist
-        COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-*.rpm" 
-        COMMAND rpmbuild -bs --nodeps "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_ARCHIVE}.spec"
     )
  
     add_custom_target(pdf
