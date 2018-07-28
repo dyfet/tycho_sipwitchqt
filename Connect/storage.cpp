@@ -424,8 +424,6 @@ QVariantHash Storage::next(QSqlQuery& query)
     return item;
 }
 
-
-#include <QStandardPaths>
 int Storage::copyDb(const QString &dbName){
 
     QVariantHash extlab = getRecord("SELECT extension, label from Credentials",{});

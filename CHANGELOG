@@ -1,6 +1,8 @@
 v0.3.1
 * Fix for freebsd build
 * Improved openssl vendoring
+* Layout of basic crypto support
+* Restructured client sip code
 
 v0.3.0
 * Improved unit file

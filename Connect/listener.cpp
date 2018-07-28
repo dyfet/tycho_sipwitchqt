@@ -29,43 +29,8 @@
 
 #define EVENT_TIMER 200l    // 200ms...
 
-static const char *eid(eXosip_event_type ev);
-
 static bool exitingFlag = false;
 static unsigned rosterSequence = 0xffff;
-
-// internal lock class
-class Locker final
-{
-public:
-    explicit inline Locker(eXosip_t *ctx) :
-    context(ctx) {
-        Q_ASSERT(context != nullptr);
-        eXosip_lock(context);
-    }
-
-    inline ~Locker() {
-        eXosip_unlock(context);
-    }
-
-private:
-    eXosip_t *context;
-};
-
-static void dump(osip_message_t *msg)
-{
-    if(!msg)
-        return;
-
-    char *data = nullptr;
-    size_t len;
-    osip_message_to_str(msg, &data, &len);
-    if(data) {
-        data[len] = 0;
-        qDebug() << "MSG" << data;
-        osip_free(data);
-    }
-}
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
 QObject(), active(true), connected(false), registered(false), authenticated(false)
@@ -249,7 +214,7 @@ void Listener::run()
         }
         else {
             connected = true;
-            qDebug().nospace() << "type=" << eid(event->type) << " cid=" << event->cid;
+            qDebug().nospace() << "type=" << toStr(event->type) << " cid=" << event->cid;
         }
 
         osip_header_t *header;
@@ -572,76 +537,4 @@ void Listener::stop(bool shutdown)
 {
     exitingFlag = shutdown;
     active = false;
-}
-
-static const char *eid(eXosip_event_type ev)
-{
-    switch(ev) {
-    case EXOSIP_REGISTRATION_SUCCESS:
-        return "register";
-    case EXOSIP_CALL_INVITE:
-        return "invite";
-    case EXOSIP_CALL_REINVITE:
-        return "reinvite";
-    case EXOSIP_CALL_NOANSWER:
-    case EXOSIP_SUBSCRIPTION_NOANSWER:
-    case EXOSIP_NOTIFICATION_NOANSWER:
-        return "noanswer";
-    case EXOSIP_MESSAGE_PROCEEDING:
-    case EXOSIP_NOTIFICATION_PROCEEDING:
-    case EXOSIP_CALL_MESSAGE_PROCEEDING:
-    case EXOSIP_SUBSCRIPTION_PROCEEDING:
-    case EXOSIP_CALL_PROCEEDING:
-        return "proceed";
-    case EXOSIP_CALL_RINGING:
-        return "ring";
-    case EXOSIP_MESSAGE_ANSWERED:
-    case EXOSIP_CALL_ANSWERED:
-    case EXOSIP_CALL_MESSAGE_ANSWERED:
-    case EXOSIP_SUBSCRIPTION_ANSWERED:
-    case EXOSIP_NOTIFICATION_ANSWERED:
-        return "answer";
-    case EXOSIP_SUBSCRIPTION_REDIRECTED:
-    case EXOSIP_NOTIFICATION_REDIRECTED:
-    case EXOSIP_CALL_MESSAGE_REDIRECTED:
-    case EXOSIP_CALL_REDIRECTED:
-    case EXOSIP_MESSAGE_REDIRECTED:
-        return "redirect";
-    case EXOSIP_REGISTRATION_FAILURE:
-        return "noreg";
-    case EXOSIP_SUBSCRIPTION_REQUESTFAILURE:
-    case EXOSIP_NOTIFICATION_REQUESTFAILURE:
-    case EXOSIP_CALL_REQUESTFAILURE:
-    case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
-    case EXOSIP_MESSAGE_REQUESTFAILURE:
-        return "failed";
-    case EXOSIP_SUBSCRIPTION_SERVERFAILURE:
-    case EXOSIP_NOTIFICATION_SERVERFAILURE:
-    case EXOSIP_CALL_SERVERFAILURE:
-    case EXOSIP_CALL_MESSAGE_SERVERFAILURE:
-    case EXOSIP_MESSAGE_SERVERFAILURE:
-        return "server";
-    case EXOSIP_SUBSCRIPTION_GLOBALFAILURE:
-    case EXOSIP_NOTIFICATION_GLOBALFAILURE:
-    case EXOSIP_CALL_GLOBALFAILURE:
-    case EXOSIP_CALL_MESSAGE_GLOBALFAILURE:
-    case EXOSIP_MESSAGE_GLOBALFAILURE:
-        return "global";
-    case EXOSIP_CALL_ACK:
-        return "ack";
-    case EXOSIP_CALL_CLOSED:
-    case EXOSIP_CALL_RELEASED:
-        return "bye";
-    case EXOSIP_CALL_CANCELLED:
-        return "cancel";
-    case EXOSIP_MESSAGE_NEW:
-    case EXOSIP_CALL_MESSAGE_NEW:
-    case EXOSIP_IN_SUBSCRIPTION_NEW:
-        return "new";
-    case EXOSIP_SUBSCRIPTION_NOTIFY:
-        return "notify";
-    default:
-        break;
-    }
-    return "unknown";
 }

@@ -182,8 +182,4 @@ QDebug operator<<(QDebug dbg, const Contact& contact);
  * \return internet port number for contact.
  */
 
-/*!
- * \namespace Util
- */
-
 #endif
