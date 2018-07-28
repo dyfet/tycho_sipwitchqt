@@ -74,8 +74,8 @@ public:
     static QPair<QByteArray, QByteArray> keypair(bool compressed = true);
     static QByteArray pad(const QByteArray &unpadded, int size);
     static QByteArray unpad(const QByteArray& data, int iv = 0);
-    static QByteArray encrypt(const QByteArray& data, const QByteArray& key);
-    static QByteArray decrypt(const QByteArray& data, const QByteArray& key);
+    static QByteArray encrypt(const QByteArray& data, const QByteArray& key, bool isSigned = false);
+    static QByteArray decrypt(const QByteArray& data, const QByteArray& key, bool isSigned = false);
     static QByteArray sha256(const QByteArray& data);
     static QByteArray sha512(const QByteArray& data);
     static QByteArray sign(const QByteArray& prikey, const QByteArray& data);
@@ -164,7 +164,7 @@ Q_DECLARE_METATYPE(Crypto)
  * \param salt Optional salt to apply.
  * \return a derived AES crypto key.
  *
- * \fn Crypto::encrypt(const QByteArray& data, const QByteArray& key)
+ * \fn Crypto::encrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
  * This is used to produce an encrypted output of supplied data using AES.
  * The iv should be appended as random data.  The data block is aligned to
  * the cipher block size (32 or 64 for aes 128 or 256), and a sha256 is
@@ -172,13 +172,15 @@ Q_DECLARE_METATYPE(Crypto)
  * has valid data rather than just purely random values.
  * \param data What to encrypt.
  * \param key Symetric key to encrypt with.
+ * \param isSigned Skip digest if signed.
  * \return ciphered data block, ciphered iv in front, padded, tail sha256.
  *
- * \fn Crypto::decrypt(const QByteArray& data, const QByteArray& key)
+ * \fn Crypto::decrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
  * This used to decrypt a data bock produced by encrypt.  It also verifies the
  * sha256 at the end.
  * \param data What t decrypt.
  * \param key Symetric key to decrypt with.
+ * \param isSiged Skip digest if signed.
  * \return clear text of ciphered data.
  *
  * \fn Crypto::sign(const QByteArray& key, const QByteArray& data)

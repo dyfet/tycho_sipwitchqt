@@ -192,7 +192,7 @@ QByteArray Crypto::unpad(const QByteArray& padded, int iv)
     return data;
 }
 
-QByteArray Crypto::encrypt(const QByteArray& data, const QByteArray& key)
+QByteArray Crypto::encrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
 {
     const EVP_CIPHER *algo;
     switch(key.count()) {
@@ -223,7 +223,8 @@ QByteArray Crypto::encrypt(const QByteArray& data, const QByteArray& key)
 
     EVP_CIPHER_CTX_set_padding(context, 0);
     auto in = Crypto::pad(data, align);
-    in += sha256(in);
+    if(!isSigned)
+        in += sha256(in);
     auto size = 0;
 
     QByteArray out(in.count() + align, 0);
@@ -238,7 +239,7 @@ QByteArray Crypto::encrypt(const QByteArray& data, const QByteArray& key)
     return out;
 }
 
-QByteArray Crypto::decrypt(const QByteArray& data, const QByteArray& key)
+QByteArray Crypto::decrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
 {
     const EVP_CIPHER *algo;
     switch(key.count()) {
@@ -274,12 +275,16 @@ QByteArray Crypto::decrypt(const QByteArray& data, const QByteArray& key)
     auto ip = reinterpret_cast<const quint8 *>(data.constData());
     auto op = bytePointer(out.constData());
     if(EVP_DecryptUpdate(context, op, &size, ip, data.count())) {
-        auto sha = out.right(32);   // extract sha
-        out.resize(size - 32);      // strip sha
-        if(sha == sha256(out))
-            out = Crypto::unpad(out);
+        if(!isSigned) {
+            auto sha = out.right(32);   // extract sha
+            out.resize(size - 32);      // strip sha
+            if(sha == sha256(out))
+                out = Crypto::unpad(out);
+            else
+                out = QByteArray{};
+        }
         else
-            out = QByteArray{};
+            out = Crypto::unpad(out);
     }
     else
         out = QByteArray{};
