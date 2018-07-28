@@ -293,6 +293,103 @@ QByteArray Crypto::decrypt(const QByteArray& data, const QByteArray& key, bool i
     return out;
 }
 
+
+QByteArray Crypto::encrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pri)
+{
+    const EVP_CIPHER *algo;
+    switch(key.count()) {
+    case 16:
+        algo = EVP_aes_128_ecb();
+        break;
+    case 32:
+        algo = EVP_aes_256_ecb();
+        break;
+    default:
+        return {};
+    }
+
+    auto context = EVP_CIPHER_CTX_new();
+    if(!context)
+        return {};
+
+    auto align = EVP_CIPHER_block_size(algo);
+    auto ivbuf = random(align);
+    auto iv = bytePointer(ivbuf.constData());
+    auto kp = reinterpret_cast<const quint8*>(key.constData());
+
+    EVP_CIPHER_CTX_init(context);
+    if(EVP_DecryptInit_ex(context, algo, nullptr, kp, iv) != 1) {
+        EVP_CIPHER_CTX_free(context);
+        return {};
+    }
+
+    EVP_CIPHER_CTX_set_padding(context, 0);
+    auto in = Crypto::pad(data, align);
+    in += sign(pri, in);
+    auto size = 0;
+
+    QByteArray out(in.count() + align, 0);
+    auto ip = reinterpret_cast<const quint8 *>(in.constData());
+    auto op = bytePointer(out.constData());
+    if(EVP_EncryptUpdate(context, op, &size, ip, in.count()))
+        out.resize(size);
+    else
+        out = QByteArray{};
+    EVP_CIPHER_CTX_cleanup(context);
+    EVP_CIPHER_CTX_free(context);
+    return out;
+}
+
+QByteArray Crypto::decrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pub)
+{
+    const EVP_CIPHER *algo;
+    switch(key.count()) {
+    case 16:
+        algo = EVP_aes_128_ecb();
+        break;
+    case 32:
+        algo = EVP_aes_256_ecb();
+        break;
+    default:
+        return {};
+    }
+
+    auto context = EVP_CIPHER_CTX_new();
+    if(!context)
+        return {};
+
+    auto align = EVP_CIPHER_block_size(algo);
+    auto ivbuf = QByteArray(align, 0);
+    auto iv = bytePointer(ivbuf.constData());
+    auto kp = reinterpret_cast<const quint8*>(key.constData());
+
+    EVP_CIPHER_CTX_init(context);
+    if(EVP_DecryptInit_ex(context, algo, nullptr, kp, iv) != 1) {
+        EVP_CIPHER_CTX_free(context);
+        return {};
+    }
+
+    EVP_CIPHER_CTX_set_padding(context, 0);
+    auto size = 0;
+
+    QByteArray out(data.count(), 0);
+    auto ip = reinterpret_cast<const quint8 *>(data.constData());
+    auto op = bytePointer(out.constData());
+    if(EVP_DecryptUpdate(context, op, &size, ip, data.count())) {
+        auto sig = out.right(32);   // extract sha
+        out.resize(size - 32);      // strip sha
+        if(verify(pub, out, sig))
+            out = Crypto::unpad(out);
+        else
+            out = QByteArray{};
+    }
+    else
+        out = QByteArray{};
+    EVP_CIPHER_CTX_cleanup(context);
+    EVP_CIPHER_CTX_free(context);
+    return out;
+}
+
 QByteArray Crypto::keygen(const QByteArray& secret, int keysize, int rounds, const QByteArray& salt)
 {
     switch(keysize) {

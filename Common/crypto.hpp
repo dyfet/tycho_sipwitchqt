@@ -76,6 +76,8 @@ public:
     static QByteArray unpad(const QByteArray& data, int iv = 0);
     static QByteArray encrypt(const QByteArray& data, const QByteArray& key, bool isSigned = false);
     static QByteArray decrypt(const QByteArray& data, const QByteArray& key, bool isSigned = false);
+    static QByteArray encrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pri);
+    static QByteArray decrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pub);
     static QByteArray sha256(const QByteArray& data);
     static QByteArray sha512(const QByteArray& data);
     static QByteArray sign(const QByteArray& prikey, const QByteArray& data);
@@ -167,7 +169,7 @@ Q_DECLARE_METATYPE(Crypto)
  * \fn Crypto::encrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
  * This is used to produce an encrypted output of supplied data using AES.
  * The iv should be appended as random data.  The data block is aligned to
- * the cipher block size (32 or 64 for aes 128 or 256), and a sha256 is
+ * the cipher block size (32 or 64 for aes 128 or 256), and a sha256 can be
  * appended and ciphered at the end so the decryptor can really verify it
  * has valid data rather than just purely random values.
  * \param data What to encrypt.
@@ -176,11 +178,30 @@ Q_DECLARE_METATYPE(Crypto)
  * \return ciphered data block, ciphered iv in front, padded, tail sha256.
  *
  * \fn Crypto::decrypt(const QByteArray& data, const QByteArray& key, bool isSigned)
- * This used to decrypt a data bock produced by encrypt.  It also verifies the
- * sha256 at the end.
- * \param data What t decrypt.
+ * This used to decrypt a data bock produced by encrypt.  It can also verify
+ * the sha256 at the end.
+ * \param data What to decrypt.
  * \param key Symetric key to decrypt with.
  * \param isSiged Skip digest if signed.
+ * \return clear text of ciphered data.
+ *
+ * \fn Crypto::encrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pri)
+ * This is used to produce an encrypted output of supplied data using AES.
+ * The iv should be appended as random data.  The data block is aligned to
+ * the cipher block size (32 or 64 for aes 128 or 256), and a signature is
+ * appended and ciphered at the end so the decryptor can really verify it
+ * has valid data.
+ * \param data What to encrypt.
+ * \param key Symetric key to encrypt with.
+ * \param pri Private key to sign block before encrypting.
+ * \return ciphered data block, ciphered iv in front, padded, tail signature.
+ *
+ * \fn Crypto::decrypt(const QByteArray& data, const QByteArray& key, const QByteArray& pub)
+ * This used to decrypt a data bock produced by encrypt.  It also verifies the
+ * signature with the matching public key at the end.
+ * \param data What to decrypt.
+ * \param key Symetric key to decrypt with.
+ * \param pri Key to verify signature.
  * \return clear text of ciphered data.
  *
  * \fn Crypto::sign(const QByteArray& key, const QByteArray& data)
