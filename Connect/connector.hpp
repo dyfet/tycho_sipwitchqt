@@ -21,13 +21,13 @@
 #include "../Common/compiler.hpp"
 #include "../Common/util.hpp"
 #include "../Common/contact.hpp"
+#include "message.hpp"
 
 #include <QThread>
-#include <QSslCertificate>
 #include <QTimer>
 #include <climits>
 
-class Connector final : public QObject
+class Connector final : public QObject, public Message
 {
     Q_DISABLE_COPY(Connector)
 	Q_OBJECT

@@ -18,18 +18,15 @@
 #ifndef LISTENER_HPP_
 #define LISTENER_HPP_
 
-#include "../Common/compiler.hpp"
-#include "../Common/util.hpp"
-#include "../Common/contact.hpp"
+#include "message.hpp"
 
 #include <QThread>
-#include <QSslCertificate>
 #include <QTimer>
 
 #define AGENT_ALLOWS "INVITE,ACK,OPTIONS,BYE,CANCEL,SUBSCRIBE,NOTIFY,REFER,MESSAGE,INFO,PING"
 #define AGENT_EXPIRES 1800
 
-class Listener final : public QObject
+class Listener final : public QObject, public Message
 {
     Q_DISABLE_COPY(Listener)
     Q_OBJECT
