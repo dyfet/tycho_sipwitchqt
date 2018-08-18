@@ -11,7 +11,7 @@ Development of this project is managed from https://gitlab.com/tychosoft/sipwitc
 
 ## Dependencies
 
-SipWitchQt should build with any Qt version later than 5.5.  Official binary installers will be built from latest LTS (currently 5.9).  SipWitchQt clients and servers also require libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos (and this includes the latest Fedora), we locally build libeXosip2 from the vendor/ directory.  For server zeroconfig support you should install libavahi-client-dev.  For systems using systemd, you should install libsystemd-dev.
+SipWitchQt should build with any Qt version later than 5.5.  Official binary installers will be built from latest LTS (currently 5.9).  SipWitchQt clients and servers also require libeXosip2 4.0 or later to build.  For really old Unix/Linux distros that may only have very old versions of exosip2 in their repos, we locally build libeXosip2 from the vendor/ directory.  In the case of fedora and redhat, which both have very old libeXosip2 releases but each use different openssl api's, we have a copr repo, at dyfet/stable and dyfet/develop.  For server zeroconfig support you should install libavahi-client-dev.  For systems using systemd, you should install libsystemd-dev.
 
 For building on MacOS you can use homebrew.  The libraries are linked and used thru the /usr/local/opt/xxx paths to avoid conflicts when building with the Qt company online installer and provided libraries.  This solves the problem where things like the brew version of libjpeg breaking linkage for the Qt distributed libs.  To install libeXosip2 with homebrew, simply do:
 
@@ -19,7 +19,7 @@ For building on MacOS you can use homebrew.  The libraries are linked and used t
 
 This should pull in all other required dependencies (openssl, libosip, etc) on MacOS.  You can also build using the homebrew version of Qt.
 
-For building on Microsoft Windows, the repo contains all required build dependencies as vendor/ packages, including openssl 1.1 and a lightly modified eXosip2.  To build openssl 1.1, you need to have ActivePerl, nasm for assembler optimizations, and the ActivePerl Text-Template perl package installed.  The current repo has been tested building native with either Visual Studio 2013, or the latest 2017.  The release builds can also automatically create an installer for Microsoft Windows using inno setup and the stage target.
+For building on Microsoft Windows, the repo contains a vendored and lightly modified eXosip2.  To get openssl to build with exosip2 you must use VCPKG, set the CMAKE_TOOLCHAIN_FILE as directed, and install an appropriate triple for openssl, such as vcpkg install openssl:w64-windows.  In the past we supplied a vendored openssl build kit, and we no longer are doing this.  Release builds for windows also automatically create an installer for Microsoft Windows using inno setup.
 
 ## Deploy
 
