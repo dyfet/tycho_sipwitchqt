@@ -838,7 +838,7 @@ verify_cb (int preverify_ok, X509_STORE_CTX * store)
    * it for something special
    */
   if (!preverify_ok && (err == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT)) {
-    X509_NAME_oneline (X509_get_issuer_name (X509_STORE_CTX_get_current_cert(store)), buf, 256);
+    X509_NAME_oneline (X509_get_issuer_name (store->current_cert), buf, 256);
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "issuer= %s\n", buf));
   }
 
@@ -1155,7 +1155,7 @@ initialize_client_ctx (struct eXosip_t * excontext, const char *certif_client_lo
       }
       else {
         /* this is used to add a trusted certificate */
-        X509_STORE_add_cert (SSL_CTX_get_cert_store(ctx), cert);
+        X509_STORE_add_cert (ctx->cert_store, cert);
       }
       BIO_free (bio);
     }

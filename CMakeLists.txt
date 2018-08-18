@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.3.1 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.3.2 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017-2018")
 
@@ -42,10 +42,9 @@ set(DESKTOP_NAME "sipwitchqt-desktop")
 if(WIN32)
     set(PROJECT_PREFIX "C:/ProgramData/SipWitchQt${CUSTOM_SUFFIX}")
     set(BOOTSTRAP_VENDOR_EXOSIP true)
-    set(BOOTSTRAP_EXTERNAL true)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    set(system_libs libssl libcrypto advapi32 user32 crypt32 gdi32 ws2_32)
+    set(system_libs advapi32 user32 crypt32 gdi32 ws2_32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
     find_path(WINDEPLOYQT_PATH windeployqt.exe PATH_SUFFIXES bin)
@@ -54,12 +53,13 @@ elseif(APPLE)
         message(FATAL_ERROR "*** requires: brew install libexosip")
     endif()
 
+    set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl/*)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
     find_library(APPKIT_LIBRARY AppKit)
-    set(system_libs ${APPKIT_LIBRARY} ${IOKIT_LIBRARY} ${CORE_LIBRARY} -lcrypto)
-    include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include" "/usr/local/opt/openssl/include")
-    link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib" "/usr/local/opt/openssl/lib")
+    set(system_libs ${APPKIT_LIBRARY} ${IOKIT_LIBRARY} ${CORE_LIBRARY})
+    include_directories("/usr/local/opt/libosip/include" "/usr/local/opt/libexosip/include")
+    link_directories("/usr/local/opt/libosip/lib" "/usr/local/opt/libexosip/lib")
     find_path(MACDEPLOYQT_PATH macdeployqt PATH_SUFFIXES bin)
 
     set(DESKTOP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/logo.icns")
@@ -75,17 +75,8 @@ elseif(APPLE)
     set(MACOSX_BUNDLE_COPYRIGHT "Copyright ${PROJECT_COPYRIGHT} Tycho Softworks.")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.tychosoft.sipwitchqt")
 else()
-    if(EXISTS "/etc/redhat-release")
-        set(BOOTSTRAP_VENDOR_EXOSIP true)
-    endif()
-
     if(BOOTSTRAP_VENDOR_EXOSIP)
-        set(system_libs ssl crypto pthread)
-    else()
-        set(system_libs crypto)
-    endif()
-    if(BOOTSTRAP_EXTERNAL)
-        set(system_libs ${system_libs} dl)
+        set(system_libs pthread)
     endif()
     include_directories("/usr/local/include")
     link_directories("/usr/local/lib")
@@ -110,6 +101,16 @@ else()
         set(system_libs "${system_libs}" -ltcmalloc_minimal)
     endif()
 endif()
+
+# Third party installed/system libraries.  For windows, this
+# is being supported with vcpkg.  For redhat and fedora, you 
+# may need to use copr repo's; dyfet/develop for fedora and
+# dyfet/stable for rhel7/centos7.  Maybe one day fedora will
+# have a modern exosip2 in the main repo.
+
+find_package(OpenSSL REQUIRED)
+include_directories(${OPENSSL_INCLUDE_DIR})
+set(system_libs ${OPENSSL_LIBRARIES} ${system_libs})
 
 if(CUSTOM_NAME)
     set(DESKTOP_NAME "${CUSTOM_NAME}")
@@ -175,14 +176,6 @@ file(GLOB sipp_xml testdata/*.xml)
 file(GLOB database_sql Database/*.sql)
 file(GLOB desktop_ts Translations/sipwitchqt-desktop_*.ts)
 
-if(BOOTSTRAP_EXTERNAL)
-    add_subdirectory(vendor/external)
-    set(BOOTSTRAP_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/vendor/external")
-    set(BOOTSTRAP_PATH "${BOOTSTRAP_PREFIX}/bin")
-    include_directories("${BOOTSTRAP_PREFIX}/include")
-    link_directories("${BOOTSTRAP_PREFIX}/lib")
-endif()
-
 if(BOOTSTRAP_VENDOR_EXOSIP)
     include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libosip2/include")
     include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libeXosip2/include")
@@ -238,10 +231,6 @@ if(BOOTSTRAP_VENDOR_EXOSIP)
     add_subdirectory(vendor/libeXosip2)
     add_dependencies(server-app eXosip2 osip2 osipparser2)
     add_dependencies(desktop-app eXosip2 osip2 osipparser2)
-endif()
-
-if(BOOTSTRAP_EXTERNAL)
-    add_dependencies(eXosip2 openssl)
 endif()
 
 add_custom_target(support-files SOURCES desktop.plist.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.default ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
@@ -312,6 +301,7 @@ if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
             COMMAND "${CMAKE_COMMAND}" -E remove_directory stage
             COMMAND "${CMAKE_COMMAND}" -E make_directory stage
             COMMAND "${CMAKE_COMMAND}" -E copy sipwitchqt-desktop.exe stage
+            COMMAND xcopy /q "*.dll" stage
             COMMAND "${WINDEPLOYQT_PATH}/windeployqt" --release --verbose=0 stage/sipwitchqt-desktop.exe
             COMMAND xcopy /q "translations_autogen\\*.qm" "stage\\translations" >nul
             COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" stage/COPYING.txt
