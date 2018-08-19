@@ -53,7 +53,7 @@ elseif(APPLE)
         message(FATAL_ERROR "*** requires: brew install libexosip")
     endif()
 
-    set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl/*)
+    set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
     find_library(APPKIT_LIBRARY AppKit)
