@@ -60,6 +60,13 @@ doc/
 *.gch/
 .idea/
 
+build/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
 # for in-tree unix builds
 
 .DS_Store
