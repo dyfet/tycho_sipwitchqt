@@ -53,7 +53,7 @@ elseif(APPLE)
         message(FATAL_ERROR "*** requires: brew install libexosip")
     endif()
 
-    set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl/*)
+    set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
     find_library(IOKIT_LIBRARY IOKit)
     find_library(CORE_LIBRARY CoreFoundation)
     find_library(APPKIT_LIBRARY AppKit)
@@ -295,7 +295,7 @@ if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         )
     endif()
 
-    if(WIN32)
+    if(WIN32 AND NOT CMAKE_GENERATOR MATCHES "Visual Studio")
         add_custom_command(TARGET desktop-app POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E remove Setup.exe
             COMMAND "${CMAKE_COMMAND}" -E remove_directory stage
