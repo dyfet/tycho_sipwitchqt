@@ -210,9 +210,11 @@ if(NOT CUSTOM_CONTAINER)
     )
 endif()
 
-add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc} ${CUSTOM_SERVER_RESOURCES})
-target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
-set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
+if(NOT CUSTOM_DESKTOP)
+    add_executable(server-app ${common_src} ${common_hdr} ${database_src} ${database_hdr} ${server_src} ${server_hdr} ${server_mm} ${server_rc} ${CUSTOM_SERVER_RESOURCES})
+    target_link_libraries(server-app Qt5::Core Qt5::Network Qt5::Sql ${voip_libs} ${server_libs} ${system_libs})
+    set_target_properties(server-app PROPERTIES OUTPUT_NAME "sipwitchqt-server")
+endif()
 
 if(WIN32)
     set(DIST_FORMAT zip)
@@ -295,7 +297,7 @@ if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         )
     endif()
 
-    if(WIN32 AND NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+    if(WIN32 AND NOT CUSTOM_DESKTOP)
         add_custom_command(TARGET desktop-app POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E remove Setup.exe
             COMMAND "${CMAKE_COMMAND}" -E remove_directory stage
