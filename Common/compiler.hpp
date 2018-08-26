@@ -30,14 +30,8 @@
 #endif
 
 #ifdef _MSC_VER
-#if _MSC_VER < 1800
-#error "VS >= 2013 or later required"
-#endif
-
 #if _MSC_VER < 1900
-#include <xkeycheck.h>
-#define noexcept
-#define NORETURN
+#error "VS >= 2015 or later required"
 #endif
 
 #if !defined(_MT) && !defined(__MT__)
