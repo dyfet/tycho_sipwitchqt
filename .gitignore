@@ -58,7 +58,9 @@ cmake-release-*/
 stage/
 doc/
 *.gch/
-.idea/
+.idea/*
+!.idea/inspectionProfiles
+!.idea/inspectionProfiles/*
 
 build/
 .vscode/*
