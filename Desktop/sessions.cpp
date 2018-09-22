@@ -26,26 +26,28 @@
 #include <unistd.h>
 #endif
 
-static Ui::SessionsWindow ui;
-static int activeCalls = 0;                 // active calls (temp sessions)...
-static QList<SessionItem*> sessions;
-static QMap<QString, SessionItem *> groups;
-static MessageItem *activeMessage = nullptr;
-static SessionItem *clickedItem = nullptr;
-static SessionItem *inputItem = nullptr;
-static SessionItem *activeItem = nullptr, *local[1000];
-static QString userStatus = "@", groupStatus = "#";
-static bool mousePressed = false;
-static QPoint mousePosition;
-static int cellHeight, cellLift = 3;
-static QTimer expiration;
+namespace {
+Ui::SessionsWindow ui;
+int activeCalls = 0;                 // active calls (temp sessions)...
+QList<SessionItem *> sessions;
+QMap<QString, SessionItem *> groups;
+MessageItem *activeMessage = nullptr;
+SessionItem *clickedItem = nullptr;
+SessionItem *inputItem = nullptr;
+SessionItem *activeItem = nullptr, *local[1000];
+QString userStatus = "@", groupStatus = "#";
+bool mousePressed = false;
+QPoint mousePosition;
+int cellHeight, cellLift = 3;
+QTimer expiration;
+} // namespace
 
 Sessions *Sessions::Instance = nullptr;
 SessionModel *SessionModel::Instance = nullptr;
 unsigned SessionItem::totalUnread = 0;
 
 SessionItem::SessionItem(ContactItem *contactItem, bool active) :
-messageModel(nullptr)
+messageModel(nullptr), lastSequence(0)
 {
     contact = contactItem;
     contact->session = this;
@@ -90,8 +92,7 @@ SessionItem::~SessionItem()
 
 void SessionItem::clearMessages()
 {
-    if(messageModel)
-        delete messageModel;
+    delete messageModel;
 
     foreach(auto msg, messages) {
         delete msg;
@@ -345,7 +346,7 @@ void SessionModel::clickSession(int row)
 int SessionModel::rowCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent);
-    if(sessions.size() < 1)
+    if(sessions.empty())
         return 0;
     return sessions.size();
 }
@@ -539,7 +540,7 @@ void SessionDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
 }
 
 Sessions::Sessions(Desktop *control) :
-QWidget(), desktop(control), model(nullptr), selfName("self")
+desktop(control), model(nullptr), selfName("self")
 {
     ui.setupUi(static_cast<QWidget *>(this));
     ui.sessions->setAttribute(Qt::WA_MacShowFocusRect, false);
@@ -591,7 +592,7 @@ bool Sessions::event(QEvent *event)
 {
     switch(event->type()) {
     case QEvent::MouseButtonPress: {
-        auto mpos = static_cast<QMouseEvent *>(event)->pos();
+        auto mpos = dynamic_cast<QMouseEvent *>(event)->pos();
         auto rect = QRect(ui.separator->pos(), ui.separator->size());
         rect.setLeft(rect.left() - 2);
         rect.setRight(rect.right() + 2);
@@ -605,7 +606,7 @@ bool Sessions::event(QEvent *event)
     }
     case QEvent::MouseMove: {
         if(mousePressed) {
-            auto mpos = static_cast<QMouseEvent *>(event)->pos();
+            auto mpos = dynamic_cast<QMouseEvent *>(event)->pos();
             auto width = ui.sessions->maximumWidth() + mpos.x() - mousePosition.x();
             auto maxWidth = size().width() / 3;
             if(width < 132 || width > maxWidth) {
@@ -1029,8 +1030,8 @@ void Sessions::changeConnector(Connector *connected)
 
         connect(connector, &Connector::topicFailed, this, []{
             if(activeItem) {
-                auto toolbar = Toolbar::instance();
-                toolbar->setTopics(activeItem->topic(), activeItem->topicList());
+                auto bar = Toolbar::instance();
+                bar->setTopics(activeItem->topic(), activeItem->topicList());
             }
         }, Qt::QueuedConnection);
 
@@ -1140,10 +1141,12 @@ void Sessions::receiveText(const UString& sipFrom, const UString& sipTo, const U
         session->addMessage(msg);
         model->latest(session);
     }
-    else
+    else {
         delete msg;
+        msg = nullptr;
+    }
 
-    if(activeItem == session) {
+    if(msg && activeItem == session) {
         if(msg->type() == MessageItem::ADMIN_MESSAGE) {
             auto toolbar = Toolbar::instance();
             toolbar->newTopics(activeItem->topic(), activeItem->topicList());

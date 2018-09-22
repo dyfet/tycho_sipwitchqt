@@ -20,8 +20,10 @@
 #include <QVariant>
 #include <QDebug>
 
-static QHash<const UString, Provider *> providers;
-static QHash<int, Provider *> registrations;
+namespace {
+QHash<const UString, Provider *> providers;
+QHash<int, Provider *> registrations;
+}
 
 Provider::Provider(const QSqlRecord& db, Context *ctx, int rid) :
 provider(db), uri(db.value("contact").toString()), text(db.value("display").toString()), context(ctx), id(rid)

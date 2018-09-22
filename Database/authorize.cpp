@@ -25,8 +25,10 @@
 
 Authorize *Authorize::Instance = nullptr;
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
 Authorize::Authorize(unsigned order) :
-QObject(), db(nullptr)
+db(nullptr), failed(false)
 {
     database = Database::instance();
     if(order) {
@@ -47,6 +49,7 @@ QObject(), db(nullptr)
     connect(manager, &Manager::removeAuthorize, this, &Authorize::removeAuthorization);
     connect(this, &Authorize::createEndpoint, manager, &Manager::createRegistration);
 }
+#pragma clang diagnostic pop
 
 Authorize::~Authorize()
 {
@@ -265,10 +268,7 @@ bool Authorize::checkConnection()
             failed = false;
 
     }
-    if(!db)
-        return false;
-
-    return true;
+    return db != nullptr;
 }
 
 bool Authorize::runQuery(const QString &request, const QVariantList &parms)
@@ -288,7 +288,7 @@ retry:
         while(++count < parms.count())
             query.bindValue(count, parms.at(count));
 
-        if(query.exec() != true) {
+        if(!query.exec()) {
             if(resume() && ++retries < 3)
                 goto retry;
             warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();

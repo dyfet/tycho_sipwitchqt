@@ -28,10 +28,7 @@ bool UString::toBool() const
     if(toLower() == "yes" || toLower() == "true")
         return true;
 
-    if(atoi(cp) > 0)
-        return true;
-
-    return false;
+    return atoi(cp) > 0;
 }
 
 bool UString::isNumber() const
@@ -77,7 +74,7 @@ bool UString::isQuoted(const char *qc) const
     if(qc[1])
         q2[0] = qc[1];
 
-    return startsWith(q1) && endsWith(q2); // NOLINT
+    return startsWith(q1) && endsWith(q2);
 }
 
 UString UString::unescape() const

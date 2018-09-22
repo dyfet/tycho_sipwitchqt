@@ -19,7 +19,7 @@
 
 #ifdef _WIN32_WCE
 #define _INC_TIME               /* for wce.h */
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include <osipparser2/internal.h>
@@ -78,19 +78,19 @@
 #elif (!defined(WIN32) && !defined(_WIN32_WCE))
 #include <sys/time.h>
 #elif defined(WIN32)
-#include <windows.h>
+#include <Windows.h>
 #if (_MSC_VER >= 1700) && !defined(_USING_V110_SDK71_)
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 #include <winsock2.h>
 #elif defined(WINAPI_FAMILY) && WINAPI_FAMILY_ONE_PARTITION( WINAPI_FAMILY, WINAPI_PARTITION_APP )
 #else
 #ifdef WIN32_USE_CRYPTO
-#include <Wincrypt.h>
+#include <wincrypt.h>
 #endif
 #endif
 #else
 #ifdef WIN32_USE_CRYPTO
-#include <Wincrypt.h>
+#include <wincrypt.h>
 #endif
 #endif
 

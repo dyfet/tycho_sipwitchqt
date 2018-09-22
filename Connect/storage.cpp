@@ -387,7 +387,7 @@ void Storage::updateCredentials(const QVariantHash &update)
 
     auto cred = credentials();
     createKeys(cred);
-    foreach(auto key, update.keys())
+    foreach(const auto& key, update.keys())
         cred[key] = update[key];
 
     FromAddress = UString::uri(cred["schema"].toString(), cred["extension"].toString(), cred["host"].toString().toUtf8(), static_cast<quint16>(cred["port"].toInt()));
@@ -433,27 +433,22 @@ int Storage::copyDb(const QString &dbName){
     QString backupfilename = ext + "-" + lab + "-" + "backup.db";
     qDebug() << "Backup filename " << backupfilename;
 
-    FOR_DEBUG(
-    QString fullpath = QString(DESKTOP_PREFIX) + "/" +backupfilename;
-     if (QFile::copy(storagePath(dbName),(fullpath)))
-         return 0;
-     else
-         return 1;
-     )
-    FOR_RELEASE(
-        auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-        QString fileName = backupfilename;
-        QString fullPath;
-        if(path.isEmpty()){
-            fullPath = fileName;
-        }
-        else
-            fullPath = path + "/" + fileName;
-        if (QFile::copy(storagePath(dbName),fullPath))
-            return 0;
-        else
-            return 1;
-        )
+#ifdef DESKTOP_PREFIX
+    QString fullPath = QString(DESKTOP_PREFIX) + "/" +backupfilename;
+#else
+    auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+    QString fileName = backupfilename;
+    QString fullPath;
+    if(path.isEmpty()){
+        fullPath = fileName;
+    }
+    else
+        fullPath = path + "/" + fileName;
+#endif
+    if (QFile::copy(storagePath(dbName),fullPath))
+        return 0;
+    else
+        return 1;
 }
 
 bool Storage::importDb(const QString& dbName, const QVariantHash& creds)
@@ -463,22 +458,21 @@ bool Storage::importDb(const QString& dbName, const QVariantHash& creds)
     qDebug() << "Extension is " << ext << " and label is " << lab << endl;
     QString backupfilename = ext + "-" + lab + "-" + "backup.db";
 
-    FOR_DEBUG(
-        QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
-        qDebug() << fullpath;
-        QFile::remove(storagePath(dbName));
-        return QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath(dbName));
-    )
-
-    FOR_RELEASE(
-       auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-       QString fileName = backupfilename;
-       QString fullPath;
-       if(path.isEmpty()){
-           fullPath = fileName;
-       }
-       else
-           fullPath = path + "/" + fileName;
-       return QFile::copy(fullPath,storagePath(dbName)))
+#ifdef DESKTOP_PREFIX
+    QString fullpath = QString(DESKTOP_PREFIX) + "/" + backupfilename;
+    qDebug() << fullpath;
+    QFile::remove(storagePath(dbName));
+    return QFile::copy((QString(DESKTOP_PREFIX) + "/" + backupfilename),storagePath(dbName));
+#else
+    auto path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+    QString fileName = backupfilename;
+    QString fullPath;
+    if(path.isEmpty()){
+        fullPath = fileName;
+    }
+    else
+        fullPath = path + "/" + fileName;
+	return QFile::copy(fullPath, storagePath(dbName));
+#endif
 }
 

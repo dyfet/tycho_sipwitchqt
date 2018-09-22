@@ -37,6 +37,8 @@ public:
 /*! \endcond */
     };
 
+    Args() = delete;
+
     inline Args(const QStringList& flags, const QString& help, const QString& range, const QString& value) : opt(flags, help, range, value), mode(GenericArgument) {}
     
     inline Args(const QStringList& flags, const QString& help) : opt(flags, help), mode(GenericArgument) {}

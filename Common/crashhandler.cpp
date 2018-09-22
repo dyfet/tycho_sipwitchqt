@@ -18,7 +18,7 @@
 #include "crashhandler.hpp"
 
 #ifdef Q_OS_WIN
-#include <windows.h>
+#include <Windows.h>
 #else
 #if defined QT_NO_DEBUG
 #include <csignal>
@@ -31,7 +31,9 @@
 #endif
 #endif
 
-static bool installed = false;
+namespace {
+bool installed = false;
+}
 
 CrashHandler *CrashHandler::HandlerList = nullptr;
 

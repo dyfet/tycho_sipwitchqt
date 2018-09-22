@@ -16,6 +16,7 @@
  */
 
 #include "../Common/compiler.hpp"
+#include "../Common/crypto.hpp"
 #include "../Common/args.hpp"
 #include "../Dialogs/about.hpp"
 #include "../Dialogs/devicelist.hpp"
@@ -29,7 +30,7 @@
 #include <QJsonObject>
 
 #ifdef Q_OS_WIN
-#include <windows.h>
+#include <Windows.h>
 #include <QAbstractNativeEventFilter>
 #ifndef QT_NO_DEBUG_OUTPUT
 #define STARTUP_MINIMIZED
@@ -38,6 +39,18 @@
 
 #ifdef Q_OS_UNIX
 #include <unistd.h>
+#endif
+
+#ifdef Q_OS_MAC
+#include <objc/objc.h>
+#include <objc/message.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
+
+void send_notification(const UString& text, const UString& info);
+void set_dock_icon(const QIcon& icon);
+void set_dock_label(const UString& text);
+void disable_nap();
 #endif
 
 #include <QGuiApplication>
@@ -50,35 +63,24 @@
 #include <QMessageBox>
 #include <QMutex>
 
-static int result = 0;
+namespace {
+int result = 0;
 
-static void signal_handler(int signo)
-{
+void signal_handler(int signo) {
     Desktop *desktop = Desktop::instance();
-    if(desktop) {
-        QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection);
+    if (desktop) {
+        QMetaObject::invokeMethod(qApp, "quit", Qt::QueuedConnection); // NOLINT
     }
 
     result = signo;
 }
 
 #ifdef Q_OS_MAC
-#include <objc/objc.h>
-#include <objc/message.h>
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
+io_connect_t ioroot = 0;
+io_object_t iopobj;
+IONotificationPortRef iopref;
 
-void send_notification(const UString& text, const UString& info);
-void set_dock_icon(const QIcon& icon);
-void set_dock_label(const UString& text);
-void disable_nap();
-
-static io_connect_t ioroot = 0;
-static io_object_t iopobj;
-static IONotificationPortRef iopref;
-
-static bool dock_click_handler(::id self, SEL _cmd, ...)
-{
+bool dock_click_handler(::id self, SEL _cmd, ...) {
     Q_UNUSED(self)
     Q_UNUSED(_cmd)
 
@@ -87,7 +89,7 @@ static bool dock_click_handler(::id self, SEL _cmd, ...)
     return false;
 }
 
-static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
+void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
     Q_UNUSED(ioservice);
     Q_UNUSED(ref);
 
@@ -96,37 +98,35 @@ static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, voi
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
 
-    switch(mtype) {
-    case kIOMessageCanSystemSleep:
-        IOAllowPowerChange(ioroot, (long)args);
-        break;
-    case kIOMessageSystemWillSleep:
-        QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
-        IOAllowPowerChange(ioroot, (long)args);
-        break;
-    case kIOMessageSystemHasPoweredOn:
-        QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
-        break;
-    default:
-        break;
+    switch (mtype) {
+        case kIOMessageCanSystemSleep:
+            IOAllowPowerChange(ioroot, (long) args); // NOLINT
+            break;
+        case kIOMessageSystemWillSleep:
+            QMetaObject::invokeMethod(desktop, "powerSuspend", Qt::QueuedConnection);
+            IOAllowPowerChange(ioroot, (long) args); // NOLINT
+            break;
+        case kIOMessageSystemHasPoweredOn:
+            QMetaObject::invokeMethod(desktop, "powerResume", Qt::QueuedConnection);
+            break;
+        default:
+            break;
     }
 
 #pragma clang pop
 }
 
-static void iop_startup()
-{
+void iop_startup() {
     void *ref = nullptr;
 
-    if(ioroot != 0)
+    if (ioroot != 0)
         return;
 
     ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
-    if(!ioroot) {
+    if (!ioroot) {
         qWarning() << "Registration for power management failed";
         return;
-    }
-    else
+    } else
         qDebug() << "Power management enabled";
 
     CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(iopref), kCFRunLoopCommonModes);
@@ -168,29 +168,17 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
     }
     return false;
 }
-
 #endif
 
-static Ui::MainWindow ui;
-
-static QHash<UString, QCryptographicHash::Algorithm> digests = {
-    {"MD5",     QCryptographicHash::Md5},
-    {"SHA",     QCryptographicHash::Sha1},
-    {"SHA1",    QCryptographicHash::Sha1},
-    {"SHA2",    QCryptographicHash::Sha256},
-    {"SHA256",  QCryptographicHash::Sha256},
-    {"SHA512",  QCryptographicHash::Sha512},
-    {"SHA-1",   QCryptographicHash::Sha1},
-    {"SHA-256", QCryptographicHash::Sha256},
-    {"SHA-512", QCryptographicHash::Sha512},
-};
+Ui::MainWindow ui;
+} // namespace
 
 Desktop *Desktop::Instance = nullptr;
 Desktop::state_t Desktop::State = Desktop::INITIAL;
 QVariantHash Desktop::Credentials;
 
 Desktop::Desktop(const QCommandLineParser& args) :
-QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
+listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
@@ -261,11 +249,11 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     dockMenu->addAction(ui.trayLogout);
     qt_mac_set_dock_menu(dockMenu);
 
-    auto inst = objc_msgSend(reinterpret_cast<objc_object *>(objc_getClass("NSApplication")), sel_registerName("sharedApplication"));
+    auto inst = objc_msgSend(reinterpret_cast<objc_object *>(objc_getClass("NSApplication")), sel_registerName("sharedApplication")); // NOLINT
 
     if(inst) {
-        auto delegate = objc_msgSend(inst, sel_registerName("delegate"));
-        auto handler = reinterpret_cast<Class>(objc_msgSend(delegate, sel_registerName("class")));
+        auto delegate = objc_msgSend(inst, sel_registerName("delegate")); // NOLINT
+        auto handler = reinterpret_cast<Class>(objc_msgSend(delegate, sel_registerName("class"))); // NOLINT
 
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
         if (class_getInstanceMethod(handler, shouldHandle)) {
@@ -300,8 +288,8 @@ QMainWindow(), listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialo
     connect(ui.actionSettings, &QAction::triggered, this, &Desktop::showOptions);
     connect(ui.actionSessions, &QAction::triggered, this, &Desktop::showSessions);
     connect(ui.actionContacts, &QAction::triggered, this, &Desktop::showPhonebook);
-    connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown);
-    connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState);
+    connect(qApp, &QCoreApplication::aboutToQuit, this, &Desktop::shutdown); // NOLINT
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState); // NOLINT
     connect(phonebook, &Phonebook::removeSelf, this, &Desktop::eraseLogout, Qt::QueuedConnection);
 
     connect(sessions, &Sessions::changeWidth, [=](int width) {
@@ -452,6 +440,8 @@ void Desktop::setUnread(unsigned count)
     if(!count)
         text = "";
     set_dock_label(text);
+#else
+    Q_UNUSED(count); // TODO: gnome and windows
 #endif
 }
 
@@ -693,7 +683,7 @@ void Desktop::changePassword(const QString& password)
     auto digest = Credentials["algorithm"].toString().toUpper();
     qDebug() << "Change password for" << user << "," << realm << digest;
     auto ha1 = user + ":" + realm + ":" + password;
-    auto secret = QCryptographicHash::hash(ha1.toUtf8(), digests[digest]).toHex();
+    auto secret = QCryptographicHash::hash(ha1.toUtf8(), Crypto::digests[digest]).toHex();
     qDebug() << "Secret" << secret;
 
     QJsonObject json = {
@@ -1237,7 +1227,7 @@ int main(int argc, char *argv[])
         Args::exePath("../share/" TRANSLATIONS_OUTPUT_DIRECTORY));
 #endif
     if(!localize.isEmpty())
-        app.installTranslator(&localize);
+        QApplication::installTranslator(&localize);
 
 #ifdef Q_OS_MAC
     QFile style(":/styles/macos.css");
@@ -1289,7 +1279,7 @@ int main(int argc, char *argv[])
 #endif
 
     Desktop w(args);
-    int status = app.exec();
+    int status = QApplication::exec();
     if(!result)
         result = status;
     return result;

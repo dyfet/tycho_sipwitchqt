@@ -62,7 +62,7 @@ int Util::hostPort(const QString& hostId)
     int pos = hostId.indexOf(":");
     if(pos < 1)
         return 0;
-    pos = hostId.mid(pos).toInt();
+    pos = hostId.midRef(pos).toInt();
     if((pos < 0) || (pos > 65535))
         pos = 0;
     return pos;

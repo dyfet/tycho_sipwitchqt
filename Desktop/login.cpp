@@ -17,7 +17,6 @@
 
 #include "desktop.hpp"
 #include "ui_login.h"
-
 #include <QHostInfo>
 
 #ifdef  HAVE_UNISTD_H
@@ -27,7 +26,7 @@
 static Ui::LoginWindow ui;
 
 Login::Login(Desktop *control) :
-QWidget(), desktop(control)
+desktop(control)
 {
     ui.setupUi(static_cast<QWidget *>(this));
     connect(ui.loginButton, &QPushButton::pressed, desktop, &Desktop::initial);

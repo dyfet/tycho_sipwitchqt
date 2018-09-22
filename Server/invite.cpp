@@ -17,12 +17,15 @@
 
 #include "invite.hpp"
 
-static QHash<UString,Invite*> invites;
-static QHash<int,Segment*> segments;
-static QList<RemoteSegment*> peering;
+namespace {
+QHash<UString,Invite*> invites;
+QHash<int,Segment*> segments;
+QList<RemoteSegment*> peering;
+}
 
 Invite::Invite(const UString& id)
 {
+    from = nullptr;
     tag = id;
     invites.insert(tag, this);
 }

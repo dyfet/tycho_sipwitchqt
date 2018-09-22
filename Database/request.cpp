@@ -1,3 +1,7 @@
+#include <utility>
+
+#include <utility>
+
 /*
  * Copyright (C) 2017-2018 Tycho Softworks.
  *
@@ -20,18 +24,18 @@
 
 #include <QEvent>
 
+namespace {
 enum {
     REQUEST_SUCCESS = QEvent::User + 1,
     REQUEST_FAILED
 };
 
-
 class RequestEvent final : public QEvent
 {
     Q_DISABLE_COPY(RequestEvent)
 public:
-    RequestEvent(int event, Request::ErrorResult error = Request::Success, const QList<QSqlRecord>& results = QList<QSqlRecord>()) :
-    QEvent(static_cast<QEvent::Type>(event)), Results(results), Error(error) {}
+    RequestEvent(int event, Request::ErrorResult error = Request::Success, QList<QSqlRecord> results = QList<QSqlRecord>()) :
+    QEvent(static_cast<QEvent::Type>(event)), Results(std::move(results)), Error(error) {}
 
     ~RequestEvent() final;
 
@@ -49,13 +53,14 @@ private:
 };
 
 RequestEvent::~RequestEvent() = default;
+} // namespace
 
 // NOTE: Use case may be something like
 // emit DB_AUTHORIZE(new Request(this, event, &authResponse, 10000))
 // database receiver processes if(!request->cancelled())
 
 Request::Request(QObject *parent, const Event& sip, int expires) :
-QObject(parent), sipEvent(sip), signalled(false)
+QObject(parent), status(Success), sipEvent(sip), signalled(false)
 {
     // compute propogation delay...
     expires -= sip.elapsed() - 20;
@@ -65,7 +70,7 @@ QObject(parent), sipEvent(sip), signalled(false)
 }
 
 Request::Request(QObject *parent, const Event& sip, int expires, Reply method) :
-QObject(parent), sipEvent(sip), signalled(false)
+QObject(parent), status(Success), sipEvent(sip), signalled(false)
 {
     connect(this, &Request::results, parent, method);
 
@@ -100,7 +105,7 @@ bool Request::event(QEvent *evt)
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
-    auto reply = static_cast<RequestEvent *>(evt);
+    auto reply = dynamic_cast<RequestEvent *>(evt);
     if(!signalled) {
         signalled = true;
         switch(id) {
@@ -109,6 +114,8 @@ bool Request::event(QEvent *evt)
             break;
         case REQUEST_FAILED:
             emit results(reply->error(), sipEvent, QList<QSqlRecord>());
+            break;
+        default:
             break;
         }
     }

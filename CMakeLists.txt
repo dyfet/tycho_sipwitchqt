@@ -287,8 +287,14 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${C
 
 if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(APPLE)
+        if(CMAKE_GENERATOR MATCHES "Xcode")
+            set(OUTPUT_PREFIX "${CMAKE_BINARY_DIR}/Debug")
+        else()
+            set(OUTPUT_PREFIX "${CMAKE_BINARY_DIR}")
+        endif()
         add_custom_command(TARGET desktop-app POST_BUILD
-            COMMAND dsymutil "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
+            WORKING_DIRECTORY "${OUTPUT_PREFIX}"
+            COMMAND dsymutil "${OUTPUT_PREFIX}/${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}"
             COMMAND rm -rf "${DESKTOP_NAME}.dSYM"
             COMMAND mv "${DESKTOP_NAME}.app/Contents/MacOS/${DESKTOP_NAME}.dSYM" "${DESKTOP_NAME}.dSYM"
             COMMAND mkdir -p "${DESKTOP_NAME}.app/Contents/Translations"
@@ -297,7 +303,7 @@ if(NOT CUSTOM_CONTAINER AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         )
     endif()
 
-    if(WIN32 AND NOT CUSTOM_DESKTOP)
+    if(WIN32 AND NOT CMAKE_GENERATOR MATCHES "Visual Studio")
         add_custom_command(TARGET desktop-app POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E remove Setup.exe
             COMMAND "${CMAKE_COMMAND}" -E remove_directory stage

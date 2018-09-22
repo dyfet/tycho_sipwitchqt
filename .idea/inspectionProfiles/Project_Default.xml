@@ -2,8 +2,9 @@
   <profile version="1.0">
     <option name="myName" value="Project Default" />
     <inspection_tool class="ClangTidyInspection" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="clangTidyChecks" value="modernize-*,boost-*,cppcoreguidelines-*,clang-analyzer-*,clang-diagnostic-*,objc-*,performance-*,-cppcoreguidelines-special-member-functions,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-owning-memory,-cppcoreguidelines-no-malloc" />
+      <option name="clangTidyChecks" value="modernize-*,boost-*,cppcoreguidelines-*,clang-analyzer-*,clang-diagnostic-*,objc-*,performance-*,-cppcoreguidelines-special-member-functions,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-owning-memory,-cppcoreguidelines-no-malloc,-cppcoreguidelines-avoid-goto,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-pro-type-static-cast-downcast" />
     </inspection_tool>
+    <inspection_tool class="NotImplementedFunctions" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OCUnusedClassInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OCUnusedGlobalDeclarationInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OCUnusedInstanceVariableInspection" enabled="false" level="WARNING" enabled_by_default="false" />

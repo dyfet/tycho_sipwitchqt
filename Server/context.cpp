@@ -74,16 +74,8 @@
 #define MSG_IS_DROP(msg)   (MSG_IS_REQUEST(msg) && \
     0==strcmp((msg)->sip_method, "X-DROP"))
 
-static bool active = true;
-
-volatile unsigned Context::instanceCount = 0;
-QList<Context *> Context::Contexts;
-QList<Context::Schema> Context::Schemas = {
-    {"udp", "sip:",  Context::UDP, 5060, IPPROTO_UDP},
-    {"tcp", "sip:",  Context::TCP, 5060, IPPROTO_TCP},
-    {"tls", "sips:", Context::TLS, 5061, IPPROTO_TCP},
-    {"dtls","sips:", Context::DTLS, 5061, IPPROTO_UDP},
-};
+namespace {
+bool active = true;
 
 // internal lock class
 class ContextLocker final
@@ -102,6 +94,16 @@ public:
 private:
     eXosip_t *context;
 };
+} // anon namespace
+
+volatile unsigned Context::instanceCount = 0;
+QList<Context *> Context::Contexts;
+QList<Context::Schema> Context::Schemas = {
+    {"udp", "sip:",  Context::UDP, 5060, IPPROTO_UDP},
+    {"tcp", "sip:",  Context::TCP, 5060, IPPROTO_TCP},
+    {"tls", "sips:", Context::TLS, 5061, IPPROTO_TCP},
+    {"dtls","sips:", Context::DTLS, 5061, IPPROTO_UDP},
+};
 
 void Context::dump(const osip_message_t *msg)
 {
@@ -119,7 +121,7 @@ void Context::dump(const osip_message_t *msg)
 }
 
 Context::Context(const QHostAddress& addr, quint16 port, const Schema& choice, unsigned mask, unsigned index):
-schema(choice), context(nullptr), netFamily(AF_INET), netPort(port)
+schema(choice), context(nullptr), currentEvent(0), priorEvent(0), netFamily(AF_INET), netPort(port)
 {
     allow = mask & 0xffffff00;
     netPort &= 0xfffe;

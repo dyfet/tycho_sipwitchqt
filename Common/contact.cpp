@@ -153,9 +153,7 @@ bool Contact::hasExpired() const
         return false;
     time_t now;
     time(&now);
-    if(now >= expiration)
-        return true;
-    return false;
+    return now >= expiration;
 }
 
 void Contact::refresh(int seconds)

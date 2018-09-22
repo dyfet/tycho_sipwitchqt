@@ -42,10 +42,24 @@
 #include <openssl/rand.h>
 #endif
 
-static quint8 *bytePointer(const char *cp)
+namespace {
+quint8 *bytePointer(const char *cp)
 {
     return reinterpret_cast<quint8*>(const_cast<char *>(cp));
 }
+} // namespace
+
+QHash<UString, QCryptographicHash::Algorithm> Crypto::digests = {
+    {"MD5",     QCryptographicHash::Md5},
+    {"SHA",     QCryptographicHash::Sha1},
+    {"SHA1",    QCryptographicHash::Sha1},
+    {"SHA2",    QCryptographicHash::Sha256},
+    {"SHA256",  QCryptographicHash::Sha256},
+    {"SHA512",  QCryptographicHash::Sha512},
+    {"SHA-1",   QCryptographicHash::Sha1},
+    {"SHA-256", QCryptographicHash::Sha256},
+    {"SHA-512", QCryptographicHash::Sha512},
+};
 
 Crypto::Data::Data()
 {
@@ -83,7 +97,7 @@ Crypto::Data::Data()
 
     if(PEM_write_bio_PUBKEY(bp, pkey) == 1) {
         BUF_MEM *buf;
-        BIO_get_mem_ptr(bp, &buf);
+        BIO_get_mem_ptr(bp, &buf); // NOLINT
         pem = QByteArray(buf->data, static_cast<int>(buf->length));
     }
     BIO_free(bp);
@@ -108,7 +122,7 @@ QByteArray Crypto::sharedKey(const QByteArray& peer) const
     BUF_MEM_grow(buf, static_cast<size_t>(peer.count()));
     BIO *bp = BIO_new(BIO_s_mem());
     memcpy(buf->data, peer.constData(), static_cast<size_t>(peer.count()));
-    BIO_set_mem_buf(bp, buf, BIO_NOCLOSE);
+    BIO_set_mem_buf(bp, buf, BIO_NOCLOSE); // NOLINT
     auto key = PEM_read_bio_PUBKEY(bp, nullptr, nullptr, nullptr);
     BIO_free(bp);
     BUF_MEM_free(buf);
@@ -147,13 +161,10 @@ const QByteArray Crypto::random(int size)
 bool Crypto::random(quint8 *cp, int size)
 {
 #ifdef Q_OS_MAC
-    if(CCRandomGenerateBytes(cp, static_cast<size_t>(size)) != kCCSuccess)
-        return false;
+    return CCRandomGenerateBytes(cp, static_cast<size_t>(size)) == kCCSuccess;
 #else
-    if(!RAND_bytes(cp, size))
-        return false;
+    return RAND_bytes(cp, size) != 0;
 #endif
-    return true;
 }
 
 QByteArray Crypto::pad(const QByteArray& unpadded, int size)
@@ -439,7 +450,6 @@ QPair<QByteArray,QByteArray> Crypto::keypair(bool compressed)
     BN_CTX_free(ctx);
     BN_clear_free(privKey);
 
-    QByteArray priv, pub;
     char pubOut[65], privOut[320];
     auto pubPtr = reinterpret_cast<unsigned char *>(pubOut);
     auto privPtr = reinterpret_cast<unsigned char *>(privOut);

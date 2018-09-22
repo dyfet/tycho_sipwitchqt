@@ -165,9 +165,7 @@ void Manager::create(const QList<QHostAddress>& list, quint16 port, unsigned  ma
 
 void Manager::dropEndpoint(qlonglong endpoint)
 {
-    auto *reg = Registry::find(endpoint);
-    if(reg)
-        delete reg;
+    delete Registry::find(endpoint);
 }
 
 void Manager::sendMessage(qlonglong endpoint, const QVariantHash& data)
@@ -623,10 +621,7 @@ void Manager::createRegistration(const Event& event, const QVariantHash& endpoin
     }
     else {
         auto reg = new Registry(endpoint);
-        if(!reg)
-            Context::reply(event, SIP_INTERNAL_SERVER_ERROR);
-        else
-            Context::challenge(event, reg);
+        Context::challenge(event, reg);
     }
 }
 
