@@ -25,43 +25,45 @@
 #include <QTextOption>
 #include <QRegularExpression>
 
+namespace {
 enum class TextFormat {
     bold, italic, mono
 };
 
-static QFont textFont;                      // default message text font
-static QFont textMono;
-static QFont timeFont;
-static QFont userFont;
-static QFont lineFont;
-static QFont monoFont;                      // default mono font
-static QFont boldFont;
-static int textHeight, monoHeight;
-static QTextOption textOptions;             // default text layout options
-static QTextOption textCentered;            // centered layouts...
-static QTextOption textRight;
-static QList<QString> dayOfWeek;
-static QList<QString> monthOfYear;
-static QString dayToday, dayYesterday;
-static QColor userColor(120, 0, 120);
-static QColor selfColor(16, 0, 192);
-static QColor groupColor(0, 64, 120);
-static QColor searchColor(240, 240, 0);
-static QColor urlColor(0, 0, 240);
-static QColor mapColor(0, 0, 244);
-static QColor nbrColor(240, 120, 0);
-static QColor tinted(255, 255, 223);
-static QRegularExpression findBold(R"(\*\*(\w*?)\*\*)");
-static QRegularExpression findItalic(R"(_(\w*?)_)");
-static QRegularExpression findMono(R"(`(\w*?)`)");
-static QRegularExpression findGroup(R"([\#]\d\d\d)");
-static QRegularExpression findUser(R"([\@]\d\d\d)");
-static QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
-static QRegularExpression findMap(R"([-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?))");
-static QRegularExpression findDialing(R"(\+(?:[0-9] ?){6,14}[0-9])");
-static QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}, {findMap, mapColor}, {findDialing, nbrColor}};
-static QList<QPair<QRegularExpression, TextFormat>> fontMatches = {{findBold, TextFormat::bold}, {findItalic, TextFormat::italic}, {findMono, TextFormat::mono}};
-static int dynamicLine;
+QFont textFont;                      // default message text font
+QFont textMono;
+QFont timeFont;
+QFont userFont;
+QFont lineFont;
+QFont monoFont;                      // default mono font
+QFont boldFont;
+int textHeight, monoHeight;
+QTextOption textOptions;             // default text layout options
+QTextOption textCentered;            // centered layouts...
+QTextOption textRight;
+QList<QString> dayOfWeek;
+QList<QString> monthOfYear;
+QString dayToday, dayYesterday;
+QColor userColor(120, 0, 120);
+QColor selfColor(16, 0, 192);
+QColor groupColor(0, 64, 120);
+QColor searchColor(240, 240, 0);
+QColor urlColor(0, 0, 240);
+QColor mapColor(0, 0, 244);
+QColor nbrColor(240, 120, 0);
+QColor tinted(255, 255, 223);
+QRegularExpression findBold(R"(\*\*(\w*?)\*\*)");
+QRegularExpression findItalic(R"(_(\w*?)_)");
+QRegularExpression findMono(R"(`(\w*?)`)");
+QRegularExpression findGroup(R"([\#]\d\d\d)");
+QRegularExpression findUser(R"([\@]\d\d\d)");
+QRegularExpression findHttp(R"((http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))");
+QRegularExpression findMap(R"([-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?))");
+QRegularExpression findDialing(R"(\+(?:[0-9] ?){6,14}[0-9])");
+QList<QPair<QRegularExpression, QColor>> findMatches = {{findUser, userColor}, {findGroup, groupColor}, {findHttp, urlColor}, {findMap, mapColor}, {findDialing, nbrColor}};
+QList<QPair<QRegularExpression, TextFormat>> fontMatches = {{findBold, TextFormat::bold}, {findItalic, TextFormat::italic}, {findMono, TextFormat::mono}};
+int dynamicLine;
+} // namespace
 
 MessageItem::MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject, const QString& type) :
 session(sid)
@@ -287,11 +289,7 @@ bool MessageItem::hover(const QPoint& pos)
     auto priorUnderline = textUnderline;
     auto priorUser = userUnderline;
 
-    if(!userHint || pos.y() > lineHint || pos.y() < (lineHint - userHeight))
-        userUnderline = false;
-    else
-        userUnderline = true;
-
+    userUnderline = !(!userHint || pos.y() > lineHint || pos.y() < (lineHint - userHeight));
     if(textUnderline > -1)
         formats[textUnderline].format.setFontUnderline(false);
 
@@ -300,7 +298,7 @@ bool MessageItem::hover(const QPoint& pos)
         auto bottom = lineHint;
         auto count = 0;
         foreach(auto line, textLines) {
-            bottom += line.height();
+            bottom += static_cast<int>(line.height());
             if(pos.y() < bottom)
                 break;
             bottom += 4;
@@ -382,11 +380,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
     else
         userHint = dateHint;
 
-    if(!userHint && row > 0 && session->filtered[row-1]->dateTime.secsTo(dateTime) >= 150)
-        timeHint = true;
-    else
-        timeHint = false;
-
+    timeHint = !userHint && row > 0 && session->filtered[row - 1]->dateTime.secsTo(dateTime) >= 150;
     int height = 0;
     int width = style.rect.width();
 
@@ -425,7 +419,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
             dateHeight += 4;
             height += 4;
         }
-        height += dateHeight;
+        height += static_cast<int>(dateHeight);
     }
 
     if(userHint) {
@@ -443,7 +437,7 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         userHeight = QFontInfo(userFont).pixelSize() + 4;
         if(!dateHint)
             userHeight += 4;
-        height += userHeight;
+        height += static_cast<int>(userHeight);
     }
     else if(timeHint)
     {
@@ -480,12 +474,8 @@ QSize MessageItem::layout(const QStyleOptionViewItem& style, int row, bool scrol
         textHeight += line.height();
         textLines << line;
     }
-    height += textHeight + 4;
-
-    if(height && !scrollHint)
-        lastHint = QSize(width, height);
-    else
-        lastHint = QSize(0, 0);
+    height += static_cast<int>(textHeight) + 4;
+    lastHint = height && !scrollHint ? QSize(width, height) : QSize(0, 0);
 
 /*    if(msgType == ADMIN_MESSAGE) Maybe earlier???
         height += 4;
@@ -689,7 +679,7 @@ QStyledItemDelegate(parent)
 {
     auto desktop = Desktop::instance();
 
-    listView = (static_cast<QListView*>(parent));
+    listView = (dynamic_cast<QListView*>(parent));
     listView->viewport()->installEventFilter(this);
 
     textFont = userFont = lineFont = timeFont = boldFont = desktop->getCurrentFont();
@@ -783,7 +773,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
     auto row = index.row();
     auto session = Sessions::active();
     auto position = style.rect.topLeft();
-    auto increment = static_cast<int>(userFont.pointSize() * 6);
+    auto increment = userFont.pointSize() * 6;
 
     if(!session || row < 0 || row > session->filtered.count())
         return;
@@ -793,23 +783,23 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         return;
 
     if(item->leadHeight > 0.)
-        position.ry() += item->leadHeight;
+        position.ry() += static_cast<int>(item->leadHeight);
 
     if(item->dateHint) {
         auto linepos = position;
         auto pen = painter->pen();
         auto width = (static_cast<int>(style.rect.width() - item->textDateline.textWidth()) / 2 - 8);
-        linepos.ry() += item->textDateline.size().height() / 2;
+        linepos.ry() += static_cast<int>(item->textDateline.size().height()) / 2;
         painter->setPen(QColor("#f0f0f0"));
         painter->drawLine(linepos.x(), linepos.y(), linepos.x() + width, linepos.y());
         linepos.rx() += (style.rect.width() - width);
         painter->drawLine(linepos.x(), linepos.y(), linepos.x() + width, linepos.y());
         painter->setPen(pen);
         auto datepos = position;
-        datepos.rx() += ((style.rect.width() - item->textDateline.textWidth()) / 2);
+        datepos.rx() += static_cast<int>((style.rect.width() - item->textDateline.textWidth()) / 2);
         painter->setFont(boldFont);
         painter->drawStaticText(datepos, item->textDateline);
-        position.ry() += item->dateHeight;
+        position.ry() += static_cast<int>(item->dateHeight);
     }
 
     if(item->userHint) {
@@ -830,7 +820,7 @@ void MessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style
         painter->setFont(timeFont);
         painter->setPen(pen);
         painter->drawStaticText(userpos, item->textTimestamp);
-        position.ry() += item->userHeight;
+        position.ry() += static_cast<int>(item->userHeight);
     }
     else if(item->timeHint) {
         position.setX(style.rect.right() - dynamicLine);
@@ -869,7 +859,7 @@ bool MessageDelegate::eventFilter(QObject *list, QEvent *event)
         if(!session)
             break;
 
-        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto mpos = (dynamic_cast<QMouseEvent *>(event))->pos();
         auto index = listView->indexAt(mpos);
         auto row = index.row();
         if(row < 0 || row >= session->filtered.count())
@@ -883,10 +873,10 @@ bool MessageDelegate::eventFilter(QObject *list, QEvent *event)
         break;
     }
     case QEvent::MouseMove: {
-        auto model = static_cast<MessageModel*>(listView->model());
+        auto model = dynamic_cast<MessageModel*>(listView->model());
         if(!model)
             break;
-        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto mpos = (dynamic_cast<QMouseEvent *>(event))->pos();
         auto index = listView->indexAt(mpos);
         model->hover(index, mpos - listView->visualRect(index).topLeft());
         break;

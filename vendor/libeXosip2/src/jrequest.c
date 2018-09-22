@@ -41,7 +41,7 @@
 #include <unistd.h>
 #endif
 #else
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 /* Private functions */

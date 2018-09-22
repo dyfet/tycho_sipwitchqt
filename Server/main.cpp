@@ -47,10 +47,12 @@ void disable_nap()
 
 using namespace std;
 
-static QString command = "none";
-static int exitcode = -1;
+namespace {
+QString command = "none";
+int exitcode = -1;
+}
 
-Main::Main(Server *server) : QObject()
+Main::Main(Server *server)
 {
     connect(server, &Server::started, this, &Main::onStartup);
     connect(server, &Server::finished, this, &Main::onShutdown);

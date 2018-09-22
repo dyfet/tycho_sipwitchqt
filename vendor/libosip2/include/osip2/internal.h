@@ -177,7 +177,7 @@ typedef struct {
 
 /* Prevent the inclusion of winsock.h */
 #define _WINSOCKAPI_
-#include <windows.h>
+#include <Windows.h>
 #undef _WINSOCKAPI_
 
 typedef struct {
@@ -263,7 +263,7 @@ typedef struct {
 #if (defined(WIN32) || defined(_WIN32_WCE)) && !defined(HAVE_PTHREAD_WIN32)
 /* Prevent the inclusion of winsock.h */
 #define _WINSOCKAPI_
-#include <windows.h>
+#include <Windows.h>
 #undef _WINSOCKAPI_
 
 #if (_WIN32_WINNT >= 0x0403) && (!defined(_WIN32_WCE))

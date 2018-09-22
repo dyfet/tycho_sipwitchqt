@@ -19,17 +19,18 @@
 
 #include <QMultiHash>
 
-static QMultiHash<int, Registry*> extensions;
-static QMultiHash<UString, Registry*> aliases;
-static QHash<QPair<int,UString>, Registry *> registries;
-static QHash<qlonglong, Registry *> endpoints;
-static unsigned count[1000];
-static unsigned char online[1000 / 8];
-static bool init = false;
-static QPair<int,int> range;
-static int size = 0;
+namespace {
+QMultiHash<int, Registry*> extensions;
+QMultiHash<UString, Registry*> aliases;
+QHash<QPair<int,UString>, Registry *> registries;
+QHash<qlonglong, Registry *> endpoints;
+unsigned count[1000];
+unsigned char online[1000 / 8];
+bool init = false;
+QPair<int,int> range;
+int size = 0;
 
-static QHash<UString, QCryptographicHash::Algorithm> digests = {
+QHash<UString, QCryptographicHash::Algorithm> digests = {
     {"MD5",     QCryptographicHash::Md5},
     {"SHA",     QCryptographicHash::Sha1},
     {"SHA1",    QCryptographicHash::Sha1},
@@ -41,7 +42,7 @@ static QHash<UString, QCryptographicHash::Algorithm> digests = {
     {"SHA-512", QCryptographicHash::Sha512},
 };
 
-static void set(int number)
+void set(int number)
 {
     number -= range.first;
     auto offset = number / 8;
@@ -49,13 +50,14 @@ static void set(int number)
     online[offset] |= mask;
 }
 
-static void unset(int number)
+void unset(int number)
 {
     number -= range.first;
     auto offset = number / 8;
     auto mask = static_cast<unsigned char>(1 << (number % 8));
     online[offset] &= ~mask;
 }
+} // namespace
 
 // We create registration records based on the initial pre-authorize
 // request, and as inactive.  The registration becomes active only when
@@ -77,7 +79,7 @@ active(false), timeout(-1), serverContext(nullptr)
     userPrivs = ep.value("privs").toString().toUtf8();
     number = ep.value("number").toInt();
     userLabel = ep.value("label").toString().toUtf8();
-    timeout = ep.value("expires").toInt() * 1000l;
+    timeout = ep.value("expires").toLongLong() * 1000l;
     authRealm = ep.value("realm").toString().toUtf8();
     authDigest = ep.value("digest").toString().toUpper();
     endpointId = ep.value("endpoint").toLongLong();

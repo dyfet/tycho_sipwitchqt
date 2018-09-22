@@ -191,35 +191,19 @@ static QStringList sqlitePreload = {
 #endif
 
 namespace Util {
-    const QStringList pragmaQuery(const QString& name)
-    {
-        if(name == "QSQLITE")
-            return sqlitePragmas;
-        else
-            return QStringList();
+    const QStringList pragmaQuery(const QString& name) {
+        return name == "QSQLITE" ? sqlitePragmas : QStringList();
     }
 
-    const QStringList createQuery(const QString& name)
-    {
-        if(name == "QSQLITE")
-            return sqliteTables;
-        else
-            return QStringList();
+    const QStringList createQuery(const QString& name) {
+        return name == "QSQLITE" ? sqliteTables : QStringList();
     }
 
-    bool dbIsFile(const QString& name)
-    {
-        if(name == "QSQLITE")
-            return true;
-        else
-            return false;
+    bool dbIsFile(const QString& name) {
+        return name == "QSQLITE";
     }
 
-    const QStringList preloadConfig(const QString& name)
-    {
-        if(name == "QSQLITE")
-            return sqlitePreload;
-        else
-            return QStringList();
+    const QStringList preloadConfig(const QString& name) {
+        return name == "QSQLITE" ? sqlitePreload : QStringList();
     }
 }

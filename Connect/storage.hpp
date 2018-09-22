@@ -58,6 +58,12 @@ public:
     void updateSelf(const QString& text);
     void verifyDevices(QJsonArray &devices);
     void verifyDevice(const QString& label, const QByteArray& key, const QString &agent);
+    QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
+    bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
+    int runQueries(const QStringList& list);
+    QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
+    QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
+    int copyDb(const QString& dbName);
 
     static Storage *instance() {
         return Instance;
@@ -76,16 +82,7 @@ public:
     static void remove(const QString &dbName);
     static QVariantHash next(QSqlQuery& query);
     static void initialLogin(const QString& dbName, const QString &key, QVariantHash& creds);
-
-    QVariant insert(const QString& string, const QVariantList& parms = QVariantList());
-    bool runQuery(const QString& string, const QVariantList& parms = QVariantList());
-    int runQueries(const QStringList& list);
-    QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
-    QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
-    int copyDb(const QString& dbName);
     static bool importDb(const QString &dbName, const QVariantHash &creds);
-
-    void updateExpiration(int expires);
 
 private:
     QSqlDatabase db;

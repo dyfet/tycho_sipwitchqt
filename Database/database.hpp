@@ -50,7 +50,9 @@ public:
     static QPair<int,int> range() {
         if(!Instance)
             return {0, 0};
-        return {static_cast<int>(Instance->firstNumber), static_cast<int>(Instance->lastNumber)};
+        int first = Instance->firstNumber;
+        int last = Instance->lastNumber;
+        return {first, last};
     }
 
     static int sequence() {

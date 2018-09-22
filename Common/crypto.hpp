@@ -47,6 +47,7 @@
 #include <openssl/pem.h>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
+#include <QCryptographicHash>
 
 class Crypto final
 {
@@ -69,6 +70,7 @@ public:
 
     QByteArray sharedKey(const QByteArray& peer) const;
 
+    static QHash<UString, QCryptographicHash::Algorithm> digests;
     static const QByteArray random(int size);
     static bool random(quint8 *bytes, int size);
     static QPair<QByteArray, QByteArray> keypair(bool compressed = true);

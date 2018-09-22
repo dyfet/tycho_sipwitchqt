@@ -197,7 +197,7 @@ public:
     }
 
     inline QDateTime expiresBefore() const {
-        return QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch() - (currentExpiration * 1000l));
+        return QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch() - (static_cast<qint64>(currentExpiration) * 1000l));
     }
 
     inline QVariant config(const QString& path, const QVariant& value = QVariant()) {
@@ -245,7 +245,7 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenuBar *appBar;
     QMenu *trayMenu, *dockMenu, *appMenu, *popup;
-    bool restart_flag, front;
+    bool front;
     QVariantHash currentCredentials;
     QString currentAppearance;
     int currentExpiration;

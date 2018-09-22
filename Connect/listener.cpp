@@ -29,11 +29,13 @@
 
 #define EVENT_TIMER 200l    // 200ms...
 
-static bool exitingFlag = false;
-static unsigned rosterSequence = 0xffff;
+namespace {
+bool exitingFlag = false;
+unsigned rosterSequence = 0xffff;
+} // namespace
 
 Listener::Listener(const QVariantHash& cred, const QSslCertificate& cert) :
-QObject(), active(true), connected(false), registered(false), authenticated(false)
+active(true), connected(false), registered(false), authenticated(false), context(nullptr)
 {
     serverId = cred["extension"].toString();
     serverHost = cred["host"].toString().toUtf8();
@@ -44,6 +46,7 @@ QObject(), active(true), connected(false), registered(false), authenticated(fals
     serverCreds["initialize"] = "";
     serverCreds["schema"] = "sip:";
     serverSchema = "sip:";
+    serverFirst = serverLast = -1;
 
     if(!serverPort)
         serverPort = 5060;
@@ -479,9 +482,7 @@ bool Listener::isLocal(osip_uri_t *uri)
         return false;
     if(serverPort == 0 && port == basePort)
         return true;
-    if(serverPort == basePort && port == 0)
-        return true;
-    return false;
+    return serverPort == basePort && port == 0;
 }
 
 QVariantHash Listener::parseXdp(const UString& xdp)

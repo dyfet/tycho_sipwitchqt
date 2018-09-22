@@ -18,10 +18,6 @@
 #include "newgroup.hpp"
 #include "ui_newgroup.h"
 
-#include <Desktop/desktop.hpp>
-#include <QCryptographicHash>
-#include <QHash>
-
 static Ui::NewGroup ui;
 
 NewGroup::NewGroup(Desktop *parent, Connector *connection) :
@@ -29,7 +25,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 {
     ui.setupUi(static_cast<QDialog*>(this));
     connector = connection;
-    auto creds = parent->credentials();
+    auto creds = Desktop::credentials();
 
     connect(ui.cancelButton, &QPushButton::clicked, this, &NewGroup::reject);
     connect(ui.addButton, &QPushButton::clicked, this, &NewGroup::add);

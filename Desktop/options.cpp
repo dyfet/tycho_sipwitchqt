@@ -29,12 +29,14 @@
 #include <unistd.h>
 #endif
 
-static Ui::OptionsWindow ui;
-static QLineEdit *speeds[10];
-static bool updateDisabled = true;
+namespace {
+Ui::OptionsWindow ui;
+QLineEdit *speeds[10];
+bool updateDisabled = true;
+} // namespace
 
 Options::Options(Desktop *control) :
-QWidget(), desktop(control), connector(nullptr)
+desktop(control), dialog(nullptr), connector(nullptr)
 {
     ui.setupUi(static_cast<QWidget *>(this));
     ui.appearance->setCurrentText(desktop->appearance());
@@ -202,6 +204,8 @@ QWidget(), desktop(control), connector(nullptr)
             break;
         case 5:
             change += 6;
+            break;
+        default:
             break;
         }
 

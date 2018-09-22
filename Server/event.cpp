@@ -23,15 +23,17 @@
 #define SESSION_EXPIRES "session-expires"
 #endif
 
-static std::atomic<unsigned> atomicSequence;
+namespace {
+std::atomic<unsigned> atomicSequence;
+}
 
 Event::Data::Data() :
-number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), sequenceOrder(0)
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), record(false), context(nullptr), event(nullptr), message(nullptr), authorization(nullptr), sequenceOrder(0)
 {
 }
 
 Event::Data::Data(eXosip_event_t *evt, Context *ctx, int seq) :
-number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), sequenceOrder(seq)
+number(-1), expires(-1), status(0), hops(0), natted(false), isLocal(false), toLocal(false), associated(false), record(false), context(ctx), event(evt), message(nullptr), authorization(nullptr), sequenceOrder(seq)
 {
     // start time of event creation
     elapsed.start();

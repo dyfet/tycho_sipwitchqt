@@ -29,10 +29,12 @@
 
 #define EVENT_TIMER 400l    // 400ms...
 
-static bool exiting = false;
+namespace {
+bool exiting = false;
+}
 
 Connector::Connector(const QVariantHash& cred, const QSslCertificate& cert) :
-QObject(), active(true)
+active(true), context(nullptr)
 {
     serverId = cred["extension"].toString();
     serverHost = cred["host"].toString().toUtf8();

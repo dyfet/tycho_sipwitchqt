@@ -295,15 +295,11 @@ public:
     }
 
     bool isMember(const QModelIndex& index) const {
-        if(index.row() >= membership.count())
-            return false;
-        return true;
+        return index.row() < membership.count();
     }
 
     bool isSeparator(const QModelIndex& index) const {
-        if(index.row() > 0 && index.row() == membership.count())
-            return true;
-        return false;
+        return index.row() > 0 && index.row() == membership.count();
     }
 
     void updateOnline(ContactItem *item);

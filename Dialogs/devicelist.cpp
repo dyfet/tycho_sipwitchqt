@@ -15,14 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../Desktop/options.hpp"
 #include "devicelist.hpp"
 #include "ui_devicelist.h"
-#include <Desktop/desktop.hpp>
-#include <Desktop/options.hpp>
 
 #include <QWidget>
-
 #include <iostream>
+
 static Ui::DeviceList ui;
 
 DeviceList::DeviceList(Desktop *parent, Connector *connector) :
@@ -44,13 +43,13 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 
             ui.table->setSizeAdjustPolicy(QTableWidget::AdjustToContents);
             foreach(auto profile, list) {
-                auto json = profile.toObject();
-                auto endpoint = json.value("e").toString();
-                auto number = json.value("n").toString();
-                auto label = json.value("u").toString();
-                auto lastOnline = json.value("o").toString();
-                auto registered = json.value("r").toString();
-                auto agent = json.value("a").toString();
+                auto obj = profile.toObject();
+                auto endpoint = obj.value("e").toString();
+                auto number = obj.value("n").toString();
+                auto label = obj.value("u").toString();
+                auto lastOnline = obj.value("o").toString();
+                auto registered = obj.value("r").toString();
+                auto agent = obj.value("a").toString();
                 QStringList strArr = {endpoint, number,label,agent, registered, lastOnline};
                 for (column = 0; column < totalCol; column++){
                     ui.table->setItem(row,column, new QTableWidgetItem(strArr[column]));

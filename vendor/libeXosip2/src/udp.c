@@ -38,7 +38,7 @@
 #include <unistd.h>
 #endif
 #else
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #if !defined(_WIN32_WCE)

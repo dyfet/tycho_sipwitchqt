@@ -23,21 +23,23 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-static Ui::PhonebookWindow ui;
-static int highest = 699, me = -1, removes = 0;
-static ContactItem *local[1000];
-static UString searching;
-static ContactItem *activeItem = nullptr;
-static ContactItem *clickedItem = nullptr;
-static bool mousePressed = false;
-static QPoint mousePosition;
-static int cellHeight, cellLift = 3;
-static QIcon addIcon, delIcon, newIcon;
-static MemberModel *memberModel = nullptr;
-static bool disableUpdates = false;
-static QString verifyLabel, verifyAgent;
-static QByteArray verifyKey;
-static bool activeSuspend, activeSysop;
+namespace {
+Ui::PhonebookWindow ui;
+int highest = 699, me = -1, removes = 0;
+ContactItem *local[1000];
+UString searching;
+ContactItem *activeItem = nullptr;
+ContactItem *clickedItem = nullptr;
+bool mousePressed = false;
+QPoint mousePosition;
+int cellHeight, cellLift = 3;
+QIcon addIcon, delIcon, newIcon;
+MemberModel *memberModel = nullptr;
+bool disableUpdates = false;
+QString verifyLabel, verifyAgent;
+QByteArray verifyKey;
+bool activeSuspend, activeSysop;
+} // namespace
 
 Phonebook *Phonebook::Instance = nullptr;
 QList<ContactItem *> ContactItem::users;
@@ -170,8 +172,8 @@ void ContactItem::removeIndex(ContactItem *item)
     local[number] = nullptr;
     index.remove(item->uid);
 
-    for(auto pos = 0; pos <= highest; ++pos) {
-        auto entry = local[pos];
+    for(auto index = 0; index <= highest; ++index) {
+        auto entry = local[index];
         if(entry)
             entry->removeMember(item);
     }
@@ -256,8 +258,7 @@ ContactItem *ContactItem::findText(const QString& text)
     return found;
 }
 
-DeviceModel::DeviceModel(const QJsonArray& devices) :
-QAbstractListModel()
+DeviceModel::DeviceModel(const QJsonArray& devices)
 {
     deviceList = devices;
 }
@@ -296,8 +297,7 @@ QVariant DeviceModel::data(const QModelIndex& index, int role) const
     }
 }
 
-MemberModel::MemberModel(ContactItem *item) :
-QAbstractListModel()
+MemberModel::MemberModel(ContactItem *item)
 {
     membership = item->contactMembers;
     admin = item->admin;
@@ -424,7 +424,7 @@ QVariant LocalContacts::data(const QModelIndex& index, int role) const
         return QVariant();
 
     auto item = local[row];
-    if(item == nullptr || item->display().isEmpty())
+    if(!item || item->display().isEmpty())
         return QVariant();
 
     return QString::number(row) + " " + item->display();
@@ -565,10 +565,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         }
         ui.profileStack->setCurrentWidget(ui.memberPage);
         ui.memberPage->setEnabled(true);
-        if(Desktop::isAdmin())
-            ui.groupAdmin->setVisible(true);
-        else
-            ui.groupAdmin->setVisible(false);
+        ui.groupAdmin->setVisible(Desktop::isAdmin());
     }
 
     if(!item) {
@@ -629,8 +626,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
 
         item->speedNumbers.clear();
         for(int spd = 1; spd < 10; ++spd) {
-            auto key = QString::number(spd);
-            auto target = json[key].toString();
+            auto target = json[QString::number(spd)].toString();
             if(!target.isEmpty())
                 item->speedNumbers[spd] = target;
         }
@@ -643,11 +639,7 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         storage->runQuery("UPDATE Contacts SET display=?, user=?, type=?, uri=?, mailto=?, puburi=?, sync=?, info=?, verify=? WHERE (extension=?);", {
                               display, user, type, uri, mailto, puburi, sync, info, verify, number});
 
-        if(type == "GROUP" || type == "PILOT" || number == 0)
-            item->group = true;
-        else
-            item->group = false;
-
+        item->group = type == "GROUP" || type == "PILOT" || number == 0;
         item->contactMembers.clear();
         if(item->group && !members.isEmpty()) {
             auto list = members.split(",");
@@ -680,7 +672,7 @@ bool MemberDelegate::eventFilter(QObject *list, QEvent *event)
 {
     switch(event->type()) {
     case QEvent::MouseButtonRelease: {
-        auto mpos = (static_cast<QMouseEvent *>(event))->pos();
+        auto mpos = (dynamic_cast<QMouseEvent *>(event))->pos();
         auto index = ui.memberList->indexAt(mpos);
         auto number = index.data(MemberModel::DisplayNumber).toInt();
         auto extension = index.data(MemberModel::DisplayNumber).toString();
@@ -902,7 +894,7 @@ void LocalDelegate::paint(QPainter *painter, const QStyleOptionViewItem& style, 
 }
 
 Phonebook::Phonebook(Desktop *control, Sessions *sessions) :
-QWidget(), desktop(control), localModel(nullptr), connector(nullptr), refreshRoster()
+desktop(control), localModel(nullptr), connector(nullptr)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
@@ -1290,25 +1282,22 @@ void Phonebook::updateProfile(ContactItem *item)
         ui.noworld->setVisible(false);
         ui.uri->setText(QString::fromUtf8(item->uri()));
     }
-    if(item == self() || desktop->isAdmin() || desktop->isOperator()) {
+    if(item == self() || Desktop::isAdmin() || Desktop::isOperator()) {
         ui.displayName->setEnabled(true);
         ui.displayName->setFocus();
     }
     else
         ui.displayName->setEnabled(false);
-    if(item == self() || desktop->isAdmin()) {
+    if(item == self() || Desktop::isAdmin()) {
         ui.emailAddress->setEnabled(true);
-        if(connector)
-            ui.forwardGroup->setEnabled(true);
-        else
-            ui.forwardGroup->setEnabled(false);
+        ui.forwardGroup->setEnabled(connector != nullptr);
     }
     else {
         ui.emailAddress->setEnabled(false);
         ui.forwardGroup->setEnabled(false);
     }
 
-    if(desktop->isAdmin()) {
+    if(Desktop::isAdmin()) {
         ui.world->setEnabled(true);
         ui.noworld->setEnabled(true);
     }
@@ -1381,12 +1370,7 @@ void Phonebook::selectContact(const QModelIndex& index)
         return;
 
     activeSysop = activeSuspend = false;
-
-    if(item == self())
-        ui.behaviorGroup->setEnabled(false);
-    else
-        ui.behaviorGroup->setEnabled(true);
-
+    ui.behaviorGroup->setEnabled(item != self());
     if(connector) {
         ui.behaviorGroup->setEnabled(true);
         if(activeItem == Phonebook::self() || Desktop::isAdmin())
@@ -1627,11 +1611,7 @@ void Phonebook::selectLabel(const QModelIndex& index)
     verifyAgent = index.data(DeviceModel::DisplayAgent).toString();
     verifyLabel = index.data(DeviceModel::DisplayLabel).toString();
 
-    if(status == 1)
-        ui.verifyDevice->setVisible(false);
-    else
-        ui.verifyDevice->setVisible(true);
-
+    ui.verifyDevice->setVisible(status != 1);
     ui.deviceCreated->setText(created.toString(Qt::SystemLocaleLongDate));
     ui.lastSeen->setText(online.toString(Qt::SystemLocaleLongDate));
 }
@@ -1683,7 +1663,7 @@ bool Phonebook::event(QEvent *event)
 {
     switch(event->type()) {
     case QEvent::MouseButtonPress: {
-        auto mpos = static_cast<QMouseEvent *>(event)->pos();
+        auto mpos = dynamic_cast<QMouseEvent *>(event)->pos();
         auto rect = QRect(ui.separator->pos(), ui.separator->size());
         rect.setLeft(rect.left() - 2);
         rect.setRight(rect.right() + 2);
@@ -1696,7 +1676,7 @@ bool Phonebook::event(QEvent *event)
     }
     case QEvent::MouseMove: {
         if(mousePressed) {
-            auto mpos = static_cast<QMouseEvent *>(event)->pos();
+            auto mpos = dynamic_cast<QMouseEvent *>(event)->pos();
             auto width = ui.contacts->maximumWidth() + mpos.x() - mousePosition.x();
             auto maxWidth = size().width() / 3;
             if(width < 132 || width > maxWidth) {

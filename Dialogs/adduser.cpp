@@ -15,26 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../Common/crypto.hpp"
 #include "adduser.hpp"
 #include "ui_adduser.h"
 
-#include <Desktop/desktop.hpp>
-#include <QCryptographicHash>
-#include <QHash>
-
 static Ui::AddUser ui;
-
-static QHash<UString, QCryptographicHash::Algorithm> digests = {
-    {"MD5",     QCryptographicHash::Md5},
-    {"SHA",     QCryptographicHash::Sha1},
-    {"SHA1",    QCryptographicHash::Sha1},
-    {"SHA2",    QCryptographicHash::Sha256},
-    {"SHA256",  QCryptographicHash::Sha256},
-    {"SHA512",  QCryptographicHash::Sha512},
-    {"SHA-1",   QCryptographicHash::Sha1},
-    {"SHA-256", QCryptographicHash::Sha256},
-    {"SHA-512", QCryptographicHash::Sha512},
-};
 
 AddUser::AddUser(Desktop *parent, Connector *connection) :
 QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
@@ -51,7 +36,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     ui.authorization->setFocus();
 
     connector = connection;
-    auto creds = parent->credentials();
+    auto creds = Desktop::credentials();
     realm = creds["realm"].toString();
     digest = creds["algorithm"].toString().toUpper();
 
@@ -161,7 +146,7 @@ void AddUser::add()
 
     if(createAuth) {
         UString ha1 = user + ":" + realm + ":" + secret;
-        secret = QCryptographicHash::hash(ha1, digests[digest]).toHex();
+        secret = QCryptographicHash::hash(ha1, Crypto::digests[digest]).toHex();
         json = {
             {"s", secret},
             {"r", realm},

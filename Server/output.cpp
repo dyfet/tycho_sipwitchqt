@@ -24,7 +24,9 @@
 #include <syslog.h>
 #endif
 
-static QMutex lock;
+namespace {
+QMutex lock;
+}
 
 crit::~crit()
 {

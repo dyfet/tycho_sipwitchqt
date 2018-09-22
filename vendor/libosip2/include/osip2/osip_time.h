@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <time.h>
+
 /* Common time-related functions and data types */
 
 #if defined(_WIN32_WCE)

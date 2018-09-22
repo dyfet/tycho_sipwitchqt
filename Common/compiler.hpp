@@ -25,11 +25,20 @@
 #pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-result"
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 #if __cplusplus <= 199711L && !defined(_MSC_VER)
 #error C++11 compliant compiler required
 #endif
 
 #ifdef _MSC_VER
+#pragma warning(disable: 4068)
+#pragma warning(disable: 26451)
+#pragma warning(disable: 26444)
+#pragma warning(disable: 26495)
 #if _MSC_VER < 1900
 #error "VS >= 2015 or later required"
 #endif

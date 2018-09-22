@@ -38,7 +38,6 @@ public:
     explicit Contact(osip_contact_t *contact) noexcept;
     Contact(const osip_uri_t *uri) noexcept;
     Contact() noexcept;
-    Contact(const Contact& from) noexcept = default;
 
     Contact& operator+=(const Contact& from) {
         refresh(from);

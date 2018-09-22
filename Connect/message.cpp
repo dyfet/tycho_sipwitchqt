@@ -15,19 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../Common/crypto.hpp"
 #include "message.hpp"
-
-static QHash<UString, QCryptographicHash::Algorithm> digests = {
-    {"MD5",     QCryptographicHash::Md5},
-    {"SHA",     QCryptographicHash::Sha1},
-    {"SHA1",    QCryptographicHash::Sha1},
-    {"SHA2",    QCryptographicHash::Sha256},
-    {"SHA256",  QCryptographicHash::Sha256},
-    {"SHA512",  QCryptographicHash::Sha512},
-    {"SHA-1",   QCryptographicHash::Sha1},
-    {"SHA-256", QCryptographicHash::Sha256},
-    {"SHA-512", QCryptographicHash::Sha512},
-};
 
 bool Message::verify_body(osip_message_t *msg, const QByteArray& pubkey)
 {
@@ -72,7 +61,7 @@ void Message::add_authorization(osip_message_t *msg, const QVariantHash& creds, 
     UString algo = creds["algorithm"].toString();
     UString nonce = creds["nonce"].toString();
 
-    auto digest = digests[algo];
+    auto digest = Crypto::digests[algo];
     char *uri = nullptr;
     osip_uri_to_str(msg->req_uri, &uri);
 

@@ -24,15 +24,15 @@
 #include <QStandardPaths>
 #endif
 
-Control *Control::Instance = nullptr;
-
+namespace {
 #ifdef DESKTOP_PREFIX
-static QString runtimePath(const QString& fileName)
-{
+
+QString runtimePath(const QString &fileName) {
     return QString(DESKTOP_PREFIX) + "/" + fileName;
 }
+
 #else
-static QString runtimePath(const QString& fileName)
+QString runtimePath(const QString& fileName)
 {
     auto path = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
 #ifdef Q_OS_UNIX
@@ -45,6 +45,9 @@ static QString runtimePath(const QString& fileName)
     return path + "/" + fileName;
 }
 #endif
+} // anon namespace
+
+Control *Control::Instance = nullptr;
 
 Control::Control(QObject *parent) :
 QObject(parent), lockFile(runtimePath("sipwitchqt-lock"))

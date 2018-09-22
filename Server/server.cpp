@@ -31,7 +31,7 @@
 #include <csignal>
 
 #ifdef Q_OS_WIN
-#include <windows.h>
+#include <Windows.h>
 #include <QAbstractNativeEventFilter>
 #else
 #include <unistd.h>
@@ -52,10 +52,12 @@
 #ifdef Q_OS_MAC
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
+#include <thread>
 #endif
 
 using namespace std;
 
+namespace {
 using Context = struct {
     QThread *thread;
     QThread::Priority priority;
@@ -64,20 +66,19 @@ using Context = struct {
 
 enum {
     // server events...
-    SERVER_STARTUP = QEvent::User + 1,
+            SERVER_STARTUP = QEvent::User + 1,
     SERVER_SHUTDOWN,
     SERVER_RELOAD,
     SERVER_SUSPEND,
     SERVER_RESUME
 };
 
-class ServerEvent final : public QEvent
-{
+class ServerEvent final : public QEvent {
     Q_DISABLE_COPY(ServerEvent)
 
 public:
     ServerEvent(int event, int code = 0) :
-    QEvent(static_cast<QEvent::Type>(event)) {
+            QEvent(static_cast<QEvent::Type>(event)) {
         exitReason = code;
     }
 
@@ -93,71 +94,57 @@ private:
 
 ServerEvent::~ServerEvent() = default;
 
-static bool notifySystemD = false;
-static int exitReason = 0;
-static bool staticConfig = false;
-static QList<Context> contexts;
-static unsigned maxOrder = 1;
-
-Server *Server::Instance = nullptr;
-QString Server::Uuid;
-QVariantHash Server::CurrentConfig;
-QVariantHash Server::DefaultConfig;
-Server::ServerEnv Server::Env;
-bool Server::DebugVerbose = false;
-bool Server::RunAsService = false;
-bool Server::RunAsDetached = false;
-volatile Server::State Server::RunState = Server::START;
+bool notifySystemD = false;
+int exitReason = 0;
+bool staticConfig = false;
+QList<Context> contexts;
+unsigned maxOrder = 1;
 
 #ifdef Q_OS_MAC
-#include <thread>
 
 // FIXME: This will require a new thread for cfrunloop to work!!
 
-static io_connect_t ioroot = 0;
-static io_object_t iopobj;
-static IONotificationPortRef iopref;
-static std::thread powerthread;
-static CFRunLoopRef runloop;
+io_connect_t ioroot = 0;
+io_object_t iopobj;
+IONotificationPortRef iopref;
+std::thread powerthread;
+CFRunLoopRef runloop;
 
-static void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
+void iop_callback(void *ref, io_service_t ioservice, natural_t mtype, void *args) {
     Q_UNUSED(ioservice);
     Q_UNUSED(ref);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
 
-    switch(mtype) {
-    case kIOMessageCanSystemSleep:
-        IOAllowPowerChange(ioroot, (long)args);
-        break;
-    case kIOMessageSystemWillSleep:
-        Server::suspend();
-        IOAllowPowerChange(ioroot, (long)args);
-        break;
-    case kIOMessageSystemHasPoweredOn:
-        Server::resume();
-        break;
-    default:
-        break;
+    switch (mtype) {
+        case kIOMessageCanSystemSleep:
+            IOAllowPowerChange(ioroot, (long) args); // NOLINT
+            break;
+        case kIOMessageSystemWillSleep:
+            Server::suspend();
+            IOAllowPowerChange(ioroot, (long) args); // NOLINT
+            break;
+        case kIOMessageSystemHasPoweredOn:
+            Server::resume();
+            break;
+        default:
+            break;
     }
-
-#pragma clang pop
+#pragma clang diagnostic pop
 }
 
-static void iop_startup()
-{
+void iop_startup() {
     void *ref = nullptr;
 
-    if(ioroot != 0)
+    if (ioroot != 0)
         return;
 
     ioroot = IORegisterForSystemPower(ref, &iopref, iop_callback, &iopobj);
-    if(!ioroot) {
+    if (!ioroot) {
         error() << "Registration for power management failed";
         return;
-    }
-    else
+    } else
         debug() << "Power management enabled";
 
     runloop = CFRunLoopGetCurrent();
@@ -165,8 +152,7 @@ static void iop_startup()
     CFRunLoopRun();
 }
 
-static void iop_shutdown()
-{
+void iop_shutdown() {
     CFRunLoopStop(runloop);
     powerthread.join();
 }
@@ -190,7 +176,7 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
     case WM_CLOSE:
         if(Server::shutdown(15)) {
             qApp->processEvents();
-            result = 0l;
+            result = nullptr;
             return true;
         }
         break;
@@ -213,7 +199,7 @@ bool NativeEvent::nativeEventFilter(const QByteArray &eventType, void *message, 
     return false;
 }
 
-static BOOL WINAPI consoleHandler(DWORD code)
+BOOL WINAPI consoleHandler(DWORD code)
 {
     switch(code) {
     case CTRL_LOGOFF_EVENT:
@@ -237,55 +223,54 @@ static BOOL WINAPI consoleHandler(DWORD code)
     return FALSE;
 }
 
-static NativeEvent nativeEvents;
+NativeEvent nativeEvents;
 
 #endif
 
-static void disableSignals()
-{
-    ::signal(SIGTERM, SIG_IGN);
-    ::signal(SIGINT, SIG_IGN);
+void disableSignals() {
+    ::signal(SIGTERM, SIG_IGN); // NOLINT
+    ::signal(SIGINT, SIG_IGN); // NOLINT
 #ifdef SIGHUP
-    ::signal(SIGHUP, SIG_IGN);
+    ::signal(SIGHUP, SIG_IGN); // NOLINT
 #endif
 #ifdef SIGKILL
-    ::signal(SIGKILL, SIG_IGN);
+    ::signal(SIGKILL, SIG_IGN); // NOLINT
 #endif
 }
 
-static void handleSignals(int signo)
-{
-    switch(signo) {
-    case SIGINT:
-        printf("\n");
-        disableSignals();
-        Server::shutdown(signo);
-        break;
+void handleSignals(int signo) {
+    switch (signo) {
+        case SIGINT:
+            printf("\n");
+            disableSignals();
+            Server::shutdown(signo);
+            break;
 #ifdef SIGKILL
-    case SIGKILL:
+        case SIGKILL:
 #endif
-    case SIGTERM:
-        disableSignals();
-        Server::shutdown(signo);
-        break;
+        case SIGTERM:
+            disableSignals();
+            Server::shutdown(signo);
+            break;
 #if defined(SIGUSR1) && defined(SIGUSR2)
-    case SIGUSR1:
-        Server::suspend();
-        break;
-    case SIGUSR2:
-        Server::resume();
-        break;
+        case SIGUSR1:
+            Server::suspend();
+            break;
+        case SIGUSR2:
+            Server::resume();
+            break;
 #endif
 #ifdef SIGHUP
-    case SIGHUP:
-        Server::reload();
-        break;
+        case SIGHUP:
+            Server::reload();
+            break;
 #endif
+        default:
+            break;
     }
 }
 
-static void enableSignals()
-{
+void enableSignals() {
 #ifdef Q_OS_WIN
     if(!Server::isService())
         SetConsoleCtrlHandler((PHANDLER_ROUTINE)consoleHandler, TRUE);
@@ -305,9 +290,20 @@ static void enableSignals()
     ::signal(SIGUSR2, handleSignals);
 #endif
 }
+} // namespace anon finished
+
+Server *Server::Instance = nullptr;
+QString Server::Uuid;
+QVariantHash Server::CurrentConfig;
+QVariantHash Server::DefaultConfig;
+Server::ServerEnv Server::Env;
+bool Server::DebugVerbose = false;
+bool Server::RunAsService = false;
+bool Server::RunAsDetached = false;
+volatile Server::State Server::RunState = Server::START;
 
 Server::Server(int& argc, char **argv, QCommandLineParser& args, const QVariantHash& keypairs):
-QObject(), app(argc, argv)
+app(argc, argv)
 {
     Q_ASSERT(Instance == nullptr);
     Instance = this;
@@ -410,7 +406,7 @@ QObject(), app(argc, argv)
     // Wouldn't it be great if Qt had an actual app starting signal??
     // This kinda fakes it in a way so that we can complete startup after
     // app exec() is called and main event loop is running.
-    app.postEvent(Instance, new ServerEvent(SERVER_STARTUP));
+    QCoreApplication::postEvent(Instance, new ServerEvent(SERVER_STARTUP));
 }
 
 Server::~Server()
@@ -427,7 +423,7 @@ int Server::start(QThread::Priority priority)
     debug() << "Starting " << QCoreApplication::applicationName();
     // when server comes up logging is activated...
     emit aboutToStart();
-    return app.exec();
+    return QCoreApplication::exec();
 }
 
 bool Server::event(QEvent *evt)
@@ -436,7 +432,7 @@ bool Server::event(QEvent *evt)
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
-    auto se = static_cast<ServerEvent *>(evt);
+    auto se = dynamic_cast<ServerEvent *>(evt);
     switch(id) {
     case SERVER_STARTUP: // used to process post app exec startup
         debug() << "Server(STARTUP)";
@@ -464,6 +460,8 @@ bool Server::event(QEvent *evt)
             RunState = UP;
         }
         return true;
+    default:
+        break;
     }
     return false;
 }
@@ -525,7 +523,7 @@ void Server::startup()
 
     // TODO: currently race if came up suspended first
     RunState = UP;
-    notice() << "Service starting, version=" << app.applicationVersion();
+    notice() << "Service starting, version=" << QCoreApplication::applicationVersion();
 
     // start managed threads
     for(unsigned order = 0; order < maxOrder; ++order) {
@@ -566,7 +564,7 @@ void Server::notify(SERVER_STATE state, const char *text)
         sd_notifyf(0,
             "READY=1\n"
             "STATUS=%s%s\n"
-            "MAINPID=%lu", cp, text, (unsigned long)getpid()
+            "MAINPID=%lu", cp, text, static_cast<unsigned long>(getpid())
         );
         break;
     case SERVER_STOPPED:
@@ -596,7 +594,7 @@ void Server::exit(int reason)
     RunState = DOWN;
     notify(SERVER_STOPPED);
     notice() << "Service stopping, reason=" + QString::number(reason);
-    app.processEvents();    // de-queue pending events
+    QCoreApplication::processEvents();    // de-queue pending events
     emit aboutToFinish();
 
     // stop managed threads

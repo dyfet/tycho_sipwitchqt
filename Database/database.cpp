@@ -34,6 +34,7 @@
 
 #include <osipparser2/osip_headers.h>
 
+namespace {
 enum {
     // database events...
     COUNT_EXTENSIONS = QEvent::User + 1,
@@ -58,18 +59,17 @@ private:
 
 DatabaseEvent::~DatabaseEvent() = default;
 
-namespace {
-    bool failed = false;
-}
+bool failed = false;
+} // namespace
 
 Database *Database::Instance = nullptr;
 
-Database::Database(unsigned order) :
-QObject()
+Database::Database(unsigned order)
 {
     firstNumber = lastNumber = -1;
     operatorPolicy = "system";
     dbSequence = 0;
+    dbPort = 0;
 
     expiresNat = 80;
     expiresUdp = 300;
@@ -141,7 +141,7 @@ retry:
     while(++count < parms.count())
         query.bindValue(count, parms.at(count));
 
-    if(query.exec() != true) {
+    if(!query.exec()) {
         if(resume() && ++retries < 3)
             goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
@@ -394,7 +394,7 @@ bool Database::event(QEvent *evt)
     if(id < QEvent::User + 1)
         return QObject::event(evt);
 
-    auto reply = (static_cast<DatabaseEvent *>(evt))->reply();
+    auto reply = (dynamic_cast<DatabaseEvent *>(evt))->reply();
 
     // reply->value("key"), etc, to pass parms to query here!!!!
 
@@ -408,6 +408,8 @@ bool Database::event(QEvent *evt)
     switch(id) {
     case COUNT_EXTENSIONS:
         return true;
+    default:
+        break;
     }
     return true;
 }
@@ -895,8 +897,8 @@ void Database::changeTopic(const Event& event)
     Context::reply(event, SIP_OK);
     auto members = getRecords("SELECT extnbr FROM Groups WHERE grpnbr=?;", {target});
     while(members.isActive() && members.next()) {
-        auto record = members.record();
-        auto to = record.value("extnbr").toInt();
+        auto item = members.record();
+        auto to = item.value("extnbr").toInt();
         adminMessage(event, to, text, target, event.display());
     }
 }
@@ -1049,9 +1051,8 @@ void Database::dropExtension(const Event& event, const UString& authuser, qlongl
     sendProfile(event, authuser, endpoint);
     auto query = getRecords("SELECT * FROM Endpoints WHERE extnbr=?;", {target});
     while(query.isActive() && query.next()) {
-        auto record = query.record();
-        auto endpoint = record.value("endpoint").toLongLong();
-        emit disconnectEndpoint(endpoint);
+        auto endpointUsed = query.record().value("endpoint").toLongLong();
+        emit disconnectEndpoint(endpointUsed);
     }
 }
 
@@ -1110,9 +1111,8 @@ void Database::changeAdmin(const Event& event, const UString& authuser, qlonglon
 
     auto query = getRecords("SELECT * FROM Extensions JOIN Endpoints ON Extensions.extnbr = Endpoints.extnbr WHERE Extensions.authname=?;", {user});
     while(query.isActive() && query.next()) {
-        auto record = query.record();
-        auto endpoint = record.value("endpoint").toLongLong();
-        emit disconnectEndpoint(endpoint);
+        auto endpointUsed = query.record().value("endpoint").toLongLong();
+        emit disconnectEndpoint(endpointUsed);
     }
 }
 
@@ -1166,10 +1166,6 @@ void Database::changeMembership(const Event& event, const UString& authuser, qlo
     auto pos = 0;
     auto groupAdmin = 0;
     QSet<int> memberList;
-    if(admin && admin->hvalue) {
-        groupAdmin = atoi(admin->hvalue);
-        memberList << groupAdmin;
-    }
 
     for(;;) {
         osip_message_header_get_byname(msg, "x-group-member", pos++, &member);
@@ -1181,12 +1177,17 @@ void Database::changeMembership(const Event& event, const UString& authuser, qlo
         member = nullptr;
     }
 
-    foreach(auto member, memberList) {
-        runQuery("INSERT INTO Groups(grpnbr,extnbr) VALUES(?,?);", {target, member});
+    foreach(auto groupMember, memberList) {
+        runQuery("INSERT INTO Groups(grpnbr,extnbr) VALUES(?,?);", {target, groupMember});
     }
 
     if(target != 0) // no group admin for operators...
         osip_message_header_get_byname(msg, "x-group-admin", 0, &admin);
+
+    if(admin && admin->hvalue) {
+        groupAdmin = atoi(admin->hvalue);
+        memberList << groupAdmin;
+    }
 
     if(groupAdmin > 0) {
         runQuery("INSERT INTO Groups(grpnbr,extnbr) VALUES(?,?);", {target, groupAdmin});
@@ -1362,8 +1363,8 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
                 groupAccess = "member";
                 auto query = getRecords("SELECT * FROM Admin WHERE (authname=?);", {userid});
                 if(query.isActive() && query.next()) {
-                    auto record = query.record();
-                    groupAccess = record.value("extnbr").toString();
+                    auto groupAdmin = query.record();
+                    groupAccess = groupAdmin.value("extnbr").toString();
                 }
             }
         }
@@ -1374,10 +1375,10 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
         }
         if(listAccess) {
             auto query = getRecords("SELECT * FROM Groups WHERE (grpnbr=?);", {target});
-            auto sep = "";
+            const char *sep = "";
             while(query.isActive() && query.next()) {
-                auto record = query.record();
-                groupList += sep + record.value("extnbr").toString();
+                auto member = query.record();
+                groupList += sep + member.value("extnbr").toString();
                 sep = ",";
             }
         }
@@ -1412,28 +1413,28 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
     if(target == event.number()) {
         auto speeds = getRecords("SELECT extnbr,target FROM Speeds WHERE (authname=?) AND (extnbr < 10);", {userid});
         while(speeds.isActive() && speeds.next()) {
-            auto record = speeds.record();
-            auto speedDial = record.value("extnbr").toString();
+            auto item = speeds.record();
+            auto speedDial = item.value("extnbr").toString();
             if(speedDial < "1")
                 continue;
-            profile[speedDial] = record.value("target").toString();
+            profile[speedDial] = item.value("target").toString();
         }
 
         // self device list...
         QJsonArray devices;
         auto query = getRecords("SELECT * FROM Endpoints WHERE (extnbr=?) AND (label != 'NONE') AND (label != ?) ORDER BY label;", {event.number(), event.label()});
         while(query.isActive() && query.next()) {
-            auto record = query.record();
-            auto endpoint = record.value("endpoint").toString();
-            auto label = record.value("label").toString();
-            auto agent = record.value("agent").toString();
-            auto resgistrated = record.value("created").toString();
-            auto lastOnline = record.value("lastaccess").toString();
-            auto lastUri = record.value("lasturi").toString();
-            auto deviceKey = record.value("devkey").toByteArray();
+            auto devitem = query.record();
+            auto devendpoint = devitem.value("endpoint").toString();
+            auto label = devitem.value("label").toString();
+            auto agent = devitem.value("agent").toString();
+            auto resgistrated = devitem.value("created").toString();
+            auto lastOnline = devitem.value("lastaccess").toString();
+            auto lastUri = devitem.value("lasturi").toString();
+            auto deviceKey = devitem.value("devkey").toByteArray();
 
             QJsonObject device {
-                {"e", endpoint},
+                {"e", devendpoint},
                 {"k", QString(deviceKey.toHex())},
                 {"u", label},
                 {"a", agent},
@@ -1471,8 +1472,8 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
 
         auto jdoc = QJsonDocument::fromJson(event.body());
         auto json = jdoc.object();
-        auto display = json["d"].toString();
-        auto email = json["e"].toString();
+        auto userDisplay = json["d"].toString();
+        auto userEmail = json["e"].toString();
         auto changedAccess = json["a"].toString().toUpper();
         auto changedSecret = json["s"].toString();
 
@@ -1496,20 +1497,20 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
 
         if(changedAccess.isEmpty()) {
             if(operAllowed || allowed) {
-                if(display.isEmpty())
-                    display = altDisplay;
-                profile["d"] = display;
+                if(userDisplay.isEmpty())
+                    userDisplay = altDisplay;
+                profile["d"] = userDisplay;
             }
             else
-                display = profile["d"].toString();
+                userDisplay = profile["d"].toString();
             if(allowed)
-                profile["e"] = email;
+                profile["e"] = userEmail;
             else
-                email = profile["e"].toString();
+                userEmail = profile["e"].toString();
         }
         else {
-            display = profile["d"].toString();
-            email = profile["e"].toString();
+            userDisplay = profile["d"].toString();
+            userEmail = profile["e"].toString();
         }
 
         if(changedSecret.length() == secret.length() && changedSecret.length() > 0) {
@@ -1517,8 +1518,8 @@ void Database::sendProfile(const Event& event, const UString& authuser, qlonglon
             secret = changedSecret;
         }
 
-        runQuery("UPDATE Extensions SET display=? WHERE extnbr=?;", {display, target});
-        runQuery("UPDATE Authorize SET email=?, authaccess=?, secret=? WHERE authname=?;", {email, access, secret, userid});
+        runQuery("UPDATE Extensions SET display=? WHERE extnbr=?;", {userDisplay, target});
+        runQuery("UPDATE Authorize SET email=?, authaccess=?, secret=? WHERE authname=?;", {userEmail, access, secret, userid});
 
         Manager::updateRoster();
     }

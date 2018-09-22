@@ -18,8 +18,6 @@
 #include "logout.hpp"
 #include "ui_logout.h"
 
-#include <Desktop/desktop.hpp>
-
 static Ui::Logout ui;
 
 Logout::Logout(Desktop *parent) :

@@ -18,8 +18,6 @@
 #include "delauth.hpp"
 #include "ui_delauth.h"
 
-#include <Desktop/desktop.hpp>
-
 static Ui::DelAuth ui;
 
 DelAuth::DelAuth(Desktop *desktop, Connector *connection, const QString& id) :

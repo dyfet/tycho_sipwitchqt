@@ -30,20 +30,21 @@
 #define HOST_NAME_MAX 255
 #endif
 
-static Zeroconfig *instance = nullptr;
-static quint16 sip_port = 5060;
-static bool active = false;
+namespace {
+Zeroconfig *instance = nullptr;
+quint16 sip_port = 5060;
+bool active = false;
 
 #if defined(Q_OS_LINUX) && defined(ZEROCONF_FOUND)
 #define AVAHI_ZEROCONF
 extern "C" {
-    #include <avahi-client/client.h>
-    #include <avahi-client/publish.h>
-    #include <avahi-common/alternative.h>
-    #include <avahi-common/thread-watch.h>
-    #include <avahi-common/malloc.h>
-    #include <avahi-common/error.h>
-    #include <avahi-common/timeval.h>
+#include <avahi-client/client.h>
+#include <avahi-client/publish.h>
+#include <avahi-common/alternative.h>
+#include <avahi-common/thread-watch.h>
+#include <avahi-common/malloc.h>
+#include <avahi-common/error.h>
+#include <avahi-common/timeval.h>
 }
 
 AvahiThreadedPoll *poller = nullptr;
@@ -53,10 +54,11 @@ AvahiClientState clientState = AVAHI_CLIENT_S_REGISTERING;
 char *srvName = avahi_strdup("sipwitchqt");
 char *hostName = avahi_strdup("_sipwitchqt.local");
 
-static void client_running();
+void client_running();
 
-static void client_callback(AvahiClient *cbClient, AvahiClientState cbState, void *userData)
+void client_callback(AvahiClient *cbClient, AvahiClientState cbState, void *userData)
 {
+    Q_UNUSED(userData);
     if(!cbClient)
         return;
 
@@ -79,9 +81,11 @@ static void client_callback(AvahiClient *cbClient, AvahiClientState cbState, voi
     }
 }
 
-static void srvGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, void *userData)
+void srvGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, void *userData)
 {
     char *altName;
+    Q_UNUSED(cbGroup);
+    Q_UNUSED(userData);
 
     switch(cbState) {
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
@@ -95,16 +99,18 @@ static void srvGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbS
         client_running();
         break;
     case AVAHI_ENTRY_GROUP_FAILURE:
-        error() << "Zeroconfig service failure; error=", avahi_strerror(avahi_client_errno(client));
+        error() << "Zeroconfig service failure; error=" << avahi_strerror(avahi_client_errno(client));
         break;
     default:
         break;
     }
 }
 
-static void hostGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, void *userData)
+void hostGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, void *userData)
 {
     char *altName;
+    Q_UNUSED(cbGroup);
+    Q_UNUSED(userData);
 
     switch(cbState) {
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
@@ -118,14 +124,14 @@ static void hostGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cb
         client_running();
         break;
     case AVAHI_ENTRY_GROUP_FAILURE:
-        error() << "Zeroconfig service failure; error=", avahi_strerror(avahi_client_errno(client));
+        error() << "Zeroconfig service failure; error=" << avahi_strerror(avahi_client_errno(client));
         break;
     default:
         break;
     }
 }
 
-static void client_running()
+void client_running()
 {
     if(!hostGroup)
         hostGroup = avahi_entry_group_new(client, hostGroup_callback, nullptr);
@@ -151,7 +157,7 @@ static void client_running()
 
         auto len = strlen(localName) - 1;
         char count = 0;
-        for(int ind = len; ind >= 0; ind--) {
+        for(int ind = static_cast<int>(len); ind >= 0; ind--) {
             if(localName[ind] == '.') {
                 localName[ind] = count;
                 count = 0;
@@ -160,7 +166,7 @@ static void client_running()
                count++;
         }
 
-        auto result = avahi_entry_group_add_record(hostGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, (AvahiPublishFlags)(AVAHI_PUBLISH_USE_MULTICAST|AVAHI_PUBLISH_ALLOW_MULTIPLE), hostName, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_CNAME, AVAHI_DEFAULT_TTL, localName, len + 2);
+        auto result = avahi_entry_group_add_record(hostGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, static_cast<AvahiPublishFlags>(AVAHI_PUBLISH_USE_MULTICAST|AVAHI_PUBLISH_ALLOW_MULTIPLE), hostName, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_CNAME, AVAHI_DEFAULT_TTL, localName, len + 2);
         if(result >= 0)
             result = avahi_entry_group_commit(hostGroup);
         if(result < 0)
@@ -175,11 +181,10 @@ static void client_running()
     if(result < 0)
         error() << "Zeroconfig; failed to update, error=" << avahi_strerror(result);
 }
-
 #endif
+} // namespace
 
-Zeroconfig::Zeroconfig(Server *server, quint16 port) :
-QObject()
+Zeroconfig::Zeroconfig(Server *server, quint16 port)
 {
     Q_ASSERT(instance == nullptr);
     sip_port = port;

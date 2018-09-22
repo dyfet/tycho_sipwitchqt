@@ -244,7 +244,7 @@ void Toolbar::onRefocus()
 
 bool Toolbar::eventFilter(QObject *object, QEvent *event)
 {
-    auto mouse = static_cast<QMouseEvent *>(event);
+    auto mouse = dynamic_cast<QMouseEvent *>(event);
     auto window = static_cast<QWidget *>(Desktop::instance());
     QPoint pos;
 
