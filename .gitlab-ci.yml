@@ -5,7 +5,7 @@ stages:
 
 # Build debug release version after each commit or merge requests    
 debug:
-  image: in1t3r/gitlabqt:build
+  image: tychosoft/gitlabqt:build
   stage: build
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug  --build . | tee cmake.log
@@ -20,7 +20,7 @@ debug:
 
 # Run to build release builds    
 release:
-  image: in1t3r/gitlabqt:build
+  image: tychosoft/gitlabqt:build
   stage: build
   script:
     - cmake -DCMAKE_BUILD_TYPE=Release --build . | tee cmake.log
