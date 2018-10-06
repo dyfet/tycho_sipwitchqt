@@ -20,7 +20,7 @@
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #else
-#if defined QT_NO_DEBUG
+#include <cstdlib>
 #include <csignal>
 #include <execinfo.h>
 #include <cxxabi.h>
@@ -28,7 +28,6 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif
 #endif
 
 namespace {

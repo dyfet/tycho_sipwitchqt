@@ -1,3 +1,7 @@
+v0.3.3
+* General code cleanup
+* Build support for Hurd and OpenBSD added
+
 v0.3.2
 * No longer external vendoring openssl
 * Redhat and fedora require updated copr repos
