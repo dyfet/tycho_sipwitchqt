@@ -102,15 +102,13 @@ void Manager::applyConfig(const QVariantHash& config)
     if(ServerNames.count() < 1) {               // auto add localhost for * case
         ServerNames << "127.0.0.1";
         ServerNames << "localhost";
+        ServerNames << Util::localName();
+        ServerNames << Util::hostName();
 #ifdef Q_OS_UNIX
         if(Zeroconfig::enabled())   // avahi published hostname for any client
             ServerNames << "_sipwitchqt.local";
-        char localName[HOST_NAME_MAX];
-        if(!gethostname(localName, sizeof(localName)-1)) {
-            strncat(localName, ".local", sizeof(localName) - strlen(localName) - 1);
-            localName[sizeof(localName) - 1] = '\0';
-            ServerNames << localName;
-        }
+
+        ServerNames << Util::localName() + ".local";
 #endif
     }
     if(!config["banner"].toString().isEmpty())

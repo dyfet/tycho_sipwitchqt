@@ -36,6 +36,25 @@ const QString Util::localDomain()
     return domain;
 }
 
+const QString Util::localName()
+{
+    QString host = QHostInfo::localHostName();
+    if(host.isEmpty())
+        return "localhost";
+    int pos = host.indexOf(".");
+    if(pos < 0)
+        return host;
+    return host.left(pos);
+}
+
+const QString Util::hostName()
+{
+    QString host = QHostInfo::localHostName();
+    if(host.isEmpty())
+        return "localhost";
+    return host;
+}
+
 const QList<QHostAddress> Util::hostAddress(const QString& hostId)
 {
     int pos = hostId.indexOf(":");
