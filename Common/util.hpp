@@ -28,6 +28,8 @@
 namespace Util {
     quint16 portNumber(const char *cp);
     const QString localDomain();
+    const QString localName();
+    const QString hostName();
     const QList<QHostAddress> bindAddress(const QString& hostId);
     const QList<QHostAddress> hostAddress(const QString& hostId);
     int hostPort(const QString& hostId);

@@ -1,6 +1,7 @@
 v0.3.3
 * General code cleanup
 * Build support for Hurd and OpenBSD added
+* Fixed server hostname detection
 
 v0.3.2
 * No longer external vendoring openssl
