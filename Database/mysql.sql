@@ -1,16 +1,16 @@
-CREATE TABLE Config (
+CREATE TABLE IF NOT EXISTS Config (
     id INTEGER PRIMARY KEY,               -- rowid in sqlite
     realm VARCHAR(128) NOT NULL,          -- site realm
     dbseries INTEGER DEFAULT 9,             -- site db series
     dialplan VARCHAR(8) DEFAULT 'STD3');  -- site dialing plan
 
-CREATE TABLE Switches (
+CREATE TABLE IF NOT EXISTS Switches (
     version VARCHAR(8) NOT NULL,          -- db series # supported
     uuid CHAR(36) NOT NULL,               -- switch uuid
     lastaccess DATETIME,
     PRIMARY KEY (uuid));
 
-CREATE TABLE Authorize (
+CREATE TABLE IF NOT EXISTS Authorize (
     authname VARCHAR(32),                     -- authorizing user or group id
     authtype VARCHAR(8) DEFAULT 'USER',       -- group type
     authdigest VARCHAR(8) DEFAULT 'NONE',     -- digest format of secret
@@ -26,7 +26,7 @@ CREATE TABLE Authorize (
     fwdnoanswer INTEGER DEFAULT -1,        -- forward no answer
     PRIMARY KEY (authname));
 
-CREATE TABLE Extensions (
+CREATE TABLE IF NOT EXISTS Extensions (
     extnbr INTEGER NOT NULL,              -- ext number
     authname VARCHAR(32) DEFAULT '@nobody',   -- group affinity
     extpriority INTEGER DEFAULT 0,           -- ring/dial priority
@@ -38,7 +38,7 @@ CREATE TABLE Extensions (
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
         ON DELETE CASCADE);
 
-CREATE TABLE Endpoints (
+CREATE TABLE IF NOT EXISTS Endpoints (
     endpoint INTEGER PRIMARY KEY AUTO_INCREMENT,
     extnbr INTEGER NOT NULL,                -- extension of endpoint
     label VARCHAR(32) DEFAULT 'NONE',       -- label id
@@ -47,15 +47,14 @@ CREATE TABLE Endpoints (
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     lastaccess DATETIME DEFAULT 0,
     lasturi VARCHAR(96),
+    CONSTRAINT Registry UNIQUE KEY (extnbr, label), 
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);
-
-CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);
 
 -- the system speed dialing is system group 10-99
 -- per extension group personal speed dials 01-09 (#1-#9)
 
-CREATE TABLE Speeds (
+CREATE TABLE IF NOT EXISTS Speeds (
     authname VARCHAR(32),                     -- speed dial for...
     target VARCHAR(128),                  -- local or external uri
     extnbr INTEGER,                       -- speed dial #
@@ -63,7 +62,7 @@ CREATE TABLE Speeds (
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
         ON DELETE CASCADE);
 
-CREATE TABLE Calling (
+CREATE TABLE IF NOT EXISTS Calling (
     authname VARCHAR(32),                     -- group hunt is part of
     extnbr INTEGER,                       -- extension # to ring
     extpriority INTEGER DEFAULT 0,           -- hunt group priority order
@@ -72,7 +71,7 @@ CREATE TABLE Calling (
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);
 
-CREATE TABLE Admin (
+CREATE TABLE IF NOT EXISTS Admin (
     authname VARCHAR(32),                     -- group permission is for
     extnbr INTEGER,                       -- extension with permission
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
@@ -80,7 +79,7 @@ CREATE TABLE Admin (
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);
 
-CREATE TABLE Groups (
+CREATE TABLE IF NOT EXISTS Groups (
     grpnbr INTEGER,                       -- group tied to
     extnbr INTEGER,                       -- group member extension
     extpriority INTEGER DEFAULT 0,        -- coverage priority
@@ -90,7 +89,7 @@ CREATE TABLE Groups (
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);
 
-CREATE TABLE Providers (
+CREATE TABLE IF NOT EXISTS Providers (
     contact VARCHAR(128) NOT NULL,        -- provider host uri
     protocol VARCHAR(3) DEFAULT 'UDP',    -- providers usually udp
     userid VARCHAR(32) NOT NULL,          -- auth code
@@ -98,7 +97,7 @@ CREATE TABLE Providers (
     display VARCHAR(64) NOT NULL,         -- provider short name
     PRIMARY KEY (contact));
 
-CREATE TABLE Messages (
+CREATE TABLE IF NOT EXISTS Messages (
     mid BIGINT PRIMARY KEY AUTO_INCREMENT,
     msgseq INTEGER,                       -- helps exclude dups on devices
     msgfrom VARCHAR(64),                  -- origin uri direct reply
@@ -110,7 +109,7 @@ CREATE TABLE Messages (
     msgtype VARCHAR(8),
     msgtext TEXT);
 
-CREATE TABLE Deletes (
+CREATE TABLE IF NOT EXISTS Deletes (
     authname VARCHAR(32),
     delstatus INTEGER DEFAULT 0,
     endpoint INTEGER,
@@ -118,7 +117,7 @@ CREATE TABLE Deletes (
     FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint)
         ON DELETE CASCADE);
 
-CREATE TABLE Outboxes (
+CREATE TABLE IF NOT EXISTS Outboxes (
     mid BIGINT,
     endpoint INTEGER,
     msgstatus INTEGER DEFAULT 0,          -- status code from stack
