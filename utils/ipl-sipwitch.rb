@@ -5,7 +5,7 @@
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-['optparse', 'io/console', 'digest', 'fileutils', 'mysql'].each {|mod| require mod}
+['optparse', 'io/console', 'digest', 'fileutils', 'mysql2'].each {|mod| require mod}
 
 RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody']
 database = 'mysql'
@@ -151,7 +151,7 @@ rescue Interrupt
 end
 
 IPL_COMMANDS = [
-  "INSERT INTO Config(realm) VALUES('#{realm}');",
+  "INSERT INTO Config(id, realm) VALUES(1,'#{realm}');",
   "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('system', 'SYSTEM', 'LOCAL');",
   "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('nobody', 'SYSTEM', 'LOCAL');",
   "INSERT INTO Authorize(authname,authtype,authaccess) VALUES('anonymous', 'SYSTEM', 'DISABLED');",
@@ -165,16 +165,17 @@ IPL_COMMANDS = [
 
 create = []
 line = ""
+dbcfg[:database] = dbcfg[:name]
 
 begin
-  db = Mysql.connect(dbcfg[:host],dbcfg[:username],dbcfg[:password],dbcfg[:name])
+  db = Mysql2::Client.new(dbcfg)
   File.open(schema, 'r') do |infile; cmd|
     while(cmd = infile.gets)
       cmd.gsub!(/(^|\s)[-][-].*$/, '')
       case cmd.strip!
       when /^$/
         line.strip!
-        print "#{line}\n"
+        db.query(line) if line.length > 1
         line = ""
       else
         line = "#{line} #{cmd}"
@@ -182,12 +183,9 @@ begin
     end
   end
   IPL_COMMANDS.each do |cmd|
-    print "#{cmd}\n"
+    db.query(cmd)
   end
-rescue Mysql::Error => e
-  puts e.errno
-  puts e.error
-ensure
-  db.close if db
+rescue Mysql2::Error => e
+  abort("*** ipl-sipwitch: mysql error=#{e.errno},#{e.error}")
 end
 
