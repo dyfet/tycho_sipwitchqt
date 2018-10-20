@@ -127,9 +127,9 @@ int main(int argc, char **argv)
     });
 
 #ifdef Q_OS_UNIX
-    // if not root group, then use group perms, else owner ownly...
+    // if not root group, then use group read perms, else owner ownly...
     if(getegid())
-        umask(007);
+        umask(027);
     else
         umask(077);
 #endif
