@@ -47,10 +47,9 @@ CREATE TABLE Endpoints (
     created DATETIME DEFAULT CURRENT_TIMESTAMP,
     lastaccess DATETIME DEFAULT 0,
     lasturi VARCHAR(96),
+    CONSTRAINT registryIndex UNIQUE (extnbr, label), 
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE);
-
-CREATE UNIQUE INDEX Registry ON Endpoints(extnbr, label);
 
 -- the system speed dialing is system group 10-99
 -- per extension group personal speed dials 01-09 (#1-#9)
@@ -59,7 +58,7 @@ CREATE TABLE Speeds (
     authname VARCHAR(32),                     -- speed dial for...
     target VARCHAR(128),                  -- local or external uri
     extnbr INTEGER,                       -- speed dial #
-    CONSTRAINT dialing PRIMARY KEY (authname, extnbr),
+    CONSTRAINT dialingIndex PRIMARY KEY (authname, extnbr),
     FOREIGN KEY (authname) REFERENCES Authorize(authname)
         ON DELETE CASCADE);
 
@@ -84,7 +83,7 @@ CREATE TABLE Groups (
     grpnbr INTEGER,                       -- group tied to
     extnbr INTEGER,                       -- group member extension
     extpriority INTEGER DEFAULT 0,        -- coverage priority
-    CONSTRAINT Grouping PRIMARY KEY (grpnbr, extnbr),
+    CONSTRAINT GroupingIndex PRIMARY KEY (grpnbr, extnbr),
     FOREIGN KEY (grpnbr) REFERENCES Extensions(extnbr)
         ON DELETE CASCADE,
     FOREIGN KEY (extnbr) REFERENCES Extensions(extnbr)
@@ -122,7 +121,7 @@ CREATE TABLE Outboxes (
     mid INTEGER,
     endpoint INTEGER,
     msgstatus INTEGER DEFAULT 0,          -- status code from stack
-    CONSTRAINT outbox PRIMARY KEY (endpoint, mid),
+    CONSTRAINT outboxIndex PRIMARY KEY (endpoint, mid),
     FOREIGN KEY (mid) REFERENCES Messages(mid)
         ON DELETE CASCADE,
     FOREIGN KEY (endpoint) REFERENCES Endpoints(endpoint)
