@@ -1,4 +1,4 @@
-# Sprint Task
+# Overhead
 
 ## Requirements:                                               
 
@@ -6,6 +6,6 @@ General description of work, relevant notes, etc.  The actual tasks to complete 
 
 ## Acceptance Criteria:                                        
 
-* [ ] Need to ______
+* [ ] Provide ______
 
  -- if multiple criteria, write them on separate lines.
