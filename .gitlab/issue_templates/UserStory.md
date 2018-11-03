@@ -1,16 +1,13 @@
-# User Story sprint
+# User Story for Sprint
 
-### User Experience:                                               
+## Requirements:                                               
 
+As a user, I need to _______.
 
-* [ ] I as a user need _____________ functionality, so I can __________________.
+ -- long description as needed. The actual tasks to complete are summerized in acceptance criteria.
 
+## Acceptance Criteria:
 
-### Implementation related:                                        
+* [ ] Need to ______
 
-* [ ] Need to implement ______ so the functionality __________ can exist.
-
-
- -- if there are needed multiple big steps inimplementation write them separate.
- 
- -- if the story require multiple functionalities write them on separate lines.
+ -- if multiple criteria, write them on separate lines.

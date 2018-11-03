@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.3.3 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.4.0 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017-2018")
 
@@ -104,12 +104,6 @@ else()
     if(ZEROCONF_FOUND)
         set(server_libs "${server_libs}" ${ZEROCONF_LIBRARIES})
     endif()
-    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-        find_library(HAVE_TCMALLOC tcmalloc_minimal)
-        if(HAVE_TCMALLOC)
-            set(system_libs "${system_libs}" -ltcmalloc_minimal)
-        endif()
-    endif()
 endif()
 
 # Third party installed/system libraries.  For windows, this
@@ -118,10 +112,18 @@ endif()
 # dyfet/stable for rhel7/centos7.  Maybe one day fedora will
 # have a modern exosip2 in the main repo.
 
+# Required libraries
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 set(system_libs ${OPENSSL_LIBRARIES} ${system_libs})
 
+# Optional libraries
+find_library(HAVE_JEMALLOC jemalloc)
+if(HAVE_JEMALLOC)
+    set(system_libs "${system_libs}" ${HAVE_JEMALLOC})
+endif()
+
+# Customization
 if(CUSTOM_NAME)
     set(DESKTOP_NAME "${CUSTOM_NAME}")
     set(PLIST_DISPLAY_NAME "${CUSTOM_NAME}")
