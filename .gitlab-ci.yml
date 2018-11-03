@@ -1,6 +1,6 @@
 stages:
 - build
-# - release
+- release
 - docs
 
 # Build debug release version after each commit or merge requests    
@@ -27,6 +27,8 @@ release:
     - make | tee make.log
   tags:
     - docker
+  only:
+    - master
   artifacts:
     expire_in: 2 weeks
     when: always
@@ -35,13 +37,12 @@ release:
 
 
 docs:
-  image: in1t3r/gitlabqt:documentation
+  image: tychosoft/gitlabdoc:build
   stage: docs
-
+  when: manual
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug --build .
     - make docs
-  when: manual
   tags:
     - docker
   only:
