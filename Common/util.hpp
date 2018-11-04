@@ -26,6 +26,9 @@
 #include <QDateTime>
 
 namespace Util {
+    static qint64 const HOURLY_INTERVAL = 3600000;
+    static qint64 const DAILY_INTERVAL = 86400000;
+
     quint16 portNumber(const char *cp);
     const QString localDomain();
     const QString localName();
@@ -35,6 +38,7 @@ namespace Util {
     int hostPort(const QString& hostId);
     unsigned currentDay(const QDateTime& when = QDateTime::currentDateTime());
     unsigned untilTomorrow(const QDateTime& when = QDateTime::currentDateTime());
+    int untilInterval(qint64 interval, const QDateTime& when = QDateTime::currentDateTime());
     qlonglong timestampKey(const QDateTime& when, unsigned sequence);
 }
 

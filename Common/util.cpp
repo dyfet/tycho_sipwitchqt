@@ -149,6 +149,13 @@ unsigned Util::untilTomorrow(const QDateTime& when)
     return static_cast<unsigned>(86400 - (secs % 86400l));
 }
 
+int Util::untilInterval(qint64 interval, const QDateTime& when)
+{
+    auto msecs = when.toMSecsSinceEpoch();
+    msecs += when.offsetFromUtc() * 1000l;
+    return static_cast<int>(interval - (msecs % interval));
+}
+
 qlonglong Util::timestampKey(const QDateTime& when, unsigned sequence)
 {
     auto secs = when.toMSecsSinceEpoch() / 1000l;
