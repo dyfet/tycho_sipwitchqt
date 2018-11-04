@@ -18,6 +18,7 @@
 #include "about.hpp"
 #include "ui_about.h"
 #include <QUrl>
+#include <QSslSocket>
 #include <QDesktopServices>
 
 static Ui::About ui;
@@ -25,8 +26,13 @@ static Ui::About ui;
 About::About(Desktop *parent) :
 QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
 {
+    auto sslVersion = QSslSocket::sslLibraryBuildVersionString();
+    if(sslVersion.size() < 1 || !QSslSocket::supportsSsl())
+        sslVersion = "No Secure Socket Support Enabled";
+
     ui.setupUi(static_cast<QDialog*>(this));
-    ui.labelVersion->setText(tr("Version: ") + PROJECT_VERSION);
+    ui.labelVersion->setText(tr("SipWitchQt Version: ") + PROJECT_VERSION);
+    ui.labelSsl->setText(sslVersion);
     ui.labelCopyright->setText(tr("Copyright (C) ") + PROJECT_COPYRIGHT + " Tycho Softworks");
     ui.logoButton->setVisible(false);
     setWindowTitle(tr("About SipWitchQt Desktop"));
