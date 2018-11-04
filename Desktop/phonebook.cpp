@@ -568,6 +568,23 @@ ContactItem *LocalContacts::updateContact(const QJsonObject& json)
         ui.groupAdmin->setVisible(Desktop::isAdmin());
     }
 
+    if(type == "SYSTEM") {
+        ui.removeGroup->setDisabled(true);
+        ui.removelabel1->setDisabled(true);
+        ui.removelabel1->setDisabled(true);
+        ui.removeButton->setDisabled(true);
+        ui.suspendLabel->setDisabled(true);
+        ui.suspendButton->setDisabled(true);
+    }
+    else {
+        ui.removeGroup->setEnabled(true);
+        ui.removelabel1->setEnabled(true);
+        ui.removelabel1->setEnabled(true);
+        ui.removeButton->setEnabled(true);
+        ui.suspendLabel->setEnabled(true);
+        ui.suspendButton->setEnabled(true);
+    }
+
     if(!item) {
         storage->runQuery("INSERT INTO Contacts(extension, dialing, type, display, user, uri, mailto, puburi, sync, info, pubkey) VALUES(?,?,?,?,?,?,?,?,?,?,?);", {
                               number, QString::number(number), type, display, user, uri, mailto, puburi, sync, info, key});
