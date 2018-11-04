@@ -24,8 +24,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>384</width>
-    <height>414</height>
+    <width>392</width>
+    <height>444</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -213,6 +213,29 @@
       <widget class="QLabel" name="labelCopyright">
        <property name="text">
         <string notr="true">1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="labelSsl">
+       <property name="text">
+        <string>2</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
