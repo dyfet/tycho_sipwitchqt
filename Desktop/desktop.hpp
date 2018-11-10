@@ -244,6 +244,7 @@ private:
     QSettings settings;
     QSystemTrayIcon *trayIcon;
     QMenuBar *appBar;
+    QTimer dailyTimer;
     QMenu *trayMenu, *dockMenu, *appMenu, *popup;
     bool front;
     QVariantHash currentCredentials;
@@ -275,6 +276,7 @@ signals:
     void changeStorage(Storage *state);
     void changeSelf(const QString& text);
     void changeFont();
+    void dailyEvent();
     void logout();
 
 public slots:

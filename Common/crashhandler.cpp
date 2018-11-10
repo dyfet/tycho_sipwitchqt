@@ -24,7 +24,6 @@
 #include <csignal>
 #include <execinfo.h>
 #include <cxxabi.h>
-#include <signal.h>
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/resource.h>

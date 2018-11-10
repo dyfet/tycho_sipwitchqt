@@ -64,6 +64,7 @@ public:
     QSqlQuery getRecords(const QString& request, const QVariantList &parms = QVariantList());
     QVariantHash getRecord(const QString &request, const QVariantList &parms = QVariantList());
     int copyDb(const QString& dbName);
+    void cleanupExpired();
 
     static Storage *instance() {
         return Instance;

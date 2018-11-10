@@ -302,6 +302,15 @@ listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
         sessions->setWidth(width);
     });
 
+    connect(&dailyTimer, &QTimer::timeout, [this]{
+        qDebug() << "Daily housekeeping activated";
+        if(storage)
+            storage->cleanupExpired();
+        emit dailyEvent();
+        dailyTimer.setSingleShot(true);
+        dailyTimer.start(Util::untilInterval(Util::DAILY_INTERVAL));
+    });
+
     if(tray)
         trayIcon = new QSystemTrayIcon(this);
 
@@ -373,6 +382,10 @@ listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
         width = 136;
     sessions->setWidth(width);
     phonebook->setWidth(width);
+
+    // enable timer initialization...
+    dailyTimer.setSingleShot(true);
+    dailyTimer.start(Util::untilInterval(Util::DAILY_INTERVAL));
 }
 
 void Desktop::closeEvent(QCloseEvent *event)
@@ -642,7 +655,7 @@ void Desktop::changeExpiration(int expires)
 
     currentExpiration = expires;
     settings.setValue("expires", expires);
-    if(storage){
+    if(storage) {
         auto lastRecord = storage->getRecord("Select count(*) from Messages;");
         qDebug() << "Last record value is " << lastRecord;
         auto query = storage->getRecords("SELECT posted, rowid FROM Messages");
