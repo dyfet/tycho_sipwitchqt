@@ -28,6 +28,7 @@
 #include <QEvent>
 #include <QVariant>
 #include <QMutex>
+#include <QTimer>
 
 #define SERVER_CONFIG   "CONFIG"
 
@@ -112,6 +113,7 @@ private:
     using ServerEnv = QHash<QString, Symbol>;
 
     QCoreApplication app;
+    QTimer dailyTimer;
 
     static Server *Instance;
     static QString Uuid;
@@ -136,6 +138,7 @@ signals:
     void changeConfig(const QVariantHash& cfg);
     void started();
     void finished();
+    void dailyEvent();
 };
 
 /*!

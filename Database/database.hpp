@@ -82,8 +82,7 @@ private:
     QString dbPass;
     int dbPort;
 
-    int expiresNat, expiresUdp, expiresTcp;
-
+    int expiresNat, expiresUdp, expiresTcp, msgRetention;
     volatile int firstNumber, lastNumber, dbSequence;
 
     Database(unsigned order);
@@ -117,6 +116,7 @@ public slots:
     void messageResponse(const QByteArray& mid, const QByteArray &ep, int status);
 
 private slots:
+    void cleanupMessages();
     void sendRoster(const Event& ev, qlonglong endpoint);
     void sendProfile(const Event& ev, const UString& auth, qlonglong endpoint);
     void sendPending(const Event& ev, qlonglong endpoint);

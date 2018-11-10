@@ -16,6 +16,7 @@
  */
 
 #include "../Common/compiler.hpp"
+#include "../Common/util.hpp"
 #include "server.hpp"
 #include "output.hpp"
 
@@ -308,6 +309,13 @@ app(argc, argv)
     Q_ASSERT(Instance == nullptr);
     Instance = this;
 
+    connect(&dailyTimer, &QTimer::timeout, [this]{
+        qDebug() << "Daily housekeeping activated";
+        dailyTimer.setSingleShot(true);
+        dailyTimer.start(Util::untilInterval(Util::DAILY_INTERVAL));
+        emit dailyEvent();
+    });
+
     foreach(auto key, keypairs.keys()) {
         if(key[0] == '_' || (key[0].isUpper() && key.indexOf('/') < 0))
             Env[key] = keypairs.value(key).toString().toLocal8Bit();
@@ -543,6 +551,9 @@ void Server::startup()
 #ifdef Q_OS_MAC
     powerthread = std::thread(&iop_startup);
 #endif
+    // initiate housekeeping....
+    dailyTimer.setSingleShot(true);
+    dailyTimer.start(Util::untilInterval(Util::DAILY_INTERVAL));
 }
 
 void Server::notify(SERVER_STATE state, const char *text)
