@@ -75,6 +75,7 @@ Storage::Storage(const QString& dbName, const QString& key, const QVariantHash &
 
     if(existing) {
         updateCredentials(cred);
+        cleanupExpired();
         return;
     }
 
@@ -181,6 +182,12 @@ Storage::~Storage()
         db = QSqlDatabase();
         QSqlDatabase::removeDatabase("default");
     }
+}
+
+void Storage::cleanupExpired()
+{
+    auto current = QDateTime::currentDateTime();
+    runQuery("DELETE FROM Messages WHERE expires > posted AND expires < ?;", {current});
 }
 
 QString Storage::name(const QVariantHash& creds, const UString &id)
