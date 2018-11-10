@@ -1,5 +1,8 @@
 v0.4.0
 * Replaced tcmalloc with jemalloc for reduced memory usage
+* Message retention and database cleanup
+* Cannot drop system objects from client
+* Report ssl version in client
 
 v0.3.3
 * General code cleanup
