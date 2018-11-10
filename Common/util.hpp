@@ -92,6 +92,13 @@ namespace Util {
  * \param when Timestap to check.
  * \return number of seconds until next day.
  *
+ * \fn Util::untilInterval(qint64 interval, const QDateTime& when)
+ * Returns number of milliseconds remaining until the specified target
+ * interval, aligned by the current timezone.  This can be used to create
+ * timers that trigger on every hour, every 5 minutes, every week, etc.
+ * \param interval Period of timer in milliseconds.  One hour = 3600000.
+ * \return number of milliseconds until next interval.
+ *
  * \fn Util::timestampKey(const QDateTime& when, unsigned sequence)
  * Produces a unique message key based on the server timestamp and sequence
  * id as issued uniquely for each message sent.  This can be used to identify

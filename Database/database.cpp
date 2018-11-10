@@ -82,6 +82,7 @@ Database::Database(unsigned order)
     Server *server = Server::instance();
     connect(thread(), &QThread::finished, this, &QObject::deleteLater);
     connect(server, &Server::changeConfig, this, &Database::applyConfig);
+    connect(server, &Server::dailyEvent, this, &Database::cleanupMessages);
     connect(&dbTimer, &QTimer::timeout, this, &Database::onTimeout);
 
     Manager *manager = Manager::instance();
@@ -368,7 +369,17 @@ bool Database::create()
     if(!runQuery("UPDATE Switches SET version=? WHERE uuid=?;", {PROJECT_VERSION, dbUuid}))
         runQuery("INSERT INTO Switches(uuid, version) VALUES (?,?);", {dbUuid, PROJECT_VERSION});
 
+    if(!init)
+        cleanupMessages();
+
     return true;
+}
+
+void Database::cleanupMessages()
+{
+    QDateTime expires = QDateTime::currentDateTime();
+    expires = expires.addDays(-msgRetention);
+    runQuery("DELETE FROM Messages WHERE posted < ?", {expires});
 }
 
 int Database::getCount(const QString& id)
@@ -1618,6 +1629,7 @@ void Database::onTimeout()
 void Database::applyConfig(const QVariantHash& config)
 {
     operatorPolicy = config["operators"].toString().toLower();
+    msgRetention = config["retain"].toInt();
     dbRealm = config["realm"].toString();
     dbName = config["database/name"].toString();
     dbHost = config["database/host"].toString();
@@ -1627,6 +1639,9 @@ void Database::applyConfig(const QVariantHash& config)
     dbDriver = config["database"].toString();
     dbUuid = Server::uuid();
     failed = false;
+
+    if(!msgRetention)
+        msgRetention = 180;
 
     if(operatorPolicy == "private") {
         operatorDisplay = tr("Foyer");
