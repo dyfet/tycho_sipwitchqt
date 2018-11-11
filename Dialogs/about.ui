@@ -25,7 +25,7 @@
     <x>0</x>
     <y>0</y>
     <width>392</width>
-    <height>444</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -159,10 +159,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="authId">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>None</string>
+          <string>Device Label</string>
          </property>
         </widget>
        </item>
@@ -173,6 +173,13 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="authId">
+         <property name="text">
+          <string>None</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QLabel" name="authServer">
          <property name="text">
@@ -180,17 +187,24 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Device Label</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="1">
         <widget class="QLabel" name="authLabel">
          <property name="text">
           <string>None</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Peering Address</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="peering">
+         <property name="text">
+          <string>Offline</string>
          </property>
         </widget>
        </item>

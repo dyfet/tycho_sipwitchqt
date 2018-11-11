@@ -47,6 +47,7 @@ active(true), connected(false), registered(false), authenticated(false), context
     serverCreds["schema"] = "sip:";
     serverSchema = "sip:";
     serverFirst = serverLast = -1;
+    serverContact = "unknown";
 
     if(!serverPort)
         serverPort = 5060;
@@ -511,6 +512,12 @@ QVariantHash Listener::parseXdp(const UString& xdp)
             rosterSequence = line.mid(2).toUInt();
             if(rosterSequence != rosterPrior)
                 emit updateRoster();
+        }
+        else if(line.left(2) == "c=") {
+            auto priorContact = serverContact;
+            serverContact = line.mid(2);
+            if(serverContact != priorContact)
+                emit contactAddress(serverContact);
         }
         else if(line.left(2) == "l=")
             serverLast = line.mid(2).toInt();

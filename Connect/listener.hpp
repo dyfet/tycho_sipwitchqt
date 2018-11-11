@@ -60,6 +60,7 @@ private:
     UString serverSchema;
     UString serverLabel;
     UString serverUser;
+    UString serverContact;
     quint16 serverPort;
 
     int serverFirst, serverLast;
@@ -73,6 +74,7 @@ signals:
     void changeStatus(const QByteArray& bitmap, int first, int last);
     void changeBanner(const QString& banner);
     void messageResult(int status);
+    void contactAddress(const QString& connection);
     void receiveText(const UString& from, const UString& to, const UString& text, const QDateTime& timestamp, int sequence, const UString& subject, const UString& type);
     void authorize(const QVariantHash& creds);
     void updateRoster();

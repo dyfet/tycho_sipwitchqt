@@ -1074,6 +1074,7 @@ void Desktop::authorized(const QVariantHash& creds)
 void Desktop::listen(const QVariantHash& cred)
 {
     Q_ASSERT(listener == nullptr);
+    peeringAddress = "unknown";
 
     listener = new Listener(cred);
     connect(listener, &Listener::authorize, this, &Desktop::authorized);
@@ -1084,6 +1085,10 @@ void Desktop::listen(const QVariantHash& cred)
 
     connect(listener, &Listener::changeBanner, this, [this](const QString& banner) {
         setWindowTitle(banner);
+    }, Qt::QueuedConnection);
+
+    connect(listener, &Listener::contactAddress, this, [this](const QString& address) {
+        peeringAddress = address;
     }, Qt::QueuedConnection);
 
     connect(listener, &Listener::updateRoster, this, [this]() {

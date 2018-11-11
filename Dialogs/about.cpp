@@ -35,6 +35,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     ui.labelSsl->setText(sslVersion);
     ui.labelCopyright->setText(tr("Copyright (C) ") + PROJECT_COPYRIGHT + " Tycho Softworks");
     ui.logoButton->setVisible(false);
+    ui.peering->setText(parent->peering());
     setWindowTitle(tr("About SipWitchQt Desktop"));
 
     connect(ui.aboutButton, &QToolButton::clicked, this, &About::aboutProject);
