@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../Common/compiler.hpp"
 #include "../Common/util.hpp"
 #include "server.hpp"
+#include "ipc.hpp"
 #include "output.hpp"
 
 #include <QSettings>
@@ -554,6 +554,9 @@ void Server::startup()
     // initiate housekeeping....
     dailyTimer.setSingleShot(true);
     dailyTimer.start(Util::untilInterval(Util::DAILY_INTERVAL));
+    auto ipc = IPCServer::start();
+    if(ipc)
+        connect(ipc, &IPCServer::request, this, &Server::ipcRequest);
 }
 
 void Server::notify(SERVER_STATE state, const char *text)
@@ -640,6 +643,7 @@ bool Server::shutdown(int reason)
 #ifdef Q_OS_MAC
     iop_shutdown();
 #endif
+    IPCServer::stop();
     if(exitReason)
         return false;
 
@@ -659,3 +663,11 @@ void Server::reload()
     }
 }
 
+void Server::ipcRequest(const UString &command)
+{
+    if(command.left(2) != "s:")
+        return;
+
+    if(command == "s:reload")
+        reload();
+}

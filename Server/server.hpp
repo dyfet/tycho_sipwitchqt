@@ -18,6 +18,7 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
+#include "../Common/types.hpp"
 #include <QHash>
 #include <QString>
 #include <QProcess>
@@ -139,6 +140,9 @@ signals:
     void started();
     void finished();
     void dailyEvent();
+
+private slots:
+    void ipcRequest(const UString& message);
 };
 
 /*!
