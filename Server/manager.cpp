@@ -597,6 +597,7 @@ void Manager::refreshRegistration(const Event &ev)
                     xdp += "l=" + UString::number(range.second) + "\n";
                     xdp += "r=" + UString::number(static_cast<int>(checkRoster())) + "\n";
                     xdp += "s=" + UString::number(Database::sequence()) + "\n";
+                    xdp += "c=" + reg->route() + "\n";
                     xdp += "a=" + Registry::bitmask() + "\n";
                 }
                 Context::authorize(ev, reg, xdp);

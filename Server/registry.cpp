@@ -257,7 +257,7 @@ int Registry::authorize(const Event& ev)
 
     auto protocol = ev.protocol();
     if(protocol == "udp")
-        address = ev.source();  // for nat, use appearing origin...
+        address = ev.source();  // for nat, we use appearing origin...
     else
         address = ev.contact();
     serverContext = ev.context();

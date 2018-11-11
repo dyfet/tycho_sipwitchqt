@@ -188,6 +188,12 @@ public:
         return enableAudioNotify(!disable);
     }
 
+    inline QString peering() const {
+        if(!listener)
+            return "offline";
+        return peeringAddress;
+    }
+
     inline QString appearance() const {
         return currentAppearance;
     }
@@ -249,6 +255,7 @@ private:
     bool front;
     QVariantHash currentCredentials;
     QString currentAppearance;
+    QString peeringAddress;
     int currentExpiration;
     QDialog *dialog;
     QFont baseFont;
