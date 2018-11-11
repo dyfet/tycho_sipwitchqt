@@ -104,6 +104,10 @@ else()
     if(ZEROCONF_FOUND)
         set(server_libs "${server_libs}" ${ZEROCONF_LIBRARIES})
     endif()
+    find_library(HAVE_RT rt)
+    if(HAVE_RT)
+        set(server_libs "${server_libs}" ${HAVE_RT})
+    endif()
 endif()
 
 # Third party installed/system libraries.  For windows, this
