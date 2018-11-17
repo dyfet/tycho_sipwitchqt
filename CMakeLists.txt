@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.4.0 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.4.1 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017-2018")
 
@@ -247,7 +247,9 @@ add_custom_target(dist
 if(BOOTSTRAP_VENDOR_EXOSIP)
     add_subdirectory(vendor/libosip2)
     add_subdirectory(vendor/libeXosip2)
-    add_dependencies(server-app eXosip2 osip2 osipparser2)
+    if(NOT CUSTOM_DESKTOP)
+        add_dependencies(server-app eXosip2 osip2 osipparser2)
+    endif()
     if(NOT CUSTOM_CONTAINER)
         add_dependencies(desktop-app eXosip2 osip2 osipparser2)
     endif()
@@ -255,7 +257,9 @@ endif()
 
 add_custom_target(support-files SOURCES desktop.plist.in desktop.rc.in server.rc.in config.hpp.in setup.iss.in Doxyfile.in ${XDG}/${PROJECT_ARCHIVE}.desktop ${XDG}/${PROJECT_ARCHIVE}.appdata.xml LICENSE ${markdown} etc/sipwitchd.service etc/sipwitchqt-server.1 ${ETC}/sipwitchqt.default ${ETC}/sipwitchqt.conf etc/sipwqt-sleep.sh etc/run testdata/service.conf testdata/siptest.sh ${sipp_xml} ${database_sql})
 
-add_subdirectory(utils)
+if(NOT CUSTOM_DESKTOP)
+    add_subdirectory(utils)
+endif()
 
 find_program(DOXYGEN doxygen)
 find_program(GRAPHVIZ dot)
@@ -265,22 +269,6 @@ if(DOXYGEN AND GRAPHVIZ)
         COMMAND "${DOXYGEN}" Doxyfile
     )
 endif()
-
-install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
-
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
-    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}" 
-    PERMISSIONS OWNER_READ OWNER_WRITE
-)
-
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.default"
-    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/default" RENAME "sipwitchqt"
-)
-
-
-install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
-    DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
-)
 
 if(NOT CUSTOM_CONTAINER)
     install(TARGETS desktop-app DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -293,14 +281,33 @@ if(UNIX AND NOT APPLE AND NOT CUSTOM_CONTAINER)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${XDG}/${DESKTOP_NAME}.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${LOGO}" DESTINATION "${CMAKE_INSTALL_DATADIR}/pixmaps" RENAME sipwitchqt.png)
 endif()
-if(UNIX AND NOT APPLE)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt-server.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
-    install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
-endif()
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-sqlite.sql)
+if(NOT CUSTOM_DESKTOP)
+    if(UNIX AND NOT APPLE)
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt-server.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
+        install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
+    endif()
+
+    install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
+        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}" 
+        PERMISSIONS OWNER_READ OWNER_WRITE
+    )
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.default"
+        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/default" RENAME "sipwitchqt"
+    )
+
+
+    install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
+        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
+    )
+
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/sqlite.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-sqlite.sql)
+endif()
 
 # staging releases; we do not stage debug because it uses testdata...
 

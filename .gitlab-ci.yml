@@ -12,6 +12,8 @@ debug:
     - make | tee make.log
   tags:
     - docker
+  except:
+    - master
   artifacts:
     expire_in: 2 weeks
     when: always
@@ -28,7 +30,8 @@ release:
   tags:
     - docker
   only:
-    - master
+    - /^sprint-.*$/
+    - /^patch-.*$/
   artifacts:
     expire_in: 2 weeks
     when: always
@@ -46,7 +49,7 @@ docs:
   tags:
     - docker
   only:
-    - master
+    - tags
   artifacts:
     expire_in: 1 week
     paths:
