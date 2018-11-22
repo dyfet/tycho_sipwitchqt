@@ -31,7 +31,7 @@ IPCServer::IPCServer(QThread::Priority priority) noexcept
     Instance = this;
 
     path = "/sipwitchqt.ipc";
-    struct mq_attr attr;
+    struct mq_attr attr{};
 
     attr.mq_flags = 0;
     attr.mq_maxmsg = 10;
