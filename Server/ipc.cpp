@@ -94,9 +94,7 @@ void IPCServer::stop()
 
 #else
 
-IPCServer::~IPCServer()
-{
-}
+IPCServer::~IPCServer() = default;
 
 void IPCServer::run()
 {
