@@ -32,12 +32,12 @@ release:
   only:
     - /^sprint-.*$/
     - /^patch-.*$/
+    - /^fix-.*$/
   artifacts:
     expire_in: 2 weeks
     when: always
     paths:
       - ./*.log
-
 
 docs:
   image: tychosoft/gitlabdoc:build

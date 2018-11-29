@@ -389,6 +389,7 @@ app(argc, argv)
         Uuid = uuid.mid(2);
         Uuid.chop(1);
         uuidFile.open(QIODevice::WriteOnly);
+        uuidFile.setPermissions(QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ReadGroup);
         QTextStream stream(&uuidFile);
         stream << Uuid << endl;
     }
