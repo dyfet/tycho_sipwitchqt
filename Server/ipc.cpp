@@ -38,7 +38,8 @@ IPCServer::IPCServer(QThread::Priority priority) noexcept
     attr.mq_msgsize = MAX_SIZE;
     attr.mq_curmsgs = 0;
 
-    ipc = mq_open(path.constData(), O_CREAT | O_RDONLY, 0664, &attr);
+    ::remove(path.constData()); // just in case...
+    ipc = mq_open(path.constData(), O_CREAT | O_RDONLY, 0660, &attr);
     auto thread = new QThread;
     thread->setObjectName("IPCServer");
     this->moveToThread(thread);
