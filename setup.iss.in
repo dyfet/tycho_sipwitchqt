@@ -14,6 +14,7 @@ OutputDir=.
 OutputBaseFilename=Setup
 Compression=lzma
 SolidCompression=yes
+ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
@@ -26,6 +27,7 @@ Source: "stage\sipwitchqt-desktop.exe"; DestDir: "{app}"; Components: Desktop;
 [Icons]
 Name: "{group}\SipWitchQt"; Filename: "{app}\sipwitchqt-desktop.exe"; WorkingDir: "{app}"; IconFilename: "{app}\sipwitchqt-desktop.exe"; IconIndex: 0; Components: Desktop; Languages: english
 Name: "{group}\COPYING"; Filename: "{app}\COPYING.txt"; WorkingDir: "{app}"; IconFilename: "{app}\COPYING.txt"; Components: Desktop;
+Name: "{group}\Uninstall SipWitchQt"; Filename: "{app}\unins000.exe";
 
 [Run]
 Filename: "{app}\vcredist_x86.exe"; WorkingDir: "{app}"; Flags: postinstall skipifdoesntexist skipifsilent unchecked

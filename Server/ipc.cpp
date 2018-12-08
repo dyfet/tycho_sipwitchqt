@@ -20,8 +20,18 @@
 #include <QDir>
 #include <QDebug>
 
-#ifdef Q_OS_LINUX
+#ifdef SYSV_MQUEUE
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 #define MAX_SIZE 256
+
+#if defined(POSIX_MQUEUE)
 
 IPCServer *IPCServer::Instance = nullptr;
 
@@ -90,6 +100,79 @@ void IPCServer::stop()
     auto ctrl = mq_open(Instance->path.constData(), O_WRONLY);
     mq_send(ctrl, buf, 1, 1);
     mq_close(ctrl);
+    QThread::yieldCurrentThread();
+}
+
+#elif defined(SYSV_MQUEUE)
+
+IPCServer *IPCServer::Instance = nullptr;
+
+IPCServer::IPCServer(QThread::Priority priority) noexcept
+{
+    Q_ASSERT(Instance == nullptr);
+    Instance = this;
+
+    ipc = msgget(ftok(".", 'u'), 0770 | IPC_CREAT);
+    auto thread = new QThread;
+    thread->setObjectName("IPCServer");
+    this->moveToThread(thread);
+
+    connect(thread, &QThread::started, this, &IPCServer::run);
+    connect(this, &IPCServer::finished, thread, &QThread::quit);
+    connect(this, &IPCServer::finished, this, &QObject::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    thread->start(priority);
+}
+
+IPCServer::~IPCServer()
+{
+    if(ipc > -1) {
+        msgctl(ipc, IPC_RMID, nullptr);
+        ::close(ipc);
+        ipc = -1;
+    }
+    Instance = nullptr;
+}
+
+void IPCServer::run()
+{
+    debug() << "Message Queue Started";
+    struct {
+        long mtype;
+        char mtext[MAX_SIZE];
+    } buf;
+    auto size = sizeof(buf) - sizeof(long);
+
+    for(;;) {
+        auto result = msgrcv(ipc, (struct msgbuf *)&buf, size, 1, 0);
+        if(result < 0)
+            break;
+        QByteArray msg(buf.mtext, result);
+        emit request(msg);
+    }
+    debug() << "Message Queue Stopped";
+    emit finished();
+}
+
+IPCServer *IPCServer::start(QThread::Priority priority)
+{
+    if(Instance)
+        return Instance;
+
+    return new IPCServer(priority);
+}
+
+void IPCServer::stop()
+{
+    if(!Instance)
+        return;
+
+    if(Instance->ipc > -1) {
+        auto ipc = Instance->ipc;
+        Instance->ipc = -1;
+        msgctl(ipc, IPC_RMID, nullptr);
+        ::close(ipc);
+    }
     QThread::yieldCurrentThread();
 }
 

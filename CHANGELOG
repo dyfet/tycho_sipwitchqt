@@ -1,3 +1,6 @@
+v0.4.3
+* sysv msg queue ipc also usable
+
 v0.4.2
 * Fixed permissions related to ipc and masking
 

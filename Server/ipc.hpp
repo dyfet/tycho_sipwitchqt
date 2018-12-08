@@ -27,6 +27,10 @@
 #define POSIX_MQUEUE
 #endif
 
+#ifdef Q_OS_MACX
+#define SYSV_MQUEUE
+#endif
+
 class IPCServer final : public QObject
 {
     Q_OBJECT
@@ -41,9 +45,11 @@ public:
     static void stop();
 
 private:
-#ifdef  POSIX_MQUEUE
+#if defined(POSIX_MQUEUE)
     mqd_t ipc;
     UString path;
+#elif defined(SYSV_MQUEUE)
+    int ipc;
 #endif
 
     IPCServer(QThread::Priority priority) noexcept;
