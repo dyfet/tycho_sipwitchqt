@@ -28,7 +28,7 @@ class ValidateTopic final : public QValidator
     Q_DISABLE_COPY(ValidateTopic)
 
 public:
-    ValidateTopic(QObject *parent) : QValidator(parent) {}
+    explicit ValidateTopic(QObject *parent) : QValidator(parent) {}
 
     State validate(QString& input, int& pos) const final {
         if(input.length() < 1)

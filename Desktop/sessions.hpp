@@ -142,7 +142,7 @@ public:
         topics.remove("");
         auto list = topics.toList();
         list.sort();
-        return list;
+        return std::move(list);
     }
 
     unsigned unread() {
@@ -183,7 +183,7 @@ class SessionModel final : public QAbstractListModel
     friend class SessionDelegate;
 
 public:
-    SessionModel(QWidget *parent) : QAbstractListModel(parent) {
+    explicit SessionModel(QWidget *parent) : QAbstractListModel(parent) {
         Instance = this;
     }
 
@@ -219,7 +219,7 @@ private:
 class SessionDelegate final : public QStyledItemDelegate
 {
 public:
-    SessionDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+    explicit SessionDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
 
 private:
     QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
@@ -230,7 +230,7 @@ class Sessions : public QWidget
 {
     Q_OBJECT
 public:
-    Sessions(Desktop *main);
+    explicit Sessions(Desktop *main);
 
     void enter();
     void listen(Listener *listener);

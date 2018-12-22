@@ -40,7 +40,7 @@ public:
     Event(const Event& copy) = default;
     ~Event() = default;
 
-    inline operator bool() const;
+    explicit inline operator bool() const;
 
     inline bool operator!() const {
         return d->event == nullptr;

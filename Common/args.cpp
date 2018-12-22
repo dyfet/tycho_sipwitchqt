@@ -56,6 +56,8 @@ void Args::add(QCommandLineParser& args, ArgType use, const Args& opt) {
     case GenericArgument:
         add(args, opt);
         break;
+    default:
+        break;
     }
 }
 

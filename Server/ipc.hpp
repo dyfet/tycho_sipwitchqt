@@ -52,7 +52,7 @@ private:
     int ipc;
 #endif
 
-    IPCServer(QThread::Priority priority) noexcept;
+    explicit IPCServer(QThread::Priority priority) noexcept;
     ~IPCServer() final;
 
     static IPCServer *Instance;

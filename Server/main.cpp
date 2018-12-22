@@ -42,6 +42,7 @@ void disable_nap();
 #else
 void disable_nap()
 {
+    // no nap implementation outside macos
 }
 #endif
 

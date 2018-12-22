@@ -26,15 +26,6 @@
 #include <climits>
 #endif
 
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
-
-namespace {
-Zeroconfig *instance = nullptr;
-quint16 sip_port = 5060;
-bool active = false;
-
 #if defined(Q_OS_LINUX) && defined(ZEROCONF_FOUND)
 #define AVAHI_ZEROCONF
 extern "C" {
@@ -46,10 +37,22 @@ extern "C" {
 #include <avahi-common/error.h>
 #include <avahi-common/timeval.h>
 }
+#endif
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
+namespace {
+Zeroconfig *instance = nullptr;
+quint16 sip_port = 5060;
+bool active = false;
+
+#ifdef AVAHI_ZEROCONF
 AvahiThreadedPoll *poller = nullptr;
 AvahiClient *client = nullptr;
-AvahiEntryGroup *srvGroup = nullptr, *hostGroup = nullptr;
+AvahiEntryGroup *srvGroup = nullptr;
+AvahiEntryGroup *hostGroup = nullptr;
 AvahiClientState clientState = AVAHI_CLIENT_S_REGISTERING;
 char *srvName = avahi_strdup("sipwitchqt");
 char *hostName = avahi_strdup("_sipwitchqt.local");

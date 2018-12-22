@@ -85,7 +85,7 @@ private:
     int expiresNat, expiresUdp, expiresTcp, msgRetention;
     volatile int firstNumber, lastNumber, dbSequence;
 
-    Database(unsigned order);
+    explicit Database(unsigned order);
 
     bool event(QEvent *evt) final;
 

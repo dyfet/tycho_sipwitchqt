@@ -36,7 +36,7 @@ public:
     static void init(unsigned order);
 
 protected:
-    Authorize(unsigned order);
+    explicit Authorize(unsigned order);
 
     bool checkConnection();
     bool resume();

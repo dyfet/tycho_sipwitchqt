@@ -29,7 +29,7 @@ class Login : public QWidget
     Q_DISABLE_COPY(Login)
 
 public:
-    Login(Desktop *main);
+    explicit Login(Desktop *main);
 
     void enter();
     void badIdentity();

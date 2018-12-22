@@ -421,7 +421,6 @@ void SessionModel::update(SessionItem *session)
         return;
 
     if(count >= groups.count() + activeCalls) {
-refresh:
         Instance->dataChanged(Instance->index(count), Instance->index(count));
         return;
     }
@@ -438,8 +437,10 @@ refresh:
         return;
 
     auto item = session->contact;
-    if(old == item->display())
-        goto refresh;
+    if(old == item->display()) {
+		Instance->dataChanged(Instance->index(count), Instance->index(count));
+        return;
+	}
 
     auto old_row = std::distance(groups.begin(), groups.find(old));
     auto new_row = std::distance(groups.begin(), groups.upperBound(item->display()));
@@ -448,7 +449,8 @@ refresh:
     if(old_row == new_row) {
         groups.take(old);
         groups[item->display()] = session;
-        goto refresh;
+		Instance->dataChanged(Instance->index(count), Instance->index(count));
+        return;
     }
     sessions.takeAt(static_cast<int>(old_row));
     sessions.insert(static_cast<int>(new_row), session);

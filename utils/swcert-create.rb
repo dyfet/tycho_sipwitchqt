@@ -8,7 +8,7 @@
 ['optparse', 'openssl', 'fileutils'].each {|mod| require mod}
 
 class SelfSignedCertificate
-  def initialize(server = "localhost", keysize = 1024, org="SipWitchQt", country = "US")
+  def initialize(server = "localhost", keysize = 1024, org='SipWitchQt', country = 'US')
     @key = OpenSSL::PKey::RSA.new(keysize)
     public_key = @key.public_key
 
@@ -26,12 +26,12 @@ class SelfSignedCertificate
     ef.subject_certificate = @cert
     ef.issuer_certificate = @cert
     @cert.extensions = [
-        ef.create_extension("basicConstraints","CA:TRUE", true),
-        ef.create_extension("subjectKeyIdentifier", "hash"),
-    # ef.create_extension("keyUsage", "cRLSign,keyCertSign", true),
+        ef.create_extension('basicConstraints','CA:TRUE', true),
+        ef.create_extension('subjectKeyIdentifier', 'hash'),
+    # ef.create_extension('keyUsage', 'cRLSign,keyCertSign', true),
     ]
-    @cert.add_extension ef.create_extension("authorityKeyIdentifier",
-                                           "keyid:always,issuer:always")
+    @cert.add_extension ef.create_extension('authorityKeyIdentifier',
+                                            'keyid:always,issuer:always')
 
     @cert.sign @key, OpenSSL::Digest::SHA1.new
   end
@@ -48,7 +48,7 @@ end
 keysize = 1024
 server = 'localhost'
 country = 'US'
-organization = "SipWitchQt"
+organization = 'SipWitchQt'
 banner = 'Usage: swcert-create [options]'
 
 datadir = '/var/lib/sipwitchqt'
@@ -82,18 +82,16 @@ OptionParser.new do |opts|
     exit
   end
 end.parse!
-abort(banner) unless ARGV.size == 0
+abort(banner) unless ARGV.empty?
 
 cert = SelfSignedCertificate.new(server, keysize, organization, country)
 
-File.open("#{datadir}/public.pem", "w") do |f|
+File.open("#{datadir}/public.pem", 'w') do |f|
   f.puts cert.public_pem
 end
 
-File.open("#{datadir}/private.key", "w") do |f|
+File.open("#{datadir}/private.key", 'w') do |f|
   f.puts cert.private_key
 end
 
-FileUtils.chmod 0600, "#{datadir}/private.key"
-
-
+FileUtils.chmod 0o600, "#{datadir}/private.key"

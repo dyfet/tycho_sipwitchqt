@@ -227,6 +227,8 @@ void MessageItem::findFormats()
             case TextFormat::mono:
                 range.format.setFont(textMono);
                 break;
+            default:
+                break;
             }
             formats << range;
             ++textFormats;

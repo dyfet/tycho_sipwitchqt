@@ -73,7 +73,7 @@ class Invite
     Q_DISABLE_COPY(Invite)
 
 public:
-    Invite(const UString& id);
+    explicit Invite(const UString& id);
     ~Invite();
 
     inline Segment *origin() const {

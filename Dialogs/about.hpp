@@ -28,7 +28,7 @@ class About final : public QDialog
     Q_DISABLE_COPY(About)
 
 public:
-    About(Desktop *parent = nullptr);
+    explicit About(Desktop *parent = nullptr);
 
 private:
     void closeEvent(QCloseEvent *event) final;
