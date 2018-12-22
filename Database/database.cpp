@@ -143,7 +143,7 @@ retry:
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
-        if(resume() && ++retries < 3)
+        if(resume() && (++retries < 3))
             goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return false;
@@ -167,7 +167,7 @@ retry:
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
-        if(resume() && ++retries < 3)
+        if(resume() && (++retries < 3))
             goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return QVariant();
@@ -192,7 +192,7 @@ retry:
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
-        if(resume() && ++retries < 3)
+        if(resume() && (++retries < 3))
             goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();            
         return QSqlRecord();
@@ -220,7 +220,7 @@ retry:
         query.bindValue(count, parms.at(count));
 
     if(!query.exec()) {
-        if(resume() && ++retries < 3)
+        if(resume() && (++retries < 3))
             goto retry;
         warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
         return QSqlQuery();

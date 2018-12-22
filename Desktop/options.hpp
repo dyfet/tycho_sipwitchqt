@@ -28,7 +28,7 @@ class Connector;
 class Options : public QWidget
 {
 public:
-    Options(Desktop *main);
+    explicit Options(Desktop *main);
 
     void enter();
     void fontDialog();

@@ -8,22 +8,20 @@
 ['optparse', 'io/console', 'sqlite3', 'digest'].each {|mod| require mod}
 
 if STDIN.respond_to?(:noecho)
-  def get_password(prompt="Password: ")
+  def get_password(prompt='Password: ')
     print prompt
     STDIN.noecho(&:gets).chomp
   end
 else
-  def get_password(prompt="Password: ")
+  def get_password(prompt='Password: ')
     `read -s -p "#{prompt}" password; echo $password`.chomp
   end
 end
 
 access = 'LOCAL'
 digest = 'MD5'
-number = -1
 minext = 100
 maxext = 699
-user = nil
 password = nil
 mode = 'USER'
 create = false
@@ -31,7 +29,7 @@ domain = nil
 dbname = '/var/lib/sipwitchqt/local.db'
 dbname = '../testdata/local.db' if File.writable?('../testdata/local.db')
 dbname = '../userdata/local.db' if File.writable?('../userdata/local.db')
-abort("*** swlite-authorize: no database") unless File.writable?(dbname)
+abort('*** swlite-authorize: no database') unless File.writable?(dbname)
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: swlite-authorize [id]'
@@ -79,13 +77,13 @@ OptionParser.new do |opts|
     exit
   end
 end.parse!
-abort(opts.banner) if(ARGV.size > 1)
+abort(opts.banner) if ARGV.size > 1
 user = ARGV[0]
 
-begin 
+begin
   db = SQLite3::Database.open dbname
-  db.execute("SELECT realm, dialplan FROM Config") do |row|
-    abort("*** swlite-authorize: multiple config entries") unless domain == nil
+  db.execute('SELECT realm, dialplan FROM Config') do |row|
+    abort('*** swlite-authorize: multiple config entries') unless domain.nil?
     domain = row[0]
     dialing = row[1]
     case dialing
@@ -97,11 +95,11 @@ begin
     end
   end
 rescue SQLite3::SQLException
-  abort("*** swlite-authorize: no switch table")
+  abort('*** swlite-authorize: no switch table')
 end
 
 print "Realm #{domain}\n"
-exit if user == nil
+exit if user.nil?
 
 begin
   type = 'NONE'
@@ -110,7 +108,7 @@ begin
     access = row[2]
   end
   if type == 'NONE'
-    abort("*** swlite-authorize: #{user}: no such authorization") if create != true or digest == 'DROP'
+    abort("*** swlite-authorize: #{user}: no such authorization") if create != true || digest == 'DROP'
     db.execute("INSERT INTO Authorize (authname, authtype, realm, authaccess) VALUES('#{user}','#{mode}','#{domain}','#{access}')")
     type = mode
     print "Created #{user}\n"
@@ -131,17 +129,17 @@ begin
     case access
     when 'LOCAL', 'REMOTE', 'GROUP'
       print "Changing password for #{user}\n"
-      if password == nil
+      if password.nil?
         pass1 = get_password
-        print "\n"
-        exit unless pass1.size > 0
-        pass2 = get_password "Retype Password: "
-        print "\n"
+        print '\n'
+        exit if pass1.empty?
+        pass2 = get_password 'Retype Password: '
+        print '\n'
       else
         pass1 = pass2 = password
       end
-      exit unless pass2.size > 0
-      abort("*** swlite-authorize: passwords do not match") unless pass1 == pass2
+      exit if pass2.empty?
+      abort('*** swlite-authorize: passwords do not match') unless pass1 == pass2
       case digest
       when 'SHA-256'
         secret = Digest::SHA256.hexdigest "#{user}:#{domain}:#{pass1}"
@@ -156,11 +154,10 @@ begin
     end
   end
 rescue SQLite3::BusyException
-  abort("*** swlite-authorize: database busy; sipwitchqt active")
+  abort('*** swlite-authorize: database busy; sipwitchqt active')
 rescue SQLite3::SQLException
-  abort("*** swlite-authorize: database error")
+  abort('*** swlite-authorize: database error')
 rescue Interrupt
-  abort("^C")
-  exit
+  abort('^C')
 end
 

@@ -140,14 +140,14 @@ void IPCServer::run()
     struct {
         long mtype;
         char mtext[MAX_SIZE];
-    } buf;
+    } buf{};
     auto size = sizeof(buf) - sizeof(long);
 
     for(;;) {
-        auto result = msgrcv(ipc, (struct msgbuf *)&buf, size, 1, 0);
+        auto result = msgrcv(ipc, reinterpret_cast<struct msgbuf *>(&buf), size, 1, 0);
         if(result < 0)
             break;
-        QByteArray msg(buf.mtext, result);
+        QByteArray msg(buf.mtext, static_cast<int>(result));
         emit request(msg);
     }
     debug() << "Message Queue Stopped";

@@ -5,7 +5,7 @@
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-['optparse', 'io/console', 'digest', 'fileutils', 'mysql2'].each {|mod| require mod}
+['pp', 'optparse', 'io/console', 'digest', 'fileutils', 'mysql2'].each {|mod| require mod}
 
 RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody']
 database = 'mysql'
@@ -17,17 +17,17 @@ config = '/nonexist'
 Dir.chdir(File.dirname($0))
 
 if STDIN.respond_to?(:noecho)
-  def get_pass(prompt="Password: ")
+  def get_pass(prompt='Password: ')
     print prompt
     input = STDIN.noecho(&:gets).chomp
-    exit unless input.size > 0
+    exit if input.empty?
     print "\n"
     input
   end
 else
-  def get_pass(prompt="Password: ")
+  def get_pass(prompt='Password: ')
     input = `read -s -p "#{prompt}" password; echo $password`.chomp
-    exit unless input.size > 0
+    exit if input.empty?
     print "\n"
     input
   end
@@ -36,7 +36,7 @@ end
 def get_input(*args)
   print(*args)
   input = gets.chomp
-  exit unless input.size > 0
+  exit if input.empty?
   input
 end
 
@@ -70,24 +70,23 @@ OptionParser.new do |opts|
     echo_flag = true
   end
 end.parse!
-abort(opts.banner) if(ARGV.size > 0)
+abort(opts.banner) unless ARGV.empty?
 
-if !File.exists?(config) 
+unless File.exist?(config)
   config = '/etc/sipwitchqt.conf'
-  config = '../testdata/service.conf' if File.exists?('../testdata/service.conf')
-  config = '../userdata/service.conf' if File.exists?('../userdata/service.conf')
-  localdb = '/var/lib/sipwitchqt/local.db'
+  config = '../testdata/service.conf' if File.exist?('../testdata/service.conf')
+  config = '../userdata/service.conf' if File.exist?('../userdata/service.conf')
 end
 
-abort("*** ipl-sipwitch: no config") unless File.exists?(config)
+abort('*** ipl-sipwitch: no config') unless File.exist?(config)
 print "config file #{config} used\n"
 
 section = nil
 realm = nil
-dbcfg = {:host => '127.0.0.1', :name => 'sipwitch', :port => '3306', :username => 'sipwitch', :password => nil}
+dbcfg = {host: '127.0.0.1', name: 'sipwitch', port: '3306', username: 'sipwitch', password: nil}
 
 File.open(config, 'r') do |infile; line, key, value|
-  while(line = infile.gets)
+  while (line = infile.gets)
     line.gsub!(/(^|\s)[#].*$/, '')
     case line.strip!
     when /^\[.*\]$/
@@ -119,35 +118,33 @@ end
 
 # find schema
 schema = "../Database/#{database}.sql"
-schema = "../share/schemas/sipwitch-#{database}.sql" if File.exists?("/usr/share/schemas/sipwitch-#{database}.sql")
-abort("*** ipl-sipwitch: no schema") unless File.exists?(schema)
+schema = "../share/schemas/sipwitch-#{database}.sql" if File.exist?("/usr/share/schemas/sipwitch-#{database}.sql")
+abort('*** ipl-sipwitch: no schema') unless File.exist?(schema)
 
 # gather facts for initial config....
 
 begin
-  print "Creating realm \"#{realm}\" for #{database}\n" if (realm != nil && realm.size > 0)
-  realm   = get_input "Server realm: " if realm === nil
-  user    = get_input "Authorizing user: " 
+  print "Creating realm \"#{realm}\" for #{database}\n" unless realm.nil? || realm.empty?
+  realm   = get_input 'Server realm: ' if realm.empty?
+  user    = get_input 'Authorizing user: ' 
   abort("*** ipl-sipwitch: #{user}: reserved name") if RESERVED_NAMES.include?(user)
-  extnbr  = get_input "User extension:   "
-  abort("*** ipl-sipwitch: ext must be #{first}-#{last}") unless extnbr >= first and extnbr <= last
-  display = get_input "Display name:     "
-  email = get_input   "Email address:    "
+  extnbr  = get_input 'User extension:   '
+  abort("*** ipl-sipwitch: ext must be #{first}-#{last}") unless extnbr >= first && extnbr <= last
+  display = get_input 'Display name:     '
+  email = get_input   'Email address:    '
 rescue Interrupt
-  abort("")
-  exit
+  abort('')
 end
 
 begin
   print "\nEnter a password for #{extnbr} to authorize with\n"
-  pass1    = get_pass "Password: "
-  pass2    = get_pass "Verify:   "
-  abort("*** ipl-sipwitch: passwords do not match") unless pass1 == pass2
-  extpass = get_secret(digest_type,user,realm,pass1)
+  pass1    = get_pass 'Password: '
+  pass2    = get_pass 'Verify:   '
+  abort('*** ipl-sipwitch: passwords do not match') unless pass1 == pass2
+  extpass = get_secret(digest_type, user, realm, pass1)
 
 rescue Interrupt
-  abort("^C")
-  exit
+  abort('^C')
 end
 
 IPL_COMMANDS = [
@@ -164,19 +161,20 @@ IPL_COMMANDS = [
 ]
 
 create = []
-line = ""
+line = ''
 dbcfg[:database] = dbcfg[:name]
 
 begin
+  pp dbcfg
   db = Mysql2::Client.new(dbcfg)
   File.open(schema, 'r') do |infile; cmd|
-    while(cmd = infile.gets)
+    while (cmd = infile.gets)
       cmd.gsub!(/(^|\s)[-][-].*$/, '')
       case cmd.strip!
       when /^$/
         line.strip!
         db.query(line) if line.length > 1
-        line = ""
+        line = ''
       else
         line = "#{line} #{cmd}"
       end
@@ -188,4 +186,3 @@ begin
 rescue Mysql2::Error => e
   abort("*** ipl-sipwitch: mysql error=#{e.errno},#{e.error}")
 end
-

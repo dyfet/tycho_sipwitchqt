@@ -30,9 +30,9 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-abort(banner) unless ARGV.size == 0
+abort(banner) unless ARGV.empty?
 
-raw = File.read "#{path}"
+raw = File.read path
 cert = OpenSSL::X509::Certificate.new raw
 
 subject = cert.subject.to_a

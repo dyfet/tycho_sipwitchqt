@@ -55,7 +55,7 @@ class ContactItem final
     friend class MessageItem;
 
 public:
-    ContactItem(const QSqlRecord& record);
+    explicit ContactItem(const QSqlRecord& record);
 
     int number() const {
         return extensionNumber;
@@ -265,7 +265,7 @@ public:
         DisplayVerify,
     };
 
-    DeviceModel(const QJsonArray& devices);
+    explicit DeviceModel(const QJsonArray& devices);
 
 private:
     QJsonArray deviceList;
@@ -288,7 +288,7 @@ public:
         DisplayMembers,
     };
 
-    MemberModel(ContactItem *item);
+    explicit MemberModel(ContactItem *item);
 
     bool isAdmin() const {
         return admin;
@@ -319,7 +319,7 @@ class LocalContacts final : public QAbstractListModel
     friend class LocalDelegate;
 
 public:
-    LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
+    explicit LocalContacts(QWidget *parent) : QAbstractListModel(parent) {}
     void setFilter(const UString& filter);
     ContactItem *updateContact(const QJsonObject& json);
     void clickContact(int row);
@@ -340,7 +340,7 @@ private:
 class DeviceDelegate final : public QStyledItemDelegate
 {
 public:
-    DeviceDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+    explicit DeviceDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
 
 private:
     QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
@@ -350,7 +350,7 @@ private:
 class MemberDelegate final : public QStyledItemDelegate
 {
 public:
-    MemberDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+    explicit MemberDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
 
 private:
     QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;
@@ -361,7 +361,7 @@ private:
 class LocalDelegate final : public QStyledItemDelegate
 {
 public:
-    LocalDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
+    explicit LocalDelegate(QWidget *parent) : QStyledItemDelegate(parent) {}
 
 private:
     QSize sizeHint(const QStyleOptionViewItem& style, const QModelIndex& index) const final;

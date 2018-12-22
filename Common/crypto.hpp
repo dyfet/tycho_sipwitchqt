@@ -56,7 +56,7 @@ public:
     Crypto(const Crypto& copy) = default;
     ~Crypto() = default;
 
-    operator bool() const {
+    explicit operator bool() const {
         return !d->pem.isEmpty();
     }
 

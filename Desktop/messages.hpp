@@ -53,7 +53,7 @@ public:
 
     MessageItem(SessionItem *sid, const QString& text, const QDateTime& timestamp, int sequence);
     MessageItem(SessionItem *sid, ContactItem *from, ContactItem *to, const UString &text, const QDateTime& timestamp, int sequence, const UString &subject, const QString &type);
-    MessageItem(const QSqlRecord& record);      // database load...
+    explicit MessageItem(const QSqlRecord& record);      // database load...
 
     type_t type() const {
         return msgType;
@@ -153,7 +153,7 @@ class MessageModel final : public QAbstractListModel
     friend class MessageDelegate;
 
 public:
-    MessageModel(SessionItem *list) : QAbstractListModel(), session(list) {}
+    explicit MessageModel(SessionItem *list) : QAbstractListModel(), session(list) {}
 
     bool hover(const QModelIndex& index, const QPoint &pos);
     void fastUpdate(int count = 1);
@@ -175,7 +175,7 @@ private:
 class MessageDelegate final : public QStyledItemDelegate
 {
 public:
-    MessageDelegate(QWidget *parent);
+    explicit MessageDelegate(QWidget *parent);
     ~MessageDelegate() final;
 
 private:

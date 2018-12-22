@@ -61,7 +61,7 @@ class Main final : public QObject
     Q_DISABLE_COPY(Main)
 
 public:
-    Main(Server *server);
+    explicit Main(Server *server);
 
 private slots:
     void onStartup();

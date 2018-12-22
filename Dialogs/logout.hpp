@@ -28,7 +28,7 @@ class Logout final : public QDialog
     Q_DISABLE_COPY(Logout)
 
 public:
-    Logout(Desktop *parent = nullptr);
+    explicit Logout(Desktop *parent = nullptr);
 
 private:
     void closeEvent(QCloseEvent *event) final;
