@@ -160,4 +160,3 @@ rescue SQLite3::SQLException
 rescue Interrupt
   abort('^C')
 end
-

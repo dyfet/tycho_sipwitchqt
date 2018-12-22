@@ -36,9 +36,9 @@ raw = File.read path
 cert = OpenSSL::X509::Certificate.new raw
 
 subject = cert.subject.to_a
-server = subject.select{|name, _, _| name == 'CN'}.first[1]
-country = subject.select{|country, _, _| country == 'C'}.first[1]
-organization = subject.select{|organization, _, _| organization == 'O'}.first[1]
+server = subject.select {|name, _, _| name == 'CN'}.first[1]
+country = subject.select {|country, _, _| country == 'C'}.first[1]
+organization = subject.select {|organization, _, _| organization == 'O'}.first[1]
 
 if output
   puts raw

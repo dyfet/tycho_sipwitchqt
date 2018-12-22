@@ -7,7 +7,7 @@
 
 ['optparse', 'io/console', 'sqlite3', 'digest'].each {|mod| require mod}
 
-RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody']
+RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody'].freeze
 database = 'sqlite'
 digest_type = 'MD5'
 first = '100'
@@ -17,14 +17,14 @@ if STDIN.respond_to?(:noecho)
   def get_pass(prompt='Password: ')
     print prompt
     input = STDIN.noecho(&:gets).chomp
-    exit unless input.size > 0
+    exit if input.empty?
     print "\n"
     input
   end
 else
   def get_pass(prompt='Password: ')
     input = `read -s -p "#{prompt}" password; echo $password`.chomp
-    exit unless input.size > 0
+    exit if input.empty?
     print "\n"
     input
   end
@@ -33,7 +33,7 @@ end
 def get_input(*args)
   print(*args)
   input = gets.chomp
-  exit unless input.size > 0
+  exit if input.empty?
   input
 end
 
@@ -65,12 +65,12 @@ OptionParser.new do |opts|
     digest_type = 'SHA-512'
   end
 end.parse!
-abort(opts.banner) if(ARGV.size > 0)
+abort(opts.banner) unless ARGV.empty?
 
-begin 
+begin
   db = SQLite3::Database.open dbname
-  db.execute("SELECT realm, dialplan FROM Config") do |row|
-    abort('*** swlite-initialize: multiple config entries') unless domain == nil
+  db.execute('SELECT realm, dialplan FROM Config') do |row|
+    abort('*** swlite-initialize: multiple config entries') unless domain.nil?
     domain = row[0]
     dialing = row[1]
     case dialing
@@ -89,7 +89,7 @@ print "Realm #{domain}\n" unless domain.nil?
 realm = domain if domain.nil?
 
 begin
-  realm   = get_input 'Server realm: ' if realm === nil
+  realm   = get_input 'Server realm: ' if realm.nil?
   user    = get_input 'Authorizing user: '
   abort("*** ipl-sipwitch: #{user}: reserved name") if RESERVED_NAMES.include?(user)
   extnbr  = get_input 'User extension:   '
@@ -105,7 +105,7 @@ begin
   pass1    = get_pass 'Password: '
   pass2    = get_pass 'Verify:   '
   abort('*** ipl-sipwitch: passwords do not match') unless pass1 == pass2
-  extpass = get_secret(digest_type,user,realm,pass1)
+  extpass = get_secret(digest_type, user, realm, pass1)
 rescue Interrupt
   abort('^C')
 end
@@ -119,4 +119,3 @@ begin
 rescue SQLite3::SQLException
   abort("*** swlite-initialize: cannot initialize #{extnbr}")
 end
-

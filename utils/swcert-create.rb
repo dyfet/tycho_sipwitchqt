@@ -8,7 +8,7 @@
 ['optparse', 'openssl', 'fileutils'].each {|mod| require mod}
 
 class SelfSignedCertificate
-  def initialize(server = "localhost", keysize = 1024, org='SipWitchQt', country = 'US')
+  def initialize(server = 'localhost', keysize = 1024, org='SipWitchQt', country = 'US')
     @key = OpenSSL::PKey::RSA.new(keysize)
     public_key = @key.public_key
 
@@ -26,12 +26,11 @@ class SelfSignedCertificate
     ef.subject_certificate = @cert
     ef.issuer_certificate = @cert
     @cert.extensions = [
-        ef.create_extension('basicConstraints','CA:TRUE', true),
-        ef.create_extension('subjectKeyIdentifier', 'hash'),
-    # ef.create_extension('keyUsage', 'cRLSign,keyCertSign', true),
+      ef.create_extension('basicConstraints', 'CA:TRUE', true),
+      ef.create_extension('subjectKeyIdentifier', 'hash'),
+    #  ef.create_extension('keyUsage', 'cRLSign,keyCertSign', true),
     ]
-    @cert.add_extension ef.create_extension('authorityKeyIdentifier',
-                                            'keyid:always,issuer:always')
+    @cert.add_extension ef.create_extension('authorityKeyIdentifier', 'keyid:always,issuer:always')
 
     @cert.sign @key, OpenSSL::Digest::SHA1.new
   end

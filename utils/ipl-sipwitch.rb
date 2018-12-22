@@ -7,14 +7,14 @@
 
 ['pp', 'optparse', 'io/console', 'digest', 'fileutils', 'mysql2'].each {|mod| require mod}
 
-RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody']
+RESERVED_NAMES = ['operators', 'system', 'anonymous', 'nobody'].freeze
 database = 'mysql'
 digest_type = 'MD5'
 first = '100'
 last = '699'
 config = '/nonexist'
 
-Dir.chdir(File.dirname($0))
+Dir.chdir(File.dirname($PROGRAM_NAME))
 
 if STDIN.respond_to?(:noecho)
   def get_pass(prompt='Password: ')
@@ -67,7 +67,7 @@ OptionParser.new do |opts|
   end
 
   opts.on('-e', '--echo', 'echo commands to stdout') do
-    echo_flag = true
+    _echo_flag = true
   end
 end.parse!
 abort(opts.banner) unless ARGV.empty?
@@ -126,7 +126,7 @@ abort('*** ipl-sipwitch: no schema') unless File.exist?(schema)
 begin
   print "Creating realm \"#{realm}\" for #{database}\n" unless realm.nil? || realm.empty?
   realm   = get_input 'Server realm: ' if realm.empty?
-  user    = get_input 'Authorizing user: ' 
+  user    = get_input 'Authorizing user: '
   abort("*** ipl-sipwitch: #{user}: reserved name") if RESERVED_NAMES.include?(user)
   extnbr  = get_input 'User extension:   '
   abort("*** ipl-sipwitch: ext must be #{first}-#{last}") unless extnbr >= first && extnbr <= last
@@ -142,7 +142,6 @@ begin
   pass2    = get_pass 'Verify:   '
   abort('*** ipl-sipwitch: passwords do not match') unless pass1 == pass2
   extpass = get_secret(digest_type, user, realm, pass1)
-
 rescue Interrupt
   abort('^C')
 end
@@ -158,9 +157,8 @@ IPL_COMMANDS = [
   "INSERT INTO Extensions(extnbr,authname) VALUES(#{extnbr},'#{user}');",
   "INSERT INTO Endpoints(extnbr) VALUES(#{extnbr});",
   "INSERT INTO Admin(authname,extnbr) VALUES('system',#{extnbr});",
-]
+].freeze
 
-create = []
 line = ''
 dbcfg[:database] = dbcfg[:name]
 

@@ -9,23 +9,21 @@
 
 ['optparse', 'io/console', 'digest', 'fileutils'].each {|mod| require mod}
 
-Dir.chdir(File.dirname($0))
+Dir.chdir(File.dirname($PROGRAM_NAME))
 
 database = 'sqlite'
 
 config = '/nonexistent'
-config = '../testdata/service.conf' if File.exists?('../testdata/service.conf')
-config = '../userdata/service.conf' if File.exists?('../userdata/service.conf')
-localdb = '../testdata/local.db'
-localdb = '../userdata/local.db' if File.exists?('../userdata/service.conf')
-abort("*** ipl-testing: no config") unless File.exists?(config)
+config = '../testdata/service.conf' if File.exist?('../testdata/service.conf')
+config = '../userdata/service.conf' if File.exist?('../userdata/service.conf')
+abort('*** ipl-testing: no config') unless File.exist?(config)
 
 section = nil
 realm = nil
-db = {:database => 'localhost', :port => '3306', :username => 'sipwitch', :password => nil}
+db = {database: 'localhost', port: '3306', username: 'sipwitch', password: nil}
 
 File.open(config, 'r') do |infile; line, key, value|
-  while(line = infile.gets)
+  while (line = infile.gets)
     line.gsub!(/(^|b)[#].*$/, '')
     case line.strip!
     when /^\[.*\]$/
@@ -57,8 +55,8 @@ end
 
 # find schema
 schema = "../Database/#{database}.sql"
-testdata = "../Database/testdata.sql"
-abort("*** ipl-testing: no schema") unless File.exists?(schema)
-abort("*** ipl-testing: no test config") unless File.exists?(testdata)
+testdata = '../Database/testdata.sql'
+abort('*** ipl-testing: no schema') unless File.exist?(schema)
+abort('*** ipl-testing: no test config') unless File.exist?(testdata)
 
 print "Loading #{database}...\n"

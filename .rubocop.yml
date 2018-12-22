@@ -1,0 +1,59 @@
+# prefer longer lines
+Metrics/LineLength:
+    Max: 240
+
+# prefer deeper nesting
+Metrics/BlockNesting:
+    Max: 5
+
+# prefer longer blocks
+Metrics/BlockLength:
+    Max: 50
+
+# prefer longer methods
+Metrics/MethodLength:
+    Max: 50
+
+# prefer larger branch sizes
+Metrics/AbcSize:
+    Max: 25
+
+# prefer word lists direct 
+Style/WordArray:
+    Enabled: false
+
+# not documenting classes for now
+Style/Documentation:
+    Enabled: false
+
+# false triggers for things that are not lambda members
+Style/SymbolProc:
+    Enabled: false
+
+# makes it easy to add to lists
+Style/TrailingCommaInArrayLiteral:
+    Enabled: false
+
+# false issues
+Style/ConditionalAssignment:
+    Enabled: false
+
+# prefer compact spacing
+Layout/SpaceInsideHashLiteralBraces:
+    Enabled: false
+
+# may use spacing to align code
+Layout/SpaceAroundOperators:
+    Enabled: false
+
+# may use spacing to align code
+Layout/ExtraSpacing:
+    Enabled: false
+
+# prefer compact spacing
+Layout/SpaceInsideBlockBraces:
+    Enabled: false
+
+# prefer compact spacing
+Layout/SpaceAroundEqualsInParameterDefault:
+    Enabled: false
