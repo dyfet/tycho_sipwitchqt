@@ -273,95 +273,91 @@ bool Authorize::checkConnection()
 
 bool Authorize::runQuery(const QString &request, const QVariantList &parms)
 {
-    if(db == &local) {
-        if(!checkConnection())
-            return false;
-
-        for(unsigned retries = 0; retries < 3; ++ retries) {
-            QSqlQuery query(local);
-            query.prepare(request);
-
-            int count = -1;
-                qDebug() << "Query" << request << "LIST" << parms;
-            while(++count < parms.count())
-                query.bindValue(count, parms.at(count));
-
-            if(!query.exec()) {
-                if(!retries)
-                    warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-                if(resume())
-                    continue;
-                break;
-            }
-            return true;
-        }
-        return false;
-    }
-    else
+    if(db != &local)
         return database->runQuery(request, parms);
+
+    if(!checkConnection())
+        return false;
+
+    for(unsigned retries = 0; retries < 3; ++ retries) {
+        QSqlQuery query(local);
+        query.prepare(request);
+
+        int count = -1;
+            qDebug() << "Query" << request << "LIST" << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+        return true;
+    }
+    return false;
 }
 
 QSqlQuery Authorize::getRecords(const QString& request, const QVariantList& parms)
 {
-    if(db == &local) {
-        if(!checkConnection())
-            return QSqlQuery();
-
-        for(unsigned retries = 0; retries < 3; ++retries) {
-            QSqlQuery query(local);
-            query.prepare(request);
-            int count = -1;
-            qDebug() << "Query " << request << " LIST " << parms;
-            while(++count < parms.count())
-                query.bindValue(count, parms.at(count));
-
-            if(!query.exec()) {
-                if(!retries)
-                    warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-                if(resume())
-                    continue;
-                break;
-            }
-            return query;
-        }
-        return QSqlQuery();
-    }
-    else
+    if(db != &local)
         return database->getRecords(request, parms);
+
+    if(!checkConnection())
+        return QSqlQuery();
+
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(local);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Query " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+        return query;
+    }
+    return QSqlQuery();
 }
 
 QSqlRecord Authorize::getRecord(const QString& request, const QVariantList &parms)
 {
+    if(db != &local)
+        return database->getRecord(request, parms);
 
-    if(db == &local) {
-        if(!checkConnection())
+    if(!checkConnection())
+        return QSqlRecord();
+
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(local);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Request " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
+
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+
+        if(!query.next())
             return QSqlRecord();
 
-        for(unsigned retries = 0; retries < 3; ++retries) {
-            QSqlQuery query(local);
-            query.prepare(request);
-            int count = -1;
-            qDebug() << "Request " << request << " LIST " << parms;
-            while(++count < parms.count())
-                query.bindValue(count, parms.at(count));
-
-            if(!query.exec()) {
-                if(!retries)
-                    warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-                if(resume())
-                    continue;
-                break;
-            }
-
-            if(!query.next())
-                return QSqlRecord();
-
-            return query.record();
-        }
-        return QSqlRecord();
+        return query.record();
     }
-    else
-        return database->getRecord(request, parms);
+    return QSqlRecord();
 }
 
 void Authorize::removeAuthorization(const Event& ev)
