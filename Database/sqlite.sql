@@ -1,12 +1,12 @@
 CREATE TABLE Config (
-    id INTEGER PRIMARY KEY,               -- rowid in sqlite
-    realm VARCHAR(128) NOT NULL,          -- site realm
+    id INTEGER PRIMARY KEY,                 -- rowid in sqlite
+    realm VARCHAR(128) NOT NULL,            -- site realm
     dbseries INTEGER DEFAULT 9,             -- site db series
-    dialplan VARCHAR(8) DEFAULT 'STD3');  -- site dialing plan
+    dialplan VARCHAR(8) DEFAULT 'STD3');    -- site dialing plan
 
 CREATE TABLE Switches (
-    version VARCHAR(8) NOT NULL,          -- db series # supported
-    uuid CHAR(36) NOT NULL,               -- switch uuid
+    version VARCHAR(8) NOT NULL,            -- db series # supported
+    uuid VARCHAR(36) NOT NULL,              -- switch uuid
     lastaccess DATETIME,
     PRIMARY KEY (uuid));
 

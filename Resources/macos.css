@@ -34,9 +34,11 @@ QLineEdit#searchText {
     border-left: 0px;
     border-bottom-left-radius: 0px;
     border-top-left-radius: 0px;
-    padding: 1px;
     margin: 0px;
     padding-left: 0px;
+    padding-right: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 QToolBar#toolBar {
