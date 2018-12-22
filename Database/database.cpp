@@ -131,24 +131,25 @@ bool Database::runQuery(const QString &request, const QVariantList &parms)
     if(!reopen())
         return false;
 
-    unsigned retries = 0;
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(db);
+        query.prepare(request);
 
-retry:
-    QSqlQuery query(db);
-    query.prepare(request);
+        int count = -1;
+            qDebug() << "Query" << request << "LIST" << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
 
-    int count = -1;
-        qDebug() << "Query" << request << "LIST" << parms;
-    while(++count < parms.count())
-        query.bindValue(count, parms.at(count));
-
-    if(!query.exec()) {
-        if(resume() && (++retries < 3))
-            goto retry;
-        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-        return false;
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
 QVariant Database::insert(const QString& request, const QVariantList &parms)
@@ -156,24 +157,24 @@ QVariant Database::insert(const QString& request, const QVariantList &parms)
     if(!reopen())
         return QVariant();
 
-    unsigned retries = 0;
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(db);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Request " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
 
-retry:
-    QSqlQuery query(db);
-    query.prepare(request);
-    int count = -1;
-    qDebug() << "Request " << request << " LIST " << parms;
-    while(++count < parms.count())
-        query.bindValue(count, parms.at(count));
-
-    if(!query.exec()) {
-        if(resume() && (++retries < 3))
-            goto retry;
-        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-        return QVariant();
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+        return query.lastInsertId();
     }
-
-    return query.lastInsertId();
+    return QVariant();
 }
 
 QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms)
@@ -181,27 +182,28 @@ QSqlRecord Database::getRecord(const QString& request, const QVariantList &parms
     if(!reopen())
         return QSqlRecord();
 
-    unsigned retries = 0;
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(db);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Request " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
 
-retry:
-    QSqlQuery query(db);
-    query.prepare(request);
-    int count = -1;
-    qDebug() << "Request " << request << " LIST " << parms;
-    while(++count < parms.count())
-        query.bindValue(count, parms.at(count));
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
 
-    if(!query.exec()) {
-        if(resume() && (++retries < 3))
-            goto retry;
-        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();            
-        return QSqlRecord();
+        if(!query.next())
+            return QSqlRecord();
+
+        return query.record();
     }
-
-    if(!query.next())
-        return QSqlRecord();
-
-    return query.record();
+    return QSqlRecord();
 }
 
 QSqlQuery Database::getRecords(const QString& request, const QVariantList &parms)
@@ -209,24 +211,24 @@ QSqlQuery Database::getRecords(const QString& request, const QVariantList &parms
     if(!reopen())
         return QSqlQuery();
 
-    unsigned retries = 0;
+    for(unsigned retries = 0; retries < 3; ++retries) {
+        QSqlQuery query(db);
+        query.prepare(request);
+        int count = -1;
+        qDebug() << "Query " << request << " LIST " << parms;
+        while(++count < parms.count())
+            query.bindValue(count, parms.at(count));
 
-retry:
-    QSqlQuery query(db);
-    query.prepare(request);
-    int count = -1;
-    qDebug() << "Query " << request << " LIST " << parms;
-    while(++count < parms.count())
-        query.bindValue(count, parms.at(count));
-
-    if(!query.exec()) {
-        if(resume() && (++retries < 3))
-            goto retry;
-        warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
-        return QSqlQuery();
+        if(!query.exec()) {
+            if(!retries)
+                warning() << "Query failed; " << query.lastError().text() << " for " << query.lastQuery();
+            if(resume())
+                continue;
+            break;
+        }
+        return query;
     }
-
-    return query;
+    return QSqlQuery();
 }
 
 void Database::init(unsigned order)
