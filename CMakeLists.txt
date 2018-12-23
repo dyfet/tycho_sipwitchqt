@@ -16,7 +16,7 @@ if (POLICY CMP0058)
     cmake_policy(SET CMP0058 OLD)
 endif()
 
-if(CMAKE_COVERAGE_TYPE MATCHES "gcov")
+if(CMAKE_COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
     set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
 endif()
