@@ -395,7 +395,7 @@ if(CMAKE_COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMAND rm -f *.gcov
         # Server functional tests...
-        COMMAND ./sipwitchqt-server --test siptest.sh
+        COMMAND ./sipwitchqt-server --test ./siptest.sh
         COMMAND gcov -b Common/*.cpp -o CMakeFiles/server-app.dir/Common
         COMMAND gcov -b Server/*.cpp -o CMakeFiles/server-app.dir/Server
         COMMAND gcov -b Database/*.cpp -o CMakeFiles/server-app.dir/Database
