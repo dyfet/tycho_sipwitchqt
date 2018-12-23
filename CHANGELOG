@@ -1,5 +1,7 @@
 v0.4.3
 * sysv msg queue ipc also usable
+* ruby fixups
+* code coverage and functional testing
 
 v0.4.2
 * Fixed permissions related to ipc and masking

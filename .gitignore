@@ -40,6 +40,7 @@ prime/
 *.iss
 *.rc
 *.dSYM
+*.gcov
 rubocop.json
 cmake_*.cmake
 *_automoc.cpp

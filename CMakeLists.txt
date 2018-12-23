@@ -16,6 +16,11 @@ if (POLICY CMP0058)
     cmake_policy(SET CMP0058 OLD)
 endif()
 
+if(CMAKE_COVERAGE_TYPE MATCHES "gcov")
+    set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
+endif()
+
 if(UNIX AND (CMAKE_GENERATOR MATCHES "Unix"))
     set(CMAKE_MAINTAINER true)
 endif()
@@ -380,5 +385,20 @@ if(CMAKE_MAINTAINER)
     # include.cmake specific to my ci environment and where I upload our builds. 
     include("${CMAKE_CURRENT_SOURCE_DIR}/redhat/include.cmake" OPTIONAL)
     include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
+endif()
+
+# testing and coverage
+
+if(CMAKE_COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
+    set(BUILD_TESTING true)
+    add_custom_target(coverage
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND rm -f *.gcov
+        # Server functional tests...
+        COMMAND ./sipwitchqt-server --test siptest.sh
+        COMMAND gcov -b Common/*.cpp -o CMakeFiles/server-app.dir/Common
+        COMMAND gcov -b Server/*.cpp -o CMakeFiles/server-app.dir/Server
+        COMMAND gcov -b Database/*.cpp -o CMakeFiles/server-app.dir/Database
+    )
 endif()
 
