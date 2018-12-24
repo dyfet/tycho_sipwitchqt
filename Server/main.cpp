@@ -68,15 +68,15 @@ void Main::onStartup()
     if(command == "none")
         return;
 
-    QTimer::singleShot(1200, this, [=] {
+    QTimer::singleShot(1200, this, [] {
         auto proc = new QProcess;
-        connect(proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), [=](int code, QProcess::ExitStatus status) {
+        connect(proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), [](int code, QProcess::ExitStatus status) {
             Q_UNUSED(status);
             qDebug() << "Finished" << command << code;
             exitcode = code;
             Server::shutdown(exitcode);
         });
-        connect(proc, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
+        connect(proc, &QProcess::errorOccurred, [](QProcess::ProcessError error) {
             Q_UNUSED(error);
             qDebug() << "Failed" << command;
             exitcode = -1;

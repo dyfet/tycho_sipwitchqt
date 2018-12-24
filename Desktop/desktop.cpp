@@ -292,12 +292,12 @@ listener(nullptr), storage(nullptr), settings(CONFIG_FROM), dialog(nullptr)
     connect(qApp, &QGuiApplication::applicationStateChanged, this, &Desktop::appState); // NOLINT
     connect(phonebook, &Phonebook::removeSelf, this, &Desktop::eraseLogout, Qt::QueuedConnection);
 
-    connect(sessions, &Sessions::changeWidth, [=](int width) {
+    connect(sessions, &Sessions::changeWidth, [this](int width) {
         settings.setValue("width", width);
         phonebook->setWidth(width);
     });
 
-    connect(phonebook, &Phonebook::changeWidth, [=](int width) {
+    connect(phonebook, &Phonebook::changeWidth, [this](int width) {
         settings.setValue("width", width);
         sessions->setWidth(width);
     });
@@ -497,7 +497,7 @@ void Desktop::openDelAuth(const UString& id)
     setEnabled(false);
     auto obj = new DelAuth(this, connector, id);
     dialog = obj;
-    connect(obj, &DelAuth::error, this, [=](const QString& msg) {
+    connect(obj, &DelAuth::error, this, [this](const QString& msg) {
         errorMessage(msg);
     });
 }
@@ -508,7 +508,7 @@ void Desktop::openNewGroup()
     setEnabled(false);
     auto obj = new NewGroup(this, connector);
     dialog = obj;
-    connect(obj, &NewGroup::error, this, [=](const QString& msg) {
+    connect(obj, &NewGroup::error, this, [this](const QString& msg) {
         errorMessage(msg);
     });
 }
@@ -519,7 +519,7 @@ void Desktop::openAddUser()
     setEnabled(false);
     auto obj = new AddUser(this, connector);
     dialog = obj;
-    connect(obj, &AddUser::error, this, [=](const QString& msg) {
+    connect(obj, &AddUser::error, this, [this](const QString& msg) {
         errorMessage(msg);
     });
 }
@@ -737,7 +737,7 @@ void Desktop::appState(Qt::ApplicationState state)
             qDebug() << "Going online on activation";
             listen(storage->credentials());
         }
-        QTimer::singleShot(200, this, [=] {
+        QTimer::singleShot(200, this, [this] {
             front = true;
         });
         break;

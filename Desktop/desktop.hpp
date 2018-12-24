@@ -73,7 +73,7 @@ public:
         ONLINE,
     };
 
-    Desktop(const QCommandLineParser& args);
+    explicit Desktop(const QCommandLineParser& args);
 
     bool isConnected() const {
         return connector != nullptr;

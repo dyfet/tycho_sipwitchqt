@@ -208,14 +208,14 @@ QStringList ContactItem::allUsers()
 {
     auto list = usrAuths.toList();
     list.sort();
-    return list;
+    return std::move(list);
 }
 
 QStringList ContactItem::allGroups()
 {
     auto list = grpAuths.toList();
     list.sort();
-    return list;
+    return std::move(list);
 }
 
 ContactItem *ContactItem::find(const UString& id)
@@ -951,37 +951,37 @@ desktop(control), localModel(nullptr), connector(nullptr)
         activeItem = clickedItem = nullptr;
     });
 
-    connect(ui.removeGroup, &QPushButton::pressed, this, [=] {
+    connect(ui.removeGroup, &QPushButton::pressed, this, [control] {
        if(!activeItem)
            return;
        control->openDelAuth(activeItem->user());
     });
 
-    connect(ui.removeButton, &QPushButton::pressed, this, [=] {
+    connect(ui.removeButton, &QPushButton::pressed, this, [control] {
         if(!activeItem)
             return;
         control->openDelAuth(activeItem->user());
     });
 
-    connect(ui.adminButton, &QPushButton::pressed, this, [=] {
+    connect(ui.adminButton, &QPushButton::pressed, this, [this] {
         if(!connector || !activeItem)
             return;
         connector->changeAdmin(activeItem->uri(), activeSysop);
     });
 
-    connect(ui.suspendButton, &QPushButton::pressed, this, [=] {
+    connect(ui.suspendButton, &QPushButton::pressed, this, [this] {
         if(!connector || !activeItem)
             return;
         connector->changeSuspend(activeItem->uri(), activeSuspend);
     });
 
-    connect(ui.dropButton, &QPushButton::pressed, this, [=] {
+    connect(ui.dropButton, &QPushButton::pressed, this, [this] {
         if(!connector || !activeItem)
             return;
         connector->disconnectUser(activeItem->uri());
     });
 
-    connect(ui.contacts, &QListView::doubleClicked, this, [=](const QModelIndex& index) {
+    connect(ui.contacts, &QListView::doubleClicked, this, [this, sessions](const QModelIndex& index) {
         auto row = index.row();
         if(row < 0 || row > highest)
             return;
@@ -1000,7 +1000,7 @@ desktop(control), localModel(nullptr), connector(nullptr)
         connect(listener, &Listener::changeStatus, this, &Phonebook::changeStatus);
     });
 
-    connect(ui.sessionButton, &QPushButton::pressed, this, [=] {
+    connect(ui.sessionButton, &QPushButton::pressed, this, [sessions] {
         if(activeItem)
             sessions->activateContact(activeItem);
     });
@@ -1015,15 +1015,15 @@ desktop(control), localModel(nullptr), connector(nullptr)
             activeItem->setAutoAnswer(value > 0);
     });
 
-    connect(ui.fwdAway,  static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+    connect(ui.fwdAway,  static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [this](const QString& text) {
         sendForwarding(Connector::Forwarding::AWAY, text);
     });
 
-    connect(ui.fwdBusy, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+    connect(ui.fwdBusy, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [this](const QString& text) {
         sendForwarding(Connector::Forwarding::BUSY, text);
     });
 
-    connect(ui.fwdNoAnswer, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [=](const QString& text) {
+    connect(ui.fwdNoAnswer, static_cast<void(QComboBox::*)(const QString& text)>(&QComboBox::currentIndexChanged), this, [this](const QString& text) {
         sendForwarding(Connector::Forwarding::NA, text);
     });
 
@@ -1426,7 +1426,7 @@ void Phonebook::selectContact(const QModelIndex& index)
         desktop->clearMessage();
 
     // delay to avoid false view if double-click activation
-    QTimer::singleShot(CONST_CLICKTIME, this, [=] {
+    QTimer::singleShot(CONST_CLICKTIME, this, [this, row] {
         if(highest > -1 && row <= highest) {
             localModel->clickContact(row);
             ui.contact->setVisible(true);
@@ -1507,7 +1507,7 @@ void Phonebook::changeConnector(Connector *connected)
         if(activeItem == Phonebook::self() || Desktop::isAdmin())
             ui.forwardGroup->setEnabled(true);
         requestPending = true;
-        connect(connector, &Connector::changeProfile, this, [=](const QByteArray& json) {
+        connect(connector, &Connector::changeProfile, this, [this](const QByteArray& json) {
             if(!connector)
                 return;
 
@@ -1517,7 +1517,7 @@ void Phonebook::changeConnector(Connector *connected)
             updateGroup();
         }, Qt::QueuedConnection);
 
-        connect(connector, &Connector::changeRoster, this, [=](const QByteArray& json) {
+        connect(connector, &Connector::changeRoster, this, [this](const QByteArray& json) {
             if(!connector)
                 return;
 

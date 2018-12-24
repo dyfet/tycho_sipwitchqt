@@ -136,7 +136,7 @@ desktop(control), dialog(nullptr), connector(nullptr)
             changePassword();
     });
 
-    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [=](const QString &expiresIndex) {
+    connect(ui.expires,static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged), [this](const QString &expiresIndex) {
         auto expiresDays = expiresIndex.toInt();
         if(expiresDays < 1)
             desktop->changeExpiration(INT_MAX);
@@ -148,32 +148,32 @@ desktop(control), dialog(nullptr), connector(nullptr)
         toolbar->noSession();
     });
 
-    connect(ui.autoAnswer, &QSlider::valueChanged, this, [=](int value) {
+    connect(ui.autoAnswer, &QSlider::valueChanged, this, [this](int value) {
         if(value)
             desktop->enableAutoAnswer();
         else
             desktop->disableAutoAnswer();
     });
 
-    connect(ui.desktopNotify, &QSlider::valueChanged, this, [=](int value) {
+    connect(ui.desktopNotify, &QSlider::valueChanged, this, [this](int value) {
         if(value)
             desktop->enableDesktopNotify();
         else
             desktop->disableDesktopNotify();
     });
 
-    connect(ui.audioNotify, &QSlider::valueChanged, this, [=](int value) {
+    connect(ui.audioNotify, &QSlider::valueChanged, this, [this](int value) {
         if(value)
             desktop->enableAudioNotify();
         else
             desktop->disableAudioNotify();
     });
 
-    connect(ui.fontPicker, &QFontComboBox::currentFontChanged, this, [=](const QFont& font) {
+    connect(ui.fontPicker, &QFontComboBox::currentFontChanged, this, [control](const QFont& font) {
         control->setTheFont(font);
     });
 
-    connect(ui.delayRinging, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](int priority) {
+    connect(ui.delayRinging, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [this](int priority) {
         if(updateDisabled)
             return;
 
@@ -185,7 +185,7 @@ desktop(control), dialog(nullptr), connector(nullptr)
             desktop->errorMessage(tr("Cannot modify while offline"));
     });
 
-    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [=](const int ind) {
+    connect(ui.fontSize, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged) , [this](const int ind) {
         int change = QGuiApplication::font().pointSize();   // system base size...
         switch(ind) {
         case 0:
@@ -214,7 +214,7 @@ desktop(control), dialog(nullptr), connector(nullptr)
         desktop->setTheFont(font);
     });
 
-    connect(desktop, &Desktop::changeConnector, this, [=](Connector *connection) {
+    connect(desktop, &Desktop::changeConnector, this, [this](Connector *connection) {
         connector = connection;
         if(connector) {
             ui.delayRinging->setEnabled(true);

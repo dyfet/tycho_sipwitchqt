@@ -740,7 +740,8 @@ void Context::shutdown()
 
     unsigned hanged = 50;   // up to 5 seconds, after we force...
 
-    while(instanceCount && (hanged--)) {
+    while(instanceCount && hanged) {
+        --hanged;
         QThread::msleep(100);
     }
 }

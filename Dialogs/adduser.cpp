@@ -61,7 +61,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
             ui.type->setFocus();
     });
 
-    connect(parent, &Desktop::changeConnector, [=](Connector *connection) {
+    connect(parent, &Desktop::changeConnector, [this,parent](Connector *connection) {
         if(!connection)
             parent->closeDialog();
         else

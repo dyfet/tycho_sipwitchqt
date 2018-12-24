@@ -31,7 +31,7 @@ QDialog(parent, Qt::Popup|Qt::WindowTitleHint|Qt::WindowCloseButtonHint)
     if(connector != nullptr) {
         connector->requestDeviceList();
 
-        connect(connector, &Connector::changeDeviceList, this, [=](const QByteArray& json){
+        connect(connector, &Connector::changeDeviceList, this, [this](const QByteArray& json){
             auto jdoc = QJsonDocument::fromJson(json);
             auto list = jdoc.array();
             ui.table->setColumnCount(6);

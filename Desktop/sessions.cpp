@@ -336,7 +336,7 @@ void SessionModel::clickSession(int row)
 
     clickedItem = sessions[row];
     dataChanged(index(row), index(row));
-    QTimer::singleShot(CONST_CLICKTIME, this, [=] {
+    QTimer::singleShot(CONST_CLICKTIME, this, [this,row] {
         if(row < sessions.count())
             dataChanged(index(row), index(row));
     });
