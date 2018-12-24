@@ -131,10 +131,10 @@ begin
       print "Changing password for #{user}\n"
       if password.nil?
         pass1 = get_password
-        print '\n'
+        print "\n"
         exit if pass1.empty?
         pass2 = get_password 'Retype Password: '
-        print '\n'
+        print "\n"
       else
         pass1 = pass2 = password
       end
