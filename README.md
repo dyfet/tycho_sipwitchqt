@@ -38,7 +38,7 @@ sipwitchqt code base.  User and administration documentation will be written sep
 
 ## Support
 
-At the moment I do not have infrastructure to offer support.  I have published this, and perhaps as of this writing, other telephony packages, to develop best practices for producing a new generation of telephony services.  I do maintain an email address for public contact for all similarly published Tycho Softworks projects as [tychosoft@gmail.com](mailto://tychosoft@gmail.com).  Merge requests may be accepted when I happen to have a chance and connectivity to do so.  I also will be using the gitlab [sipwitchqt](https://gitlab.com/tychosoft/sipwitchqt) issue tracker for bug reporting and project management.  Maybe in the future we will be able to put together a and commercially deliver a complete VoIP solution. 
+At the moment I do not have infrastructure to offer support.  I have published this, and perhaps as of this writing, other telephony packages, to develop best practices for producing a new generation of telephony services.  Bug reports specific to SipWitchQt can be sent to [bugs-sipwitchqt](mailto:incoming+tychosoft/sipwitchqt@incoming.gitlab.com).  I do maintain an email address for public contact for all similarly published Tycho Softworks projects as [tychosoft@gmail.com](mailto:tychosoft@gmail.com).  Merge requests may be accepted when I happen to have a chance and connectivity to do so.  I also will be using the gitlab [sipwitchqt](https://gitlab.com/tychosoft/sipwitchqt) issue tracker for bug reporting and project management.  Maybe in the future we will be able to put together a and commercially deliver a complete VoIP solution. 
 
 ## Testing
 

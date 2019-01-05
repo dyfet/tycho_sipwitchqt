@@ -42,7 +42,6 @@ release:
 docs:
   image: tychosoft/gitlabdoc:build
   stage: docs
-  when: manual
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug --build .
     - make docs
@@ -51,7 +50,8 @@ docs:
   only:
     - tags
   artifacts:
-    expire_in: 1 week
+    expire_in: 2 weeks
+    when: always
     paths:
       - doc/
   allow_failure: false
