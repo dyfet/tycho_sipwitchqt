@@ -68,7 +68,8 @@ void Main::onStartup()
     if(command == "none")
         return;
 
-    QTimer::singleShot(1200, this, [] {
+    QTimer::singleShot(1200, this, [this] {
+        Q_UNUSED(this) // needed for connect...
         auto proc = new QProcess;
         connect(proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), [](int code, QProcess::ExitStatus status) {
             Q_UNUSED(status);

@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 Project(libeXosip2 VERSION 4.1.0 LANGUAGES C)
 
-if (POLICY CMP0063)
-    cmake_policy(SET CMP0063 OLD)
-endif()
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_INSTALL_PREFIX}/include)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/../libosip2/include)
