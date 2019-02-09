@@ -373,7 +373,7 @@ if(CMAKE_MAINTAINER)
     # like the Custom directory itself.  OS's that redistribute would in any
     # case maintain their own packaging.  Finally I tend to add things in my
     # include.cmake specific to my ci environment and where I upload our builds. 
-    include("${CMAKE_CURRENT_SOURCE_DIR}/redhat/include.cmake" OPTIONAL)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/pkg/include.cmake" OPTIONAL)
     include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
 endif()
 
