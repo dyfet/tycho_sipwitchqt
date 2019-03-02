@@ -30,11 +30,12 @@ public:
     Zeroconfig(Server *server, quint16 port);
 
     static bool enabled();
+    static UString currentHostName();
 
-public slots:
+private slots:
     void onStartup();
     void onShutdown();
-    
+    void applyConfig(const QVariantHash& config);
 };
 
 #endif

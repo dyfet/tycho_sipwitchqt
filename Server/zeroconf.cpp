@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../Common/compiler.hpp"
+#include "../Common/inline.hpp"
 #include "output.hpp"
 #include "zeroconf.hpp"
 #include "config.hpp"
@@ -47,6 +49,9 @@ namespace {
 Zeroconfig *instance = nullptr;
 quint16 sip_port = 5060;
 bool active = false;
+bool started = false;
+UString hostName = "_sipwitchqt.local";
+UString srvName = "sipwitchqt";
 
 #ifdef AVAHI_ZEROCONF
 AvahiThreadedPoll *poller = nullptr;
@@ -54,8 +59,6 @@ AvahiClient *client = nullptr;
 AvahiEntryGroup *srvGroup = nullptr;
 AvahiEntryGroup *hostGroup = nullptr;
 AvahiClientState clientState = AVAHI_CLIENT_S_REGISTERING;
-char *srvName = avahi_strdup("sipwitchqt");
-char *hostName = avahi_strdup("_sipwitchqt.local");
 
 void client_running();
 
@@ -95,9 +98,8 @@ void srvGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, v
         notice() << "Zeroconfig " << srvName << " service established";
         break;
     case AVAHI_ENTRY_GROUP_COLLISION:
-        altName = avahi_alternative_service_name(srvName);
-        notice() << "Zeroconfig " << srvName << " service renamed " << altName;
-        avahi_free(srvName);
+        altName = avahi_alternative_service_name(srvName.constData());
+        notice() << "Zeroconfig " << srvName.constData() << " service renamed " << altName;
         srvName = altName;
         client_running();
         break;
@@ -117,12 +119,11 @@ void hostGroup_callback(AvahiEntryGroup *cbGroup, AvahiEntryGroupState cbState, 
 
     switch(cbState) {
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
-        notice() << "Zeroconfig " << hostName << " hostname established";
+        notice() << "Zeroconfig " << hostName.constData() << " hostname established";
         break;
     case AVAHI_ENTRY_GROUP_COLLISION:
-        altName = avahi_alternative_service_name(hostName);
-        notice() << "Zeroconfig " << hostName << " hostname renamed " << altName;
-        avahi_free(hostName);
+        altName = avahi_alternative_service_name(hostName.constData());
+        notice() << "Zeroconfig " << hostName.constData() << " hostname renamed " << altName;
         hostName = altName;
         client_running();
         break;
@@ -169,15 +170,15 @@ void client_running()
                count++;
         }
 
-        auto result = avahi_entry_group_add_record(hostGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, static_cast<AvahiPublishFlags>(AVAHI_PUBLISH_USE_MULTICAST|AVAHI_PUBLISH_ALLOW_MULTIPLE), hostName, AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_CNAME, AVAHI_DEFAULT_TTL, localName, len + 2);
+        auto result = avahi_entry_group_add_record(hostGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, static_cast<AvahiPublishFlags>(AVAHI_PUBLISH_USE_MULTICAST|AVAHI_PUBLISH_ALLOW_MULTIPLE), hostName.constData(), AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_CNAME, AVAHI_DEFAULT_TTL, localName, len + 2);
         if(result >= 0)
             result = avahi_entry_group_commit(hostGroup);
         if(result < 0)
             error() << "Zeroconfig; failed to update, error=" << avahi_strerror(result);
     }
-    notice() << "Zeroconfig adding sip on port " << sip_port;
+    notice() << "Zeroconfig adding sip apply config port " << sip_port;
     auto result = avahi_entry_group_add_service(srvGroup, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
-        static_cast<AvahiPublishFlags>(0), srvName, "_sip._udp", nullptr, nullptr, sip_port,
+        static_cast<AvahiPublishFlags>(0), srvName.constData(), "_sip._udp", nullptr, nullptr, sip_port,
         "type=sipwitch", nullptr);
     if(result >= 0)
         result = avahi_entry_group_commit(srvGroup);
@@ -192,6 +193,7 @@ Zeroconfig::Zeroconfig(Server *server, quint16 port)
     Q_ASSERT(instance == nullptr);
     sip_port = port;
     if(sip_port) {  // 0 disables zeroconfig...
+        connect(server, &Server::changeConfig, this, &Zeroconfig::applyConfig);
         connect(server, &Server::started, this, &Zeroconfig::onStartup);
         connect(server, &Server::finished, this, &Zeroconfig::onShutdown);
         active = true;
@@ -205,8 +207,35 @@ bool Zeroconfig::enabled()
     return active;
 }
 
+UString Zeroconfig::currentHostName()
+{
+    return hostName;
+}
+
+void Zeroconfig::applyConfig(const QVariantHash& config)
+{
+#ifdef AVAHI_ZEROCONF
+    notice() << "Zeroconfig configuration...";
+    if(started && active)
+        onShutdown();
+    auto namelist = config["localnames"].toStringList();
+    if(!Util::isEmpty(namelist))
+        active = false;
+    else if(sip_port)
+        active = true;
+    if(started && active)
+        onStartup();
+#else
+    Q_UNUSED(config);
+#endif
+}
+
 void Zeroconfig::onStartup()
 {
+    started = true;
+    if(!active)
+        return;
+
 #ifdef AVAHI_ZEROCONF
     int errorCode;
     notice() << "Zeroconfig starting up...";

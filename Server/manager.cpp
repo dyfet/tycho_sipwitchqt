@@ -16,6 +16,7 @@
  */
 
 #include "../Common/compiler.hpp"
+#include "../Common/inline.hpp"
 #include "server.hpp"
 #include "output.hpp"
 #include "manager.hpp"
@@ -99,14 +100,15 @@ void Manager::applyNames()
 void Manager::applyConfig(const QVariantHash& config)
 {
     ServerNames = config["localnames"].toStringList();
-    if(ServerNames.count() < 1) {               // auto add localhost for * case
+    if(Util::isEmpty(ServerNames)) {               // auto add localhost for * case
+        ServerNames.clear();
         ServerNames << "127.0.0.1";
         ServerNames << "localhost";
         ServerNames << Util::localName();
         ServerNames << Util::hostName();
 #ifdef Q_OS_UNIX
         if(Zeroconfig::enabled())   // avahi published hostname for any client
-            ServerNames << "_sipwitchqt.local";
+            ServerNames << Zeroconfig::currentHostName();
 
         ServerNames << Util::localName() + ".local";
 #endif

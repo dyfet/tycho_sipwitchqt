@@ -19,6 +19,7 @@
 #define INLINE_HPP_
 
 #include "compiler.hpp"
+#include <QStringList>
 
 namespace Util {
     template<typename T>
@@ -35,6 +36,29 @@ namespace Util {
     template<typename T>
     bool inRange(const T& value, const T& min, const T& max) {
         return !(value < min || value > max);
+    }
+
+    template<typename T>
+    inline bool isEmpty(const T& value) {
+        return value.count() < 1;
+    }
+
+    template<>
+    inline bool isEmpty<QString>(const QString& value) {
+        if(value.count() < 1)
+            return true;
+        if(value.trimmed().count() < 1)
+            return true;
+        return false;
+    }
+
+    template<>
+    inline bool isEmpty<QStringList>(const QStringList& value) {
+        if(value.count() < 1)
+            return true;
+        if(value.count() > 1)
+            return false;
+        return isEmpty(value[0]);
     }
 }
 

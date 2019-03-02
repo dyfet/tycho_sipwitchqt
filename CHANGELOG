@@ -1,3 +1,7 @@
+v0.4.4
+* empty localnames = parsed correctly from config
+* zeroconfig suppressed if localnames override used
+
 v0.4.3
 * sysv msg queue ipc also usable
 * ruby fixups
