@@ -1,3 +1,6 @@
+v0.5.1
+* missing sysv init
+
 v0.5.0
 * default is sysv init
 
