@@ -48,7 +48,7 @@ start)
         exit 0
     fi
     echo -n "Starting $DESC: "
-    [ -z "$PID" ] && start-stop-daemon --start --quiet \
+    [ -z "$PID" ] && start-stop-daemon --start --quiet --background \
         --group sipwitch --chuid sipwitch:sipwitch --exec $DAEMON -- $ARGS &>/dev/null
     echo "$NAME."
     ;;
