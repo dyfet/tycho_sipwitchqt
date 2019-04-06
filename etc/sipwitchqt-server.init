@@ -49,7 +49,7 @@ start)
     fi
     echo -n "Starting $DESC: "
     [ -z "$PID" ] && start-stop-daemon --start --quiet \
-        --group sipwitch --user sipwitch --exec $DAEMON -- $ARGS &>/dev/null
+        --group sipwitch --chuid sipwitch:sipwitch --exec $DAEMON -- $ARGS &>/dev/null
     echo "$NAME."
     ;;
 stop)
