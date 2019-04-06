@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 include("${CMAKE_CURRENT_SOURCE_DIR}/Custom/include.cmake" OPTIONAL)
-project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.4.4 LANGUAGES CXX)
+project(SipWitchQt${CUSTOM_SUFFIX} VERSION 0.5.0 LANGUAGES CXX)
 set(PROJECT_RELEASE "1")
 set(PROJECT_COPYRIGHT "2017-2018")
 
@@ -86,7 +86,9 @@ else()
     if(NOT BOOTSTRAP_VENDOR_EXOSIP)
         pkg_check_modules(OSIP2 libosip2)
     endif()
-    pkg_check_modules(SYSTEMD libsystemd)
+    if(INIT_SYSTEM MATCHES "systemd")
+        pkg_check_modules(SYSTEMD libsystemd)
+    endif()
     if(NOT CUSTOM_CONTAINER OR CUSTOM_CONTAINER MATCHES "avahi")
         pkg_check_modules(ZEROCONF avahi-client>=0.3.0)
     endif()
@@ -280,8 +282,16 @@ endif()
 if(NOT CUSTOM_DESKTOP)
     if(UNIX AND NOT APPLE)
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt-server.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
-        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
-        install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
+        if(INIT_SYSTEM MATCHES "systemd")
+            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchd.service" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system")
+            install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwqt-sleep.sh" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/systemd/system-sleep")
+        endif()
+        if(INIT_SYSTEM MATCHES "sysv")
+            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/etc/sipwitchqt-server.init" DESTINATION "{CMAKE_INSTALL_PREFIX}/etc/init.d")
+        endif()
+        if(INIT_SYSTEM MATCHES "runit")
+            install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run" DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt")
+        endif()
     endif()
 
     install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
@@ -293,11 +303,6 @@ if(NOT CUSTOM_DESKTOP)
 
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.default"
         DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/default" RENAME "sipwitchqt"
-    )
-
-
-    install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/etc/run"
-        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/sv/sipwitchqt"
     )
 
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Database/mysql.sql" DESTINATION "${CMAKE_INSTALL_DATADIR}/schemas" RENAME sipwitch-mysql.sql)

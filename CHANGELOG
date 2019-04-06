@@ -1,3 +1,6 @@
+v0.5.0
+* default is sysv init
+
 v0.4.4
 * empty localnames = parsed correctly from config
 * zeroconfig suppressed if localnames override used

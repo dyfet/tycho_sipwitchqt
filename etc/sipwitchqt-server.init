@@ -1,0 +1,96 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:             sipwitchd
+# Required-Start:       $local_fs $network $syslog $remote_fs $named
+# Required-Stop:        $local_fs $network $syslog $remote_fs $named
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Start and stop sipwitchqt service daemon.
+# Description:          This script manages startup and shutdown for
+#                       SipWitchQt, a SIP telephony service daemon.
+### END INIT INFO
+#
+# Copyright (C) 2018-2019 David Sugar, Tycho Softworks.
+#
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# sipwitchd       This shell script takes care of starting and stopping
+#                 a sipwitch server running as a system service.
+#
+# chkconfig: - 95 15
+# description: SipWitchQt telephony service.
+
+DAEMON="/usr/sbin/sipwitchqt-server"
+NAME="sipwitchd"
+DESC="sipwitchd server"
+DEFAULT="/etc/default/sipwitchqt"
+START="1"
+
+# Exit if service not installed
+test -x "$DAEMON" || exit 0
+
+# Read config variables if present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+PID=$(pidof $DAEMON)
+
+. /lib/lsb/init-functions
+
+set -e
+case "$1" in
+start)
+    if [ "$START" = "0" ] ; then
+        exit 0
+    fi
+    echo -n "Starting $DESC: "
+    [ -z "$PID" ] && start-stop-daemon --start --quiet \
+        --group sipwitch --user sipwitch --exec $DAEMON -- $ARGS &>/dev/null
+    echo "$NAME."
+    ;;
+stop)
+    echo -n "Stopping $DESC: "
+    [ -n "$PID" ] && start-stop-daemon --stop --quiet \
+        --retry=TERM/30/KILL/5 --pid $PID --exec $DAEMON
+    ;;
+status)
+    if test -n "$PID" ; then
+        echo "$NAME running."
+    else
+        echo "$NAME stopped."
+    fi
+    ;;
+reload)
+    echo -n "Reloading $DESC: "
+    [ -n "$PID" ] && kill -1 $PID &>/dev/null
+    echo "$NAME."
+    ;;
+restart|force-reload)
+    $0 stop
+    $0 start
+    ;;
+try-restart)
+    if test -n "$PID" ; then
+        $0 stop
+        $0 start
+    else
+        echo "Inactive $DESC: "
+	fi
+	echo "$NAME."
+	;;
+*)
+    echo "Usage: $0 {start|stop|restart|reload|force-reload|try-restart|status}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
+
+
+
+
