@@ -1,3 +1,7 @@
+v0.5.2
+* improved sysv init
+* added openrc init
+
 v0.5.1
 * missing sysv init
 

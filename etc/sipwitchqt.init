@@ -20,16 +20,18 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
-# sipwitchd       This shell script takes care of starting and stopping
+# sipwitchqt      This shell script takes care of starting and stopping
 #                 a sipwitch server running as a system service.
 #
 # chkconfig: - 95 15
 # description: SipWitchQt telephony service.
 
 DAEMON="/usr/sbin/sipwitchqt-server"
-NAME="sipwitchd"
+NAME="sipwitchqt"
 DESC="sipwitchd server"
-DEFAULT="/etc/default/sipwitchqt"
+DEFAULT="/etc/default/$NAME"
+PIDFILE="/var/run/$NAME.pid"
+OPTIONS="--quiet --chuid sipwitch --pidfile $PIDFILE"
 START="1"
 
 # Exit if service not installed
@@ -38,8 +40,6 @@ test -x "$DAEMON" || exit 0
 # Read config variables if present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
-PID=$(pidof $DAEMON)
-
 . /lib/lsb/init-functions
 
 case "$1" in
@@ -47,41 +47,52 @@ start)
     if [ "$START" = "0" ] ; then
         exit 0
     fi
-    echo -n "Starting $DESC: "
-    [ -z "$PID" ] && start-stop-daemon --start --quiet --background \
-        --group sipwitch --chuid sipwitch:sipwitch --exec $DAEMON -- $ARGS &>/dev/null
-    echo "$NAME."
+    echo -n "Starting $NAME: "
+    start-stop-daemon --start --background --make-pid $OPTIONS \
+        --group sipwitch --exec $DAEMON &>/dev/null
+    echo "$?"
     ;;
 stop)
-    echo -n "Stopping $DESC: "
-    [ -n "$PID" ] && start-stop-daemon --stop --quiet \
-        --retry=TERM/30/KILL/5 --pid $PID --exec $DAEMON
+    echo -n "Stopping $NAME: "
+    start-stop-daemon --stop $OPTIONS --remove-pidfile \
+        --signal INT --retry=TERM/30/KILL/5 --exec $DAEMON
+    echo "$?"
     ;;
 status)
-    if test -n "$PID" ; then
-        echo "$NAME running."
-    else
-        echo "$NAME stopped."
-        exit 3
-    fi
+    echo -n "Status "NAME: "
+    start-stop-daemon --status $OPTIONS && exit_status=$? || exit_status=$?
+    case "$exit_status" in
+    0) 
+        echo "running"
+        ;;
+    1)
+        echo "stopped but pid file exists"
+        ;;
+    3)
+        echo "stopped"
+        ;;
+    4)
+        echo "status unknown"
+        ;;
+    esac
+    exit $exit_status
     ;;
 reload)
-    echo -n "Reloading $DESC: "
-    [ -n "$PID" ] && kill -1 $PID &>/dev/null
-    echo "$NAME."
+    echo -n "Reloading $NAME: "
+    start-stop-daemon --signal HUP $OPTIONS
+    echo "$?"
     ;;
 restart|force-reload)
     $0 stop
     $0 start
     ;;
 try-restart)
-    if test -n "$PID" ; then
+    if test -f "$PIDFILE" ; then
         $0 stop
         $0 start
     else
-        echo "Inactive $DESC: "
+        echo "Inactive $NAME"
 	fi
-	echo "$NAME."
 	;;
 *)
     echo "Usage: $0 {start|stop|restart|reload|force-reload|try-restart|status}" >&2
