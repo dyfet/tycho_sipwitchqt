@@ -1,6 +1,11 @@
+v0.5.4
+* added bsd init service
+
+v0.5.3
+* added openrc init
+
 v0.5.2
 * improved sysv init
-* added openrc init
 
 v0.5.1
 * missing sysv init
