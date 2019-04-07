@@ -87,12 +87,7 @@ restart|force-reload)
     $0 start
     ;;
 try-restart)
-    if test -f "$PIDFILE" ; then
-        $0 stop
-        $0 start
-    else
-        echo "Inactive $NAME"
-	fi
+    $0 status >/dev/null 2>&1 && $0 restart
 	;;
 *)
     echo "Usage: $0 {start|stop|restart|reload|force-reload|try-restart|status}" >&2
@@ -101,7 +96,4 @@ try-restart)
 esac
 
 exit 0
-
-
-
 
