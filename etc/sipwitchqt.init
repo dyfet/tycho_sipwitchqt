@@ -59,7 +59,7 @@ stop)
     echo "$?"
     ;;
 status)
-    echo -n "Status "NAME: "
+    echo -n "Status $NAME: "
     start-stop-daemon --status $OPTIONS && exit_status=$? || exit_status=$?
     case "$exit_status" in
     0) 
