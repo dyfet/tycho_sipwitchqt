@@ -197,7 +197,7 @@ endif()
 if(NOT CUSTOM_CONTAINER)
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
     set_source_files_properties(${desktop_ts} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations_autogen")
-    qt5_add_translation(desktop_qm ${desktop_ts})
+    #qt5_add_translation(desktop_qm ${desktop_ts})
 
     set(ts_desktop ${desktop_src} ${desktop_hdr} ${desktop_uic} ${dialogs_hdr} ${dialogs_src} ${dialogs_uic} ${connect_hdr} ${connect_src})
     add_custom_target(translations SOURCES ${desktop_ts}
