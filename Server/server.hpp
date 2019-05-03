@@ -154,9 +154,9 @@ private slots:
  * \class Server
  * \brief The core daemon service class.
  * This is used to create and manage a service daemon under Qt.  On Posix
- * systems, the deamon is supported thru a double fork().  Support is also
- * included to operate as a service under Linux SystemD.  On Windows
- * support is provided for operating as a NT service.
+ * systems, the deamon is supported thru a double fork().  Support is
+ * provided to run as a daemon typically thru an init script or manager
+ * like openrc or runit.
  *
  * The service daemon also manages ordered startup and shutdown of long term
  * service persistent threads, loading of a config file, and service

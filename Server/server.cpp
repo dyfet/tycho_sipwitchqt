@@ -46,10 +46,6 @@
 #include <syslog.h>
 #endif
 
-#if defined(SYSTEMD_FOUND)
-#include <systemd/sd-daemon.h>
-#endif
-
 #ifdef Q_OS_MAC
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include <IOKit/IOMessage.h>
@@ -95,7 +91,6 @@ private:
 
 ServerEvent::~ServerEvent() = default;
 
-bool notifySystemD = false;
 int exitReason = 0;
 bool staticConfig = false;
 QList<Context> contexts;
@@ -332,8 +327,6 @@ app(argc, argv)
     if(args.isSet("detached") || getppid() == 1) {
         RunAsService = true;
         RunAsDetached = true;
-        if(getenv("NOTIFY_SOCKET"))
-            notifySystemD = true;
     }
 #endif
 
@@ -558,40 +551,6 @@ void Server::startup()
     auto ipc = IPCServer::start();
     if(ipc)
         connect(ipc, &IPCServer::request, this, &Server::ipcRequest);
-}
-
-void Server::notify(SERVER_STATE state, const char *text)
-{
-#if defined(SYSTEMD_FOUND)
-    if(!notifySystemD)
-        return;
-
-    const char *cp;
-    switch(state) {
-    case SERVER_RUNNING:
-        if(!text) {
-            cp = "started";
-            text = "";
-        }
-        else
-            cp = "started:";
-
-        sd_notifyf(0,
-            "READY=1\n"
-            "STATUS=%s%s\n"
-            "MAINPID=%lu", cp, text, static_cast<unsigned long>(getpid())
-        );
-        break;
-    case SERVER_STOPPED:
-        sd_notify(0, "STOPPING=1");
-        break;
-    default:
-        break;
-    }
-#else
-    Q_UNUSED(state);
-    Q_UNUSED(text);
-#endif
 }
 
 // since private, can only be triggered locally in our thread context.
