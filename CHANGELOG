@@ -1,5 +1,6 @@
 v0.5.4
 * added bsd init service
+* cleanup init naming
 
 v0.5.3
 * added openrc init
