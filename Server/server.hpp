@@ -104,7 +104,6 @@ public:
         return Env;
     }
 
-    static void notify(SERVER_STATE state, const char *text = nullptr);
     static bool shutdown(int exitcode);
     static void reload();
     static void suspend();

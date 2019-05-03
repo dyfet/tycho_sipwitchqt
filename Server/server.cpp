@@ -540,7 +540,6 @@ void Server::startup()
 
     emit changeConfig(CurrentConfig);
     emit started();
-    notify(SERVER_RUNNING, "Ready to process");
 
 #ifdef Q_OS_MAC
     powerthread = std::thread(&iop_startup);
@@ -566,7 +565,6 @@ void Server::exit(int reason)
 
     // do service shutdown while in main thread context...
     RunState = DOWN;
-    notify(SERVER_STOPPED);
     notice() << "Service stopping, reason=" + QString::number(reason);
     QCoreApplication::processEvents();    // de-queue pending events
     emit aboutToFinish();
