@@ -178,8 +178,6 @@ void Connector::changeForwarding(const UString& to, Forwarding type, int target)
     case Forwarding::AWAY:
         osip_message_set_header(msg, "Subject", "AWAY");
         break;
-    default:
-        break;
     }
 
     osip_message_set_header(msg, "X-Label", serverLabel);
