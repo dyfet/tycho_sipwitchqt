@@ -8,7 +8,7 @@ string(TOLOWER "${PROJECT_NAME}" PROJECT_ARCHIVE)
 string(REGEX REPLACE "[.]" "," RC_VERSION ${PROJECT_VERSION})
 set(RC_VERSION "${RC_VERSION},0")
 
-if(CMAKE_COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
+if(COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
     set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
 endif()
@@ -18,7 +18,7 @@ if(UNIX AND (CMAKE_GENERATOR MATCHES "Unix"))
 endif()
 
 include(GNUInstallDirs)
-if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")  
+if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     set(QT_QMAKE_EXECUTABLE "/usr/local/lib/qt5/bin/qmake")
     set(Qt5_DIR "/usr/local/lib/qt5/cmake/Qt5")
     set(Qt5Core_DIR "/usr/local/lib/qt5/cmake/Qt5Core")
@@ -50,7 +50,7 @@ if(WIN32)
     set(desktop_rc "${CMAKE_CURRENT_BINARY_DIR}/desktop.rc")
     set(server_rc "${CMAKE_CURRENT_BINARY_DIR}/server.rc")
     find_path(WINDEPLOYQT_PATH windeployqt.exe PATH_SUFFIXES bin)
-elseif(APPLE)    
+elseif(APPLE)
     if(NOT EXISTS "/usr/local/opt/libexosip")
         message(FATAL_ERROR "*** requires: brew install libexosip")
     endif()
@@ -102,7 +102,7 @@ else()
 endif()
 
 # Third party installed/system libraries.  For windows, this
-# is being supported with vcpkg.  For redhat and fedora, you 
+# is being supported with vcpkg.  For redhat and fedora, you
 # may need to use copr repo's; dyfet/develop for fedora and
 # dyfet/stable for rhel7/centos7.  Maybe one day fedora will
 # have a modern exosip2 in the main repo.
@@ -197,7 +197,7 @@ if(NOT CUSTOM_CONTAINER)
     add_custom_target(translations SOURCES ${desktop_ts}
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMAND ${Qt5_LUPDATE_EXECUTABLE} ${ts_desktop} -ts translations/sipwitchqt-desktop_es.ts
-    ) 
+    )
 endif()
 
 if(APPLE)
@@ -300,7 +300,7 @@ if(NOT CUSTOM_DESKTOP)
     install(TARGETS server-app DESTINATION "${CMAKE_INSTALL_SBINDIR}")
 
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${ETC}/sipwitchqt.conf"
-        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}" 
+        DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}"
         PERMISSIONS OWNER_READ OWNER_WRITE
     )
 
@@ -367,27 +367,27 @@ if(CMAKE_MAINTAINER)
         COMMAND "${CMAKE_COMMAND}" -E remove -F "*.pdf"
         COMMAND "${CMAKE_COMMAND}" -E remove_directory "doc"
     )
- 
+
     add_custom_target(pdf
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc/latex"
         COMMAND make
         COMMAND mv refman.pdf "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}.pdf"
         DEPENDS support-docs
     )
-    
+
     # Patch in packaging support.  These are not part of master, but rather a
     # packaging branch.  This is done so that we can also overlay different
     # packaging directory content for custom and special purpose builds, much
     # like the Custom directory itself.  OS's that redistribute would in any
     # case maintain their own packaging.  Finally I tend to add things in my
-    # include.cmake specific to my ci environment and where I upload our builds. 
+    # include.cmake specific to my ci environment and where I upload our builds.
     include("${CMAKE_CURRENT_SOURCE_DIR}/pkg/include.cmake" OPTIONAL)
     include("${CMAKE_CURRENT_SOURCE_DIR}/debian/include.cmake" OPTIONAL)
 endif()
 
 # testing and coverage
 
-if(CMAKE_COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
+if(COVERAGE_TYPE MATCHES "gcov" AND CMAKE_BUILD_TYPE MATCHES "Debug")
     set(BUILD_TESTING true)
     add_custom_target(coverage
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
