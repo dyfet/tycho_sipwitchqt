@@ -1,3 +1,6 @@
+v0.5.6
+* Fix sysv init path
+
 v0.5.5
 * upgraded to eXosip2 5.1.0 api and vendoring
 
