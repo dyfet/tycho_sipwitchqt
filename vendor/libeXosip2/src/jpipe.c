@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,10 @@
 
 #include "jpipe.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #if !defined(WIN32) && !defined(__arc__)
 
 #include <fcntl.h>
@@ -66,8 +70,8 @@ jpipe_close (jpipe_t * apipe)
 {
   if (apipe == NULL)
     return OSIP_BADPARAMETER;
-  close (apipe->pipes[0]);
-  close (apipe->pipes[1]);
+  _eXosip_closesocket (apipe->pipes[0]);
+  _eXosip_closesocket (apipe->pipes[1]);
   osip_free (apipe);
   return OSIP_SUCCESS;
 }
@@ -109,7 +113,7 @@ jpipe_get_read_descr (jpipe_t * apipe)
 #else
 
 int
-setNonBlocking (int fd)
+setNonBlocking (SOCKET_TYPE fd)
 {
   int flags;
 
@@ -131,9 +135,9 @@ jpipe ()
 {
   int s = 0;
   int timeout = 0;
-  static int aport = 10500;
   struct sockaddr_in raddr;
   int j;
+  socklen_t len;
 
   jpipe_t *my_pipe = (jpipe_t *) osip_malloc (sizeof (jpipe_t));
 
@@ -141,43 +145,34 @@ jpipe ()
     return NULL;
 
   s = (int) socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (0 > s) {
+  if (s < 0) {
     osip_free (my_pipe);
     return NULL;
   }
   my_pipe->pipes[1] = (int) socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (0 > my_pipe->pipes[1]) {
-#if defined(__arc__)
-    close (s);
-#else
-    closesocket (s);
-#endif
+  if (my_pipe->pipes[1] < 0) {
+    _eXosip_closesocket (s);
     osip_free (my_pipe);
     return NULL;
   }
 
   raddr.sin_addr.s_addr = inet_addr ("127.0.0.1");
   raddr.sin_family = AF_INET;
-
-  j = 50;
-  while (aport++ && j-- > 0) {
-    raddr.sin_port = htons ((short) aport);
-    if (bind (s, (struct sockaddr *) &raddr, sizeof (raddr)) < 0) {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "Failed to bind one local socket %i!\n", aport));
-    }
-    else
-      break;
+  raddr.sin_port = 0;
+  if (bind (s, (struct sockaddr *) &raddr, sizeof (raddr)) < 0) {
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Failed to bind a local socket (port=0), aborting!\n"));
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
+    osip_free (my_pipe);
+    return NULL;
   }
-
-  if (j == 0) {
-    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Failed to bind a local socket, aborting!\n"));
-#if defined(__arc__)
-    close (s);
-    close (my_pipe->pipes[1]);
-#else
-    closesocket (s);
-    closesocket (my_pipe->pipes[1]);
-#endif
+  /* get port */
+  len = sizeof (raddr);
+  j = getsockname (s, (struct sockaddr *) &raddr, &len);
+  if (j != 0) {
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Failed to getsockname on a local socket, aborting!\n"));
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
     osip_free (my_pipe);
     return NULL;
   }
@@ -185,13 +180,8 @@ jpipe ()
   j = listen (s, 1);
   if (j != 0) {
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Failed to listen on a local socket, aborting!\n"));
-#if defined(__arc__)
-    close (s);
-    close (my_pipe->pipes[1]);
-#else
-    closesocket (s);
-    closesocket (my_pipe->pipes[1]);
-#endif
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
     osip_free (my_pipe);
     return NULL;
   }
@@ -201,8 +191,8 @@ jpipe ()
   if (j != 0) {
     /* failed for some reason... */
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "udp plugin; cannot set O_NONBLOCK to the file desciptor!\n"));
-    close (s);
-    close (my_pipe->pipes[1]);
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
     osip_free (my_pipe);
     return NULL;
   }
@@ -210,8 +200,8 @@ jpipe ()
   if (j != NO_ERROR) {
     /* failed for some reason... */
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "udp plugin; cannot set O_NONBLOCK to the file desciptor!\n"));
-    closesocket (s);
-    closesocket (my_pipe->pipes[1]);
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
     osip_free (my_pipe);
     return NULL;
   }
@@ -219,17 +209,12 @@ jpipe ()
 
   connect (my_pipe->pipes[1], (struct sockaddr *) &raddr, sizeof (raddr));
 
-  my_pipe->pipes[0] = accept (s, NULL, NULL);
+  my_pipe->pipes[0] = (int) accept (s, NULL, NULL);
 
-  if (my_pipe->pipes[0] <= 0) {
+  if (my_pipe->pipes[0] < 0) {
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "udp plugin; Failed to call accept!\n"));
-#if defined(__arc__)
-    close (s);
-    close (my_pipe->pipes[1]);
-#else
-    closesocket (s);
-    closesocket (my_pipe->pipes[1]);
-#endif
+    _eXosip_closesocket (s);
+    _eXosip_closesocket (my_pipe->pipes[1]);
     osip_free (my_pipe);
     return NULL;
   }
@@ -237,11 +222,7 @@ jpipe ()
   /* set the socket to non-blocking to avoid a deadly embrace problem. */
   setNonBlocking (my_pipe->pipes[1]);
 
-#if defined(__arc__)
-  close (s);
-#else
-  closesocket (s);
-#endif
+  _eXosip_closesocket (s);
 
   return my_pipe;
 }
@@ -251,13 +232,8 @@ jpipe_close (jpipe_t * apipe)
 {
   if (apipe == NULL)
     return OSIP_BADPARAMETER;
-#if defined(__arc__)
-  close (apipe->pipes[0]);
-  close (apipe->pipes[1]);
-#else
-  closesocket (apipe->pipes[0]);
-  closesocket (apipe->pipes[1]);
-#endif
+  _eXosip_closesocket (apipe->pipes[0]);
+  _eXosip_closesocket (apipe->pipes[1]);
   osip_free (apipe);
   return OSIP_SUCCESS;
 }
@@ -293,7 +269,7 @@ jpipe_get_read_descr (jpipe_t * apipe)
 {
   if (apipe == NULL)
     return OSIP_BADPARAMETER;
-  return apipe->pipes[0];
+  return (int) apipe->pipes[0]; /* on windows, this is a conversion from SOCKET to int... doesn't seems to be an issue */
 }
 
 #endif

@@ -19,7 +19,7 @@
 
 #ifdef _WIN32_WCE
 #define _INC_TIME               /* for wce.h */
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 #include <osipparser2/internal.h>
@@ -78,22 +78,17 @@
 #elif (!defined(WIN32) && !defined(_WIN32_WCE))
 #include <sys/time.h>
 #elif defined(WIN32)
-#include <Windows.h>
+#include <windows.h>
 #if (_MSC_VER >= 1700) && !defined(_USING_V110_SDK71_)
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 #include <winsock2.h>
-#elif defined(WINAPI_FAMILY) && WINAPI_FAMILY_ONE_PARTITION( WINAPI_FAMILY, WINAPI_PARTITION_APP )
-#else
-#ifdef WIN32_USE_CRYPTO
-#include <wincrypt.h>
-#endif
-#endif
-#else
-#ifdef WIN32_USE_CRYPTO
-#include <wincrypt.h>
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP)
 #endif
 #endif
 
+#ifdef WIN32_USE_CRYPTO
+#include <Wincrypt.h>
+#endif
 #endif
 
 #if defined (__rtems__)
@@ -363,7 +358,7 @@ int
 osip_atoi (const char *number)
 {
 #if defined(__linux) || defined(HAVE_STRTOL)
-  int i;
+  long int i;
 
   if (number == NULL)
     return OSIP_UNDEFINED_ERROR;
@@ -381,7 +376,7 @@ osip_atoi (const char *number)
 #if (_MSC_VER >= 1700) && !defined(_USING_V110_SDK71_)
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 #define HAVE_WINDOWSPHONE_API
-#elif defined(WINAPI_FAMILY) && WINAPI_FAMILY_ONE_PARTITION( WINAPI_FAMILY, WINAPI_PARTITION_APP )
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP)
 #define HAVE_WINAPPSTORE_API
 #endif
 #endif
@@ -560,8 +555,7 @@ osip_clrspace (char *word)
   len = strlen (word);
 
   pbeg = word;
-  while ((' ' == *pbeg) || ('\r' == *pbeg) || ('\n' == *pbeg) || ('\t' == *pbeg))
-    pbeg++;
+  pbeg += strspn (pbeg, " \r\n\t");
 
   pend = word + len - 1;
   while ((' ' == *pend) || ('\r' == *pend) || ('\n' == *pend) || ('\t' == *pend)) {
@@ -963,7 +957,7 @@ osip_trace (char *filename_long, int li, osip_trace_level_t level, FILE * f, cha
   }
   __osip_port_gettimeofday (&now, NULL);
 
-  relative_time = (int)(1000 * (now.tv_sec - start.tv_sec));
+  relative_time = (int) (1000 * (now.tv_sec - start.tv_sec));
   if (now.tv_usec - start.tv_usec > 0)
     relative_time = relative_time + ((now.tv_usec - start.tv_usec) / 1000);
   else
@@ -1472,8 +1466,7 @@ osip_clrncpy (char *dst, const char *src, size_t len)
 
   /* find the start of relevant text */
   pbeg = src;
-  while ((' ' == *pbeg) || ('\r' == *pbeg) || ('\n' == *pbeg) || ('\t' == *pbeg))
-    pbeg++;
+  pbeg += strspn (pbeg, " \r\n\t");
 
 
   /* find the end of relevant text */

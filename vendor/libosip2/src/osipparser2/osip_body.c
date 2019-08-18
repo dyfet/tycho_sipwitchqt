@@ -47,12 +47,6 @@ osip_body_init (osip_body_t ** body)
   return OSIP_SUCCESS;
 }
 
-/**
- * Fill the body of message.
- * @param sip The structure to store results.
- * @param buf The pointer to the start of body.
- * @param length The length of body;
- */
 int
 osip_message_set_body (osip_message_t * sip, const char *buf, size_t length)
 {
@@ -265,7 +259,7 @@ osip_body_parse_header (osip_body_t * body, const char *start_of_osip_body_heade
     if (i != 0)
       return i;
 
-    if (strncmp (end_of_line, CRLF, 2) == 0 || strncmp (end_of_line, "\n", 1) == 0 || strncmp (end_of_line, "\r", 1) == 0) {
+    if (strncmp (end_of_line, OSIP_CRLF, 2) == 0 || strncmp (end_of_line, "\n", 1) == 0 || strncmp (end_of_line, "\r", 1) == 0) {
       *next_body = end_of_line;
       return OSIP_SUCCESS;
     }
@@ -314,7 +308,7 @@ osip_body_parse_mime (osip_body_t * body, const char *start_of_body, size_t leng
 
   start_of_osip_body_header = end_of_osip_body_header;
   /* set the real start of body */
-  if (strncmp (start_of_osip_body_header, CRLF, 2) == 0)
+  if (strncmp (start_of_osip_body_header, OSIP_CRLF, 2) == 0)
     start_of_osip_body_header = start_of_osip_body_header + 2;
   else {
     if ((strncmp (start_of_osip_body_header, "\n", 1) == 0)
@@ -388,43 +382,44 @@ osip_body_to_str (const osip_body_t * body, char **dest, size_t * str_length)
 
     tmp_body = osip_str_append (tmp_body, tmp);
     osip_free (tmp);
-    tmp_body = osip_strn_append (tmp_body, CRLF, 2);
+    tmp_body = osip_strn_append (tmp_body, OSIP_CRLF, 2);
   }
 
   {
     osip_list_iterator_t it;
-    osip_header_t *header = (osip_header_t *) osip_list_get_first(body->headers, &it);  
+    osip_header_t *header = (osip_header_t *) osip_list_get_first (body->headers, &it);
+
     while (header != OSIP_SUCCESS) {
       i = osip_header_to_str (header, &tmp);
       if (i != 0) {
-	osip_free (ptr);
-	return i;
+        osip_free (ptr);
+        return i;
       }
       if (length < tmp_body - ptr + strlen (tmp) + 4) {
-	size_t len;
-	
-	len = tmp_body - ptr;
-	length = length + strlen (tmp) + 4;
-	ptr = osip_realloc (ptr, length);
-	tmp_body = ptr + len;
+        size_t len;
+
+        len = tmp_body - ptr;
+        length = length + strlen (tmp) + 4;
+        ptr = osip_realloc (ptr, length);
+        tmp_body = ptr + len;
       }
       tmp_body = osip_str_append (tmp_body, tmp);
       osip_free (tmp);
-      tmp_body = osip_strn_append (tmp_body, CRLF, 2);
-      header = (osip_header_t *) osip_list_get_next(&it);
+      tmp_body = osip_strn_append (tmp_body, OSIP_CRLF, 2);
+      header = (osip_header_t *) osip_list_get_next (&it);
     }
   }
-  
+
   if ((osip_list_size (body->headers) > 0) || (body->content_type != NULL)) {
     if (length < tmp_body - ptr + 3) {
       size_t len;
 
       len = tmp_body - ptr;
-      length = length + 3 + body->length; /* add body->length, to avoid calling realloc often */
+      length = length + 3 + body->length;       /* add body->length, to avoid calling realloc often */
       ptr = osip_realloc (ptr, length);
       tmp_body = ptr + len;
     }
-    tmp_body = osip_strn_append (tmp_body, CRLF, 2);
+    tmp_body = osip_strn_append (tmp_body, OSIP_CRLF, 2);
   }
   if (length < tmp_body - ptr + body->length + 4) {
     size_t len;

@@ -205,7 +205,7 @@ strcat_simple_header (char **_string, size_t * malloc_size, char **_message, voi
 
     message = osip_str_append (message, tmp);
     osip_free (tmp);
-    message = osip_strn_append (message, CRLF, 2);
+    message = osip_strn_append (message, OSIP_CRLF, 2);
   }
   *_string = string;
   *_message = message;
@@ -221,7 +221,7 @@ strcat_headers_one_per_line (char **_string, size_t * malloc_size, char **_messa
   char *tmp;
   int i;
   osip_list_iterator_t it;
-  void *elt = osip_list_get_first(headers, &it);
+  void *elt = osip_list_get_first (headers, &it);
 
   string = *_string;
   message = *_message;
@@ -270,8 +270,8 @@ strcat_headers_one_per_line (char **_string, size_t * malloc_size, char **_messa
     }
     message = osip_str_append (message, tmp);
     osip_free (tmp);
-    message = osip_strn_append (message, CRLF, 2);
-    elt = osip_list_get_next(&it);
+    message = osip_strn_append (message, OSIP_CRLF, 2);
+    elt = osip_list_get_next (&it);
   }
   *_string = string;
   *_message = message;
@@ -376,7 +376,8 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
     /* A start-line isn't required for message/sipfrag parts. */
   }
   else {
-    size_t message_len = strlen(tmp);
+    size_t message_len = strlen (tmp);
+
     if (_osip_message_realloc (&message, dest, message_len + 3, &malloc_size) < 0) {
       osip_free (tmp);
       *dest = NULL;
@@ -385,7 +386,7 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
 
     message = osip_str_append (message, tmp);
     osip_free (tmp);
-    message = osip_strn_append (message, CRLF, 2);
+    message = osip_strn_append (message, OSIP_CRLF, 2);
   }
 
   {
@@ -480,34 +481,35 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
 
   {
     osip_list_iterator_t it;
-    osip_header_t *header = (osip_header_t *) osip_list_get_first(&sip->headers, &it);  
+    osip_header_t *header = (osip_header_t *) osip_list_get_first (&sip->headers, &it);
+
     while (header != OSIP_SUCCESS) {
-      
+
       size_t header_len = 0;
-      
+
       i = osip_header_to_str (header, &tmp);
       if (i != 0) {
-	osip_free (*dest);
-	*dest = NULL;
-	return i;
+        osip_free (*dest);
+        *dest = NULL;
+        return i;
       }
-      
+
       header_len = strlen (tmp);
-      
+
       if (_osip_message_realloc (&message, dest, header_len + 3, &malloc_size) < 0) {
-	osip_free (tmp);
-	*dest = NULL;
-	return OSIP_NOMEM;
+        osip_free (tmp);
+        *dest = NULL;
+        return OSIP_NOMEM;
       }
-      
+
       message = osip_str_append (message, tmp);
       osip_free (tmp);
-      message = osip_strn_append (message, CRLF, 2);
-      
-      header = (osip_header_t *) osip_list_get_next(&it);
+      message = osip_strn_append (message, OSIP_CRLF, 2);
+
+      header = (osip_header_t *) osip_list_get_next (&it);
     }
   }
-  
+
   /* we have to create the body before adding the contentlength */
   /* add enough lenght for "Content-Length: " */
 
@@ -516,7 +518,7 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
 
   if (sipfrag && osip_list_eol (&sip->bodies, 0)) {
     /* end of headers */
-    osip_strncpy (message, CRLF, 2);
+    osip_strncpy (message, OSIP_CRLF, 2);
     message = message + 2;
 
     /* same remark as at the beginning of the method */
@@ -563,11 +565,11 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
   }
   /*  } */
 
-  message = osip_strn_append (message, CRLF, 2);
+  message = osip_strn_append (message, OSIP_CRLF, 2);
 
 
   /* end of headers */
-  message = osip_strn_append (message, CRLF, 2);
+  message = osip_strn_append (message, OSIP_CRLF, 2);
 
   start_of_bodies = message;
   total_length = start_of_bodies - *dest;
@@ -604,7 +606,7 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
         return OSIP_NOMEM;
       }
 
-      osip_strncpy (boundary, CRLF, 2);
+      osip_strncpy (boundary, OSIP_CRLF, 2);
       osip_strncpy (boundary + 2, "--", 2);
 
       if (ct_param->gvalue[0] == '"' && ct_param->gvalue[len - 1] == '"')
@@ -616,54 +618,55 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
 
   {
     osip_list_iterator_t it;
-    osip_body_t *body = (osip_body_t *) osip_list_get_first(&sip->bodies, &it);  
+    osip_body_t *body = (osip_body_t *) osip_list_get_first (&sip->bodies, &it);
+
     while (body != OSIP_SUCCESS) {
       size_t body_length;
 
       if (boundary) {
-	/* Needs at most 77 bytes,
-	   last realloc allocate at least 100 bytes extra */
-	message = osip_str_append (message, boundary);
-	message = osip_strn_append (message, CRLF, 2);
+        /* Needs at most 77 bytes,
+           last realloc allocate at least 100 bytes extra */
+        message = osip_str_append (message, boundary);
+        message = osip_strn_append (message, OSIP_CRLF, 2);
       }
-      
+
       i = osip_body_to_str (body, &tmp, &body_length);
       if (i != 0) {
-	osip_free (*dest);
-	*dest = NULL;
-	if (boundary)
-	  osip_free (boundary);
-	return i;
+        osip_free (*dest);
+        *dest = NULL;
+        if (boundary)
+          osip_free (boundary);
+        return i;
       }
-      
+
       if (malloc_size < message - *dest + 100 + body_length) {
-	size_t size = message - *dest;
-	int offset_of_body;
-	int offset_content_length_to_modify = 0;
-	
-	offset_of_body = (int) (start_of_bodies - *dest);
-	if (content_length_to_modify != NULL)
-	  offset_content_length_to_modify = (int) (content_length_to_modify - *dest);
-	malloc_size = message - *dest + body_length + 100;
-	*dest = osip_realloc (*dest, malloc_size);
-	if (*dest == NULL) {
-	  osip_free (tmp);        /* fixed 09/Jun/2005 */
-	  if (boundary)
-	    osip_free (boundary);
-	  return OSIP_NOMEM;
-	}
-	start_of_bodies = *dest + offset_of_body;
-	if (content_length_to_modify != NULL)
-	  content_length_to_modify = *dest + offset_content_length_to_modify;
-	message = *dest + size;
+        size_t size = message - *dest;
+        int offset_of_body;
+        int offset_content_length_to_modify = 0;
+
+        offset_of_body = (int) (start_of_bodies - *dest);
+        if (content_length_to_modify != NULL)
+          offset_content_length_to_modify = (int) (content_length_to_modify - *dest);
+        malloc_size = message - *dest + body_length + 100;
+        *dest = osip_realloc (*dest, malloc_size);
+        if (*dest == NULL) {
+          osip_free (tmp);      /* fixed 09/Jun/2005 */
+          if (boundary)
+            osip_free (boundary);
+          return OSIP_NOMEM;
+        }
+        start_of_bodies = *dest + offset_of_body;
+        if (content_length_to_modify != NULL)
+          content_length_to_modify = *dest + offset_content_length_to_modify;
+        message = *dest + size;
       }
-      
+
       memcpy (message, tmp, body_length);
       message[body_length] = '\0';
       osip_free (tmp);
       message = message + body_length;
-      
-      body = (osip_body_t *) osip_list_get_next(&it);
+
+      body = (osip_body_t *) osip_list_get_next (&it);
     }
   }
 
@@ -672,7 +675,7 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
        last realloc allocate at least 100 bytes extra */
     message = osip_str_append (message, boundary);
     message = osip_strn_append (message, "--", 2);
-    message = osip_strn_append (message, CRLF, 2);
+    message = osip_strn_append (message, OSIP_CRLF, 2);
 
     osip_free (boundary);
     boundary = NULL;
@@ -692,7 +695,7 @@ _osip_message_to_str (osip_message_t * sip, char **dest, size_t * message_length
     total_length += size;
     snprintf (tmp2, 15, "%i", (int) size);
     /* do not use osip_strncpy here! */
-    strncpy (content_length_to_modify + 5 - strlen (tmp2), tmp2, strlen (tmp2));
+    memcpy (content_length_to_modify + 5 - strlen (tmp2), tmp2, strlen (tmp2));
   }
 
   /* same remark as at the beginning of the method */

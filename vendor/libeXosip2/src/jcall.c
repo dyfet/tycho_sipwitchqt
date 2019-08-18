@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ _eXosip_call_renew_expire_time (eXosip_call_t * jc)
 }
 
 int
-_eXosip_call_init (eXosip_call_t ** jc)
+_eXosip_call_init (struct eXosip_t *excontext, eXosip_call_t ** jc)
 {
   *jc = (eXosip_call_t *) osip_malloc (sizeof (eXosip_call_t));
   if (*jc == NULL)
@@ -64,6 +64,17 @@ _eXosip_call_init (eXosip_call_t ** jc)
   memset (*jc, 0, sizeof (eXosip_call_t));
 
   (*jc)->c_id = -1;             /* make sure the _eXosip_update will assign a valid id to the call */
+
+
+#ifndef MINISIZE
+  {
+    struct timeval now;
+
+    excontext->statistics.allocated_calls++;
+    osip_gettimeofday (&now, NULL);
+    _eXosip_counters_update (&excontext->average_calls, 1, &now);
+  }
+#endif
   return OSIP_SUCCESS;
 }
 
@@ -92,13 +103,14 @@ _eXosip_call_remove_dialog_reference_in_call (eXosip_call_t * jc, eXosip_dialog_
   _jd = (eXosip_dialog_t *) osip_transaction_get_reserved3 (jc->c_out_tr);
   if (_jd != NULL && _jd == jd)
     osip_transaction_set_reserved3 (jc->c_out_tr, NULL);
+  _jd = (eXosip_dialog_t *) osip_transaction_get_reserved3 (jc->c_cancel_tr);
+  if (_jd != NULL && _jd == jd)
+    osip_transaction_set_reserved3 (jc->c_cancel_tr, NULL);
 }
 
 void
 _eXosip_call_free (struct eXosip_t *excontext, eXosip_call_t * jc)
 {
-  /* ... */
-
   eXosip_dialog_t *jd;
 
   if (jc->c_inc_tr != NULL && jc->c_inc_tr->orig_request != NULL && jc->c_inc_tr->orig_request->call_id != NULL && jc->c_inc_tr->orig_request->call_id->number != NULL)
@@ -113,11 +125,16 @@ _eXosip_call_free (struct eXosip_t *excontext, eXosip_call_t * jc)
 
   _eXosip_delete_reserved (jc->c_inc_tr);
   _eXosip_delete_reserved (jc->c_out_tr);
+  _eXosip_delete_reserved (jc->c_cancel_tr);
   if (jc->c_inc_tr != NULL)
     osip_list_add (&excontext->j_transactions, jc->c_inc_tr, 0);
   if (jc->c_out_tr != NULL)
     osip_list_add (&excontext->j_transactions, jc->c_out_tr, 0);
+  if (jc->c_cancel_tr != NULL)
+    osip_list_add (&excontext->j_transactions, jc->c_cancel_tr, 0);
 
   osip_free (jc);
-
+#ifndef MINISIZE
+  excontext->statistics.allocated_calls--;
+#endif
 }

@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -39,16 +39,15 @@
 #include <eXosip2/eXosip.h>
 
 
-
-#ifndef  WIN32
-#if !defined(__arc__)
+#ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+
+/* this value should remain 120, at least, don't use very low values */
+#define TRANSACTION_TIMEOUT_RETRY 120
 
 /* Private functions */
 static jauthinfo_t *eXosip_find_authentication_info (struct eXosip_t *excontext, const char *username, const char *realm);
@@ -98,11 +97,23 @@ _eXosip_transaction_init (struct eXosip_t *excontext, osip_transaction_t ** tran
   if (i != 0) {
     return i;
   }
+
+#ifndef MINISIZE
+  {
+    struct timeval now;
+
+    excontext->statistics.allocated_transactions++;
+    osip_gettimeofday (&now, NULL);
+    _eXosip_counters_update (&excontext->average_transactions, 1, &now);
+  }
+#endif
+
   osip_transaction_set_reserved1 (*transaction, excontext);
   {
     osip_naptr_t *naptr_record = NULL;
 
-    i = _eXosip_srv_lookup (excontext, message, &naptr_record);
+    if (ctx_type == NICT || ctx_type == ICT)
+      i = _eXosip_srv_lookup (excontext, message, &naptr_record);
     if (i < 0) {
       /* might be a simple DNS request or an IP */
       return OSIP_SUCCESS;
@@ -112,21 +123,30 @@ _eXosip_transaction_init (struct eXosip_t *excontext, osip_transaction_t ** tran
   return OSIP_SUCCESS;
 }
 
+void
+_eXosip_transaction_free (struct eXosip_t *excontext, osip_transaction_t * transaction)
+{
+  _eXosip_delete_reserved (transaction);
+  eXosip_dnsutils_release (transaction->naptr_record);
+  transaction->naptr_record = NULL;
+  osip_transaction_free (transaction);
+#ifndef MINISIZE
+  excontext->statistics.allocated_transactions--;
+#endif
+}
+
 int
 _eXosip_transaction_find (struct eXosip_t *excontext, int tid, osip_transaction_t ** transaction)
 {
-  int pos = 0;
+  osip_list_iterator_t it;
+  osip_transaction_t *tr = (osip_transaction_t *) osip_list_get_first (&excontext->j_transactions, &it);
 
-  *transaction = NULL;
-  while (!osip_list_eol (&excontext->j_transactions, pos)) {
-    osip_transaction_t *tr;
-
-    tr = (osip_transaction_t *) osip_list_get (&excontext->j_transactions, pos);
+  while (tr != OSIP_SUCCESS) {
     if (tr->transactionid == tid) {
       *transaction = tr;
       return OSIP_SUCCESS;
     }
-    pos++;
+    tr = (osip_transaction_t *) osip_list_get_next (&it);
   }
   return OSIP_NOTFOUND;
 }
@@ -182,7 +202,7 @@ _eXosip_retry_with_auth (struct eXosip_t *excontext, eXosip_dialog_t * jd, osip_
     jd->d_dialog->local_cseq++;
   }
 
-  i = _eXosip_update_top_via (msg);
+  i = _eXosip_update_top_via (excontext, msg);
   if (i != 0) {
     osip_message_free (msg);
     return i;
@@ -310,7 +330,7 @@ _eXosip_publish_refresh (struct eXosip_t *excontext, eXosip_dialog_t * jd, osip_
     jd->d_dialog->local_cseq++;
   }
 
-  i = _eXosip_update_top_via (msg);
+  i = _eXosip_update_top_via (excontext, msg);
   if (i != 0) {
     osip_message_free (msg);
     return i;
@@ -327,17 +347,17 @@ _eXosip_publish_refresh (struct eXosip_t *excontext, eXosip_dialog_t * jd, osip_
 
   if (out_tr != NULL && out_tr->last_response != NULL && out_tr->last_response->status_code == 412) {
     /* remove SIP-If-Match header */
-    int pos = 0;
+    osip_list_iterator_t it;
+    osip_header_t *head = (osip_header_t *) osip_list_get_first (&msg->headers, &it);
 
-    while (!osip_list_eol (&msg->headers, pos)) {
-      osip_header_t *head = osip_list_get (&msg->headers, pos);
+    while (head != OSIP_SUCCESS) {
 
       if (head != NULL && 0 == osip_strcasecmp (head->hname, "sip-if-match")) {
-        i = osip_list_remove (&msg->headers, pos);
+        osip_list_iterator_remove (&it);
         osip_header_free (head);
         break;
       }
-      pos++;
+      head = (osip_header_t *) osip_list_get_next (&it);
     }
   }
 
@@ -361,10 +381,7 @@ _eXosip_publish_refresh (struct eXosip_t *excontext, eXosip_dialog_t * jd, osip_
 
   osip_message_force_update (msg);
 
-  if (MSG_IS_INVITE (msg))
-    i = _eXosip_transaction_init (excontext, &tr, ICT, excontext->j_osip, msg);
-  else
-    i = _eXosip_transaction_init (excontext, &tr, NICT, excontext->j_osip, msg);
+  i = _eXosip_transaction_init (excontext, &tr, NICT, excontext->j_osip, msg);
 
   if (i != 0) {
     osip_message_free (msg);
@@ -372,14 +389,10 @@ _eXosip_publish_refresh (struct eXosip_t *excontext, eXosip_dialog_t * jd, osip_
   }
 
   /* replace with the new tr */
-  if (MSG_IS_PUBLISH (msg)) {
-    /* old transaction is put in the garbage list */
-    osip_list_add (&excontext->j_transactions, out_tr, 0);
-    /* new transaction is put in the publish context */
-    *ptr = tr;
-  }
-  else
-    osip_list_add (&excontext->j_transactions, tr, 0);
+  /* old transaction is put in the garbage list */
+  osip_list_add (&excontext->j_transactions, out_tr, 0);
+  /* new transaction is put in the publish context */
+  *ptr = tr;
 
   sipevent = osip_new_outgoing_sipmessage (msg);
 
@@ -466,7 +479,7 @@ _eXosip_retry_subscribe_with_auth (struct eXosip_t *excontext, eXosip_event_t * 
   osip_transaction_t *tr = NULL;
   int i;
 
-  i = _eXosip_subscribe_transaction_find (excontext, je->tid, &js, &jd, &tr);
+  i = _eXosip_subscription_transaction_find (excontext, je->tid, &js, &jd, &tr);
   if (i != 0) {
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: subscribe dialog not found\n"));
     return i;
@@ -479,7 +492,7 @@ _eXosip_retry_subscribe_with_auth (struct eXosip_t *excontext, eXosip_event_t * 
 
   if (*retry < 3) {
     (*retry)++;
-    return _eXosip_subscribe_send_request_with_credential (excontext, js, jd, tr);
+    return _eXosip_subscription_send_request_with_credential (excontext, js, jd, tr);
   }
   return OSIP_UNDEFINED_ERROR;
 }
@@ -597,65 +610,6 @@ eXosip_default_action (struct eXosip_t *excontext, eXosip_event_t * je)
     return 1;
 }
 
-void
-eXosip_automatic_refresh (struct eXosip_t *excontext)
-{
-  eXosip_subscribe_t *js;
-  eXosip_dialog_t *jd;
-
-  eXosip_reg_t *jr;
-  time_t now;
-
-  now = osip_getsystemtime (NULL);
-
-  for (js = excontext->j_subscribes; js != NULL; js = js->next) {
-    for (jd = js->s_dialogs; jd != NULL; jd = jd->next) {
-      if (jd->d_dialog != NULL && (jd->d_id >= 1)) {    /* finished call */
-        osip_transaction_t *out_tr = NULL;
-
-        out_tr = osip_list_get (jd->d_out_trs, 0);
-        if (out_tr == NULL)
-          out_tr = js->s_out_tr;
-
-        if (js->s_reg_period == 0 || out_tr == NULL) {
-        }
-        else if (now - out_tr->birth_time > js->s_reg_period - (js->s_reg_period / 10)) {       /* will expires in js->s_reg_period/10: send refresh! */
-          int i;
-
-          i = _eXosip_subscribe_automatic_refresh (excontext, js, jd, out_tr);
-          if (i != 0) {
-            OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: could not send subscribe for refresh\n"));
-          }
-        }
-      }
-    }
-  }
-
-  for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
-    if (jr->r_id >= 1 && jr->r_last_tr != NULL) {
-      if (jr->r_reg_period == 0) {
-        /* skip refresh! */
-      }
-      else if (now - jr->r_last_tr->birth_time > 900) {
-        /* automatic refresh */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-#if TARGET_OS_IPHONE
-      }
-      else if (now - jr->r_last_tr->birth_time > jr->r_reg_period - 630) {
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-#endif
-      }
-      else if (now - jr->r_last_tr->birth_time > jr->r_reg_period - (jr->r_reg_period / 10)) {
-        /* automatic refresh at "timeout - 10%" */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-      }
-      else if (now - jr->r_last_tr->birth_time > 120 && (jr->r_last_tr->last_response == NULL || (!MSG_IS_STATUS_2XX (jr->r_last_tr->last_response)))) {
-        /* automatic refresh */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-      }
-    }
-  }
-}
 #endif
 
 void
@@ -713,13 +667,11 @@ eXosip_automatic_action (struct eXosip_t *excontext)
 #ifndef MINISIZE
   eXosip_subscribe_t *js;
   eXosip_notify_t *jn;
+  eXosip_pub_t *jpub;
 #endif
 
   eXosip_reg_t *jr;
 
-#ifndef MINISIZE
-  eXosip_pub_t *jpub;
-#endif
   time_t now;
 
   now = osip_getsystemtime (NULL);
@@ -738,7 +690,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
           && (out_tr->state == ICT_TERMINATED
               || out_tr->state == NICT_TERMINATED
               || out_tr->state == ICT_COMPLETED
-              || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407)) {
+              || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401
+                                                                                                                                                                               || out_tr->last_response->status_code == 407)) {
         /* retry with credential */
         if (jc->c_retry < 3) {
           int i;
@@ -753,7 +706,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
       else if (out_tr != NULL
                && (out_tr->state == ICT_TERMINATED
                    || out_tr->state == NICT_TERMINATED
-                   || out_tr->state == ICT_COMPLETED || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && out_tr->last_response->status_code == 422) {
+                   || out_tr->state == ICT_COMPLETED || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL
+               && out_tr->last_response->status_code == 422) {
         /* retry with higher Session-Expires / Min-SE */
         if (jc->c_retry < 3) {
           int i;
@@ -769,7 +723,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
                && (out_tr->state == ICT_TERMINATED
                    || out_tr->state == NICT_TERMINATED
                    || out_tr->state == ICT_COMPLETED
-                   || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code >= 300 && out_tr->last_response->status_code <= 399)) {
+                   || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code >= 300
+                                                                                                                                                                                    && out_tr->last_response->status_code <= 399)) {
         /* retry with credential */
         int i;
 
@@ -794,7 +749,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
             && (out_tr->state == ICT_TERMINATED
                 || out_tr->state == NICT_TERMINATED
                 || out_tr->state == ICT_COMPLETED
-                || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407)) {
+                || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401
+                                                                                                                                                                                 || out_tr->last_response->status_code == 407)) {
           /* retry with credential */
           if (jd->d_retry < 3) {
             int i;
@@ -809,7 +765,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
         else if (out_tr != NULL
                  && (out_tr->state == ICT_TERMINATED
                      || out_tr->state == NICT_TERMINATED
-                     || out_tr->state == ICT_COMPLETED || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && out_tr->last_response->status_code == 422) {
+                     || out_tr->state == ICT_COMPLETED || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL
+                 && out_tr->last_response->status_code == 422) {
           /* retry with higher Session-Expires / Min-SE */
           if (jd->d_retry < 3) {
             int i;
@@ -825,7 +782,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
                  && (out_tr->state == ICT_TERMINATED
                      || out_tr->state == NICT_TERMINATED
                      || out_tr->state == ICT_COMPLETED
-                     || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code >= 300 && out_tr->last_response->status_code <= 399)) {
+                     || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code >= 300
+                                                                                                                                                                                      && out_tr->last_response->status_code <= 399)) {
           /* retry with credential */
           int i;
 
@@ -847,7 +805,7 @@ eXosip_automatic_action (struct eXosip_t *excontext)
               osip_message_t *request = NULL;
 
               if (jd->d_session_timer_use_update == 1) {
-                eXosip_call_build_update (excontext, jd->d_id, &request);
+                eXosip_call_build_request (excontext, jd->d_id, "UPDATE", &request);
                 if (request != NULL) {
                   char session_exp[32];
                   int i;
@@ -890,6 +848,48 @@ eXosip_automatic_action (struct eXosip_t *excontext)
     }
   }
 
+  for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
+    if (jr->r_id >= 1 && jr->r_last_tr != NULL) {
+      if (jr->r_reg_period != 0 && now - jr->r_last_tr->birth_time > 900) {
+        /* automatic refresh */
+        eXosip_register_send_register (excontext, jr->r_id, NULL);
+      }
+      else if (jr->r_reg_period != 0 && (now - jr->r_last_tr->birth_time > jr->r_reg_period - (jr->r_reg_period / 10) || now - jr->r_last_tr->birth_time > jr->r_reg_period - 6)) {
+        /* automatic refresh */
+        eXosip_register_send_register (excontext, jr->r_id, NULL);
+      }
+      else if (jr->r_reg_period != 0 && now - jr->r_last_tr->birth_time > TRANSACTION_TIMEOUT_RETRY && (jr->r_last_tr->last_response == NULL || (!MSG_IS_STATUS_2XX (jr->r_last_tr->last_response)))) {
+        /* automatic refresh */
+        eXosip_register_send_register (excontext, jr->r_id, NULL);
+      }
+      else if (now - jr->r_last_tr->birth_time < 120 &&
+               jr->r_last_tr->orig_request != NULL && (jr->r_last_tr->last_response != NULL && (jr->r_last_tr->last_response->status_code == 401 || jr->r_last_tr->last_response->status_code == 407
+                                                                                                || jr->r_last_tr->last_response->status_code == 423 || jr->r_last_tr->last_response->status_code == 606))) {
+        if (jr->r_retry < 3) {
+          /* TODO: improve support for several retries when
+             several credentials are needed */
+          eXosip_register_send_register (excontext, jr->r_id, NULL);
+          jr->r_retry++;
+        }
+      }
+      else if (jr->registration_step == RS_DELETIONREQUIRED && jr->r_last_tr->orig_request != NULL && jr->r_last_tr->last_response != NULL && MSG_IS_STATUS_2XX (jr->r_last_tr->last_response)) {
+        jr->registration_step = RS_DELETIONPROCEEDING;
+        if (OSIP_SUCCESS != eXosip_register_send_register (excontext, jr->r_id, NULL)) {
+          jr->registration_step = RS_DELETIONREQUIRED;
+        }
+      }
+      else if (jr->registration_step == RS_MASQUERADINGREQUIRED && jr->r_last_tr->orig_request != NULL && jr->r_last_tr->last_response != NULL && MSG_IS_STATUS_2XX (jr->r_last_tr->last_response)) {
+        jr->registration_step = RS_MASQUERADINGPROCEEDING;
+        if (OSIP_SUCCESS != eXosip_register_send_register (excontext, jr->r_id, NULL)) {
+          jr->registration_step = RS_MASQUERADINGREQUIRED;
+        }
+      }
+    }
+
+    if (jr->r_last_deletion != 0 && jr->r_last_deletion + 60 < now)
+      jr->r_last_deletion = 0;  /* automasquerading may happen later than 1 minutes after previous one, to avoid loop (happens with bad NAT) */
+  }
+
 #ifndef MINISIZE
 
   for (js = excontext->j_subscribes; js != NULL; js = js->next) {
@@ -903,12 +903,13 @@ eXosip_automatic_action (struct eXosip_t *excontext)
       if (out_tr != NULL
           && (out_tr->state == NICT_TERMINATED
               || out_tr->state == NICT_COMPLETED) &&
-          now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407 || out_tr->last_response->status_code == 423)) {
+          now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407
+                                                                                                                                    || out_tr->last_response->status_code == 423)) {
         /* retry with credential */
         if (js->s_retry < 3) {
           int i;
 
-          i = _eXosip_subscribe_send_request_with_credential (excontext, js, NULL, out_tr);
+          i = _eXosip_subscription_send_request_with_credential (excontext, js, NULL, out_tr);
           if (i != 0) {
             OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: could not clone msg for authentication\n"));
           }
@@ -928,12 +929,13 @@ eXosip_automatic_action (struct eXosip_t *excontext)
 
           if (out_tr != NULL
               && (out_tr->state == NICT_TERMINATED
-                  || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407)) {
+                  || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401
+                                                                                                                                                                                   || out_tr->last_response->status_code == 407)) {
             /* retry with credential */
             if (jd->d_retry < 3) {
               int i;
 
-              i = _eXosip_subscribe_send_request_with_credential (excontext, js, jd, out_tr);
+              i = _eXosip_subscription_send_request_with_credential (excontext, js, jd, out_tr);
               if (i != 0) {
                 OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: could not clone suscbribe for authentication\n"));
               }
@@ -948,9 +950,14 @@ eXosip_automatic_action (struct eXosip_t *excontext)
           else if ((out_tr->state == NICT_TERMINATED || out_tr->state == NICT_COMPLETED) && (now - out_tr->birth_time > js->s_reg_period - (js->s_reg_period / 10) || now - out_tr->birth_time > js->s_reg_period - 6)) {       /* will expires in js->s_reg_period/10 sec OR 6 seconds: send refresh! */
             int i;
 
-            i = _eXosip_subscribe_automatic_refresh (excontext, js, jd, out_tr);
-            if (i != 0) {
-              OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: could not clone subscribe for refresh\n"));
+            if (out_tr->orig_request != NULL && MSG_IS_REFER (out_tr->orig_request)) {
+              OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: subscription for REFER is expired\n"));
+            }
+            else {
+              i = _eXosip_subscription_automatic_refresh (excontext, js, jd, out_tr);
+              if (i != 0) {
+                OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: could not clone subscribe for refresh\n"));
+              }
             }
           }
         }
@@ -969,7 +976,8 @@ eXosip_automatic_action (struct eXosip_t *excontext)
 
           if (out_tr != NULL
               && (out_tr->state == NICT_TERMINATED
-                  || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < 120 && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401 || out_tr->last_response->status_code == 407)) {
+                  || out_tr->state == NICT_COMPLETED) && now - out_tr->birth_time < TRANSACTION_TIMEOUT_RETRY && out_tr->orig_request != NULL && out_tr->last_response != NULL && (out_tr->last_response->status_code == 401
+                                                                                                                                                                                   || out_tr->last_response->status_code == 407)) {
             /* retry with credential */
             if (jd->d_retry < 3) {
               int i;
@@ -986,35 +994,6 @@ eXosip_automatic_action (struct eXosip_t *excontext)
     }
   }
 
-#endif
-
-  for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
-    if (jr->r_id >= 1 && jr->r_last_tr != NULL) {
-      if (jr->r_reg_period != 0 && now - jr->r_last_tr->birth_time > 900) {
-        /* automatic refresh */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-      }
-      else if (jr->r_reg_period != 0 && (now - jr->r_last_tr->birth_time > jr->r_reg_period - (jr->r_reg_period / 10) || now - jr->r_last_tr->birth_time > jr->r_reg_period - 6)) {
-        /* automatic refresh */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-      }
-      else if (jr->r_reg_period != 0 && now - jr->r_last_tr->birth_time > 120 && (jr->r_last_tr->last_response == NULL || (!MSG_IS_STATUS_2XX (jr->r_last_tr->last_response)))) {
-        /* automatic refresh */
-        eXosip_register_send_register (excontext, jr->r_id, NULL);
-      }
-      else if (now - jr->r_last_tr->birth_time < 120 &&
-               jr->r_last_tr->orig_request != NULL && (jr->r_last_tr->last_response != NULL && (jr->r_last_tr->last_response->status_code == 401 || jr->r_last_tr->last_response->status_code == 407 || jr->r_last_tr->last_response->status_code == 423))) {
-        if (jr->r_retry < 3) {
-          /* TODO: improve support for several retries when
-             several credentials are needed */
-          eXosip_register_send_register (excontext, jr->r_id, NULL);
-          jr->r_retry++;
-        }
-      }
-    }
-  }
-
-#ifndef MINISIZE
   for (jpub = excontext->j_pub; jpub != NULL; jpub = jpub->next) {
     if (jpub->p_id >= 1 && jpub->p_last_tr != NULL) {
       if (jpub->p_period != 0 && now - jpub->p_last_tr->birth_time > 900) {
@@ -1058,7 +1037,7 @@ _eXosip_update (struct eXosip_t *excontext)
 #endif
   eXosip_dialog_t *jd;
 
-  if (static_id == 32767)
+  if (static_id == INT_MAX)
     static_id = 1;              /* loop */
 
   for (jc = excontext->j_calls; jc != NULL; jc = jc->next) {
@@ -1122,10 +1101,10 @@ eXosip_find_authentication_info (struct eXosip_t *excontext, const char *usernam
   jauthinfo_t *authinfo;
 
   for (authinfo = excontext->authinfos; authinfo != NULL; authinfo = authinfo->next) {
-    if (realm != NULL && authinfo->realm != NULL)
+    if (realm != NULL)
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "INFO: authinfo: %s %s\n", realm, authinfo->realm));
     if (0 == osip_strcasecmp (authinfo->username, username)) {
-      if (authinfo->realm == NULL || authinfo->realm[0] == '\0') {
+      if (authinfo->realm[0] == '\0') {
         fallback = authinfo;
       }
       else if (realm == NULL || osip_strcasecmp (realm, authinfo->realm) == 0 || 0 == osip_strncasecmp (realm + 1, authinfo->realm, strlen (realm) - 2)) {
@@ -1137,10 +1116,9 @@ eXosip_find_authentication_info (struct eXosip_t *excontext, const char *usernam
   /* no matching username has been found for this realm,
      try with another username... */
   for (authinfo = excontext->authinfos; authinfo != NULL; authinfo = authinfo->next) {
-    if (realm != NULL && authinfo->realm != NULL)
+    if (realm != NULL)
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "INFO: authinfo: %s %s\n", realm, authinfo->realm));
-    if ((authinfo->realm == NULL || authinfo->realm[0] == '\0')
-        && fallback == NULL) {
+    if (authinfo->realm[0] == '\0' && fallback == NULL) {
       fallback = authinfo;
     }
     else if (realm == NULL || osip_strcasecmp (realm, authinfo->realm) == 0 || 0 == osip_strncasecmp (realm + 1, authinfo->realm, strlen (realm) - 2)) {
@@ -1184,6 +1162,8 @@ eXosip_add_authentication_info (struct eXosip_t *excontext, const char *username
   if (authinfos == NULL)
     return OSIP_NOMEM;
   memset (authinfos, 0, sizeof (jauthinfo_t));
+
+  eXosip_remove_authentication_info (excontext, username, realm);
 
   snprintf (authinfos->username, 50, "%s", username);
   snprintf (authinfos->userid, 50, "%s", userid);
@@ -1239,7 +1219,6 @@ _eXosip_add_authentication_information (struct eXosip_t *excontext, osip_message
   if (last_response == NULL) {
     /* we can add all credential that belongs to the same call-id */
     struct eXosip_http_auth *http_auth;
-    int pos;
 
     /* update entries with same call_id */
     for (pos = 0; pos < MAX_EXOSIP_HTTP_AUTH; pos++) {
@@ -1313,7 +1292,7 @@ _eXosip_add_authentication_information (struct eXosip_t *excontext, osip_message
 #if defined(AVOID_REFRESH_WITHOUT_CREDENTIAL)
     if (wwwauth->qop_options != NULL) {
 #endif
-      if (osip_strcasecmp (req->sip_method, "REGISTER") == 0 || osip_strcasecmp (req->sip_method, "INVITE") == 0 || osip_strcasecmp (req->sip_method, "SUBSCRIBE") == 0)
+      if (osip_strcasecmp (req->sip_method, "REGISTER") == 0 || osip_strcasecmp (req->sip_method, "INVITE") == 0 || osip_strcasecmp (req->sip_method, "SUBSCRIBE") == 0 || osip_strcasecmp (req->sip_method, "REFER") == 0)
         _eXosip_store_nonce (excontext, req->call_id->number, wwwauth, 401);
       else {
         osip_generic_param_t *to_tag = NULL;
@@ -1359,7 +1338,7 @@ _eXosip_add_authentication_information (struct eXosip_t *excontext, osip_message
 #if defined(AVOID_REFRESH_WITHOUT_CREDENTIAL)
     if (proxyauth->qop_options != NULL) {
 #endif
-      if (osip_strcasecmp (req->sip_method, "REGISTER") == 0 || osip_strcasecmp (req->sip_method, "INVITE") == 0 || osip_strcasecmp (req->sip_method, "SUBSCRIBE") == 0)
+      if (osip_strcasecmp (req->sip_method, "REGISTER") == 0 || osip_strcasecmp (req->sip_method, "INVITE") == 0 || osip_strcasecmp (req->sip_method, "SUBSCRIBE") == 0 || osip_strcasecmp (req->sip_method, "REFER") == 0)
         _eXosip_store_nonce (excontext, req->call_id->number, proxyauth, 407);
       else {
         osip_generic_param_t *to_tag = NULL;
@@ -1382,7 +1361,7 @@ _eXosip_add_authentication_information (struct eXosip_t *excontext, osip_message
 }
 
 int
-_eXosip_update_top_via (osip_message_t * sip)
+_eXosip_update_top_via (struct eXosip_t *excontext, osip_message_t * sip)
 {
   unsigned int number;
   char tmp[40];
@@ -1393,6 +1372,13 @@ _eXosip_update_top_via (osip_message_t * sip)
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "missing via in SIP message\n"));
     return OSIP_SYNTAXERROR;
   }
+
+  osip_free (via->host);
+  /* special values to be replaced in transport layer (eXtl_*.c files) */
+  via->host = osip_strdup ("999.999.999.999");
+  if (via->host == NULL)
+    return OSIP_NOMEM;
+
   /* browse parameter and replace "branch" */
   osip_via_param_get_byname (via, "branch", &br);
 
@@ -1427,22 +1413,97 @@ _eXosip_mark_all_registrations_expired (struct eXosip_t *excontext)
   }
 }
 
+void
+_eXosip_mark_registration_expired (struct eXosip_t *excontext, const char *call_id)
+{
+  eXosip_reg_t *jr;
+  int wakeup = 0;
+
+  for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
+    if (jr->r_id < 1 || jr->r_last_tr == NULL)
+      continue;
+    if (jr->r_last_tr->orig_request == NULL || jr->r_last_tr->orig_request->call_id == NULL || jr->r_last_tr->orig_request->call_id->number == NULL)
+      continue;
+    if (osip_strcasecmp (jr->r_last_tr->orig_request->call_id->number, call_id) == 0) {
+      time_t now;
+
+      if (jr->r_reg_period <= 0)
+        break;                  /* no need for a retry */
+      now = osip_getsystemtime (NULL);
+      if (jr->r_last_tr->last_response == NULL || (!MSG_IS_STATUS_2XX (jr->r_last_tr->last_response))) {
+        jr->r_last_tr->birth_time = now - 120;  /* after a failure, always make it exactly now-120 */
+      }
+      else if (jr->r_reg_period > 900) {
+        jr->r_last_tr->birth_time = now - 900;  /* after a success, a new REGISTER is always sent after 900 sec */
+      }
+      else {                    /* after a success, a new REGISTER is always sent after 90% of the duration has elapsed */
+        jr->r_last_tr->birth_time = now - jr->r_reg_period + (jr->r_reg_period / 10);
+      }
+      if (jr->r_retryfailover < 60)
+        jr->r_retryfailover++;
+      jr->r_last_tr->birth_time += jr->r_retryfailover; /* wait "RETRY" (counter) seconds before retrying: avoid flooding */
+      wakeup = 1;
+    }
+  }
+  if (wakeup) {
+    _eXosip_wakeup (excontext);
+  }
+}
+
+void
+_eXosip_mark_registration_ready (struct eXosip_t *excontext, const char *call_id)
+{
+  eXosip_reg_t *jr;
+  int wakeup = 0;
+
+  for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
+    if (jr->r_id < 1 || jr->r_last_tr == NULL)
+      continue;
+    if (jr->r_last_tr->orig_request == NULL || jr->r_last_tr->orig_request->call_id == NULL || jr->r_last_tr->orig_request->call_id->number == NULL)
+      continue;
+    if (osip_strcasecmp (jr->r_last_tr->orig_request->call_id->number, call_id) == 0) {
+      osip_getsystemtime (NULL);
+      if (jr->r_last_tr->state == NICT_TRYING) {
+        osip_gettimeofday (&jr->r_last_tr->nict_context->timer_e_start, NULL);
+        add_gettimeofday (&jr->r_last_tr->nict_context->timer_e_start, 1);
+        wakeup = 1;
+      }
+    }
+  }
+  if (wakeup) {
+    _eXosip_wakeup (excontext);
+  }
+}
+
 int
 _eXosip_check_allow_header (eXosip_dialog_t * jd, osip_message_t * message)
 {
-  int i;
+#ifndef MINISIZE
+  osip_list_iterator_t it;
+  osip_allow_t *dest = (osip_allow_t *) osip_list_get_first (&message->allows, &it);
 
-  for (i = 0; !osip_list_eol (&message->allows, i); i++) {
-    osip_allow_t *dest = (osip_allow_t *) osip_list_get (&message->allows, i);
-
-    if (dest == NULL)
-      return -1;
-    if (dest->value == NULL)
-      continue;
-    if (osip_strcasecmp (dest->value, "UPDATE") == 0) {
+  while (dest != NULL) {
+    if (dest->value != NULL && osip_strcasecmp (dest->value, "update") == 0) {
       jd->d_session_timer_use_update = 1;
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "Allow header contains UPDATE\n"));
+      break;
     }
+    dest = (osip_allow_t *) osip_list_get_next (&it);
   }
+#else
+  osip_list_iterator_t it;
+  osip_header_t *dest = (osip_header_t *) osip_list_get_first (&message->headers, &it);
+
+  while (dest != OSIP_SUCCESS) {
+    if (dest->hvalue != NULL && osip_strcasecmp (dest->hname, "allow") == 0) {
+      if (osip_strcasestr (dest->hvalue, "UPDATE") != NULL) {
+        jd->d_session_timer_use_update = 1;
+        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "Allow header contains UPDATE\n"));
+        break;
+      }
+    }
+    dest = (osip_header_t *) osip_list_get_next (&it);
+  }
+#endif
   return 0;
 }

@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@
 #include <eXosip2/eX_call.h>
 #include <eXosip2/eX_options.h>
 #include <eXosip2/eX_subscribe.h>
-#include <eXosip2/eX_refer.h>
 #include <eXosip2/eX_message.h>
 #include <eXosip2/eX_publish.h>
 
@@ -61,7 +60,6 @@
  * <ul>
  * <li>SIP User-Agents</li>
  * <li>SIP Voicemail or IVR</li>
- * <li>SIP B2BUA</li>
  * <li>any SIP server acting as an endpoint (music server...)</li>
  * </ul>
  *
@@ -74,11 +72,11 @@
  *    INVITE/BYE               to start/stop VoIP sessions.
  *    INFO                     to send DTMF within a VoIP sessions.
  *    OPTIONS                  to simulate VoIP sessions.
- *    re-INVITE                to modify VoIP sessions
+ *    re-INVITE                to modify VoIP sessions.
  *    REFER/NOTIFY             to transfer calls.
  *    MESSAGE                  to send Instant Message.
- *    SUBSCRIBE/NOTIFY         to handle presence capabilities.
- *    any other request        to handle what you want!
+ *    SUBSCRIBE/REFER/NOTIFY   to handle presence capabilities.
+ *    any other request        to handle what you want (outside dialogs)!
  * </pre>
  * <P>
  */
@@ -146,21 +144,10 @@ extern "C" {
 
 /**
  * Initiate some automatic actions:
- * 
- *  Refresh REGISTER and SUBSCRIBE before the expiration delay.
- *  Those actions are already done by eXosip_automatic_action();
- *  Prefer eXosip_automatic_action instead of this method.
- *
- * @param excontext    eXosip_t instance.
- */
-  void eXosip_automatic_refresh (struct eXosip_t *excontext);
-
-/**
- * Initiate some automatic actions:
  *
  *  Retry with credentials upon reception of 401/407.
  *  Retry with higher Session-Expires upon reception of 422.
- *  Refresh REGISTER and SUBSCRIBE before the expiration delay.
+ *  Refresh REGISTER and SUBSCRIBE/REFER before the expiration delay.
  *  Retry with Contact header upon reception of 3xx request.
  *  Send automatic UPDATE for session-timer feature.
  * 
@@ -333,7 +320,7 @@ extern "C" {
     /* for both UAS & UAC events */
     EXOSIP_CALL_RELEASED,             /**< call context is cleared.            */
 
-    /* response received for request outside calls */
+    /* events received for request outside calls */
     EXOSIP_MESSAGE_NEW,              /**< announce new incoming request. */
     EXOSIP_MESSAGE_PROCEEDING,       /**< announce a 1xx for request. */
     EXOSIP_MESSAGE_ANSWERED,         /**< announce a 200ok  */
@@ -352,7 +339,7 @@ extern "C" {
     EXOSIP_SUBSCRIPTION_GLOBALFAILURE,     /**< announce a global failure       */
     EXOSIP_SUBSCRIPTION_NOTIFY,            /**< announce new NOTIFY request     */
 
-    EXOSIP_IN_SUBSCRIPTION_NEW,            /**< announce new incoming SUBSCRIBE.*/
+    EXOSIP_IN_SUBSCRIPTION_NEW,            /**< announce new incoming SUBSCRIBE/REFER.*/
 
     EXOSIP_NOTIFICATION_NOANSWER,          /**< announce no answer              */
     EXOSIP_NOTIFICATION_PROCEEDING,        /**< announce a 1xx                  */

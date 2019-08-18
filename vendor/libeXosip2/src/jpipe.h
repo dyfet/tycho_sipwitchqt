@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,31 +36,6 @@
 
 #ifndef OSIP_MONOTHREAD
 
-#include <eXosip2/eXosip.h>
-
-#ifdef _WIN32_WCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <winsock2.h>
-#include <osipparser2/osip_port.h>
-#endif
-
-#ifndef WIN32
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#endif
-
-#if defined(__arc__)
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#endif
-
-#ifdef WIN32
-#include <Windows.h>
-#endif
-
 /**
  * @file jpipe.h
  * @brief PPL Pipe Handling Routines
@@ -76,8 +51,6 @@
 extern "C" {
 #endif
 
-#ifndef WIN32
-
 /**
  * Structure for storing a pipe descriptor
  * @defvar jpipe_t
@@ -87,20 +60,6 @@ extern "C" {
   struct jpipe_t {
     int pipes[2];
   };
-
-#else
-
-/**
- * Structure for storing a pipe descriptor
- * @defvar ppl_pipe_t
- */
-  typedef struct jpipe_t jpipe_t;
-
-  struct jpipe_t {
-    int pipes[2];
-  };
-
-#endif
 
 /**
  * Get New pipe pair.

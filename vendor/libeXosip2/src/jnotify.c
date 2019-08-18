@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -38,22 +38,21 @@ osip_transaction_t *
 _eXosip_find_last_inc_subscribe (eXosip_notify_t * jn, eXosip_dialog_t * jd)
 {
   osip_transaction_t *inc_tr;
-  int pos;
 
   inc_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_inc_trs, pos)) {
-      inc_tr = osip_list_get (jd->d_inc_trs, pos);
+    osip_list_iterator_t it;
+
+    inc_tr = (osip_transaction_t *) osip_list_get_first (jd->d_inc_trs, &it);
+    while (inc_tr != NULL) {
       if (0 == strcmp (inc_tr->cseq->method, "SUBSCRIBE"))
         break;
-      else
-        inc_tr = NULL;
-      pos++;
+      else if (0 == strcmp (inc_tr->cseq->method, "REFER"))
+        break;
+
+      inc_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
-  else
-    inc_tr = NULL;
 
   if (inc_tr == NULL)
     return jn->n_inc_tr;        /* can be NULL */
@@ -66,16 +65,16 @@ osip_transaction_t *
 _eXosip_find_last_out_notify (eXosip_notify_t * jn, eXosip_dialog_t * jd)
 {
   osip_transaction_t *out_tr;
-  int pos;
 
   out_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (0 == strcmp (out_tr->cseq->method, "NOTIFY"))
         return out_tr;
-      pos++;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
@@ -83,7 +82,7 @@ _eXosip_find_last_out_notify (eXosip_notify_t * jn, eXosip_dialog_t * jd)
 }
 
 int
-_eXosip_notify_init (eXosip_notify_t ** jn, osip_message_t * inc_subscribe)
+_eXosip_notify_init (struct eXosip_t *excontext, eXosip_notify_t ** jn, osip_message_t * inc_subscribe)
 {
   osip_contact_t *co;
 
@@ -97,6 +96,15 @@ _eXosip_notify_init (eXosip_notify_t ** jn, osip_message_t * inc_subscribe)
     return OSIP_NOMEM;
   memset (*jn, 0, sizeof (eXosip_notify_t));
 
+#ifndef MINISIZE
+  {
+    struct timeval now;
+
+    excontext->statistics.allocated_insubscriptions++;
+    osip_gettimeofday (&now, NULL);
+    _eXosip_counters_update (&excontext->average_insubscriptions, 1, &now);
+  }
+#endif
   return OSIP_SUCCESS;
 }
 
@@ -124,6 +132,10 @@ _eXosip_notify_free (struct eXosip_t *excontext, eXosip_notify_t * jn)
   if (jn->n_out_tr != NULL)
     osip_list_add (&excontext->j_transactions, jn->n_out_tr, 0);
   osip_free (jn);
+
+#ifndef MINISIZE
+  excontext->statistics.allocated_insubscriptions--;
+#endif
 }
 
 int
@@ -131,20 +143,22 @@ _eXosip_notify_set_refresh_interval (eXosip_notify_t * jn, osip_message_t * inc_
 {
   osip_header_t *exp;
   time_t now;
+  int default_expires = 600;
 
   now = osip_getsystemtime (NULL);
   if (jn == NULL || inc_subscribe == NULL)
     return -1;
-
+  if (MSG_IS_REFER (inc_subscribe))
+    default_expires = 120;
   osip_message_get_expires (inc_subscribe, 0, &exp);
   if (exp == NULL || exp->hvalue == NULL)
-    jn->n_ss_expires = now + 600;
+    jn->n_ss_expires = now + default_expires;
   else {
     jn->n_ss_expires = osip_atoi (exp->hvalue);
     if (jn->n_ss_expires != -1)
       jn->n_ss_expires = now + jn->n_ss_expires;
     else                        /* on error, set it to default */
-      jn->n_ss_expires = now + 600;
+      jn->n_ss_expires = now + default_expires;
   }
 
   return OSIP_SUCCESS;
@@ -163,7 +177,7 @@ _eXosip_notify_add_expires_in_2XX_for_subscribe (eXosip_notify_t * jn, osip_mess
     tmp[1] = '\0';
   }
   else {
-    snprintf (tmp, 20, "%li", jn->n_ss_expires - now);
+    snprintf (tmp, 20, "%li", (long) (jn->n_ss_expires - now));
   }
   osip_message_set_expires (answer, tmp);
 }

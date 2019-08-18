@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -53,11 +53,12 @@ struct eXtl_protocol {
 
   int proto_port;
   char proto_name[10];
-  char proto_ifs[20];
+  char proto_ifs[64];
   int proto_num;
   int proto_family;
   int proto_secure;
   int proto_reliable;
+  int proto_local_port;
 
   int (*tl_init) (struct eXosip_t * excontext);
   int (*tl_free) (struct eXosip_t * excontext);
@@ -69,7 +70,9 @@ struct eXtl_protocol {
   int (*tl_set_socket) (struct eXosip_t * excontext, int socket);
   int (*tl_masquerade_contact) (struct eXosip_t * excontext, const char *ip, int port);
   int (*tl_get_masquerade_contact) (struct eXosip_t * excontext, char *ip, int ip_size, char *port, int port_size);
+  int (*_tl_update_contact) (struct eXosip_t * excontext, osip_message_t * sip);
   int (*tl_reset) (struct eXosip_t * excontext);
+  int (*tl_check_connection) (struct eXosip_t * excontext);
 };
 
 void eXosip_transport_udp_init (struct eXosip_t *excontext);
@@ -77,7 +80,7 @@ void eXosip_transport_tcp_init (struct eXosip_t *excontext);
 void eXosip_transport_tls_init (struct eXosip_t *excontext);
 void eXosip_transport_dtls_init (struct eXosip_t *excontext);
 
-#if defined (WIN32) || defined (_WIN32_WCE)
+#if defined (HAVE_WINSOCK2_H)
 #define eXFD_SET(A, B)   FD_SET((unsigned int) A, B)
 #else
 #define eXFD_SET(A, B)   FD_SET(A, B)

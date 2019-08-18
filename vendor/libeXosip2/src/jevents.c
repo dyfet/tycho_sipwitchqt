@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ _eXosip_event_init_for_call (int type, eXosip_call_t * jc, eXosip_dialog_t * jd,
 #ifndef MINISIZE
 
 eXosip_event_t *
-_eXosip_event_init_for_subscribe (int type, eXosip_subscribe_t * js, eXosip_dialog_t * jd, osip_transaction_t * tr)
+_eXosip_event_init_for_subscription (int type, eXosip_subscribe_t * js, eXosip_dialog_t * jd, osip_transaction_t * tr)
 {
   eXosip_event_t *je;
 
@@ -385,6 +385,10 @@ eXosip_event_wait (struct eXosip_t * excontext, int tv_s, int tv_ms)
   fd_set fdset;
   struct timeval tv;
   int max, i;
+
+  if (excontext == NULL) {
+    return NULL;
+  }
 
   FD_ZERO (&fdset);
 #if defined (WIN32) || defined (_WIN32_WCE)

@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ _eXosip_build_response_default (struct eXosip_t *excontext, osip_message_t ** de
 {
   osip_generic_param_t *tag;
   osip_message_t *response;
-  int pos;
   int i;
 
   *dest = NULL;
@@ -119,19 +118,21 @@ _eXosip_build_response_default (struct eXosip_t *excontext, osip_message_t ** de
     return i;
   }
 
-  pos = 0;
-  while (!osip_list_eol (&request->vias, pos)) {
-    osip_via_t *via;
-    osip_via_t *via2;
+  {
+    osip_list_iterator_t it;
+    osip_via_t *via = (osip_via_t *) osip_list_get_first (&request->vias, &it);
 
-    via = (osip_via_t *) osip_list_get (&request->vias, pos);
-    i = osip_via_clone (via, &via2);
-    if (i != 0) {
-      osip_message_free (response);
-      return i;
+    while (via != NULL) {
+      osip_via_t *via2;
+
+      i = osip_via_clone (via, &via2);
+      if (i != 0) {
+        osip_message_free (response);
+        return i;
+      }
+      osip_list_add (&response->vias, via2, -1);
+      via = (osip_via_t *) osip_list_get_next (&it);
     }
-    osip_list_add (&response->vias, via2, -1);
-    pos++;
   }
 
   i = osip_call_id_clone (request->call_id, &(response->call_id));
@@ -175,90 +176,58 @@ int
 _eXosip_complete_answer_that_establish_a_dialog (struct eXosip_t *excontext, osip_message_t * response, osip_message_t * request)
 {
   int i;
-  int pos = 0;
+  int route_found = 0;
   char contact[1024];
-  char locip[65];
-  char firewall_ip[65];
-  char firewall_port[10];
+  char scheme[10];
+  osip_list_iterator_t it;
+  osip_record_route_t *rr;
+
+  snprintf (scheme, sizeof (scheme), "sip");
 
   /* 12.1.1:
      copy all record-route in response
      add a contact with global scope
    */
-  while (!osip_list_eol (&request->record_routes, pos)) {
-    osip_record_route_t *rr;
+  rr = (osip_record_route_t *) osip_list_get_first (&request->record_routes, &it);
+  while (rr != NULL) {
     osip_record_route_t *rr2;
 
-    rr = osip_list_get (&request->record_routes, pos);
     i = osip_record_route_clone (rr, &rr2);
     if (i != 0)
       return i;
     osip_list_add (&response->record_routes, rr2, -1);
-    pos++;
+
+    /* rfc3261: 12.1.1 UAS behavior (check sips in top most Record-Route) */
+    if (it.pos == 0 && rr2 != NULL && rr2->url != NULL && rr2->url->scheme != NULL && osip_strcasecmp (rr2->url->scheme, "sips") == 0)
+      snprintf (scheme, sizeof (scheme), "sips");
+
+    rr = (osip_record_route_t *) osip_list_get_next (&it);
+    route_found = 1;
   }
 
   if (MSG_IS_BYE (request)) {
     return OSIP_SUCCESS;
   }
 
-  firewall_ip[0] = '\0';
-  firewall_port[0] = '\0';
-  if (excontext->eXtl_transport.tl_get_masquerade_contact != NULL) {
-    excontext->eXtl_transport.tl_get_masquerade_contact (excontext, firewall_ip, sizeof (firewall_ip), firewall_port, sizeof (firewall_port));
+  if (route_found == 0) {
+    /* rfc3261: 12.1.1 UAS behavior (check sips in Contact if no Record-Route) */
+    osip_contact_t *co = (osip_contact_t *) osip_list_get (&request->contacts, 0);
+
+    if (co != NULL && co->url != NULL && co->url->scheme != NULL && osip_strcasecmp (co->url->scheme, "sips") == 0)
+      snprintf (scheme, sizeof (scheme), "sips");
   }
+  /* rfc3261: 12.1.1 UAS behavior (check sips in Request-URI) */
+  if (request->req_uri->scheme != NULL && osip_strcasecmp (request->req_uri->scheme, "sips") == 0)
+    snprintf (scheme, sizeof (scheme), "sips");
 
-  memset (locip, '\0', sizeof (locip));
-  _eXosip_guess_ip_for_via (excontext, excontext->eXtl_transport.proto_family, locip, 49);
-
+  /* special values to be replaced in transport layer (eXtl_*.c files) */
   if (request->to->url->username == NULL)
-    snprintf (contact, 1000, "<sip:%s:%s>", locip, firewall_port);
+    snprintf (contact, 1000, "<%s:999.999.999.999:99999>", scheme);
   else {
     char *tmp2 = __osip_uri_escape_userinfo (request->to->url->username);
 
-    snprintf (contact, 1000, "<sip:%s@%s:%s>", tmp2, locip, firewall_port);
+    snprintf (contact, 1000, "<%s:%s@999.999.999.999:99999>", scheme, tmp2);
     osip_free (tmp2);
-  }
-  if (firewall_ip[0] != '\0') {
-#ifdef USE_LOCALIP_WITH_LOCALPROXY      /* disable this code for local testing because it adds an extra DNS */
-    osip_contact_t *con = (osip_contact_t *) osip_list_get (&request->contacts, 0);
-
-    if (con != NULL && con->url != NULL && con->url->host != NULL) {
-      char *c_address = con->url->host;
-
-      struct addrinfo *addrinfo;
-      struct __eXosip_sockaddr addr;
-
-      i = _eXosip_get_addrinfo (excontext, &addrinfo, con->url->host, 5060, IPPROTO_UDP);
-      if (i == 0) {
-        memcpy (&addr, addrinfo->ai_addr, addrinfo->ai_addrlen);
-        _eXosip_freeaddrinfo (addrinfo);
-        c_address = inet_ntoa (((struct sockaddr_in *) &addr)->sin_addr);
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip: here is the resolved destination host=%s\n", c_address));
-      }
-
-      /* If c_address is a PUBLIC address, the request was
-         coming from the PUBLIC network. */
-      if (_eXosip_is_public_address (c_address)) {
-        if (request->to->url->username == NULL)
-          snprintf (contact, 1000, "<sip:%s:%s>", firewall_ip, firewall_port);
-        else {
-          char *tmp2 = __osip_uri_escape_userinfo (request->to->url->username);
-
-          snprintf (contact, 1000, "<sip:%s@%s:%s>", tmp2, firewall_ip, firewall_port);
-          osip_free (tmp2);
-        }
-      }
-    }
-#else
-    if (request->to->url->username == NULL)
-      snprintf (contact, 1000, "<sip:%s:%s>", firewall_ip, firewall_port);
-    else {
-      char *tmp2 = __osip_uri_escape_userinfo (request->to->url->username);
-
-      snprintf (contact, 1000, "<sip:%s@%s:%s>", tmp2, firewall_ip, firewall_port);
-      osip_free (tmp2);
-    }
-#endif
   }
 
   {
@@ -267,16 +236,37 @@ _eXosip_complete_answer_that_establish_a_dialog (struct eXosip_t *excontext, osi
     via = (osip_via_t *) osip_list_get (&response->vias, 0);
     if (via == NULL || via->protocol == NULL)
       return OSIP_SYNTAXERROR;
+    if (excontext->enable_outbound == 1) {
+      contact[strlen (contact) - 1] = '\0';
+      strcat (contact, ";ob");
+      strcat (contact, ">");
+    }
     if (strlen (contact) + strlen (via->protocol) + strlen (";transport=>") < 1024 && 0 != osip_strcasecmp (via->protocol, "UDP")) {
       contact[strlen (contact) - 1] = '\0';
       strcat (contact, ";transport=");
       strcat (contact, via->protocol);
       strcat (contact, ">");
     }
+    if (excontext->sip_instance[0] != 0 && strlen (contact) + 64 < 1024) {
+      strcat (contact, ";+sip.instance=\"<urn:uuid:");
+      strcat (contact, excontext->sip_instance);
+      strcat (contact, ">\"");
+    }
   }
 
   osip_message_set_contact (response, contact);
 
+  if (excontext->default_contact_displayname[0] != '\0') {
+    osip_contact_t *new_contact;
+
+    osip_message_get_contact (response, 0, &new_contact);
+    if (new_contact != NULL) {
+      new_contact->displayname = osip_strdup (excontext->default_contact_displayname);
+    }
+  }
+
+  if (excontext->eXtl_transport._tl_update_contact != NULL)
+    excontext->eXtl_transport._tl_update_contact (excontext, response);
   return OSIP_SUCCESS;
 }
 

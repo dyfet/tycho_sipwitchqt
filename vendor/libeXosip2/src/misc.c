@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ _eXosip_remove_transaction_from_call (osip_transaction_t * tr, eXosip_call_t * j
   osip_transaction_t *inc_tr;
   osip_transaction_t *out_tr;
   eXosip_dialog_t *jd;
-  int pos = 0;
 
   if (jc->c_inc_tr == tr) {
     jc->c_inc_tr = NULL;        /* can be NULL */
@@ -48,14 +47,15 @@ _eXosip_remove_transaction_from_call (osip_transaction_t * tr, eXosip_call_t * j
   }
 
   for (jd = jc->c_dialogs; jd != NULL; jd = jd->next) {
-    pos = 0;
-    while (!osip_list_eol (jd->d_inc_trs, pos)) {
-      inc_tr = osip_list_get (jd->d_inc_trs, pos);
+    osip_list_iterator_t it;
+
+    inc_tr = (osip_transaction_t *) osip_list_get_first (jd->d_inc_trs, &it);
+    while (inc_tr != OSIP_SUCCESS) {
       if (inc_tr == tr) {
-        osip_list_remove (jd->d_inc_trs, pos);
+        osip_list_iterator_remove (&it);
         return OSIP_SUCCESS;
       }
-      pos++;
+      inc_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
@@ -65,14 +65,15 @@ _eXosip_remove_transaction_from_call (osip_transaction_t * tr, eXosip_call_t * j
   }
 
   for (jd = jc->c_dialogs; jd != NULL; jd = jd->next) {
-    pos = 0;
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (out_tr == tr) {
-        osip_list_remove (jd->d_out_trs, pos);
+        osip_list_iterator_remove (&it);
         return OSIP_SUCCESS;
       }
-      pos++;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
@@ -102,24 +103,21 @@ osip_transaction_t *
 _eXosip_find_last_inc_transaction (eXosip_call_t * jc, eXosip_dialog_t * jd, const char *method)
 {
   osip_transaction_t *inc_tr;
-  int pos;
 
   inc_tr = NULL;
-  pos = 0;
   if (method == NULL || method[0] == '\0')
     return NULL;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_inc_trs, pos)) {
-      inc_tr = osip_list_get (jd->d_inc_trs, pos);
+    osip_list_iterator_t it;
+
+    inc_tr = (osip_transaction_t *) osip_list_get_first (jd->d_inc_trs, &it);
+    while (inc_tr != OSIP_SUCCESS) {
       if (0 == osip_strcasecmp (inc_tr->cseq->method, method))
         break;
-      else
-        inc_tr = NULL;
-      pos++;
+
+      inc_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
-  else
-    inc_tr = NULL;
 
   return inc_tr;
 }
@@ -128,23 +126,21 @@ osip_transaction_t *
 _eXosip_find_last_out_transaction (eXosip_call_t * jc, eXosip_dialog_t * jd, const char *method)
 {
   osip_transaction_t *out_tr;
-  int pos;
 
   out_tr = NULL;
-  pos = 0;
   if (jd == NULL && jc == NULL)
     return NULL;
   if (method == NULL || method[0] == '\0')
     return NULL;
 
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (0 == osip_strcasecmp (out_tr->cseq->method, method))
         break;
-      else
-        out_tr = NULL;
-      pos++;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
@@ -173,22 +169,18 @@ osip_transaction_t *
 _eXosip_find_last_inc_invite (eXosip_call_t * jc, eXosip_dialog_t * jd)
 {
   osip_transaction_t *inc_tr;
-  int pos;
 
   inc_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_inc_trs, pos)) {
-      inc_tr = osip_list_get (jd->d_inc_trs, pos);
+    osip_list_iterator_t it;
+
+    inc_tr = (osip_transaction_t *) osip_list_get_first (jd->d_inc_trs, &it);
+    while (inc_tr != OSIP_SUCCESS) {
       if (0 == strcmp (inc_tr->cseq->method, "INVITE"))
         break;
-      else
-        inc_tr = NULL;
-      pos++;
+      inc_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
-  else
-    inc_tr = NULL;
 
   if (inc_tr == NULL)
     return jc->c_inc_tr;        /* can be NULL */
@@ -200,21 +192,19 @@ osip_transaction_t *
 _eXosip_find_last_out_invite (eXosip_call_t * jc, eXosip_dialog_t * jd)
 {
   osip_transaction_t *out_tr;
-  int pos;
 
   out_tr = NULL;
-  pos = 0;
   if (jd == NULL && jc == NULL)
     return NULL;
 
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (0 == strcmp (out_tr->cseq->method, "INVITE"))
         break;
-      else
-        out_tr = NULL;
-      pos++;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
@@ -231,26 +221,22 @@ _eXosip_find_previous_invite (eXosip_call_t * jc, eXosip_dialog_t * jd, osip_tra
 {
   osip_transaction_t *inc_tr;
   osip_transaction_t *out_tr;
-  int pos;
 
   inc_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_inc_trs, pos)) {
-      inc_tr = osip_list_get (jd->d_inc_trs, pos);
-      if (inc_tr == last_invite) {
+    osip_list_iterator_t it;
+
+    inc_tr = (osip_transaction_t *) osip_list_get_first (jd->d_inc_trs, &it);
+    while (inc_tr != OSIP_SUCCESS) {
+      if (inc_tr != last_invite) {
         /* we don't want the current one */
-        inc_tr = NULL;
+        if (0 == strcmp (inc_tr->cseq->method, "INVITE"))
+          break;
       }
-      else if (0 == strcmp (inc_tr->cseq->method, "INVITE"))
-        break;
-      else
-        inc_tr = NULL;
-      pos++;
+
+      inc_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
-  else
-    inc_tr = NULL;
 
   if (inc_tr == NULL)
     inc_tr = jc->c_inc_tr;      /* can be NULL */
@@ -260,20 +246,20 @@ _eXosip_find_previous_invite (eXosip_call_t * jc, eXosip_dialog_t * jd, osip_tra
   }
 
   out_tr = NULL;
-  pos = 0;
 
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (out_tr == last_invite) {
         /* we don't want the current one */
         out_tr = NULL;
       }
       else if (0 == strcmp (out_tr->cseq->method, "INVITE"))
         break;
-      else
-        out_tr = NULL;
-      pos++;
+
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 

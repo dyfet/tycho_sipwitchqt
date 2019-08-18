@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -54,31 +54,31 @@ typedef char HASHHEX[HASHHEXLEN + 1];
 /* AKA */
 #define MAX_HEADER_LEN  2049
 #define KLEN 16
-typedef u_char K[KLEN];
+typedef unsigned char K[KLEN];
 
 #define RANDLEN 16
-typedef u_char RAND[RANDLEN];
+typedef unsigned char RAND[RANDLEN];
 
 #define AUTNLEN 16
-typedef u_char AUTN[AUTNLEN];
+typedef unsigned char AUTN[AUTNLEN];
 
 #define AKLEN 6
-typedef u_char AK[AKLEN];
+typedef unsigned char AK[AKLEN];
 
 #define AMFLEN 2
-typedef u_char AMF[AMFLEN];
+typedef unsigned char AMF[AMFLEN];
 
 #define MACLEN 8
-typedef u_char MAC[MACLEN];
+typedef unsigned char MAC[MACLEN];
 
 #define CKLEN 16
-typedef u_char CK[CKLEN];
+typedef unsigned char CK[CKLEN];
 
 #define IKLEN 16
-typedef u_char IK[IKLEN];
+typedef unsigned char IK[IKLEN];
 
 #define SQNLEN 6
-typedef u_char SQN[SQNLEN];
+typedef unsigned char SQN[SQNLEN];
 
 #define AUTSLEN 14
 typedef char AUTS[AUTSLEN];
@@ -132,6 +132,7 @@ DigestCalcHA1 (IN const char *pszAlg, IN const char *pszUserName, IN const char 
 {
   osip_MD5_CTX Md5Ctx;
   HASH HA1;
+  HASHHEX HA1Hex;
 
   osip_MD5Init (&Md5Ctx);
   osip_MD5Update (&Md5Ctx, (unsigned char *) pszUserName, (unsigned int) strlen (pszUserName));
@@ -141,8 +142,9 @@ DigestCalcHA1 (IN const char *pszAlg, IN const char *pszUserName, IN const char 
   osip_MD5Update (&Md5Ctx, (unsigned char *) pszPassword, (unsigned int) strlen (pszPassword));
   osip_MD5Final ((unsigned char *) HA1, &Md5Ctx);
   if ((pszAlg != NULL) && osip_strcasecmp (pszAlg, "md5-sess") == 0) {
+    CvtHex (HA1, HA1Hex);
     osip_MD5Init (&Md5Ctx);
-    osip_MD5Update (&Md5Ctx, (unsigned char *) HA1, HASHLEN);
+    osip_MD5Update (&Md5Ctx, (unsigned char *) HA1Hex, HASHHEXLEN);
     osip_MD5Update (&Md5Ctx, (unsigned char *) ":", 1);
     osip_MD5Update (&Md5Ctx, (unsigned char *) pszNonce, (unsigned int) strlen (pszNonce));
     osip_MD5Update (&Md5Ctx, (unsigned char *) ":", 1);

@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,7 +30,10 @@
   files in the program, then also delete it here.
 */
 
-#if defined(WIN32)
+#include "eXosip2.h"
+
+#if !defined (HAVE_INET_NTOP)
+/* This is windows replacement for inet_ntop */
 
 #if defined(__cplusplus)
 extern "C" {
@@ -43,4 +46,4 @@ extern "C" {
 #if defined(__cplusplus)
 }
 #endif
-#endif                          /* WIN32 */
+#endif
