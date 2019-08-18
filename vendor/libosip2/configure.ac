@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([libosip2],[5.0.0])
+AC_INIT([libosip2],[5.1.0])
 AC_CONFIG_SRCDIR([include/osip2/osip.h])
 
 AC_MSG_NOTICE([libosip2                The GNU Open SIP library.])
@@ -18,6 +18,7 @@ dnl Initialize automake stuff
 AC_CONFIG_AUX_DIR(scripts)
 AC_CONFIG_HEADERS(osip-config.h)
 AM_INIT_AUTOMAKE
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])],)
 AC_CONFIG_MACRO_DIR([scripts])
 
 AC_CANONICAL_HOST                                                               

@@ -178,7 +178,7 @@ extern "C" {
    * in order to send the message.
    * The default value is 50ms.
    */
-#define DEFAULT_T1_TCP_PROGRESS 50         /* 50ms */
+#define DEFAULT_T1_TCP_PROGRESS 50      /* 50ms */
 #endif
 #ifndef DEFAULT_T2
   /**
@@ -310,9 +310,12 @@ extern "C" {
  * @struct osip_srv_record
  */
   struct osip_srv_record {
-    char name[512];                  /**< name */
+    char name[1024];                 /**< name */
     int srv_state;                   /**< srv state */
-    char protocol[64];               /**< transport protocol*/
+    char flag[256];                  /**< flag:  "S" (SRV), "A" (A or AAAA), "U" (URI), and "P" (ignore), are defined. */
+    char protocol[1024];             /**< transport protocol*/
+    char regexp[1024];               /**< regexp */
+    char replacement[1024];          /**< replacement */
     int order;                       /**< order */
     int preference;                  /**< preference */
     int index;                       /**< index */
@@ -339,14 +342,16 @@ extern "C" {
  */
   struct osip_naptr {
     char domain[512];                       /**< domain */
+    char AUS[64];                           /**< UAS (User Application String) used for Enum */
     int naptr_state;                        /**< naptr state */
     void *arg;                              /**< arg */
     int keep_in_cache;                      /**< keep in cache value */
-    struct osip_srv_record sipudp_record;   /**< udp SRV result */
-    struct osip_srv_record siptcp_record;   /**< tcp SRV result */
-    struct osip_srv_record siptls_record;   /**< tls SRV result */
-    struct osip_srv_record sipdtls_record;  /**< dtls SRV result */
-    struct osip_srv_record sipsctp_record;  /**< sctp SRV result */
+    struct osip_srv_record sipudp_record;   /**< udp NAPTR result */
+    struct osip_srv_record siptcp_record;   /**< tcp NAPTR result */
+    struct osip_srv_record siptls_record;   /**< tls NAPTR result */
+    struct osip_srv_record sipdtls_record;  /**< dtls NAPTR result */
+    struct osip_srv_record sipsctp_record;  /**< sctp NAPTR result */
+    struct osip_srv_record sipenum_record;  /**< enum NAPTR result */
   };
 
 /**

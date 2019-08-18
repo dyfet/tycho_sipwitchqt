@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,7 +51,8 @@
 
 #include "eXosip2.h"
 
-#if defined(WIN32) || defined(_WIN32_WCE)
+#if !defined (HAVE_INET_NTOP)
+/* This is windows replacement for inet_ntop */
 
 #include "inet_ntop.h"
 
@@ -60,19 +61,7 @@
 #endif
 
 /* added by amd */
-/*
- * the definitions below are valid for 32-bit architectures and will have to
- * be adjusted for 16- or 64-bit architectures
- */
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-typedef __int8 int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned long in_addr_t;
 
 /* !added by amd */
 

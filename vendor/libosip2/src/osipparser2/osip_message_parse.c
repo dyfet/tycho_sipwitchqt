@@ -257,8 +257,8 @@ __osip_find_next_occurence (const char *str, const char *buf, const char **index
   *index_of_str = NULL;         /* AMD fix */
   if ((NULL == str) || (NULL == buf))
     return OSIP_BADPARAMETER;
-  /* TODO? we may prefer strcasestr instead of strstr? */
-  for (i = 0; i < 1000; i++) {
+  /* TODO? we may prefer strcasestr instead of strstr? // TODO? with large binary, it will break at 10000 loop with a syntax error */
+  for (i = 0; i < 10000; i++) {
     *index_of_str = strstr (buf, str);
     if (NULL == (*index_of_str)) {
       /* if '\0' (when binary data is used) is located before the separator,
@@ -431,7 +431,6 @@ osip_message_set_multiple_header (osip_message_t * sip, char *hname, char *hvalu
   char *beg;                    /* beg of a header */
   char *end;                    /* end of a header */
   int inquotes, inuri;          /* state for inside/outside of double-qoutes or URI */
-  size_t hname_len;
 
   /* Find header based upon lowercase comparison */
   osip_tolower (hname);
@@ -446,38 +445,12 @@ osip_message_set_multiple_header (osip_message_t * sip, char *hname, char *hvalu
   ptr = hvalue;
   comma = strchr (ptr, ',');
 
-  hname_len = strlen (hname);
-
-  if (comma == NULL || (hname_len == 4 && strncmp (hname, "date", 4) == 0)
-      || (hname_len == 1 && strncmp (hname, "t", 1) == 0)
-      || (hname_len == 2 && strncmp (hname, "to", 2) == 0)
-      || (hname_len == 1 && strncmp (hname, "f", 1) == 0)
-      || (hname_len == 4 && strncmp (hname, "from", 4) == 0)
-      || (hname_len == 1 && strncmp (hname, "i", 1) == 0)
-      || (hname_len == 7 && strncmp (hname, "call-id", 7) == 0)
-      || (hname_len == 4 && strncmp (hname, "cseq", 4) == 0)
-      || (hname_len == 1 && strncmp (hname, "s", 1) == 0)
-      || (hname_len == 7 && strncmp (hname, "subject", 7) == 0)
-      || (hname_len == 7 && strncmp (hname, "expires", 7) == 0)
-      || (hname_len == 6 && strncmp (hname, "server", 6) == 0)
-      || (hname_len == 10 && strncmp (hname, "user-agent", 10) == 0)
-      || (hname_len == 16 && strncmp (hname, "www-authenticate", 16) == 0)
-      || (hname_len == 19 && strncmp (hname, "authentication-info", 19) == 0)
-      || (hname_len == 18 && strncmp (hname, "proxy-authenticate", 18) == 0)
-      || (hname_len == 19 && strncmp (hname, "proxy-authorization", 19) == 0)
-      || (hname_len == 25 && strncmp (hname, "proxy-authentication-info", 25) == 0)
-      || (hname_len == 12 && strncmp (hname, "organization", 12) == 0)
-      || (hname_len == 13 && strncmp (hname, "authorization", 13) == 0)
-      || (hname_len == 1 && strncmp (hname, "r", 1) == 0) /* refer-to */
-      || (hname_len == 8 && strncmp (hname, "refer-to", 8) == 0)
-      || (hname_len == 1 && strncmp (hname, "b", 1) == 0) /* referred-by */
-      || (hname_len == 11 && strncmp (hname, "referred-by", 11) == 0))
-    /* there is no multiple header! likely      */
-    /* to happen most of the time...            */
-    /* or hname is a TEXT-UTF8-TRIM and may     */
-    /* contain a comma. this is not a separator */
-    /* THIS DOES NOT WORK FOR UNKNOWN HEADER!!!! */
-  {
+  /* if there is a COMMA, we check if the header is allowed on multiple line from an internal
+     list: those headers are defined in rfc to support the following format.
+     header  =  "header-name" HCOLON header-value *(COMMA header-value)
+     We cannot guess for any other headers and thus, we will handle other headers as one header.
+   */
+  if (comma == NULL || __osip_message_is_header_comma_separated (hname) != OSIP_SUCCESS) {
     i = osip_message_set__header (sip, hname, hvalue);
     if (i != 0)
       return i;
@@ -488,43 +461,34 @@ osip_message_set_multiple_header (osip_message_t * sip, char *hname, char *hvalu
   inquotes = 0;
   inuri = 0;
   /* Seach for a comma that is not within quotes or a URI */
-  for (;; ptr++)
-  {
-    switch (*ptr)
-    {
+  for (;; ptr++) {
+    switch (*ptr) {
     case '"':
       /* Check that the '"' is not escaped */
-      for (i = 0, p = ptr; p >= beg && *p == '\\'; p--, i++);
+      for (i = 0, p = ptr - 1; p >= beg && *p == '\\'; p--, i++);
       if (i % 2 == 0)
-        inquotes = !inquotes; /* the '"' was not escaped */
+        inquotes = !inquotes;   /* the '"' was not escaped */
       break;
 
     case '<':
-      if (!inquotes)
-      {
-        if (!inuri)
-        {
-          if((osip_strncasecmp(ptr+1, "sip:", 4) == 0
-              || osip_strncasecmp(ptr+1, "sips:", 5) == 0
-              || osip_strncasecmp(ptr+1, "http:", 5) == 0
-              || osip_strncasecmp(ptr+1, "https:", 6) == 0
-              || osip_strncasecmp(ptr+1, "tel:", 4) == 0)
-              && strchr(ptr, '>'))
+      if (!inquotes) {
+        if (!inuri) {
+          if ((osip_strncasecmp (ptr + 1, "sip:", 4) == 0 || osip_strncasecmp (ptr + 1, "sips:", 5) == 0 || osip_strncasecmp (ptr + 1, "http:", 5) == 0 || osip_strncasecmp (ptr + 1, "https:", 6) == 0 || osip_strncasecmp (ptr + 1, "tel:", 4) == 0)
+              && strchr (ptr, '>'))
             inuri = 1;
         }
-	/*
-	  else {
-	  if we found such sequence: "<sip:" "<sip:" ">"
-	  It might be a valid header containing data and not URIs.
-	  Thus, we ignore inuri
-	  }
-	*/
+        /*
+           else {
+           if we found such sequence: "<sip:" "<sip:" ">"
+           It might be a valid header containing data and not URIs.
+           Thus, we ignore inuri
+           }
+         */
       }
       break;
 
     case '>':
-      if (!inquotes)
-      {
+      if (!inquotes) {
         if (inuri)
           inuri = 0;
       }
@@ -532,24 +496,22 @@ osip_message_set_multiple_header (osip_message_t * sip, char *hname, char *hvalu
 
     case '\0':
       /* we discard any validation we tried: no valid uri detected */
-      inquotes=0;
-      inuri=0;
+      inquotes = 0;
+      inuri = 0;
     case ',':
-      if (!inquotes && !inuri)
-      {
+      if (!inquotes && !inuri) {
         char *avalue;
 
         if (beg[0] == '\0')
-          return OSIP_SUCCESS; /* empty header */
+          return OSIP_SUCCESS;  /* empty header */
 
         end = ptr;
-        if (end - beg + 1 < 2)
-	  {
-	    beg=end+1;
-	    break; /* skip empty header */
-	  }
+        if (end - beg + 1 < 2) {
+          beg = end + 1;
+          break;                /* skip empty header */
+        }
         avalue = (char *) osip_malloc (end - beg + 1);
-        if (avalue==NULL)
+        if (avalue == NULL)
           return OSIP_NOMEM;
         osip_clrncpy (avalue, beg, end - beg);
         /* really store the header in the sip structure */
@@ -706,11 +668,12 @@ msg_osip_body_parse (osip_message_t * sip, const char *start_of_buf, const char 
     else {
       /* if content_length does not exist, set it. */
       char tmp[16];
+
       osip_body_len = length;
       sprintf (tmp, "%i", (int) osip_body_len);
       i = osip_message_set_content_length (sip, tmp);
       if (i != 0)
-	return i;
+        return i;
     }
 
     if (length < osip_body_len) {
@@ -784,6 +747,12 @@ msg_osip_body_parse (osip_message_t * sip, const char *start_of_buf, const char 
     if ('\n' == start_of_body[0] || '\r' == start_of_body[0])
       start_of_body++;
 
+    /* if message body is empty or contains a single CR/LF */
+    if (end_of_body <= start_of_body) {
+      osip_free (sep_boundary);
+      return OSIP_SYNTAXERROR;
+    }
+
     body_len = end_of_body - start_of_body;
 
     /* Skip CR before end boundary. */
@@ -837,8 +806,7 @@ _osip_message_parse (osip_message_t * sip, const char *buf, size_t length, int s
   memcpy (tmp, buf, length);    /* may contain binary data */
   tmp[length] = '\0';
   /* skip initial \r\n */
-  while (tmp[0] == '\r' || tmp[0] == '\n')
-    tmp++;
+  tmp += strspn (tmp, "\r\n");
   osip_util_replace_all_lws (tmp);
   /* parse request or status line */
   i = __osip_message_startline_parse (sip, tmp, &next_header_index);
@@ -860,17 +828,20 @@ _osip_message_parse (osip_message_t * sip, const char *buf, size_t length, int s
 
   if (sip->content_length != NULL && sip->content_length->value == NULL) {
     /* empty content_length header */
-    osip_content_length_free(sip->content_length);
-    sip->content_length=NULL;
+    osip_content_length_free (sip->content_length);
+    sip->content_length = NULL;
   }
 
-  if (sip->content_length != NULL && sip->content_length->value != NULL && atoi(sip->content_length->value) >0) {
+  if (sip->content_length != NULL && sip->content_length->value != NULL && atoi (sip->content_length->value) > 0) {
     /* body exist */
-  } else if (sip->content_length == NULL && '\r' == next_header_index[0] && '\n' == next_header_index[1] && length - (tmp - beg) - (2) >0) {
+  }
+  else if (sip->content_length == NULL && '\r' == next_header_index[0] && '\n' == next_header_index[1] && length - (tmp - beg) - (2) > 0) {
     /* body exist */
-  } else if (sip->content_length == NULL && '\n' == next_header_index[0] && length - (tmp - beg) - (1) >0) {
+  }
+  else if (sip->content_length == NULL && '\n' == next_header_index[0] && length - (tmp - beg) - (1) > 0) {
     /* body exist */
-  } else {
+  }
+  else {
     if (sip->content_length == NULL)
       osip_message_set_content_length (sip, "0");
     osip_free (beg);
@@ -959,10 +930,12 @@ osip_message_get_reason (int replycode)
     {181, "Call Is Being Forwarded"},
     {182, "Queued"},
     {183, "Session Progress"},
+    {199, "Early Dialog Terminated"},
   };
   static const struct code_to_reason reasons2xx[] = {
     {200, "OK"},
     {202, "Accepted"},
+    {204, "No Notification"},
   };
   static const struct code_to_reason reasons3xx[] = {
     {300, "Multiple Choices"},
@@ -994,7 +967,18 @@ osip_message_get_reason (int replycode)
     {421, "Extension Required"},
     {422, "Session Interval Too Small"},
     {423, "Interval Too Brief"},
+    {424, "Bad Location Information"},
+    {428, "Use Identity Header"},
+    {429, "Provide Referrer Identity"},
+    {430, "Flow Failed"},
+    {433, "Anonymity Disallowed"},
+    {436, "Bad Identity Info"},
+    {437, "Unsupported Credential"},
+    {438, "Invalid Identity Header"},
+    {439, "First Hop Lacks Outbound Support"},
+    {440, "Max-Breadth Exceeded"},
     {469, "Bad Info Package"},
+    {470, "Consent Needed"},
     {480, "Temporarily Unavailable"},
     {481, "Call/Transaction Does Not Exist"},
     {482, "Loop Detected"},
@@ -1007,6 +991,7 @@ osip_message_get_reason (int replycode)
     {489, "Bad Event"},
     {491, "Request Pending"},
     {493, "Undecipherable"},
+    {494, "Security Agreement Required"},
   };
   static const struct code_to_reason reasons5xx[] = {
     {500, "Server Internal Error"},
@@ -1016,12 +1001,14 @@ osip_message_get_reason (int replycode)
     {504, "Server Time-out"},
     {505, "Version Not Supported"},
     {513, "Message Too Large"},
+    {580, "Precondition Failure"},
   };
   static const struct code_to_reason reasons6xx[] = {
     {600, "Busy Everywhere"},
     {603, "Decline"},
     {604, "Does Not Exist Anywhere"},
     {606, "Not Acceptable"},
+    {607, "Unwanted"},
     {687, "Dialog Terminated"}
   };
   const struct code_to_reason *reasons;

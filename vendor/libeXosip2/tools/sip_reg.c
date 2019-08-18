@@ -44,6 +44,10 @@
 #ifndef OSIP_MONOTHREAD
 #include <pthread.h>
 #endif
+#include <string.h>
+#ifdef __linux
+#include <signal.h>
+#endif
 #endif
 
 #ifdef _WIN32_WCE
@@ -63,6 +67,17 @@
 #define PROG_VER  "1.0"
 #define UA_STRING "SipReg v" PROG_VER
 #define SYSLOG_FACILITY LOG_DAEMON
+
+static volatile int keepRunning = 1;
+
+#ifdef __linux
+
+static void
+intHandler (int dummy)
+{
+  keepRunning = 0;
+}
+#endif
 
 #if defined(WIN32) || defined(_WIN32_WCE)
 static void
@@ -90,10 +105,6 @@ syslog_wrapper (int a, const char *fmt, ...)
 
 static void usage (void);
 
-#ifndef OSIP_MONOTHREAD
-static void *register_proc (void *arg);
-#endif
-
 static void
 usage (void)
 {
@@ -102,10 +113,13 @@ usage (void)
           "\t-r --proxy\tsip:proxyhost[:port]\n"
           "\t-u --from\tsip:user@host[:port]\n"
           "\n\t[optional_options]\n"
-          "\t-c --contact\tsip:user@host[:port]\n"
           "\t-d --debug (log to stderr and do not fork)\n"
-          "\t-e --expiry\tnumber (default 3600)\n"
-          "\t-f --firewallip\tN.N.N.N\n" "\t-h --help\n" "\t-l --localip\tN.N.N.N (force local IP address)\n" "\t-p --port\tnumber (default 5060)\n" "\t-U --username\tauthentication username\n" "\t-P --password\tauthentication password\n");
+          "\t-h --help\n"
+          "\n\t[optional_sip_options]\n"
+          "\t-U --username\tauthentication username\n"
+          "\t-P --password\tauthentication password\n"
+          "\t-t --transport\tUDP|TCP|TLS|DTLS (default UDP)\n"
+          "\t-e --expiry\tnumber (default 3600)\n" "\n\t[very_optional_sip_options]\n" "\t-p --port\tnumber (default 5060)\n" "\t-c --contact\tsip:user@host[:port]\n" "\t-f --firewallip\tN.N.N.N\n" "\t-l --localip\tN.N.N.N (force local IP address)\n");
 }
 
 typedef struct regparam_t {
@@ -115,36 +129,6 @@ typedef struct regparam_t {
 } regparam_t;
 
 struct eXosip_t *context_eXosip;
-
-#ifndef OSIP_MONOTHREAD
-static void *
-register_proc (void *arg)
-{
-  struct regparam_t *regparam = arg;
-  int reg;
-
-  for (;;) {
-#ifdef _WIN32_WCE
-    Sleep ((regparam->expiry / 2) * 1000);
-#else
-    sleep (regparam->expiry / 2);
-#endif
-    eXosip_lock (context_eXosip);
-    reg = eXosip_register_send_register (context_eXosip, regparam->regid, NULL);
-    if (0 > reg) {
-#ifdef _WIN32_WCE
-      fprintf (stdout, "eXosip_register: error while registring");
-#else
-      perror ("eXosip_register");
-#endif
-      exit (1);
-    }
-    regparam->auth = 0;
-    eXosip_unlock (context_eXosip);
-  }
-  return NULL;
-}
-#endif
 
 #ifdef _WIN32_WCE
 int WINAPI
@@ -161,6 +145,7 @@ main (int argc, char *argv[])
   const char *localip = NULL;
   const char *firewallip = NULL;
   char *proxy = NULL;
+  char transport[5];
 
 #if !defined(__arc__)
   struct servent *service;
@@ -168,11 +153,15 @@ main (int argc, char *argv[])
   char *username = NULL;
   char *password = NULL;
   struct regparam_t regparam = { 0, 3600, 0 };
-#ifndef OSIP_MONOTHREAD
-  struct osip_thread *register_thread;
-#endif
   int debug = 0;
   int nofork = 0;
+  int err;
+
+#ifdef __linux
+  signal (SIGINT, intHandler);
+#endif
+
+  snprintf (transport, sizeof (transport), "%s", "UDP");
 
 #ifdef _WIN32_WCE
   proxy = osip_strdup ("sip:sip.antisip.com");
@@ -180,22 +169,26 @@ main (int argc, char *argv[])
 
 #else
   for (;;) {
-#define short_options "c:de:f:hl:p:r:u:U:P:"
+#define short_options "du:r:U:P:t:p:c:e:f:l:h"
 #ifdef _GNU_SOURCE
     int option_index = 0;
 
     static struct option long_options[] = {
-      {"contact", required_argument, NULL, 'c'},
       {"debug", no_argument, NULL, 'd'},
-      {"expiry", required_argument, NULL, 'e'},
-      {"firewallip", required_argument, NULL, 'f'},
       {"from", required_argument, NULL, 'u'},
-      {"help", no_argument, NULL, 'h'},
-      {"localip", required_argument, NULL, 'l'},
-      {"port", required_argument, NULL, 'p'},
       {"proxy", required_argument, NULL, 'r'},
       {"username", required_argument, NULL, 'U'},
       {"password", required_argument, NULL, 'P'},
+
+      {"transport", required_argument, NULL, 't'},
+      {"port", required_argument, NULL, 'p'},
+      {"contact", required_argument, NULL, 'c'},
+      {"expiry", required_argument, NULL, 'e'},
+      {"firewallip", required_argument, NULL, 'f'},
+      {"localip", required_argument, NULL, 'l'},
+
+      {"help", no_argument, NULL, 'h'},
+
       {NULL, 0, NULL, 0}
     };
 
@@ -239,6 +232,9 @@ main (int argc, char *argv[])
       port = atoi (optarg);
 #endif
       break;
+    case 't':
+      snprintf (transport, sizeof (transport), "%s", optarg);
+      break;
     case 'r':
       proxy = optarg;
       break;
@@ -256,7 +252,6 @@ main (int argc, char *argv[])
     }
   }
 #endif
-
 
   if (!proxy || !fromuser) {
     usage ();
@@ -278,6 +273,13 @@ main (int argc, char *argv[])
   syslog_wrapper (LOG_INFO, "contact: %s", contact);
   syslog_wrapper (LOG_INFO, "expiry: %d", regparam.expiry);
   syslog_wrapper (LOG_INFO, "local port: %d", port);
+  syslog_wrapper (LOG_INFO, "transport: %s", transport);
+
+  if (osip_strcasecmp (transport, "UDP") != 0 && osip_strcasecmp (transport, "TCP") != 0 && osip_strcasecmp (transport, "TLS") != 0 && osip_strcasecmp (transport, "DTLS") != 0) {
+    syslog_wrapper (LOG_ERR, "wrong transport parameter");
+    usage ();
+    exit (1);
+  }
 
   if (debug > 0)
     TRACE_INITIALIZE (6, NULL);
@@ -287,7 +289,22 @@ main (int argc, char *argv[])
     syslog_wrapper (LOG_ERR, "eXosip_init failed");
     exit (1);
   }
-  if (eXosip_listen_addr (context_eXosip, IPPROTO_UDP, NULL, port, AF_INET, 0)) {
+
+  err = -1;
+  if (osip_strcasecmp (transport, "UDP") == 0) {
+    err = eXosip_listen_addr (context_eXosip, IPPROTO_UDP, NULL, port, AF_INET, 0);
+  }
+  else if (osip_strcasecmp (transport, "TCP") == 0) {
+    err = eXosip_listen_addr (context_eXosip, IPPROTO_TCP, NULL, port, AF_INET, 0);
+  }
+  else if (osip_strcasecmp (transport, "TLS") == 0) {
+    err = eXosip_listen_addr (context_eXosip, IPPROTO_TCP, NULL, port, AF_INET, 1);
+  }
+  else if (osip_strcasecmp (transport, "DTLS") == 0) {
+    err = eXosip_listen_addr (context_eXosip, IPPROTO_UDP, NULL, port, AF_INET, 1);
+  }
+
+  if (err) {
     syslog_wrapper (LOG_ERR, "eXosip_listen_addr failed");
     exit (1);
   }
@@ -329,22 +346,25 @@ main (int argc, char *argv[])
     }
   }
 
-#ifndef OSIP_MONOTHREAD
-  register_thread = osip_thread_create (20000, register_proc, &regparam);
-  if (register_thread == NULL) {
-    syslog_wrapper (LOG_ERR, "pthread_create failed");
-    exit (1);
-  }
-#endif
-
-  for (;;) {
+  for (; keepRunning;) {
+    static int counter = 0;
     eXosip_event_t *event;
 
+    counter++;
+    if (counter % 60000 == 0) {
+      struct eXosip_stats stats;
+
+      memset (&stats, 0, sizeof (struct eXosip_stats));
+      eXosip_lock (context_eXosip);
+      eXosip_set_option (context_eXosip, EXOSIP_OPT_GET_STATISTICS, &stats);
+      eXosip_unlock (context_eXosip);
+      syslog_wrapper (LOG_INFO, "eXosip stats: inmemory=(tr:%i//reg:%i) average=(tr:%f//reg:%f)", stats.allocated_transactions, stats.allocated_registrations, stats.average_transactions, stats.average_registrations);
+    }
     if (!(event = eXosip_event_wait (context_eXosip, 0, 1))) {
 #ifdef OSIP_MONOTHREAD
       eXosip_execute (context_eXosip);
-      eXosip_automatic_action (context_eXosip);
 #endif
+      eXosip_automatic_action (context_eXosip);
       osip_usleep (10000);
       continue;
     }
@@ -352,18 +372,81 @@ main (int argc, char *argv[])
     eXosip_execute (context_eXosip);
 #endif
 
+    eXosip_lock (context_eXosip);
     eXosip_automatic_action (context_eXosip);
+
     switch (event->type) {
     case EXOSIP_REGISTRATION_SUCCESS:
       syslog_wrapper (LOG_INFO, "registrered successfully");
       break;
     case EXOSIP_REGISTRATION_FAILURE:
-      regparam.auth = 1;
       break;
+    case EXOSIP_CALL_INVITE:
+      {
+        osip_message_t *answer;
+        int i;
+
+        i = eXosip_call_build_answer (context_eXosip, event->tid, 405, &answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject INVITE");
+          break;
+        }
+        osip_free (answer->reason_phrase);
+        answer->reason_phrase = osip_strdup ("No Support for Incoming Calls");
+        i = eXosip_call_send_answer (context_eXosip, event->tid, 405, answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject INVITE");
+          break;
+        }
+        syslog_wrapper (LOG_INFO, "INVITE rejected with 405");
+        break;
+      }
+    case EXOSIP_MESSAGE_NEW:
+      {
+        osip_message_t *answer;
+        int i;
+
+        i = eXosip_message_build_answer (context_eXosip, event->tid, 405, &answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject %s", event->request->sip_method);
+          break;
+        }
+        i = eXosip_message_send_answer (context_eXosip, event->tid, 405, answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject %s", event->request->sip_method);
+          break;
+        }
+        syslog_wrapper (LOG_INFO, "%s rejected with 405", event->request->sip_method);
+        break;
+      }
+    case EXOSIP_IN_SUBSCRIPTION_NEW:
+      {
+        osip_message_t *answer;
+        int i;
+
+        i = eXosip_insubscription_build_answer (context_eXosip, event->tid, 405, &answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject %s", event->request->sip_method);
+          break;
+        }
+        i = eXosip_insubscription_send_answer (context_eXosip, event->tid, 405, answer);
+        if (i != 0) {
+          syslog_wrapper (LOG_ERR, "failed to reject %s", event->request->sip_method);
+          break;
+        }
+        syslog_wrapper (LOG_INFO, "%s rejected with 405", event->request->sip_method);
+        break;
+      }
     default:
       syslog_wrapper (LOG_DEBUG, "recieved unknown eXosip event (type, did, cid) = (%d, %d, %d)", event->type, event->did, event->cid);
 
     }
+    eXosip_unlock (context_eXosip);
     eXosip_event_free (event);
   }
+
+
+  eXosip_quit (context_eXosip);
+  osip_free (context_eXosip);
+  return 0;
 }

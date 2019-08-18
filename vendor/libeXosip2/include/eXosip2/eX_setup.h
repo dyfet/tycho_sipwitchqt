@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -110,20 +110,33 @@ extern "C" {
 
 #define EXOSIP_OPT_BASE_OPTION 0
 #define EXOSIP_OPT_UDP_KEEP_ALIVE (EXOSIP_OPT_BASE_OPTION+1) /**< int *: interval for keep alive packets (UDP, TCP, TLS, DTLS) */
-#define EXOSIP_OPT_UDP_LEARN_PORT (EXOSIP_OPT_BASE_OPTION+2) /**< int *: specific re-usage of "rport" */
+#define EXOSIP_OPT_AUTO_MASQUERADE_CONTACT (EXOSIP_OPT_BASE_OPTION+2) /**< int *: specific re-usage of "rport" */
+#define EXOSIP_OPT_UDP_LEARN_PORT EXOSIP_OPT_AUTO_MASQUERADE_CONTACT /** EXOSIP_OPT_UDP_LEARN_PORT is obsolete / replaced by EXOSIP_OPT_AUTO_MASQUERADE_CONTACT */
 #define EXOSIP_OPT_USE_RPORT (EXOSIP_OPT_BASE_OPTION+7) /**< int *: enable or disable rport in via */
 #define EXOSIP_OPT_SET_IPV4_FOR_GATEWAY (EXOSIP_OPT_BASE_OPTION+8) /**< char *: usually, this is the proxy address */
 #define EXOSIP_OPT_ADD_DNS_CACHE (EXOSIP_OPT_BASE_OPTION+9) /**< struct eXosip_dns_cache *: force some cache entry to avoid DNS */
 #define EXOSIP_OPT_DELETE_DNS_CACHE (EXOSIP_OPT_BASE_OPTION+10) /**< struct eXosip_dns_cache *: force removal of some cache entry to avoid DNS */
 #define EXOSIP_OPT_SET_IPV6_FOR_GATEWAY (EXOSIP_OPT_BASE_OPTION+12) /**< char *: usually, this is the proxy address */
 #define EXOSIP_OPT_ADD_ACCOUNT_INFO (EXOSIP_OPT_BASE_OPTION+13) /**< struct eXosip_account_info *: internal stuff */
-#define EXOSIP_OPT_DNS_CAPABILITIES (EXOSIP_OPT_BASE_OPTION+14) /**< int *: 0 to disable, 2 to use NAPTR/SRV record */
+#define EXOSIP_OPT_DNS_CAPABILITIES (EXOSIP_OPT_BASE_OPTION+14) /**< int *: 0 to disable, 2 (default) to use NAPTR/SRV record */
 #define EXOSIP_OPT_SET_DSCP (EXOSIP_OPT_BASE_OPTION+15) /**< int *: set a dscp value for SIP socket */
 #define EXOSIP_OPT_REGISTER_WITH_DATE (EXOSIP_OPT_BASE_OPTION+16) /**< int *: enable usage of Date header in REGISTER */
 #define EXOSIP_OPT_SET_HEADER_USER_AGENT (EXOSIP_OPT_BASE_OPTION+17) /**< char *: set the User-Agent header */
 #define EXOSIP_OPT_ENABLE_DNS_CACHE (EXOSIP_OPT_BASE_OPTION+18) /**< int *: 0 to disable use of cache*/
 #define EXOSIP_OPT_ENABLE_AUTOANSWERBYE (EXOSIP_OPT_BASE_OPTION+19) /**< int *: 0 to disable automatic answer of BYE */
 #define EXOSIP_OPT_ENABLE_IPV6 (EXOSIP_OPT_BASE_OPTION+20) /**< int *: 0 to disable -this is a per-eXosip_t parameter for using IPv6 DNS request */
+#define EXOSIP_OPT_ENABLE_REUSE_TCP_PORT (EXOSIP_OPT_BASE_OPTION+21) /**< int *: 0 to disable, 1 to enable reusing local tcp port for outgoing tcp connection */
+#define EXOSIP_OPT_ENABLE_USE_EPHEMERAL_PORT (EXOSIP_OPT_BASE_OPTION+22) /**< int *: 0 to disable, 1 to enable usage of emphemeral tcp port in Contact headers instead of local listening port for TCP/TLS */
+#define EXOSIP_OPT_SET_CALLBACK_WAKELOCK (EXOSIP_OPT_BASE_OPTION+23) /**< CbSipWakeLock *: set a callback to be called upon start/end of transaction */
+#define EXOSIP_OPT_ENABLE_OUTBOUND (EXOSIP_OPT_BASE_OPTION+24) /**< int *: 0 to disable, 1 to enable usage of ob parmeter (rfc 5626) in dialog's contact headers */
+#define EXOSIP_OPT_SET_OC_LOCAL_ADDRESS (EXOSIP_OPT_BASE_OPTION+25) /**< char *: set the ip address to bind for outbound connection */
+#define EXOSIP_OPT_SET_OC_PORT_RANGE (EXOSIP_OPT_BASE_OPTION+26) /**< int[2] *: set the port range (min, max) to bind for outbound connection (if EXOSIP_OPT_SET_OC_LOCAL_ADDRESS is not used, this options apply to TCP/TLS only) */
+#define EXOSIP_OPT_REMOVE_PREROUTESET (EXOSIP_OPT_BASE_OPTION+27) /**< int *: 0: keep pre-route set in initial INVITE/SUBSCRIBE/REFER, 1 (default): remove pre-route set*/
+#define EXOSIP_OPT_SET_SIP_INSTANCE (EXOSIP_OPT_BASE_OPTION+28) /**< char *: define +sip.instance parameter in Contact headers  (example: f81d4fae-7dec-11d0-a765-00a0c91e6bf6) */
+#define EXOSIP_OPT_SET_MAX_MESSAGE_TO_READ (EXOSIP_OPT_BASE_OPTION+29) /**< int: set the number of message to read at once for each network processing (high load traffic use-case: DO NOT USE FOR COMMON USAGE) */
+#define EXOSIP_OPT_SET_MAX_READ_TIMEOUT (EXOSIP_OPT_BASE_OPTION+30) /**< long int: set the period in nano seconds during we read for sip message. (high load traffic use-case: DO NOT USE FOR COMMON USAGE)*/
+#define EXOSIP_OPT_SET_DEFAULT_CONTACT_DISPLAYNAME (EXOSIP_OPT_BASE_OPTION+31) /**< char *: define a display name to be added in Contact headers  (example: "john Doe") */
+#define EXOSIP_OPT_SET_SESSIONTIMERS_FORCE (EXOSIP_OPT_BASE_OPTION+32) /**< int *: 0 (default): activate "session timers" if supported on both side, 1: if remote side (UAS) do not indicate support for "session timers", activate feature on UAC (local) side */
 
 #define EXOSIP_OPT_SET_TLS_VERIFY_CERTIFICATE (EXOSIP_OPT_BASE_OPTION+500) /**< int *: enable verification of certificate for TLS connection */
 #define EXOSIP_OPT_SET_TLS_CERTIFICATES_INFO (EXOSIP_OPT_BASE_OPTION+501) /**< eXosip_tls_ctx_t *: client and/or server certificate/ca-root/key info */
@@ -133,6 +146,8 @@ extern "C" {
   /* non standard option: need a compilation flag to activate */
 #define EXOSIP_OPT_KEEP_ALIVE_OPTIONS_METHOD (EXOSIP_OPT_BASE_OPTION+1000)
 #define EXOSIP_OPT_SET_TSC_SERVER (EXOSIP_OPT_BASE_OPTION+1001) /**< void*: set the tsc tunnel handle */
+
+#define EXOSIP_OPT_GET_STATISTICS (EXOSIP_OPT_BASE_OPTION+2000) /**< struct eXosip_stats*: retreive numerous statistics about transactions, registrations, calls, publications and subscriptions... */
 
  /**
   * structure used to for inserting a DNS cache entry and avoid DNS resolution.
@@ -157,6 +172,33 @@ extern "C" {
     int answer_code;
   };
 
+#ifndef MINISIZE
+  /**
+   * Structure used to retrieve eXosip internal statistics.
+   * Total numbers are provided since last start or restart of eXosip.
+   * Average values are calculated over the last EXOSIP_STATS_PERIOD
+   * which default to 3600 seconds.
+   *
+   * @struct eXosip_stats
+   */
+  struct eXosip_stats {
+    int allocated_transactions;        /**< current number of allocated transactions. */
+    float average_transactions;     /**< average number of new transactions/hour.  (default period: 1 hour) */
+    int allocated_registrations;       /**< current number of allocated registrations. (should remains 1 in standard usage) */
+    float average_registrations;    /**< average number of new registrations/hour. (default period: 1 hour) */
+    int allocated_calls;               /**< current number of allocated calls. */
+    float average_calls;            /**< average number of new calls/hour. (default period: 1 hour) */
+    int allocated_publications;        /**< current number of allocated publications. */
+    float average_publications;     /**< average number of new publication/hour. (default period: 1 hour) */
+    int allocated_subscriptions;       /**< current number of allocated outgoing subscriptions. */
+    float average_subscriptions;    /**< average number of new outgoing subscriptions/hour. (default period: 1 hour) */
+    int allocated_insubscriptions;     /**< current number of allocated incoming subscriptions. */
+    float average_insubscriptions;  /**< average number of new incoming subscriptions/hour. (default period: 1 hour) */
+
+    int reserved1[20];               /**< reserved for future usage without breaking ABI */
+  };
+#endif
+
 /**
  * Set eXosip options.
  * See eXosip_option for available options.
@@ -172,17 +214,35 @@ extern "C" {
  /**
   * structure used to describe credentials for a client or server
   * consists of a certificate, a corresponding private key and its password
+  *
+  * If the server requires a certificate from the client, you must provide
+  * the certificate, private key, and your private key password.
+  *
+  * You can "pin" your public key certificate if you have received it.
+  * public_key_pinned must contains your public key file in DER format.
+  * To extract your public key from a PEM certificate in DER format, you
+  * can use the following command line:
+  * openssl x509 -in server-cert.pem -pubkey -noout | openssl enc -base64 -d > pub_key.der
+  *
   * @struct eXosip_tls_credentials_s
   */
   typedef struct eXosip_tls_credentials_s {
-    char priv_key[1024];
-    char priv_key_pw[1024];
-    char cert[1024];
+    char priv_key[1024];     /**< absolute path to a file with a private key */
+    char priv_key_pw[1024];  /**< password to open private key */
+    char cert[1024];         /**< absolute path to a file with a certificate for the private key */
+    char public_key_pinned[1024]; /**< absolute path to a file with the expected public key of server */
   } eXosip_tls_credentials_t;
 
  /**
   * structure to describe the whole TLS-context for eXosip
   * consists of a certificate, a corresponding private key and its password
+  *
+  * When a client connects to a server, if you wish to verify certificate, you
+  * just have to configure the root_ca_cert parameter to a file with all your
+  * trusted CA. (example file at https://pki.google.com/roots.pem)
+  *
+  * On Windows & Macosx, the trusted certificates from the store are loaded automatically.
+  *
   * @struct eXosip_tls_ctx_s
   */
   typedef struct eXosip_tls_ctx_s {
@@ -209,13 +269,29 @@ extern "C" {
  * Start and return osip_naptr context.
  * Note that DNS results might not yet be available.
  * 
- * @param excontext    eXosip_t instance.
- * @param domain         domain name for NAPTR record
+ * If you provide a FQDN, a NAPTR query will be done on it.
+ * For example: "antisip.com"
+ *
+ * If you wish to do a ENUM query, you need to specify both the domain to query
+ * and the AUS (ie, the number dialed). You will use a "!" separator between them.
+ * For example, to query "+123456789" on "e164.org",  please use: "e164.org!+123456789"
+ *
+ * @param excontext      eXosip_t instance.
+ * @param domain         domain name for NAPTR record OR ENUM query (such as e164.org!+123456789)
  * @param protocol       protocol to use ("SIP")
  * @param transport      transport to use ("UDP")
  * @param keep_in_cache  keep result in cache if >0
  */
   struct osip_naptr *eXosip_dnsutils_naptr (struct eXosip_t *excontext, const char *domain, const char *protocol, const char *transport, int keep_in_cache);
+
+  /**
+  * For every eXosip_dnsutils_naptr query you make
+  * you must call eXosip_dnsutils_release to release
+  * the memory.
+  *
+  * @param naptr_record  the naptr structure to release.
+  */
+  void eXosip_dnsutils_release (struct osip_naptr *naptr_record);
 
 /**
  * Continue to process asynchronous DNS request (if implemented).
@@ -276,7 +352,13 @@ extern "C" {
   */
   const char *eXosip_get_version (void);
 
+#ifdef WIN32
+  typedef void (__stdcall * CbSipCallback) (osip_message_t * msg, int received);
+  typedef void (__stdcall * CbSipWakeLock) (int state);
+#else
   typedef void (*CbSipCallback) (osip_message_t * msg, int received);
+  typedef void (*CbSipWakeLock) (int state);
+#endif
 
 /**
  * Set a callback to get sent and received SIP messages.
@@ -285,20 +367,6 @@ extern "C" {
  * @param cbsipCallback the callback to retreive messages.
  */
   int eXosip_set_cbsip_message (struct eXosip_t *excontext, CbSipCallback cbsipCallback);
-
-/**
- * Use IPv6 instead of IPv4. (global setting)
- *
- * DEPRECATED: you MUST use EXOSIP_OPT_ENABLE_IPV6 to configure each
- * eXosip_t independantly.
- *
- * **THIS CODE DOES NOTHING, REPLACE WITH**
- *
- * eXosip_set_option(excontext, EXOSIP_OPT_ENABLE_IPV6, &val);
- * 
- * @param ipv6_enable  This paramter should be set to 1 to enable IPv6 mode.
- */
-  void eXosip_enable_ipv6 (int ipv6_enable);
 
 /**
  * This method is used to replace contact address with

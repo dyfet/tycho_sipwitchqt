@@ -1,3 +1,6 @@
+v0.5.5
+* upgraded to eXosip2 5.1.0 api and vendoring
+
 v0.5.4
 * added bsd init service
 * cleanup init naming
@@ -67,7 +70,7 @@ v0.2.7
 * Updated copyright notices
 * Utils use stand-alone to init mysql servers
 * De-emphasizing sqlite beyond testing builds
-* Device Management and verification support added 
+* Device Management and verification support added
 
 v0.2.6
 * Simplified expiration handling
@@ -153,7 +156,7 @@ v0.1.1
 * Start of contacts (phonebook) page
 
 v0.1.0
-* Core authentication complete 
+* Core authentication complete
 * Core registration with expiration
 * Extended registration support for sipwitchqt clients
 

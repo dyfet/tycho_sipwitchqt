@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -97,12 +97,12 @@ _eXosip_pub_find_by_tid (struct eXosip_t *excontext, eXosip_pub_t ** pjp, int ti
 }
 
 int
-_eXosip_pub_init (eXosip_pub_t ** pub, const char *aor, const char *exp)
+_eXosip_pub_init (struct eXosip_t *excontext, eXosip_pub_t ** pub, const char *aor, const char *exp)
 {
   static int p_id = 0;
   eXosip_pub_t *jpub;
 
-  if (p_id == 32767)            /* keep it non-negative */
+  if (p_id == INT_MAX)          /* keep it non-negative */
     p_id = 0;
 
   *pub = NULL;
@@ -117,6 +117,16 @@ _eXosip_pub_init (eXosip_pub_t ** pub, const char *aor, const char *exp)
   jpub->p_id = ++p_id;
 
   *pub = jpub;
+
+#ifndef MINISIZE
+  {
+    struct timeval now;
+
+    excontext->statistics.allocated_publications++;
+    osip_gettimeofday (&now, NULL);
+    _eXosip_counters_update (&excontext->average_publications, 1, &now);
+  }
+#endif
   return OSIP_SUCCESS;
 }
 
@@ -130,6 +140,9 @@ _eXosip_pub_free (struct eXosip_t *excontext, eXosip_pub_t * pub)
     osip_list_add (&excontext->j_transactions, pub->p_last_tr, 0);
   }
   osip_free (pub);
+#ifndef MINISIZE
+  excontext->statistics.allocated_publications--;
+#endif
 }
 
 #endif

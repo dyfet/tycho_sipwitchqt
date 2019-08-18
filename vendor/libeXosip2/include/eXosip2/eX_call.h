@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -126,19 +126,19 @@ extern "C" {
  * Build a default ACK for a 200ok received.
  * 
  * @param excontext    eXosip_t instance.
- * @param did          dialog id of call.
+ * @param tid          transaction id of INVITE/2xx.
  * @param ack          The sip request to build.
  */
-  int eXosip_call_build_ack (struct eXosip_t *excontext, int did, osip_message_t ** ack);
+  int eXosip_call_build_ack (struct eXosip_t *excontext, int tid, osip_message_t ** ack);
 
 /**
  * Send the ACK for the 200ok received..
  * 
  * @param excontext    eXosip_t instance.
- * @param did          dialog id of call.
+ * @param tid          transaction id of INVITE/2xx.
  * @param ack          SIP ACK message to send.
  */
-  int eXosip_call_send_ack (struct eXosip_t *excontext, int did, osip_message_t * ack);
+  int eXosip_call_send_ack (struct eXosip_t *excontext, int tid, osip_message_t * ack);
 
 /**
  * Build a default REFER for a call transfer.
@@ -227,13 +227,37 @@ extern "C" {
   int eXosip_call_terminate (struct eXosip_t *excontext, int cid, int did);
 
 /**
+ * Terminate a call and add a Reason header.
+ * send CANCEL, BYE or 603 Decline.
+ * 
+ * @param excontext    eXosip_t instance.
+ * @param cid          call id of call.
+ * @param did          dialog id of call.
+ * @param reason       Reason header.
+ */
+  int eXosip_call_terminate_with_reason (struct eXosip_t *excontext, int cid, int did, const char *reason);
+
+  /**
+  * Terminate a call and add a Reason header.
+  * send CANCEL, BYE or 603 Decline.
+  *
+  * @param excontext    eXosip_t instance.
+  * @param cid          call id of call.
+  * @param did          dialog id of call.
+  * @param header_name  header name.
+  * @param header_value header value.
+  */
+  int eXosip_call_terminate_with_header (struct eXosip_t *excontext, int cid, int did, const char *header_name, const char *header_value);
+
+/**
  * Build a PRACK for invite.
  * 
  * @param excontext    eXosip_t instance.
  * @param tid          id of the invite transaction.
+ * @param response1xx  The sip response for which we build a PRACK.
  * @param prack        The sip prack to build.
  */
-  int eXosip_call_build_prack (struct eXosip_t *excontext, int tid, osip_message_t ** prack);
+  int eXosip_call_build_prack (struct eXosip_t *excontext, int tid, osip_message_t * response1xx, osip_message_t ** prack);
 
 /**
  * Send a PRACK for invite.

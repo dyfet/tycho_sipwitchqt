@@ -55,7 +55,7 @@
 #define HAVE_TIME_H 1
 #define HAVE_STDARG_H 1
 
-#if _MSC_VER < 1900
+#if (_MSC_VER < 1900)
 #define snprintf _snprintf
 #endif
 
@@ -162,7 +162,7 @@ typedef pthread_t osip_thread_t;
 #if (_MSC_VER >= 1700) && !defined(_USING_V110_SDK71_)
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 #define HAVE_CPP11_THREAD
-#elif defined(WINAPI_FAMILY) && WINAPI_FAMILY_ONE_PARTITION( WINAPI_FAMILY, WINAPI_PARTITION_APP )
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP)
 #define HAVE_CPP11_THREAD
 #endif
 #endif
@@ -177,7 +177,7 @@ typedef struct {
 
 /* Prevent the inclusion of winsock.h */
 #define _WINSOCKAPI_
-#include <Windows.h>
+#include <windows.h>
 #undef _WINSOCKAPI_
 
 typedef struct {
@@ -263,7 +263,7 @@ typedef struct {
 #if (defined(WIN32) || defined(_WIN32_WCE)) && !defined(HAVE_PTHREAD_WIN32)
 /* Prevent the inclusion of winsock.h */
 #define _WINSOCKAPI_
-#include <Windows.h>
+#include <windows.h>
 #undef _WINSOCKAPI_
 
 #if (_WIN32_WINNT >= 0x0403) && (!defined(_WIN32_WCE))

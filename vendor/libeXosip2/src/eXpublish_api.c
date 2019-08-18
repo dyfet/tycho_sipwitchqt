@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@ eXosip_publish (struct eXosip_t *excontext, osip_message_t * message, const char
   osip_event_t *sipevent;
   int i;
   eXosip_pub_t *pub = NULL;
+  int lallocated = 0;
 
   if (message == NULL)
     return OSIP_BADPARAMETER;
@@ -113,16 +114,17 @@ eXosip_publish (struct eXosip_t *excontext, osip_message_t * message, const char
     }
     else {
       /* start a new publication context */
-      i = _eXosip_pub_init (&pub, to, expires->hvalue);
+      i = _eXosip_pub_init (excontext, &pub, to, expires->hvalue);
       if (i != 0) {
         osip_message_free (message);
         return i;
       }
       ADD_ELEMENT (excontext->j_pub, pub);
+      lallocated = 1;
     }
   }
   else {
-    if (pub->p_sip_etag != NULL && pub->p_sip_etag[0] != '\0') {
+    if (pub->p_sip_etag[0] != '\0') {
       /* increase cseq */
       osip_message_set_header (message, "SIP-If-Match", pub->p_sip_etag);
     }
@@ -157,6 +159,10 @@ eXosip_publish (struct eXosip_t *excontext, osip_message_t * message, const char
   i = _eXosip_transaction_init (excontext, &transaction, NICT, excontext->j_osip, message);
   if (i != 0) {
     osip_message_free (message);
+    if (lallocated == 1) {
+      REMOVE_ELEMENT (excontext->j_pub, pub);
+      _eXosip_pub_free (excontext, pub);
+    }
     return i;
   }
 
@@ -169,7 +175,7 @@ eXosip_publish (struct eXosip_t *excontext, osip_message_t * message, const char
 
   osip_transaction_add_event (transaction, sipevent);
   _eXosip_wakeup (excontext);
-  return OSIP_SUCCESS;
+  return transaction->transactionid;
 }
 
 #endif

@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -38,22 +38,20 @@ osip_transaction_t *
 _eXosip_find_last_out_subscribe (eXosip_subscribe_t * js, eXosip_dialog_t * jd)
 {
   osip_transaction_t *out_tr;
-  int pos;
 
   out_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (0 == strcmp (out_tr->cseq->method, "SUBSCRIBE"))
         break;
-      else
-        out_tr = NULL;
-      pos++;
+      else if (0 == strcmp (out_tr->cseq->method, "REFER"))
+        break;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
-  else
-    out_tr = NULL;
 
   if (out_tr == NULL)
     return js->s_out_tr;        /* can be NULL */
@@ -65,38 +63,45 @@ osip_transaction_t *
 _eXosip_find_last_inc_notify (eXosip_subscribe_t * js, eXosip_dialog_t * jd)
 {
   osip_transaction_t *out_tr;
-  int pos;
 
   out_tr = NULL;
-  pos = 0;
   if (jd != NULL) {
-    while (!osip_list_eol (jd->d_out_trs, pos)) {
-      out_tr = osip_list_get (jd->d_out_trs, pos);
+    osip_list_iterator_t it;
+
+    out_tr = (osip_transaction_t *) osip_list_get_first (jd->d_out_trs, &it);
+    while (out_tr != OSIP_SUCCESS) {
       if (0 == strcmp (out_tr->cseq->method, "NOTIFY"))
         return out_tr;
-      pos++;
+      out_tr = (osip_transaction_t *) osip_list_get_next (&it);
     }
   }
 
   return NULL;
 }
 
-
 int
-_eXosip_subscribe_init (eXosip_subscribe_t ** js)
+_eXosip_subscription_init (struct eXosip_t *excontext, eXosip_subscribe_t ** js)
 {
   *js = (eXosip_subscribe_t *) osip_malloc (sizeof (eXosip_subscribe_t));
   if (*js == NULL)
     return OSIP_NOMEM;
   memset (*js, 0, sizeof (eXosip_subscribe_t));
+
+#ifndef MINISIZE
+  {
+    struct timeval now;
+
+    excontext->statistics.allocated_subscriptions++;
+    osip_gettimeofday (&now, NULL);
+    _eXosip_counters_update (&excontext->average_subscriptions, 1, &now);
+  }
+#endif
   return OSIP_SUCCESS;
 }
 
 void
-_eXosip_subscribe_free (struct eXosip_t *excontext, eXosip_subscribe_t * js)
+_eXosip_subscription_free (struct eXosip_t *excontext, eXosip_subscribe_t * js)
 {
-  /* ... */
-
   eXosip_dialog_t *jd;
 
   if (js->s_inc_tr != NULL && js->s_inc_tr->orig_request != NULL && js->s_inc_tr->orig_request->call_id != NULL && js->s_inc_tr->orig_request->call_id->number != NULL)
@@ -117,10 +122,13 @@ _eXosip_subscribe_free (struct eXosip_t *excontext, eXosip_subscribe_t * js)
     osip_list_add (&excontext->j_transactions, js->s_out_tr, 0);
 
   osip_free (js);
+#ifndef MINISIZE
+  excontext->statistics.allocated_subscriptions--;
+#endif
 }
 
 int
-_eXosip_subscribe_set_refresh_interval (eXosip_subscribe_t * js, osip_message_t * out_subscribe)
+_eXosip_subscription_set_refresh_interval (eXosip_subscribe_t * js, osip_message_t * out_subscribe)
 {
   osip_header_t *exp;
 
@@ -138,21 +146,6 @@ _eXosip_subscribe_set_refresh_interval (eXosip_subscribe_t * js, osip_message_t 
   }
 
   return OSIP_SUCCESS;
-}
-
-int
-_eXosip_subscribe_need_refresh (eXosip_subscribe_t * js, eXosip_dialog_t * jd, int now)
-{
-  osip_transaction_t *out_tr = NULL;
-
-  if (jd != NULL)
-    out_tr = osip_list_get (jd->d_out_trs, 0);
-  if (out_tr == NULL)
-    out_tr = js->s_out_tr;
-
-  if (now - out_tr->birth_time > js->s_reg_period - 15)
-    return OSIP_SUCCESS;
-  return OSIP_UNDEFINED_ERROR;
 }
 
 #endif

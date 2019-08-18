@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ _eXosip_notify_dialog_find (struct eXosip_t *excontext, int nid, eXosip_notify_t
 }
 
 int
-_eXosip_subscribe_dialog_find (struct eXosip_t *excontext, int sid, eXosip_subscribe_t ** js, eXosip_dialog_t ** jd)
+_eXosip_subscription_dialog_find (struct eXosip_t *excontext, int sid, eXosip_subscribe_t ** js, eXosip_dialog_t ** jd)
 {
   if (sid <= 0)
     return OSIP_BADPARAMETER;
@@ -155,6 +155,8 @@ _eXosip_dialog_init_as_uac (eXosip_dialog_t ** _jd, osip_message_t * _200Ok)
   }
   osip_list_init (jd->d_inc_trs);
 
+  jd->implicit_subscription_expire_time = 0;
+
   *_jd = jd;
   return OSIP_SUCCESS;
 }
@@ -204,6 +206,8 @@ _eXosip_dialog_init_as_uas (eXosip_dialog_t ** _jd, osip_message_t * _invite, os
   osip_list_init (jd->d_inc_trs);
 
   jd->d_dialog->local_cseq = 1;
+
+  jd->implicit_subscription_expire_time = 0;
 
   *_jd = jd;
   return OSIP_SUCCESS;

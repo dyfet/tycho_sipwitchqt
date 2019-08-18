@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,28 +36,18 @@
 #include <osip2/osip_mt.h>
 #include <osip2/osip_condv.h>
 
-#if defined (_WIN32_WCE)
+#if !defined (HAVE_INET_NTOP)
 #include "inet_ntop.h"
-#elif WIN32
-#include "inet_ntop.h"
+#endif
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 65
 #endif
 
 #ifndef OSIP_MONOTHREAD
 static void *_eXosip_thread (void *arg);
 #endif
 static void _eXosip_keep_alive (struct eXosip_t *excontext);
-
-#ifndef MINISIZE
-
-void
-eXosip_enable_ipv6 (int _ipv6_enable)
-{
-  /* obsolete, use:
-     eXosip_set_option(excontext, EXOSIP_OPT_ENABLE_IPV6, &val);
-   */
-}
-
-#endif
 
 const char *
 eXosip_get_version (void)
@@ -141,8 +131,8 @@ eXosip_set_user_agent (struct eXosip_t *excontext, const char *user_agent)
   excontext->user_agent = osip_strdup (user_agent);
 }
 
-void
-_eXosip_kill_transaction (osip_list_t * transactions)
+static void
+_eXosip_kill_transaction (struct eXosip_t *excontext, osip_list_t * transactions)
 {
   osip_transaction_t *transaction;
 
@@ -153,12 +143,8 @@ _eXosip_kill_transaction (osip_list_t * transactions)
   }
 
   while (!osip_list_eol (transactions, 0)) {
-    transaction = osip_list_get (transactions, 0);
-
-    _eXosip_delete_reserved (transaction);
-    _eXosip_dnsutils_release (transaction->naptr_record);
-    transaction->naptr_record = NULL;
-    osip_transaction_free (transaction);
+    transaction = (osip_transaction_t *) osip_list_get (transactions, 0);
+    _eXosip_transaction_free (excontext, transaction);
   }
 }
 
@@ -213,7 +199,7 @@ eXosip_quit (struct eXosip_t *excontext)
 #ifndef MINISIZE
   for (js = excontext->j_subscribes; js != NULL; js = excontext->j_subscribes) {
     REMOVE_ELEMENT (excontext->j_subscribes, js);
-    _eXosip_subscribe_free (excontext, js);
+    _eXosip_subscription_free (excontext, js);
   }
 
   for (jn = excontext->j_notifies; jn != NULL; jn = excontext->j_notifies) {
@@ -246,25 +232,15 @@ eXosip_quit (struct eXosip_t *excontext)
 
     if (tr->state == IST_TERMINATED || tr->state == ICT_TERMINATED || tr->state == NICT_TERMINATED || tr->state == NIST_TERMINATED) {
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Release a terminated transaction\n"));
-      osip_list_remove (&excontext->j_transactions, 0);
-      _eXosip_delete_reserved (tr);
-      _eXosip_dnsutils_release (tr->naptr_record);
-      tr->naptr_record = NULL;
-      osip_transaction_free (tr);
     }
-    else {
-      osip_list_remove (&excontext->j_transactions, 0);
-      _eXosip_delete_reserved (tr);
-      _eXosip_dnsutils_release (tr->naptr_record);
-      tr->naptr_record = NULL;
-      osip_transaction_free (tr);
-    }
+    osip_list_remove (&excontext->j_transactions, 0);
+    _eXosip_transaction_free (excontext, tr);
   }
 
-  _eXosip_kill_transaction (&excontext->j_osip->osip_ict_transactions);
-  _eXosip_kill_transaction (&excontext->j_osip->osip_nict_transactions);
-  _eXosip_kill_transaction (&excontext->j_osip->osip_ist_transactions);
-  _eXosip_kill_transaction (&excontext->j_osip->osip_nist_transactions);
+  _eXosip_kill_transaction (excontext, &excontext->j_osip->osip_ict_transactions);
+  _eXosip_kill_transaction (excontext, &excontext->j_osip->osip_nict_transactions);
+  _eXosip_kill_transaction (excontext, &excontext->j_osip->osip_ist_transactions);
+  _eXosip_kill_transaction (excontext, &excontext->j_osip->osip_nist_transactions);
   osip_release (excontext->j_osip);
 
   {
@@ -298,9 +274,19 @@ eXosip_quit (struct eXosip_t *excontext)
   if (excontext->eXtl_transport.tl_free != NULL)
     excontext->eXtl_transport.tl_free (excontext);
 
+  _eXosip_counters_free (&excontext->average_transactions);
+  _eXosip_counters_free (&excontext->average_registrations);
+  _eXosip_counters_free (&excontext->average_calls);
+  _eXosip_counters_free (&excontext->average_publications);
+  _eXosip_counters_free (&excontext->average_subscriptions);
+  _eXosip_counters_free (&excontext->average_insubscriptions);
+
   memset (excontext, 0, sizeof (eXosip_t));
   excontext->j_stop_ua = -1;
 
+#ifdef HAVE_WINSOCK2_H
+  WSACleanup ();
+#endif
   return;
 }
 
@@ -365,30 +351,147 @@ eXosip_find_free_port (struct eXosip_t *excontext, int free_port, int transport)
   int sock;
   int count;
 
-  for (count = 0; count < 8; count++) {
-    if (excontext->ipv6_enable == 0)
-      res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "0.0.0.0", free_port + count * 2, transport);
-    else
-      res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "::", free_port + count * 2, transport);
-    if (res1 != 0)
-      return res1;
-    if (excontext->ipv6_enable == 0)
-      res2 = _eXosip_get_addrinfo (excontext, &addrinfo_rtcp, "0.0.0.0", free_port + count * 2 + 1, transport);
-    else
-      res2 = _eXosip_get_addrinfo (excontext, &addrinfo_rtcp, "::", free_port + count * 2 + 1, transport);
-    if (res2 != 0) {
+  if (free_port > 0) {
+    for (count = 0; count < 8; count++) {
+      if (excontext->ipv6_enable == 0)
+        res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "0.0.0.0", free_port + count * 2, transport);
+      else
+        res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "::", free_port + count * 2, transport);
+      if (res1 != 0)
+        return res1;
+      if (excontext->ipv6_enable == 0)
+        res2 = _eXosip_get_addrinfo (excontext, &addrinfo_rtcp, "0.0.0.0", free_port + count * 2 + 1, transport);
+      else
+        res2 = _eXosip_get_addrinfo (excontext, &addrinfo_rtcp, "::", free_port + count * 2 + 1, transport);
+      if (res2 != 0) {
+        _eXosip_freeaddrinfo (addrinfo_rtp);
+        return res2;
+      }
+
+      sock = -1;
+      for (curinfo_rtp = addrinfo_rtp; curinfo_rtp; curinfo_rtp = curinfo_rtp->ai_next) {
+        int type;
+
+        if (curinfo_rtp->ai_protocol && curinfo_rtp->ai_protocol != transport) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo_rtp->ai_protocol));
+          continue;
+        }
+        type = curinfo_rtp->ai_socktype;
+#if defined(SOCK_CLOEXEC)
+        type = SOCK_CLOEXEC | type;
+#endif
+        sock = (int) socket (curinfo_rtp->ai_family, type, curinfo_rtp->ai_protocol);
+        if (sock < 0) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket!\n"));
+          continue;
+        }
+
+        if (curinfo_rtp->ai_family == AF_INET6) {
+#ifdef IPV6_V6ONLY
+          if (setsockopt_ipv6only (sock)) {
+            _eXosip_closesocket (sock);
+            sock = -1;
+            OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option!\n"));
+            continue;
+          }
+#endif /* IPV6_V6ONLY */
+        }
+
+        res1 = bind (sock, curinfo_rtp->ai_addr, (socklen_t) curinfo_rtp->ai_addrlen);
+        if (res1 < 0) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Cannot bind socket node: 0.0.0.0 family:%d\n", curinfo_rtp->ai_family));
+          _eXosip_closesocket (sock);
+          sock = -1;
+          continue;
+        }
+        break;
+      }
+
       _eXosip_freeaddrinfo (addrinfo_rtp);
-      return res2;
+
+      if (sock == -1) {
+        _eXosip_freeaddrinfo (addrinfo_rtcp);
+        continue;
+      }
+
+      _eXosip_closesocket (sock);
+      sock = -1;
+      for (curinfo_rtcp = addrinfo_rtcp; curinfo_rtcp; curinfo_rtcp = curinfo_rtcp->ai_next) {
+        int type;
+
+        if (curinfo_rtcp->ai_protocol && curinfo_rtcp->ai_protocol != transport) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo_rtcp->ai_protocol));
+          continue;
+        }
+        type = curinfo_rtcp->ai_socktype;
+#if defined(SOCK_CLOEXEC)
+        type = SOCK_CLOEXEC | type;
+#endif
+        sock = (int) socket (curinfo_rtcp->ai_family, type, curinfo_rtcp->ai_protocol);
+        if (sock < 0) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket!\n"));
+          continue;
+        }
+
+        if (curinfo_rtcp->ai_family == AF_INET6) {
+#ifdef IPV6_V6ONLY
+          if (setsockopt_ipv6only (sock)) {
+            _eXosip_closesocket (sock);
+            sock = -1;
+            OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option!\n"));
+            continue;
+          }
+#endif /* IPV6_V6ONLY */
+        }
+
+
+        res1 = bind (sock, curinfo_rtcp->ai_addr, (socklen_t) curinfo_rtcp->ai_addrlen);
+        if (res1 < 0) {
+          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Cannot bind socket node: 0.0.0.0 family:%d\n", curinfo_rtp->ai_family));
+          _eXosip_closesocket (sock);
+          sock = -1;
+          continue;
+        }
+        break;
+      }
+
+      _eXosip_freeaddrinfo (addrinfo_rtcp);
+
+      /* the pair must be free */
+      if (sock == -1)
+        continue;
+
+      _eXosip_closesocket (sock);
+      sock = -1;
+      return free_port + count * 2;
     }
+  }
+
+  for (count = 0; count < 8; count++) {
+    /* just get a free port */
+    if (excontext->ipv6_enable == 0)
+      res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "0.0.0.0", 0, transport);
+    else
+      res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "::", 0, transport);
+
+    if (res1)
+      return res1;
 
     sock = -1;
     for (curinfo_rtp = addrinfo_rtp; curinfo_rtp; curinfo_rtp = curinfo_rtp->ai_next) {
+      socklen_t len;
+      struct sockaddr_storage ai_addr;
+      int type;
+
       if (curinfo_rtp->ai_protocol && curinfo_rtp->ai_protocol != transport) {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo_rtp->ai_protocol));
         continue;
       }
-
-      sock = (int) socket (curinfo_rtp->ai_family, curinfo_rtp->ai_socktype, curinfo_rtp->ai_protocol);
+      type = curinfo_rtp->ai_socktype;
+#if defined(SOCK_CLOEXEC)
+      type = SOCK_CLOEXEC | type;
+#endif
+      sock = (int) socket (curinfo_rtp->ai_family, type, curinfo_rtp->ai_protocol);
       if (sock < 0) {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket!\n"));
         continue;
@@ -397,7 +500,7 @@ eXosip_find_free_port (struct eXosip_t *excontext, int free_port, int transport)
       if (curinfo_rtp->ai_family == AF_INET6) {
 #ifdef IPV6_V6ONLY
         if (setsockopt_ipv6only (sock)) {
-          close (sock);
+          _eXosip_closesocket (sock);
           sock = -1;
           OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option!\n"));
           continue;
@@ -405,136 +508,49 @@ eXosip_find_free_port (struct eXosip_t *excontext, int free_port, int transport)
 #endif /* IPV6_V6ONLY */
       }
 
-      res1 = bind (sock, curinfo_rtp->ai_addr, curinfo_rtp->ai_addrlen);
+      res1 = bind (sock, curinfo_rtp->ai_addr, (socklen_t) curinfo_rtp->ai_addrlen);
       if (res1 < 0) {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Cannot bind socket node: 0.0.0.0 family:%d\n", curinfo_rtp->ai_family));
-        close (sock);
+        _eXosip_closesocket (sock);
         sock = -1;
         continue;
       }
-      break;
-    }
 
-    _eXosip_freeaddrinfo (addrinfo_rtp);
-
-    if (sock == -1) {
-      _eXosip_freeaddrinfo (addrinfo_rtcp);
-      continue;
-    }
-
-    close (sock);
-    sock = -1;
-    for (curinfo_rtcp = addrinfo_rtcp; curinfo_rtcp; curinfo_rtcp = curinfo_rtcp->ai_next) {
-      if (curinfo_rtcp->ai_protocol && curinfo_rtcp->ai_protocol != transport) {
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo_rtcp->ai_protocol));
+      len = sizeof (ai_addr);
+      res1 = getsockname (sock, (struct sockaddr *) &ai_addr, &len);
+      if (res1 != 0) {
+        _eXosip_closesocket (sock);
+        sock = -1;
         continue;
       }
 
-      sock = (int) socket (curinfo_rtcp->ai_family, curinfo_rtcp->ai_socktype, curinfo_rtcp->ai_protocol);
-      if (sock < 0) {
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket!\n"));
-        continue;
-      }
+      _eXosip_closesocket (sock);
+      sock = -1;
 
-      if (curinfo_rtcp->ai_family == AF_INET6) {
-#ifdef IPV6_V6ONLY
-        if (setsockopt_ipv6only (sock)) {
-          close (sock);
-          sock = -1;
-          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option!\n"));
-          continue;
+      {
+        int port_found;
+
+        if (curinfo_rtp->ai_family == AF_INET)
+          port_found = ntohs (((struct sockaddr_in *) &ai_addr)->sin_port);
+        else
+          port_found = ntohs (((struct sockaddr_in6 *) &ai_addr)->sin6_port);
+        if (port_found % 2 == 0) {      /* even port for RTP */
+          _eXosip_freeaddrinfo (addrinfo_rtp);
+          return port_found;
         }
-#endif /* IPV6_V6ONLY */
+        if (count == 7) {
+          /* return odd number anyway... */
+          return port_found;
+        }
       }
-
-      res1 = bind (sock, curinfo_rtcp->ai_addr, curinfo_rtcp->ai_addrlen);
-      if (res1 < 0) {
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Cannot bind socket node: 0.0.0.0 family:%d\n", curinfo_rtp->ai_family));
-        close (sock);
-        sock = -1;
-        continue;
-      }
-      break;
     }
 
-    _eXosip_freeaddrinfo (addrinfo_rtcp);
-
-    /* the pair must be free */
-    if (sock == -1)
-      continue;
-
-    close (sock);
-    sock = -1;
-    return free_port + count * 2;
-  }
-
-  /* just get a free port */
-  if (excontext->ipv6_enable == 0)
-    res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "0.0.0.0", 0, transport);
-  else
-    res1 = _eXosip_get_addrinfo (excontext, &addrinfo_rtp, "::", 0, transport);
-
-  if (res1)
-    return res1;
-
-  sock = -1;
-  for (curinfo_rtp = addrinfo_rtp; curinfo_rtp; curinfo_rtp = curinfo_rtp->ai_next) {
-    socklen_t len;
-    struct sockaddr_storage ai_addr;
-
-    if (curinfo_rtp->ai_protocol && curinfo_rtp->ai_protocol != transport) {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo_rtp->ai_protocol));
-      continue;
-    }
-
-    sock = (int) socket (curinfo_rtp->ai_family, curinfo_rtp->ai_socktype, curinfo_rtp->ai_protocol);
-    if (sock < 0) {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket!\n"));
-      continue;
-    }
-
-    if (curinfo_rtp->ai_family == AF_INET6) {
-#ifdef IPV6_V6ONLY
-      if (setsockopt_ipv6only (sock)) {
-        close (sock);
-        sock = -1;
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option!\n"));
-        continue;
-      }
-#endif /* IPV6_V6ONLY */
-    }
-
-    res1 = bind (sock, curinfo_rtp->ai_addr, curinfo_rtp->ai_addrlen);
-    if (res1 < 0) {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Cannot bind socket node: 0.0.0.0 family:%d\n", curinfo_rtp->ai_family));
-      close (sock);
-      sock = -1;
-      continue;
-    }
-
-    len = sizeof (ai_addr);
-    res1 = getsockname (sock, (struct sockaddr *) &ai_addr, &len);
-    if (res1 != 0) {
-      close (sock);
-      sock = -1;
-      continue;
-    }
-
-    close (sock);
-    sock = -1;
     _eXosip_freeaddrinfo (addrinfo_rtp);
 
-    if (curinfo_rtp->ai_family == AF_INET)
-      return ntohs (((struct sockaddr_in *) &ai_addr)->sin_port);
-    else
-      return ntohs (((struct sockaddr_in6 *) &ai_addr)->sin6_port);
-  }
-
-  _eXosip_freeaddrinfo (addrinfo_rtp);
-
-  if (sock != -1) {
-    close (sock);
-    sock = -1;
+    if (sock != -1) {
+      _eXosip_closesocket (sock);
+      sock = -1;
+    }
   }
 
   return OSIP_UNDEFINED_ERROR;
@@ -585,6 +601,7 @@ eXosip_listen_addr (struct eXosip_t *excontext, int transport, const char *addr,
   if (i != 0) {
     if (excontext->eXtl_transport.tl_free != NULL)
       excontext->eXtl_transport.tl_free (excontext);
+    excontext->eXtl_transport.enabled = 0;
     return i;
   }
 
@@ -625,8 +642,10 @@ eXosip_malloc (void)
 {
   struct eXosip_t *ptr = (struct eXosip_t *) osip_malloc (sizeof (eXosip_t));
 
-  if (ptr)
+  if (ptr) {
     memset (ptr, 0, sizeof (eXosip_t));
+    ptr->j_stop_ua = -1;
+  }
   return ptr;
 }
 
@@ -638,22 +657,30 @@ eXosip_init (struct eXosip_t *excontext)
 
   memset (excontext, 0, sizeof (eXosip_t));
 
+  _eXosip_counters_init (&excontext->average_transactions, 0, 0);
+  _eXosip_counters_init (&excontext->average_registrations, 0, 0);
+  _eXosip_counters_init (&excontext->average_calls, 0, 0);
+  _eXosip_counters_init (&excontext->average_publications, 0, 0);
+  _eXosip_counters_init (&excontext->average_subscriptions, 0, 0);
+  _eXosip_counters_init (&excontext->average_insubscriptions, 0, 0);
+
+  excontext->max_message_to_read = 1;
   excontext->dscp = 0x1A;
+  excontext->implicit_subscription_expires = 60;
 
   snprintf (excontext->ipv4_for_gateway, 256, "%s", "217.12.3.11");
   snprintf (excontext->ipv6_for_gateway, 256, "%s", "2001:638:500:101:2e0:81ff:fe24:37c6");
 
-#ifdef WIN32
+#ifdef HAVE_WINSOCK2_H
   /* Initializing windows socket library */
   {
     WORD wVersionRequested;
     WSADATA wsaData;
 
-    wVersionRequested = MAKEWORD (1, 1);
+    wVersionRequested = MAKEWORD (2, 0);
     i = WSAStartup (wVersionRequested, &wsaData);
     if (i != 0) {
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_WARNING, NULL, "eXosip: Unable to initialize WINSOCK, reason: %d\n", i));
-      /* return -1; It might be already initilized?? */
     }
   }
 #endif
@@ -722,11 +749,16 @@ eXosip_init (struct eXosip_t *excontext)
   osip_fifo_init (excontext->j_events);
 
   excontext->use_rport = 1;
+  excontext->remove_prerouteset = 1;
   excontext->dns_capabilities = 2;
   excontext->enable_dns_cache = 1;
-  excontext->keep_alive = 17000;
-  excontext->keep_alive_options = 0;
+  excontext->ka_interval = 17000;
+  snprintf (excontext->ka_crlf, sizeof (excontext->ka_crlf), "\r\n\r\n");
+  excontext->ka_options = 0;
   excontext->autoanswer_bye = 1;
+  excontext->auto_masquerade_contact = 1;
+  excontext->masquerade_via = 0;
+  excontext->use_ephemeral_port = 1;
 
   return OSIP_SUCCESS;
 }
@@ -739,46 +771,51 @@ eXosip_execute (struct eXosip_t *excontext)
   int i;
 
 #ifndef OSIP_MONOTHREAD
-  osip_timers_gettimeout (excontext->j_osip, &lower_tv);
-  if (lower_tv.tv_sec > 10) {
-    eXosip_reg_t *jr;
-    time_t now;
-
-    osip_compensatetime ();
-
-    now = osip_getsystemtime (NULL);
-
-    lower_tv.tv_sec = 10;
-
-    eXosip_lock (excontext);
-    for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
-      if (jr->r_id >= 1 && jr->r_last_tr != NULL) {
-        if (jr->r_reg_period == 0) {
-          /* skip refresh! */
-        }
-        else if (now - jr->r_last_tr->birth_time > jr->r_reg_period - (jr->r_reg_period / 10)) {
-          /* automatic refresh at "timeout - 10%" */
-          lower_tv.tv_sec = 1;
-        }
-      }
-    }
-    eXosip_unlock (excontext);
-
-    if (lower_tv.tv_sec == 1) {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "eXosip: Reseting timer to 1s before waking up!\n"));
-    }
-    else {
-      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "eXosip: Reseting timer to 10s before waking up!\n"));
-    }
+  if (excontext->max_read_timeout > 0) {
+    lower_tv.tv_sec = 0;
+    lower_tv.tv_usec = excontext->max_read_timeout;
   }
   else {
-    /*  add a small amount of time on windows to avoid
-       waking up too early. (probably a bad time precision) */
-    if (lower_tv.tv_usec < 990000)
-      lower_tv.tv_usec += 10000;        /* add 10ms */
+    osip_timers_gettimeout (excontext->j_osip, &lower_tv);
+    if (lower_tv.tv_sec > 10) {
+      eXosip_reg_t *jr;
+      time_t now;
+
+      osip_compensatetime ();
+
+      now = osip_getsystemtime (NULL);
+
+      lower_tv.tv_sec = 10;
+
+      eXosip_lock (excontext);
+      for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
+        if (jr->r_id >= 1 && jr->r_last_tr != NULL) {
+          if (jr->r_reg_period == 0) {
+            /* skip refresh! */
+          }
+          else if (now - jr->r_last_tr->birth_time > jr->r_reg_period - (jr->r_reg_period / 10)) {
+            /* automatic refresh at "timeout - 10%" */
+            lower_tv.tv_sec = 1;
+          }
+        }
+      }
+      eXosip_unlock (excontext);
+
+      if (lower_tv.tv_sec == 1) {
+        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "eXosip: Reseting timer to 1s before waking up!\n"));
+      }
+      else {
+        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "eXosip: Reseting timer to 10s before waking up!\n"));
+      }
+    }
     else {
-      lower_tv.tv_usec = 10000; /* add 10ms */
-      lower_tv.tv_sec++;
+      /* add a small amount of time on windows to avoid waking up too early. (probably a bad time precision) */
+      if (lower_tv.tv_usec < 990000)
+        lower_tv.tv_usec += 10000;      /* add 10ms */
+      else {
+        lower_tv.tv_usec = 10000;       /* add 10ms */
+        lower_tv.tv_sec++;
+      }
     }
 #if 0
     OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO2, NULL, "eXosip: timer sec:%i usec:%i!\n", lower_tv.tv_sec, lower_tv.tv_usec));
@@ -788,7 +825,7 @@ eXosip_execute (struct eXosip_t *excontext)
   lower_tv.tv_sec = 0;
   lower_tv.tv_usec = 0;
 #endif
-  i = _eXosip_read_message (excontext, 1, (int) lower_tv.tv_sec, (int) lower_tv.tv_usec);
+  i = _eXosip_read_message (excontext, excontext->max_message_to_read, (int) lower_tv.tv_sec, (int) lower_tv.tv_usec);
 
   if (i == -2000) {
     return -2000;
@@ -808,15 +845,35 @@ eXosip_execute (struct eXosip_t *excontext)
   /* free all Calls that are in the TERMINATED STATE? */
   _eXosip_release_terminated_calls (excontext);
   _eXosip_release_terminated_registrations (excontext);
-  _eXosip_release_terminated_publications (excontext);
 #ifndef MINISIZE
+  _eXosip_release_terminated_publications (excontext);
   _eXosip_release_terminated_subscriptions (excontext);
   _eXosip_release_terminated_in_subscriptions (excontext);
 #endif
 
-  eXosip_unlock (excontext);
+  if (excontext->cbsipWakeLock != NULL && excontext->outgoing_wake_lock_state == 0) {
+    int count = osip_list_size (&excontext->j_osip->osip_ict_transactions);
+
+    count += osip_list_size (&excontext->j_osip->osip_nict_transactions);
+    if (count > 0) {
+      excontext->cbsipWakeLock (3);
+      excontext->outgoing_wake_lock_state++;
+    }
+  }
+  else if (excontext->cbsipWakeLock != NULL && excontext->outgoing_wake_lock_state > 0) {
+    int count = osip_list_size (&excontext->j_osip->osip_ict_transactions);
+
+    count += osip_list_size (&excontext->j_osip->osip_nict_transactions);
+    if (count == 0) {
+      excontext->cbsipWakeLock (2);
+      excontext->outgoing_wake_lock_state = 0;
+    }
+  }
+
 
   _eXosip_keep_alive (excontext);
+
+  eXosip_unlock (excontext);
 
   return OSIP_SUCCESS;
 }
@@ -841,6 +898,8 @@ eXosip_set_option (struct eXosip_t *excontext, int opt, const void *value)
         if (excontext->account_entries[i].proxy[0] != '\0' && 0 == osip_strcasecmp (excontext->account_entries[i].proxy, ainfo->proxy)) {
           /* update ainfo */
           if (ainfo->nat_ip[0] != '\0') {
+            if (0 == osip_strcasecmp (excontext->account_entries[i].nat_ip, ainfo->nat_ip) && excontext->account_entries[i].nat_port == ainfo->nat_port)
+              return OSIP_SUCCESS + 1;  /* NOT MODIFIED */
             snprintf (excontext->account_entries[i].nat_ip, sizeof (excontext->account_entries[i].nat_ip), "%s", ainfo->nat_ip);
             excontext->account_entries[i].nat_port = ainfo->nat_port;
             OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip option set: account info updated:%s -> %s:%i\n", ainfo->proxy, ainfo->nat_ip, ainfo->nat_port));
@@ -955,17 +1014,17 @@ eXosip_set_option (struct eXosip_t *excontext, int opt, const void *value)
     break;
   case EXOSIP_OPT_UDP_KEEP_ALIVE:
     val = *((int *) value);
-    excontext->keep_alive = val;        /* value in ms */
+    excontext->ka_interval = val;       /* value in ms */
     break;
 #ifdef ENABLE_KEEP_ALIVE_OPTIONS_METHOD
   case EXOSIP_OPT_KEEP_ALIVE_OPTIONS_METHOD:
     val = *((int *) value);
-    excontext->keep_alive_options = val;        /* value 0 or 1 */
+    excontext->ka_options = val;        /* value 0 or 1 */
     break;
 #endif
-  case EXOSIP_OPT_UDP_LEARN_PORT:
+  case EXOSIP_OPT_AUTO_MASQUERADE_CONTACT:
     val = *((int *) value);
-    excontext->learn_port = val;        /* 1 to learn port */
+    excontext->auto_masquerade_contact = val;   /* 1 to learn port */
     break;
 
   case EXOSIP_OPT_USE_RPORT:
@@ -993,6 +1052,29 @@ eXosip_set_option (struct eXosip_t *excontext, int opt, const void *value)
     val = *((int *) value);
     /* 0: A request, 1: SRV support, 2: NAPTR+SRV support */
     excontext->dns_capabilities = val;
+    break;
+  case EXOSIP_OPT_REMOVE_PREROUTESET:
+    val = *((int *) value);
+    /* 0: keep pre-route set in initial INVITE/SUBSCRIBE/REFER, 1: remove pre-route set */
+    excontext->remove_prerouteset = val;
+    break;
+  case EXOSIP_OPT_SET_SIP_INSTANCE:
+    tmp = (char *) value;
+    memset (excontext->sip_instance, '\0', sizeof (excontext->sip_instance));
+    if (tmp != NULL && tmp[0] != '\0')
+      osip_strncpy (excontext->sip_instance, tmp, sizeof (excontext->sip_instance) - 1);
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip option set: +sip.instance:%s!\n", excontext->sip_instance));
+    break;
+  case EXOSIP_OPT_SET_DEFAULT_CONTACT_DISPLAYNAME:
+    tmp = (char *) value;
+    memset (excontext->default_contact_displayname, '\0', sizeof (excontext->default_contact_displayname));
+    if (tmp != NULL && tmp[0] != '\0')
+      osip_strncpy (excontext->default_contact_displayname, tmp, sizeof (excontext->default_contact_displayname) - 1);
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip option set: default_contact_displayname:%s!\n", excontext->default_contact_displayname));
+    break;
+  case EXOSIP_OPT_SET_SESSIONTIMERS_FORCE:
+    val = *((int *) value);
+    excontext->opt_sessiontimers_force = val;
     break;
   case EXOSIP_OPT_SET_DSCP:
     val = *((int *) value);
@@ -1048,6 +1130,66 @@ eXosip_set_option (struct eXosip_t *excontext, int opt, const void *value)
     val = *((int *) value);
     excontext->ipv6_enable = val;
     break;
+  case EXOSIP_OPT_ENABLE_REUSE_TCP_PORT:
+    val = *((int *) value);
+    excontext->reuse_tcp_port = val;
+    break;
+  case EXOSIP_OPT_ENABLE_USE_EPHEMERAL_PORT:
+    val = *((int *) value);
+    excontext->use_ephemeral_port = val;
+    break;
+  case EXOSIP_OPT_SET_CALLBACK_WAKELOCK:
+    excontext->cbsipWakeLock = (CbSipWakeLock) value;
+    break;
+  case EXOSIP_OPT_ENABLE_OUTBOUND:
+    val = *((int *) value);
+    excontext->enable_outbound = val;
+    break;
+  case EXOSIP_OPT_SET_OC_LOCAL_ADDRESS:
+    tmp = (char *) value;
+    memset (excontext->oc_local_address, '\0', sizeof (excontext->oc_local_address));
+    if (tmp != NULL && tmp[0] != '\0')
+      osip_strncpy (excontext->oc_local_address, tmp, sizeof (excontext->oc_local_address) - 1);
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip option set: oc_local_address:%s!\n", excontext->oc_local_address));
+    break;
+  case EXOSIP_OPT_SET_OC_PORT_RANGE:
+    {
+      int *range = ((int *) value);
+
+      excontext->oc_local_port_range[0] = range[0];
+      excontext->oc_local_port_range[1] = range[1];
+      break;
+    }
+  case EXOSIP_OPT_SET_MAX_MESSAGE_TO_READ:
+    {
+      excontext->max_message_to_read = *((int *) value);
+      break;
+    }
+  case EXOSIP_OPT_SET_MAX_READ_TIMEOUT:
+    {
+      excontext->max_read_timeout = *((long int *) value);
+      break;
+    }
+  case EXOSIP_OPT_GET_STATISTICS:
+    {
+      struct eXosip_stats *stats = (struct eXosip_stats *) value;
+      struct timeval now;
+
+      osip_gettimeofday (&now, NULL);
+      _eXosip_counters_update (&excontext->average_transactions, 0, &now);
+      _eXosip_counters_update (&excontext->average_registrations, 0, &now);
+      _eXosip_counters_update (&excontext->average_calls, 0, &now);
+      _eXosip_counters_update (&excontext->average_publications, 0, &now);
+      _eXosip_counters_update (&excontext->average_subscriptions, 0, &now);
+      _eXosip_counters_update (&excontext->average_insubscriptions, 0, &now);
+      excontext->statistics.average_transactions = excontext->average_transactions.current_average;
+      excontext->statistics.average_registrations = excontext->average_registrations.current_average;
+      excontext->statistics.average_calls = excontext->average_calls.current_average;
+      excontext->statistics.average_publications = excontext->average_publications.current_average;
+      excontext->statistics.average_subscriptions = excontext->average_subscriptions.current_average;
+      excontext->statistics.average_insubscriptions = excontext->average_insubscriptions.current_average;
+      memcpy (stats, &excontext->statistics, sizeof (struct eXosip_stats));
+    }
   default:
     return OSIP_BADPARAMETER;
   }
@@ -1061,19 +1203,41 @@ _eXosip_keep_alive (struct eXosip_t *excontext)
 
   osip_gettimeofday (&now, NULL);
 
-  if (excontext->mtimer.tv_sec == 0 && excontext->mtimer.tv_usec == 0) {
+  /* 
+     the stack is waking up every 10 seconds when no action is required. So
+     this method will be called at a maximum interval of 10 seconds and minimum
+     2 seconds.
+     The objective is to detect broken connections that do not fire any error
+     within an acceptable timeframe.
+   */
+  if (excontext->cc_timer.tv_sec == 0 && excontext->cc_timer.tv_usec == 0) {
     /* first init */
-    osip_gettimeofday (&excontext->mtimer, NULL);
-    add_gettimeofday (&excontext->mtimer, excontext->keep_alive);
+    osip_gettimeofday (&excontext->cc_timer, NULL);
+    add_gettimeofday (&excontext->cc_timer, 2);
   }
 
-  if (osip_timercmp (&now, &excontext->mtimer, <)) {
+  if (osip_timercmp (&now, &excontext->cc_timer, >=)) {
+    /* reset timer */
+    osip_gettimeofday (&excontext->cc_timer, NULL);
+    add_gettimeofday (&excontext->cc_timer, 2);
+
+    if (excontext->eXtl_transport.tl_check_connection != NULL)
+      excontext->eXtl_transport.tl_check_connection (excontext);
+  }
+
+  if (excontext->ka_timer.tv_sec == 0 && excontext->ka_timer.tv_usec == 0) {
+    /* first init */
+    osip_gettimeofday (&excontext->ka_timer, NULL);
+    add_gettimeofday (&excontext->ka_timer, excontext->ka_interval);
+  }
+
+  if (osip_timercmp (&now, &excontext->ka_timer, <)) {
     return;                     /* not yet time */
   }
 
   /* reset timer */
-  osip_gettimeofday (&excontext->mtimer, NULL);
-  add_gettimeofday (&excontext->mtimer, excontext->keep_alive);
+  osip_gettimeofday (&excontext->ka_timer, NULL);
+  add_gettimeofday (&excontext->ka_timer, excontext->ka_interval);
 
   if (excontext->eXtl_transport.tl_keepalive != NULL)
     excontext->eXtl_transport.tl_keepalive (excontext);
@@ -1093,6 +1257,97 @@ _eXosip_thread (void *arg)
   }
   osip_thread_exit ();
   return NULL;
+}
+
+#endif
+
+#ifndef MINISIZE
+
+void
+_eXosip_counters_init (struct eXosip_counters *bw_stats, int period, int interval)
+{
+  bw_stats->period = period;
+  bw_stats->interval = interval;
+  if (bw_stats->period <= 0)
+    bw_stats->period = EXOSIP_STATS_PERIOD;
+  if (bw_stats->interval <= 0)
+    bw_stats->interval = EXOSIP_STATS_INTERVAL;
+
+  bw_stats->num_entries = (bw_stats->period / bw_stats->interval);
+  bw_stats->values = (unsigned short *) osip_malloc (sizeof (unsigned short) * bw_stats->num_entries);
+  memset (bw_stats->values, 0, sizeof (unsigned short) * bw_stats->num_entries);
+  bw_stats->times = (struct timeval *) osip_malloc (sizeof (struct timeval) * bw_stats->num_entries);
+  memset (bw_stats->times, 0, sizeof (struct timeval) * bw_stats->num_entries);
+}
+
+void
+_eXosip_counters_free (struct eXosip_counters *bw_stats)
+{
+  osip_free (bw_stats->values);
+  osip_free (bw_stats->times);
+  bw_stats->values = NULL;
+  bw_stats->times = NULL;
+  bw_stats->total_values = 0;
+  bw_stats->index_last = 0;
+}
+
+static float
+compute_average (struct timeval *orig, unsigned int values)
+{
+  struct timeval current;
+  float time;
+
+  if (values == 0)
+    return 0;
+  osip_gettimeofday (&current, NULL);
+  time = (float) (current.tv_sec - orig->tv_sec) / 3600;        /* calculate num/hour */
+  if (time == 0)
+    return 0;
+  return ((float) values) / (time + 0.000001f);
+}
+
+void
+_eXosip_counters_update (struct eXosip_counters *bw_stats, int nvalues, struct timeval *now)
+{
+  unsigned long interval;
+  unsigned long last_interval;
+
+  if (bw_stats->values == NULL)
+    _eXosip_counters_init (bw_stats, 0, 0);
+
+  interval = (now->tv_sec - bw_stats->times[0].tv_sec);
+  if (bw_stats->index_last > 0 && interval <= bw_stats->interval) {
+    bw_stats->values[0] += nvalues;
+    bw_stats->total_values += nvalues;
+    bw_stats->current_average = compute_average (&bw_stats->times[bw_stats->index_last - 1], bw_stats->total_values);
+    return;
+  }
+
+  last_interval = 0;
+  while (bw_stats->index_last > 0) {
+    last_interval = (now->tv_sec - bw_stats->times[bw_stats->index_last - 1].tv_sec);
+    if (last_interval < bw_stats->period && bw_stats->index_last < bw_stats->num_entries)
+      break;
+    bw_stats->total_values -= bw_stats->values[bw_stats->index_last - 1];
+    bw_stats->index_last--;
+  }
+
+  if (nvalues > 0) {
+    bw_stats->total_values += nvalues;
+    memmove (((unsigned char *) bw_stats->values) + sizeof (unsigned short), bw_stats->values, sizeof (unsigned short) * (bw_stats->index_last));
+    memmove (((unsigned char *) bw_stats->times) + sizeof (struct timeval), bw_stats->times, sizeof (struct timeval) * (bw_stats->index_last));
+    bw_stats->values[0] = nvalues;
+    bw_stats->times[0].tv_sec = now->tv_sec;
+    bw_stats->times[0].tv_usec = now->tv_usec;
+    bw_stats->index_last++;
+  }
+
+  if (bw_stats->index_last > 0) {
+    bw_stats->current_average = compute_average (&bw_stats->times[bw_stats->index_last - 1], bw_stats->total_values);
+  }
+  else {
+    bw_stats->current_average = 0;
+  }
 }
 
 #endif

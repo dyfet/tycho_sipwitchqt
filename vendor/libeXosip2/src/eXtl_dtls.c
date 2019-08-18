@@ -1,6 +1,6 @@
 /*
   eXosip - This is the eXtended osip library.
-  Copyright (C) 2001-2012 Aymeric MOIZARD amoizard@antisip.com
+  Copyright (C) 2001-2015 Aymeric MOIZARD amoizard@antisip.com
   
   eXosip is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,9 +33,7 @@
 #include "eXosip2.h"
 #include "eXtransport.h"
 
-#ifdef _WIN32_WCE
-#include "inet_ntop.h"
-#elif WIN32
+#if !defined (HAVE_INET_NTOP)
 #include "inet_ntop.h"
 #endif
 
@@ -72,8 +70,19 @@
 #define RANDOM  "random.pem"
 #define DHFILE "dh1024.pem"
 
-SSL_CTX *initialize_client_ctx (struct eXosip_t * excontext, const char *certif_client_local_cn_name, eXosip_tls_ctx_t * client_ctx, int transport);
-SSL_CTX *initialize_server_ctx (struct eXosip_t *excontext, const char *certif_local_cn_name, eXosip_tls_ctx_t * srv_ctx, int transport);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+static void
+SSL_set0_rbio (SSL * s, BIO * rbio)
+{
+  BIO_free_all (s->rbio);
+  s->rbio = rbio;
+}
+
+#endif
+
+SSL_CTX *initialize_client_ctx (struct eXosip_t *excontext, eXosip_tls_ctx_t * client_ctx, int transport);
+SSL_CTX *initialize_server_ctx (struct eXosip_t *excontext, eXosip_tls_ctx_t * srv_ctx, int transport);
 
 /* persistent connection */
 struct _dtls_stream {
@@ -91,8 +100,6 @@ struct _dtls_stream {
 
 struct eXtldtls {
   eXosip_tls_ctx_t eXosip_dtls_ctx_params;
-  char dtls_local_cn_name[128];
-  char dtls_client_local_cn_name[128];
 
   int dtls_socket;
   struct sockaddr_storage ai_addr;
@@ -116,8 +123,6 @@ dtls_tl_init (struct eXosip_t *excontext)
   memset (&reserved->socket_tab, 0, sizeof (struct _dtls_stream) * EXOSIP_MAX_SOCKETS);
 
   memset (&reserved->eXosip_dtls_ctx_params, 0, sizeof (eXosip_tls_ctx_t));
-  memset (&reserved->dtls_local_cn_name, 0, sizeof (reserved->dtls_local_cn_name));
-  memset (&reserved->dtls_client_local_cn_name, 0, sizeof (reserved->dtls_client_local_cn_name));
 
   /* TODO: make it configurable (as for TLS) */
   osip_strncpy (reserved->eXosip_dtls_ctx_params.client.priv_key, CLIENT_KEYFILE, sizeof (reserved->eXosip_dtls_ctx_params.client.priv_key) - 1);
@@ -233,7 +238,7 @@ shutdown_free_client_dtls (struct eXosip_t *excontext, int pos)
 
       BIO_ctrl (rbio, BIO_CTRL_DGRAM_SET_PEER, 0, (char *) &addr);
 
-      (reserved->socket_tab[pos].ssl_conn)->rbio = rbio;
+      SSL_set0_rbio (reserved->socket_tab[pos].ssl_conn, rbio);
 
       i = SSL_shutdown (reserved->socket_tab[pos].ssl_conn);
 
@@ -293,11 +298,20 @@ dtls_tl_free (struct eXosip_t *excontext)
       shutdown_free_server_dtls (excontext, pos);
     }
   }
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+  ERR_remove_thread_state (NULL);
+#else
+  ERR_remove_state (0);
+#endif
+#endif
+
   memset (&reserved->socket_tab, 0, sizeof (struct _dtls_stream) * EXOSIP_MAX_SOCKETS);
 
   memset (&reserved->ai_addr, 0, sizeof (struct sockaddr_storage));
   if (reserved->dtls_socket > 0)
-    close (reserved->dtls_socket);
+    _eXosip_closesocket (reserved->dtls_socket);
   reserved->dtls_socket = 0;
 
   osip_free (reserved);
@@ -320,26 +334,31 @@ dtls_tl_open (struct eXosip_t *excontext)
     return OSIP_WRONG_STATE;
   }
 
-  if (excontext->eXtl_transport.proto_port < 0)
-    excontext->eXtl_transport.proto_port = 5061;
+  excontext->eXtl_transport.proto_local_port = excontext->eXtl_transport.proto_port;
+  if (excontext->eXtl_transport.proto_local_port < 0)
+    excontext->eXtl_transport.proto_local_port = 5061;
 
   /* TODO: allow parameters for DTLS */
-  reserved->server_ctx = initialize_server_ctx (excontext, reserved->dtls_local_cn_name, &reserved->eXosip_dtls_ctx_params, IPPROTO_UDP);
-  reserved->client_ctx = initialize_client_ctx (excontext, reserved->dtls_client_local_cn_name, &reserved->eXosip_dtls_ctx_params, IPPROTO_UDP);
+  reserved->server_ctx = initialize_server_ctx (excontext, &reserved->eXosip_dtls_ctx_params, IPPROTO_UDP);
+  reserved->client_ctx = initialize_client_ctx (excontext, &reserved->eXosip_dtls_ctx_params, IPPROTO_UDP);
 
-  res = _eXosip_get_addrinfo (excontext, &addrinfo, excontext->eXtl_transport.proto_ifs, excontext->eXtl_transport.proto_port, excontext->eXtl_transport.proto_num);
+  res = _eXosip_get_addrinfo (excontext, &addrinfo, excontext->eXtl_transport.proto_ifs, excontext->eXtl_transport.proto_local_port, excontext->eXtl_transport.proto_num);
   if (res)
     return -1;
 
   for (curinfo = addrinfo; curinfo; curinfo = curinfo->ai_next) {
     socklen_t len;
+    int type;
 
     if (curinfo->ai_protocol && curinfo->ai_protocol != excontext->eXtl_transport.proto_num) {
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO3, NULL, "eXosip: Skipping protocol %d\n", curinfo->ai_protocol));
       continue;
     }
-
-    sock = (int) socket (curinfo->ai_family, curinfo->ai_socktype, curinfo->ai_protocol);
+    type = curinfo->ai_socktype;
+#if defined(SOCK_CLOEXEC)
+    type = SOCK_CLOEXEC | type;
+#endif
+    sock = (int) socket (curinfo->ai_family, type, curinfo->ai_protocol);
     if (sock < 0) {
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot create socket %s!\n", strerror (errno)));
       continue;
@@ -348,7 +367,7 @@ dtls_tl_open (struct eXosip_t *excontext)
     if (curinfo->ai_family == AF_INET6) {
 #ifdef IPV6_V6ONLY
       if (setsockopt_ipv6only (sock)) {
-        close (sock);
+        _eXosip_closesocket (sock);
         sock = -1;
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot set socket option %s!\n", strerror (errno)));
         continue;
@@ -356,10 +375,10 @@ dtls_tl_open (struct eXosip_t *excontext)
 #endif /* IPV6_V6ONLY */
     }
 
-    res = bind (sock, curinfo->ai_addr, curinfo->ai_addrlen);
+    res = bind (sock, curinfo->ai_addr, (socklen_t) curinfo->ai_addrlen);
     if (res < 0) {
       OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot bind socket node:%s family:%d %s\n", excontext->eXtl_transport.proto_ifs, curinfo->ai_family, strerror (errno)));
-      close (sock);
+      _eXosip_closesocket (sock);
       sock = -1;
       continue;
     }
@@ -374,7 +393,7 @@ dtls_tl_open (struct eXosip_t *excontext)
       res = listen (sock, SOMAXCONN);
       if (res < 0) {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot bind socket node:%s family:%d %s\n", excontext->eXtl_transport.proto_ifs, curinfo->ai_family, strerror (errno)));
-        close (sock);
+        _eXosip_closesocket (sock);
         sock = -1;
         continue;
       }
@@ -386,22 +405,20 @@ dtls_tl_open (struct eXosip_t *excontext)
   _eXosip_freeaddrinfo (addrinfo);
 
   if (sock < 0) {
-    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot bind on port: %i\n", excontext->eXtl_transport.proto_port));
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "eXosip: Cannot bind on port: %i\n", excontext->eXtl_transport.proto_local_port));
     return -1;
   }
 
   reserved->dtls_socket = sock;
 
-  if (excontext->eXtl_transport.proto_port == 0) {
+  if (excontext->eXtl_transport.proto_local_port == 0) {
     /* get port number from socket */
-    if (excontext->eXtl_transport.proto_family == AF_INET)
-      excontext->eXtl_transport.proto_port = ntohs (((struct sockaddr_in *) &reserved->ai_addr)->sin_port);
+    if (reserved->ai_addr.ss_family == AF_INET)
+      excontext->eXtl_transport.proto_local_port = ntohs (((struct sockaddr_in *) &reserved->ai_addr)->sin_port);
     else
-      excontext->eXtl_transport.proto_port = ntohs (((struct sockaddr_in6 *) &reserved->ai_addr)->sin6_port);
-    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip: Binding on port %i!\n", excontext->eXtl_transport.proto_port));
+      excontext->eXtl_transport.proto_local_port = ntohs (((struct sockaddr_in6 *) &reserved->ai_addr)->sin6_port);
+    OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip: Binding on port %i!\n", excontext->eXtl_transport.proto_local_port));
   }
-
-  snprintf (excontext->dtls_firewall_port, sizeof (excontext->dtls_firewall_port), "%i", excontext->eXtl_transport.proto_port);
   return OSIP_SUCCESS;
 }
 
@@ -451,7 +468,7 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
 
     socklen_t slen;
 
-    if (excontext->eXtl_transport.proto_family == AF_INET)
+    if (reserved->ai_addr.ss_family == AF_INET)
       slen = sizeof (struct sockaddr_in);
     else
       slen = sizeof (struct sockaddr_in6);
@@ -473,38 +490,10 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
 
       enc_buf[enc_buf_len] = '\0';
 
-      memset (src6host, 0, sizeof (src6host));
-
-      if (excontext->eXtl_transport.proto_family == AF_INET)
-        recvport = ntohs (((struct sockaddr_in *) &sa)->sin_port);
-      else
-        recvport = ntohs (((struct sockaddr_in6 *) &sa)->sin6_port);
-
-#if defined(__arc__)
-      {
-        struct sockaddr_in *fromsa = (struct sockaddr_in *) &sa;
-        char *tmp;
-
-        tmp = inet_ntoa (fromsa->sin_addr);
-        if (tmp == NULL) {
-          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Message received from: NULL:%i inet_ntoa failure\n", recvport));
-        }
-        else {
-          snprintf (src6host, sizeof (src6host), "%s", tmp);
-          OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Message received from: %s:%i\n", src6host, recvport));
-        }
-      }
-#else
-      err = getnameinfo ((struct sockaddr *) &sa, slen, src6host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-
-      if (err != 0) {
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_ERROR, NULL, "Message received from: NULL:%i getnameinfo failure\n", recvport));
-        snprintf (src6host, sizeof (src6host), "127.0.0.1");
-      }
-      else {
-        OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Message received from: %s:%i\n", src6host, recvport));
-      }
-#endif
+      memset (src6host, 0, NI_MAXHOST);
+      recvport = _eXosip_getport ((struct sockaddr *) &sa, slen);
+      _eXosip_getnameinfo ((struct sockaddr *) &sa, slen, src6host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+      OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Message received from: %s:%i\n", src6host, recvport));
 
       for (pos = 0; pos < EXOSIP_MAX_SOCKETS; pos++) {
         if (reserved->socket_tab[pos].ssl_conn != NULL) {
@@ -588,12 +577,12 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
       rbio = BIO_new_mem_buf (enc_buf, enc_buf_len);
       BIO_set_mem_eof_return (rbio, -1);
 
-      reserved->socket_tab[pos].ssl_conn->rbio = rbio;
+      SSL_set0_rbio (reserved->socket_tab[pos].ssl_conn, rbio);
 
       i = SSL_read (reserved->socket_tab[pos].ssl_conn, dec_buf, SIP_MESSAGE_MAX_LENGTH);
       /* done with the rbio */
-      BIO_free (reserved->socket_tab[pos].ssl_conn->rbio);
-      reserved->socket_tab[pos].ssl_conn->rbio = BIO_new (BIO_s_mem ());
+      rbio = BIO_new (BIO_s_mem ());
+      SSL_set0_rbio (reserved->socket_tab[pos].ssl_conn, rbio);
 
       if (i > 5) {
         dec_buf[i] = '\0';
@@ -601,7 +590,6 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
         _eXosip_handle_incoming_message (excontext, dec_buf, i, reserved->dtls_socket, src6host, recvport, NULL, NULL);
 
       }
-#ifndef MINISIZE
       else if (i <= 0) {
         err = SSL_get_error (reserved->socket_tab[pos].ssl_conn, i);
         print_ssl_error (err);
@@ -620,7 +608,6 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
       else {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Dummy SIP message received\n"));
       }
-#endif
 
       osip_free (dec_buf);
       osip_free (enc_buf);
@@ -632,43 +619,149 @@ dtls_tl_read_message (struct eXosip_t *excontext, fd_set * osip_fdset, fd_set * 
 }
 
 static int
-eXtl_update_local_target (struct eXosip_t *excontext, osip_message_t * req)
+dtls_tl_update_contact (struct eXosip_t *excontext, osip_message_t * req)
 {
-  int pos = 0;
+  req->application_data = (void *) 0x1; /* request for masquerading */
+  return OSIP_SUCCESS;
+}
 
-  if (excontext->dtls_firewall_ip != '\0') {
+static int
+_dtls_tl_update_contact (struct eXosip_t *excontext, osip_message_t * req)
+{
+  struct eXosip_account_info *ainfo = NULL;
+  char *proxy = NULL;
+  int i;
+  osip_via_t *via = NULL;
 
-    while (!osip_list_eol (&req->contacts, pos)) {
-      osip_contact_t *co;
+  if (req->application_data != (void *) 0x1)
+    return OSIP_SUCCESS;
+  req->application_data = (void *) 0x0; /* avoid doing twice */
 
-      co = (osip_contact_t *) osip_list_get (&req->contacts, pos);
-      pos++;
-      if (co != NULL && co->url != NULL && co->url->host != NULL && 0 == osip_strcasecmp (co->url->host, excontext->dtls_firewall_ip)) {
-        if (co->url->port == NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, "5061")) {
-          co->url->port = osip_strdup (excontext->dtls_firewall_port);
-          osip_message_force_update (req);
-        }
-        else if (co->url->port != NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, co->url->port)) {
-          osip_free (co->url->port);
-          co->url->port = osip_strdup (excontext->dtls_firewall_port);
-          osip_message_force_update (req);
+  if (MSG_IS_REQUEST (req)) {
+    if (req->from != NULL && req->from->url != NULL && req->from->url->host != NULL)
+      proxy = req->from->url->host;
+    osip_message_get_via (req, 0, &via);
+  }
+  else {
+    if (req->to != NULL && req->to->url != NULL && req->to->url->host != NULL)
+      proxy = req->to->url->host;
+  }
+
+  if (proxy != NULL) {
+    for (i = 0; i < MAX_EXOSIP_ACCOUNT_INFO; i++) {
+      if (excontext->account_entries[i].proxy[0] != '\0') {
+        if (strstr (excontext->account_entries[i].proxy, proxy) != NULL || strstr (proxy, excontext->account_entries[i].proxy) != NULL) {
+          /* use ainfo */
+          if (excontext->account_entries[i].nat_ip[0] != '\0') {
+            ainfo = &excontext->account_entries[i];
+            break;
+          }
         }
       }
     }
   }
 
+  if (excontext->dtls_firewall_ip[0] != '\0' || excontext->auto_masquerade_contact > 0) {
+
+    osip_list_iterator_t it;
+    osip_contact_t *co = (osip_contact_t *) osip_list_get_first (&req->contacts, &it);
+
+    while (co != NULL) {
+      if (co != NULL && co->url != NULL && co->url->host != NULL) {
+        if (ainfo == NULL) {
+          if (excontext->dtls_firewall_port[0] == '\0') {
+          }
+          else if (co->url->port == NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, "5061")) {
+            co->url->port = osip_strdup (excontext->dtls_firewall_port);
+            osip_message_force_update (req);
+          }
+          else if (co->url->port != NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, co->url->port)) {
+            osip_free (co->url->port);
+            co->url->port = osip_strdup (excontext->dtls_firewall_port);
+            osip_message_force_update (req);
+          }
+        }
+        else {
+          if (co->url->port == NULL && ainfo->nat_port != 5060) {
+            co->url->port = osip_malloc (10);
+            if (co->url->port == NULL)
+              return OSIP_NOMEM;
+            snprintf (co->url->port, 9, "%i", ainfo->nat_port);
+            osip_message_force_update (req);
+          }
+          else if (co->url->port != NULL && ainfo->nat_port != atoi (co->url->port)) {
+            osip_free (co->url->port);
+            co->url->port = osip_malloc (10);
+            if (co->url->port == NULL)
+              return OSIP_NOMEM;
+            snprintf (co->url->port, 9, "%i", ainfo->nat_port);
+            osip_message_force_update (req);
+          }
+#if 1
+          if (ainfo->nat_ip[0] != '\0') {
+            osip_free (co->url->host);
+            co->url->host = osip_strdup (ainfo->nat_ip);
+            osip_message_force_update (req);
+          }
+#endif
+        }
+      }
+      co = (osip_contact_t *) osip_list_get_next (&it);
+    }
+  }
+
+  if (excontext->masquerade_via)
+    if (via != NULL) {
+      if (ainfo == NULL) {
+        if (excontext->dtls_firewall_port[0] == '\0') {
+        }
+        else if (via->port == NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, "5060")) {
+          via->port = osip_strdup (excontext->dtls_firewall_port);
+          osip_message_force_update (req);
+        }
+        else if (via->port != NULL && 0 != osip_strcasecmp (excontext->dtls_firewall_port, via->port)) {
+          osip_free (via->port);
+          via->port = osip_strdup (excontext->dtls_firewall_port);
+          osip_message_force_update (req);
+        }
+      }
+      else {
+        if (via->port == NULL && ainfo->nat_port != 5060) {
+          via->port = osip_malloc (10);
+          if (via->port == NULL)
+            return OSIP_NOMEM;
+          snprintf (via->port, 9, "%i", ainfo->nat_port);
+          osip_message_force_update (req);
+        }
+        else if (via->port != NULL && ainfo->nat_port != atoi (via->port)) {
+          osip_free (via->port);
+          via->port = osip_malloc (10);
+          if (via->port == NULL)
+            return OSIP_NOMEM;
+          snprintf (via->port, 9, "%i", ainfo->nat_port);
+          osip_message_force_update (req);
+        }
+#if 1
+        if (ainfo->nat_ip[0] != '\0') {
+          osip_free (via->host);
+          via->host = osip_strdup (ainfo->nat_ip);
+          osip_message_force_update (req);
+        }
+#endif
+      }
+    }
   return OSIP_SUCCESS;
 }
 
 #ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
+#define INET6_ADDRSTRLEN 65
 #endif
 
 static int
 dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_message_t * sip, char *host, int port, int out_socket)
 {
   struct eXtldtls *reserved = (struct eXtldtls *) excontext->eXtldtls_reserved;
-  int len = 0;
+  socklen_t len = 0;
   size_t length = 0;
   struct addrinfo *addrinfo;
   struct __eXosip_sockaddr addr;
@@ -701,14 +794,7 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
   if (port == 5060)
     port = 5061;
 
-  if (MSG_IS_REQUEST (sip)) {
-    if (MSG_IS_REGISTER (sip)
-        || MSG_IS_INVITE (sip) || MSG_IS_SUBSCRIBE (sip) || MSG_IS_NOTIFY (sip))
-      eXtl_update_local_target (excontext, sip);
-  }
-
   i = -1;
-#ifndef MINISIZE
   if (tr == NULL) {
     _eXosip_srv_lookup (excontext, sip, &naptr_record);
 
@@ -833,7 +919,6 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
         tr->naptr_record = NULL;
     }
   }
-#endif
 
   /* if SRV was used, destination may be already found */
   if (i != 0) {
@@ -845,31 +930,9 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
   }
 
   memcpy (&addr, addrinfo->ai_addr, addrinfo->ai_addrlen);
-  len = addrinfo->ai_addrlen;
+  len = (socklen_t) addrinfo->ai_addrlen;
 
   _eXosip_freeaddrinfo (addrinfo);
-
-  /* remove preloaded route if there is no tag in the To header
-   */
-  {
-    osip_route_t *route = NULL;
-    osip_generic_param_t *tag = NULL;
-
-    osip_message_get_route (sip, 0, &route);
-
-    osip_to_get_tag (sip->to, &tag);
-    if (tag == NULL && route != NULL && route->url != NULL) {
-      osip_list_remove (&sip->routes, 0);
-    }
-    i = osip_message_to_str (sip, &message, &length);
-    if (tag == NULL && route != NULL && route->url != NULL) {
-      osip_list_add (&sip->routes, route, 0);
-    }
-  }
-
-  if (i != 0 || length <= 0) {
-    return -1;
-  }
 
   switch (((struct sockaddr *) &addr)->sa_family) {
   case AF_INET:
@@ -882,8 +945,6 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
     strncpy (ipbuf, "(unknown)", sizeof (ipbuf));
     break;
   }
-
-  OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Message sent: \n%s (to dest=%s:%i)\n", message, ipbuf, port));
 
   if (osip_strcasecmp (host, ipbuf) != 0 && MSG_IS_REQUEST (sip)) {
     if (MSG_IS_REGISTER (sip)) {
@@ -904,7 +965,7 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
         _dtls_stream_used = &reserved->socket_tab[pos];
         rbio = BIO_new_dgram (reserved->dtls_socket, BIO_NOCLOSE);
         BIO_ctrl (rbio, BIO_CTRL_DGRAM_SET_PEER, 0, (char *) &addr);
-        reserved->socket_tab[pos].ssl_conn->rbio = rbio;
+        SSL_set0_rbio (reserved->socket_tab[pos].ssl_conn, rbio);
         break;
       }
     }
@@ -918,7 +979,7 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
           _dtls_stream_used = &reserved->socket_tab[pos];
           rbio = BIO_new_dgram (reserved->dtls_socket, BIO_NOCLOSE);
           BIO_ctrl (rbio, BIO_CTRL_DGRAM_SET_PEER, 0, (char *) &addr);
-          reserved->socket_tab[pos].ssl_conn->rbio = rbio;
+          SSL_set0_rbio (reserved->socket_tab[pos].ssl_conn, rbio);
           break;
         }
       }
@@ -951,7 +1012,6 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
 
       memset (&reserved->socket_tab[pos], 0, sizeof (struct _dtls_stream));
 
-      osip_free (message);
       return -1;
     }
 
@@ -964,7 +1024,6 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
 
       memset (&reserved->socket_tab[pos], 0, sizeof (struct _dtls_stream));
 
-      osip_free (message);
       return -1;
     }
 
@@ -982,6 +1041,36 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
     reserved->socket_tab[pos].remote_port = port;
   }
 
+  _eXosip_request_viamanager (excontext, tr, sip, addr.ss_family, IPPROTO_UDP, &reserved->ai_addr, excontext->eXtl_transport.proto_local_port, reserved->dtls_socket, host);
+  _eXosip_message_contactmanager (excontext, tr, sip, addr.ss_family, IPPROTO_UDP, &reserved->ai_addr, excontext->eXtl_transport.proto_local_port, reserved->dtls_socket, host);
+  _dtls_tl_update_contact (excontext, sip);
+
+  /* remove preloaded route if there is no tag in the To header
+   */
+  {
+    osip_route_t *route = NULL;
+    osip_generic_param_t *tag = NULL;
+
+    if (excontext->remove_prerouteset > 0) {
+      osip_message_get_route (sip, 0, &route);
+      osip_to_get_tag (sip->to, &tag);
+      if (tag == NULL && route != NULL && route->url != NULL) {
+        osip_list_remove (&sip->routes, 0);
+        osip_message_force_update (sip);
+      }
+    }
+    i = osip_message_to_str (sip, &message, &length);
+    if (tag == NULL && route != NULL && route->url != NULL) {
+      osip_list_add (&sip->routes, route, 0);
+    }
+  }
+
+  if (i != 0 || length <= 0) {
+    return -1;
+  }
+
+  OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "Message sent: (to dest=%s:%i)\n%s\n", ipbuf, port, message));
+
   i = SSL_write (reserved->socket_tab[pos].ssl_conn, message, (int) length);
 
   if (i < 0) {
@@ -997,7 +1086,7 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
       memset (&reserved->socket_tab[pos], 0, sizeof (struct _dtls_stream));
 
     }
-#ifndef MINISIZE
+
     if (naptr_record != NULL) {
       /* rotate on failure! */
       if (eXosip_dnsutils_rotate_srv (&naptr_record->sipdtls_record) > 0) {
@@ -1005,13 +1094,13 @@ dtls_tl_send_message (struct eXosip_t *excontext, osip_transaction_t * tr, osip_
         return OSIP_SUCCESS;    /* retry for next retransmission! */
       }
     }
-#endif
+
     /* SIP_NETWORK_ERROR; */
     osip_free (message);
     return -1;
   }
 
-  if (excontext->keep_alive > 0) {
+  if (excontext->ka_interval > 0) {
     if (MSG_IS_REGISTER (sip)) {
       eXosip_reg_t *reg = NULL;
 
@@ -1030,7 +1119,6 @@ static int
 dtls_tl_keepalive (struct eXosip_t *excontext)
 {
   struct eXtldtls *reserved = (struct eXtldtls *) excontext->eXtldtls_reserved;
-  char buf[4] = "jaK";
   eXosip_reg_t *jr;
 
   if (reserved == NULL) {
@@ -1038,7 +1126,7 @@ dtls_tl_keepalive (struct eXosip_t *excontext)
     return OSIP_WRONG_STATE;
   }
 
-  if (excontext->keep_alive <= 0) {
+  if (excontext->ka_interval <= 0) {
     return 0;
   }
 
@@ -1047,7 +1135,7 @@ dtls_tl_keepalive (struct eXosip_t *excontext)
 
   for (jr = excontext->j_reg; jr != NULL; jr = jr->next) {
     if (jr->len > 0) {
-      if (sendto (reserved->dtls_socket, (const void *) buf, 4, 0, (struct sockaddr *) &(jr->addr), jr->len) > 0) {
+      if (sendto (reserved->dtls_socket, (const void *) excontext->ka_crlf, 4, 0, (struct sockaddr *) &(jr->addr), jr->len) > 0) {
         OSIP_TRACE (osip_trace (__FILE__, __LINE__, OSIP_INFO1, NULL, "eXosip: Keep Alive sent on DTLS-UDP!\n"));
       }
     }
@@ -1076,8 +1164,6 @@ dtls_tl_masquerade_contact (struct eXosip_t *excontext, const char *public_addre
   if (public_address == NULL || public_address[0] == '\0') {
     memset (excontext->dtls_firewall_ip, '\0', sizeof (excontext->dtls_firewall_ip));
     memset (excontext->dtls_firewall_port, '\0', sizeof (excontext->dtls_firewall_port));
-    if (excontext->eXtl_transport.proto_port > 0)
-      snprintf (excontext->dtls_firewall_port, sizeof (excontext->dtls_firewall_port), "%i", excontext->eXtl_transport.proto_port);
     return OSIP_SUCCESS;
   }
   snprintf (excontext->dtls_firewall_ip, sizeof (excontext->dtls_firewall_ip), "%s", public_address);
@@ -1100,21 +1186,22 @@ dtls_tl_get_masquerade_contact (struct eXosip_t *excontext, char *ip, int ip_siz
     return OSIP_WRONG_STATE;
   }
 
-  if (excontext->dtls_firewall_ip != '\0')
+  if (excontext->dtls_firewall_ip[0] != '\0')
     snprintf (ip, ip_size, "%s", excontext->dtls_firewall_ip);
 
-  if (excontext->dtls_firewall_port != '\0')
+  if (excontext->dtls_firewall_port[0] != '\0')
     snprintf (port, port_size, "%s", excontext->dtls_firewall_port);
   return OSIP_SUCCESS;
 }
 
-struct eXtl_protocol eXtl_dtls = {
+static struct eXtl_protocol eXtl_dtls = {
   1,
   5061,
   "DTLS-UDP",
   "0.0.0.0",
   IPPROTO_UDP,
   AF_INET,
+  0,
   0,
   0,
 
@@ -1128,6 +1215,8 @@ struct eXtl_protocol eXtl_dtls = {
   &dtls_tl_set_socket,
   &dtls_tl_masquerade_contact,
   &dtls_tl_get_masquerade_contact,
+  &dtls_tl_update_contact,
+  NULL,
   NULL
 };
 
